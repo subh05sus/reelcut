@@ -1,0 +1,83 @@
+<!doctype html>
+<!-- archetype seconds=4.2 -->
+<html lang="de">
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <style>
+        /* A DIAGRAM THAT BUILDS. For a beat that says one thing connects to many: the parts are
+           there first, the new thing drops into the middle, links draw out from it, then across
+           between the old parts. It assembles in the order the sentence explains it, which is what
+           makes it an argument rather than an illustration.
+           Node labels are one word each. Six nodes is the ceiling; four reads faster. */
+        #root { position: absolute; inset: 0; background: #14110e; color: #f2efe9;
+                font-family: Inter, Arial, Helvetica, sans-serif; overflow: hidden; }
+        #root .line { position: absolute; left: 72px; top: 92px; width: 936px;
+                      font-size: 50px; font-weight: 700; line-height: 1.18; letter-spacing: -0.022em; }
+        #root .line .accent { color: #f0a58f; }
+        #root svg { position: absolute; left: 0; top: 0; }
+        #root .node { position: absolute; width: 180px; height: 84px; border-radius: 12px;
+                      background: #221d18; border: 2px solid #3a332c; display: flex; align-items: center;
+                      justify-content: center; font-size: 30px; font-weight: 700; letter-spacing: -0.01em; color: #cfc8bd; }
+        #root .hub { position: absolute; left: 400px; top: 568px; width: 280px; height: 124px; border-radius: 16px;
+                     background: #f0a58f; color: #14110e; display: flex; align-items: center; justify-content: center;
+                     font-size: 46px; font-weight: 800; letter-spacing: -0.02em; }
+      </style>
+
+      <div id="root" data-composition-id="diagram-links" data-width="1080" data-height="1080">
+        <div class="line">Ein neues <span class="accent">Projekt</span> verbindet sich mit allem, was schon da ist</div>
+        <!-- Link endpoints are node centres: node left + 90, top + 42. Hub centre is 540,630. -->
+        <svg width="1080" height="1080" viewBox="0 0 1080 1080">
+          <g stroke="#f0a58f" stroke-width="4" stroke-linecap="round" fill="none">
+            <line data-link x1="540" y1="630" x2="190" y2="382" />
+            <line data-link x1="540" y1="630" x2="890" y2="382" />
+            <line data-link x1="540" y1="630" x2="170" y2="682" />
+            <line data-link x1="540" y1="630" x2="910" y2="702" />
+            <line data-link x1="540" y1="630" x2="290" y2="902" />
+            <line data-link x1="540" y1="630" x2="790" y2="902" />
+          </g>
+          <g stroke="#6b5f53" stroke-width="3" stroke-linecap="round" fill="none">
+            <line data-cross x1="190" y1="382" x2="170" y2="682" />
+            <line data-cross x1="890" y1="382" x2="910" y2="702" />
+            <line data-cross x1="290" y1="902" x2="790" y2="902" />
+          </g>
+        </svg>
+        <div class="node" data-node style="left: 100px; top: 340px">Notizen</div>
+        <div class="node" data-node style="left: 800px; top: 340px">Quellen</div>
+        <div class="node" data-node style="left: 80px; top: 640px">Ideen</div>
+        <div class="node" data-node style="left: 820px; top: 660px">Termine</div>
+        <div class="node" data-node style="left: 200px; top: 860px">Archiv</div>
+        <div class="node" data-node style="left: 700px; top: 860px">Team</div>
+        <div class="hub">Projekt</div>
+      </div>
+
+      <script>
+        (function () {
+          // Line lengths from the fixed coordinates, once, at setup. Never measured at tween time —
+          // that desyncs across parallel render workers.
+          function prime(selector) {
+            document.querySelectorAll(selector).forEach(function (el) {
+              var len = Math.hypot(el.x2.baseVal.value - el.x1.baseVal.value, el.y2.baseVal.value - el.y1.baseVal.value);
+              el.setAttribute("stroke-dasharray", len + " " + len);
+              el.setAttribute("stroke-dashoffset", String(len));
+            });
+          }
+          prime("#root [data-link]");
+          prime("#root [data-cross]");
+
+          var tl = gsap.timeline({ paused: true });
+          // Reading floor: 11 words is 3.3s settled, so the line is in by 0.3s and never moves again.
+          tl.fromTo("#root .line", { y: 14, opacity: 0.55 }, { y: 0, opacity: 1, duration: 0.3, ease: "power3.out" }, 0);
+          // What already exists…
+          tl.fromTo("#root [data-node]", { scale: 0.88, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(1.5)", stagger: 0.06 }, 0.18);
+          // …the new thing lands in the middle…
+          tl.fromTo("#root .hub", { y: -60, scale: 0.9, opacity: 0 }, { y: 0, scale: 1, opacity: 1, duration: 0.42, ease: "back.out(1.6)" }, 0.62);
+          // …links out to every part, then the parts link to each other.
+          tl.to("#root [data-link]", { attr: { "stroke-dashoffset": 0 }, duration: 0.38, ease: "power2.inOut", stagger: 0.12 }, 1.0);
+          tl.to("#root [data-cross]", { attr: { "stroke-dashoffset": 0 }, duration: 0.42, ease: "power2.inOut", stagger: 0.14 }, 1.85);
+          window.__timelines["diagram-links"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

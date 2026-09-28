@@ -1,0 +1,105 @@
+<!doctype html>
+<!-- archetype seconds=4.5 -->
+<html lang="de">
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <style>
+        /* A PRODUCT SURFACE IN A FRAME. For a beat that shows a real screen: the surface rises in,
+           the camera pushes slowly toward the part the sentence is about, a focus ring draws around
+           it while everything else steps back, and one short label names it.
+
+           The frame is deliberately minimal — a dark bezel and a radius, no traffic lights, no URL
+           bar, no notch. Drawn chrome dates a video and competes with the screen it holds.
+
+           THE SLOT: .screen holds a drawn placeholder so this renders on its own. Every flat area in it
+           carries marks down its whole length — a sidebar with four items and 380px of nothing under
+           them is exactly what the blank-panel check fails, and it is right to. With a capture,
+           replace the placeholder children with
+             <img src="assets/capture.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+           and move the focus ring's rect onto the region that matters. A capture only goes in here
+           if it passed the legibility gate at this width (908px of 1080, target 0.84).
+
+           Fixed geometry: device 936×585 at 72,290; screen inset 14px, so 908×557. The focus ring
+           is in screen coordinates; the push-in origin is the ring's centre in device coordinates. */
+        #root { position: absolute; inset: 0; background: #ede9e3; color: #14110e;
+                font-family: Inter, Arial, Helvetica, sans-serif; overflow: hidden; }
+        #root .line { position: absolute; left: 72px; top: 92px; width: 936px;
+                      font-size: 52px; font-weight: 700; line-height: 1.16; letter-spacing: -0.024em; }
+        #root .line .accent { color: #d02d1c; }
+        #root .device { position: absolute; left: 72px; top: 290px; width: 936px; height: 585px;
+                        border-radius: 24px; background: #14110e; }
+        #root .screen { position: absolute; left: 14px; top: 14px; width: 908px; height: 557px;
+                        border-radius: 12px; background: #faf8f4; overflow: hidden; }
+        #root .screen i { position: absolute; display: block; border-radius: 7px; }
+        #root .side { left: 0; top: 0; width: 190px; height: 557px; background: #e6e1d9; border-radius: 0 !important; }
+        #root .card { width: 200px; height: 150px; background: #efebe4; border: 2px solid #ddd6cc; border-radius: 12px !important; }
+        #root .ink { background: #cfc8bd; height: 14px; }
+        #root .head { background: #3b352f; height: 26px; }
+        #root .ring { position: absolute; left: 14px; top: 14px; width: 908px; height: 557px; overflow: visible; }
+        #root .callout { position: absolute; left: 72px; top: 912px; width: 936px; display: flex; align-items: center; gap: 18px;
+                         font-size: 40px; font-weight: 700; letter-spacing: -0.015em; }
+        #root .callout .dot { width: 18px; height: 18px; border-radius: 50%; background: #d02d1c; flex: none; }
+      </style>
+
+      <div id="root" data-composition-id="device-surface" data-width="1080" data-height="1080">
+        <div class="line">Alles, was du brauchst, auf <span class="accent">einer</span> Oberfläche.</div>
+        <div class="device">
+          <div class="screen">
+            <i class="side"></i>
+            <i class="ink" style="left: 24px; top: 40px; width: 120px"></i>
+            <i class="ink" style="left: 24px; top: 84px; width: 100px"></i>
+            <i class="ink" style="left: 24px; top: 128px; width: 130px"></i>
+            <i class="ink" style="left: 24px; top: 172px; width: 90px"></i>
+            <i class="ink" style="left: 24px; top: 216px; width: 112px"></i>
+            <i class="ink" style="left: 24px; top: 260px; width: 76px"></i>
+            <i class="ink" style="left: 24px; top: 304px; width: 124px"></i>
+            <i class="ink" style="left: 24px; top: 348px; width: 96px"></i>
+            <i class="ink" style="left: 24px; top: 392px; width: 108px"></i>
+            <i class="ink" style="left: 24px; top: 436px; width: 84px"></i>
+            <i class="head" style="left: 24px; top: 497px; width: 142px; height: 34px; background: #cfc8bd"></i>
+            <i class="head" style="left: 230px; top: 40px; width: 300px"></i>
+            <i class="card" data-dim style="left: 230px; top: 100px"></i>
+            <i class="card" style="left: 450px; top: 100px"></i>
+            <i class="card" data-dim style="left: 670px; top: 100px"></i>
+            <i class="ink" style="left: 470px; top: 130px; width: 110px; background: #d02d1c"></i>
+            <i class="ink" style="left: 470px; top: 164px; width: 150px"></i>
+            <i class="ink" style="left: 470px; top: 194px; width: 90px"></i>
+            <i class="ink" data-dim style="left: 230px; top: 300px; width: 640px"></i>
+            <i class="ink" data-dim style="left: 230px; top: 344px; width: 560px"></i>
+            <i class="ink" data-dim style="left: 230px; top: 388px; width: 600px"></i>
+            <i class="ink" data-dim style="left: 230px; top: 432px; width: 480px"></i>
+            <i class="ink" data-dim style="left: 230px; top: 476px; width: 520px"></i>
+          </div>
+          <svg class="ring" viewBox="0 0 908 557">
+            <rect data-ring x="438" y="88" width="224" height="174" rx="18" fill="none" stroke="#d02d1c" stroke-width="5" />
+          </svg>
+        </div>
+        <div class="callout"><span class="dot"></span>Der Wochenüberblick, sofort sichtbar</div>
+      </div>
+
+      <script>
+        (function () {
+          // Ring perimeter from its fixed size, once: 2(w+h) minus the corner savings of rx.
+          var ring = document.querySelector("#root [data-ring]");
+          var w = 224, h = 174, r = 18;
+          var perimeter = 2 * (w + h) - 8 * r + 2 * Math.PI * r;
+          ring.setAttribute("stroke-dasharray", perimeter + " " + perimeter);
+          ring.setAttribute("stroke-dashoffset", String(perimeter));
+
+          var tl = gsap.timeline({ paused: true });
+          tl.fromTo("#root .line", { y: 14, opacity: 0.55 }, { y: 0, opacity: 1, duration: 0.3, ease: "power3.out" }, 0);
+          tl.fromTo("#root .device", { y: 40, scale: 0.96, opacity: 0, transformOrigin: "564px 189px" }, { y: 0, scale: 1, opacity: 1, duration: 0.5, ease: "power3.out" }, 0.14);
+          // The slow push toward the focus region runs under everything else — a camera, not an
+          // event. Origin = ring centre in device coordinates (14 + 550, 14 + 175).
+          // A .to, not a second fromTo: two fromTos on one property fight over the frame-0 state.
+          tl.to("#root .device", { scale: 1.035, duration: 3.6, ease: "power1.inOut" }, 0.66);
+          tl.to("#root [data-ring]", { attr: { "stroke-dashoffset": 0 }, duration: 0.55, ease: "power2.inOut" }, 1.2);
+          tl.to("#root [data-dim]", { opacity: 0.4, duration: 0.4, ease: "power1.out" }, 1.3);
+          tl.fromTo("#root .callout", { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: "power3.out" }, 1.6);
+          window.__timelines["device-surface"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

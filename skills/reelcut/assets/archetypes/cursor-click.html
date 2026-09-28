@@ -1,0 +1,108 @@
+<!doctype html>
+<!-- archetype seconds=4.4 -->
+<html lang="de">
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <style>
+        /* A SIMULATED CURSOR INTERACTION. For a beat that says "one click and it's done": a surface,
+           a cursor that travels to the control, hovers, presses, and the click visibly CAUSES
+           something — a row changes state and a confirmation arrives. A click with no consequence
+           is decoration; the consequence is the point of the beat.
+
+           Motion rules this follows, each one there because the alternative reads as fake:
+           - The path curves. x and y get DIFFERENT eases (power2.inOut / power3.out), so the cursor
+             arcs the way a hand moves instead of sliding along a ruler.
+           - It arrives, then hovers, then presses. The ~0.25s hover is what makes it read as a
+             person deciding rather than a macro.
+           - The press is small: cursor to 0.88, control to 0.96, back in ~0.14s.
+           - State changes swap in sequence, never cross-faded — two labels in one place is mush.
+
+           When a real capture exists, put it in .panel in place of the drawn rows and keep the
+           cursor, press, and consequence. Coordinates are fixed: the cursor tip is its (0,0), and
+           the button's centre is 866,772. */
+        #root { position: absolute; inset: 0; background: #14110e; color: #f2efe9;
+                font-family: Inter, Arial, Helvetica, sans-serif; overflow: hidden; }
+        #root .line { position: absolute; left: 72px; top: 92px; width: 936px;
+                      font-size: 52px; font-weight: 700; line-height: 1.16; letter-spacing: -0.024em; }
+        #root .line .accent { color: #f0a58f; }
+        #root .panel { position: absolute; left: 72px; top: 300px; width: 936px; height: 540px;
+                       border-radius: 20px; background: #1f1a16; border: 2px solid #342d27; }
+        #root .row { position: absolute; left: 104px; width: 872px; height: 84px; border-radius: 12px;
+                     background: #262019; display: flex; align-items: center; }
+        #root .row .name { position: absolute; left: 28px; font-size: 34px; font-weight: 600; letter-spacing: -0.01em; }
+        #root .pill { position: absolute; right: 24px; height: 44px; padding: 0 20px; border-radius: 22px;
+                      display: flex; align-items: center; font-size: 24px; font-weight: 700; }
+        #root .pill.open { background: #342d27; color: #b9b0a5; }
+        #root .pill.done { background: #f0a58f; color: #14110e; }
+        #root .button { position: absolute; left: 756px; top: 736px; width: 220px; height: 72px; border-radius: 14px;
+                        background: #342d27; color: #f2efe9; display: flex; align-items: center; justify-content: center;
+                        font-size: 30px; font-weight: 700; }
+        #root .ripple { position: absolute; left: 806px; top: 722px; width: 120px; height: 100px; border-radius: 50%;
+                        background: #f2efe9; opacity: 0; }
+        #root .cursor { position: absolute; left: 0; top: 0; width: 44px; height: 60px; }
+        #root .toast { position: absolute; left: 72px; top: 890px; height: 84px; padding: 0 32px; border-radius: 16px;
+                       background: #f2efe9; color: #14110e; display: flex; align-items: center; gap: 18px;
+                       font-size: 34px; font-weight: 700; }
+        #root .toast svg { width: 34px; height: 34px; }
+      </style>
+
+      <div id="root" data-composition-id="cursor-click" data-width="1080" data-height="1080">
+        <div class="line">Ein <span class="accent">Klick</span>, und die Freigabe ist erledigt.</div>
+        <div class="panel"></div>
+        <div class="row" data-row style="top: 332px"><span class="name">Entwurf</span><span class="pill done">freigegeben</span></div>
+        <div class="row" data-row style="top: 428px"><span class="name">Bildauswahl</span><span class="pill done">freigegeben</span></div>
+        <div class="row target" data-row style="top: 524px"><span class="name">Finaler Schnitt</span><span class="pill open" data-before>offen</span><span class="pill done" data-after>freigegeben</span></div>
+        <div class="row" data-row style="top: 620px"><span class="name">Untertitel</span><span class="pill open">offen</span></div>
+        <div class="ripple"></div>
+        <div class="button">Freigeben</div>
+        <svg class="cursor" viewBox="0 0 44 60">
+          <path d="M2 2 L2 48 L14 37 L22 56 L30 52 L22 34 L38 34 Z" fill="#f2efe9" stroke="#14110e" stroke-width="3" stroke-linejoin="round" />
+        </svg>
+        <div class="toast">
+          <svg viewBox="0 0 34 34"><path d="M7 18 L14 25 L27 10" fill="none" stroke="#14110e" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+          Finaler Schnitt freigegeben
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var tl = gsap.timeline({ paused: true });
+          // Initial states live on the timeline at 0, not in a page-load set, so seeking back to 0
+          // restores them.
+          tl.set("#root .cursor", { x: 960, y: 990, opacity: 0, transformOrigin: "0% 0%" }, 0);
+          tl.set("#root [data-after]", { opacity: 0 }, 0);
+
+          // Reading floor: 7 words is 2.1s settled; the line is in by 0.3s and holds.
+          tl.fromTo("#root .line", { y: 14, opacity: 0.55 }, { y: 0, opacity: 1, duration: 0.3, ease: "power3.out" }, 0);
+          // The rows arrive WITH the panel, not after it: an empty panel on screen, even for a few
+          // frames, is a container that forgot its contents.
+          tl.fromTo("#root .panel", { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.36, ease: "power3.out" }, 0.12);
+          tl.fromTo("#root [data-row], #root .button", { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.26, ease: "power3.out", stagger: 0.04 }, 0.12);
+
+          // Travel: different eases on each axis make the path an arc.
+          tl.to("#root .cursor", { opacity: 1, duration: 0.18, ease: "power1.out" }, 0.8);
+          tl.to("#root .cursor", { x: 866, duration: 0.8, ease: "power2.inOut" }, 0.88);
+          tl.to("#root .cursor", { y: 772, duration: 0.8, ease: "power3.out" }, 0.88);
+          // Hover: the control answers the cursor before it is pressed.
+          tl.to("#root .button", { backgroundColor: "#f0a58f", color: "#14110e", duration: 0.16, ease: "power1.out" }, 1.62);
+          // Press and release.
+          tl.to("#root .cursor", { scale: 0.88, duration: 0.08, ease: "power2.out" }, 1.95);
+          tl.to("#root .button", { scale: 0.96, duration: 0.08, ease: "power2.out" }, 1.95);
+          tl.to("#root .cursor", { scale: 1, duration: 0.14, ease: "power2.out" }, 2.05);
+          tl.to("#root .button", { scale: 1, duration: 0.14, ease: "power2.out" }, 2.05);
+          // A set, then a .to: a fromTo would render its FROM state (a visible dot) from frame 0 onward,
+          // because a timeline fromTo renders immediately.
+          tl.set("#root .ripple", { scale: 0.2, opacity: 0.4 }, 1.97);
+          tl.to("#root .ripple", { scale: 2.2, opacity: 0, duration: 0.5, ease: "power2.out" }, 1.97);
+          // The consequence: the row changes state, in sequence, and a confirmation arrives.
+          tl.to("#root [data-before]", { opacity: 0, duration: 0.1, ease: "power1.in" }, 2.1);
+          tl.to("#root .row.target", { backgroundColor: "#3a2a22", duration: 0.2, ease: "power1.out" }, 2.1);
+          tl.fromTo("#root [data-after]", { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.22, ease: "back.out(2)" }, 2.2);
+          tl.fromTo("#root .toast", { y: 28, opacity: 0 }, { y: 0, opacity: 1, duration: 0.32, ease: "power3.out" }, 2.32);
+          window.__timelines["cursor-click"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

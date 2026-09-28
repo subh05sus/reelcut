@@ -15,7 +15,8 @@
     "capture": "tsx skills/reelcut/scripts/capture.ts",
     "check-video": "tsx skills/reelcut/scripts/checkVideo.ts",
     "render": "tsx skills/reelcut/scripts/render.ts",
-    "sfx:generate": "tsx tools/generate-sfx.ts"
+    "sfx:generate": "tsx tools/generate-sfx.ts",
+    "archetypes:check": "tsx tools/check-archetypes.ts"
   },
   "dependencies": {
     "zod": "^3.23.8",

@@ -222,6 +222,14 @@ The [HyperFrames registry](https://hyperframes.heygen.com/) has roughly 400 read
 components — charts, terminals, device frames, maps, film grain, glitch, shimmer sweeps — and the
 skill searches it before hand-building anything named.
 
+When composing fails, or nobody is there to compose, eleven archetypes are the fallback — six type
+layouts, and five that are not type: a **diagram that builds**, an **outline that nests**, a
+**counter that resolves** (digits roll to an exact value on every seeked frame, with the source
+printed under it), a **simulated cursor click** (curved path, hover, press, ripple, and a visible
+consequence), and a **product surface in a minimal frame** (slow push-in, focus ring, one label).
+Every one renders on its own and passes every gate — see
+[archetypes.md](skills/reelcut/references/archetypes.md).
+
 ### 5 · Render and deliver
 
 ```
@@ -419,10 +427,22 @@ npm run check-video -- out/clips/*.mp4
 Blank panels are the only hard failure. Static holds and grid ink are reported, never gated: a long
 hold on a payoff is the reading floor working, not a defect.
 
+### `npm run archetypes:check` — render the whole fallback library
+
+```bash
+npm run archetypes:check                  # all eleven
+npm run archetypes:check -- cursor-click  # just one
+```
+
+Wraps each archetype as a one-beat reel and sends it through the real render path: the id check,
+`hyperframes check`, the render, the frame checker. Clips land in `out/archetypes/clips/`. The
+first run caught two real defects in new archetypes — an empty sidebar and a panel on screen
+before its rows — which is what it is for.
+
 ### `npm test`
 
 ```bash
-npm test          # 168 tests
+npm test          # 202 tests
 npm run typecheck
 ```
 
@@ -458,6 +478,7 @@ npm run typecheck
 | Capture with all four gates | ✅ tested, verified against a live page |
 | Beats → HyperFrames project | ✅ tested, including the frozen-render and drift invariants |
 | Render → clips, master, thumbnail | ✅ **produced a real 18s reel**, every frame count exact |
+| Archetype fallback library | ✅ eleven, five non-type; every one rendered and passing |
 | Frame checker | ✅ tested, catches a real blank panel in a third-party video |
 | Sound effects (`--sfx`) | ✅ seven synthesised effects; verified landing within 5ms in a real render |
 | Data sourcing and charts | ⚠️ specified, not built |
@@ -470,7 +491,7 @@ npm run typecheck
 skills/reelcut/
   SKILL.md              the router: five steps and the hard rules
   references/           direction, the five steps, visual vocabulary, sourcing, archetypes
-  assets/archetypes/    six seed compositions — the fallback, not the default
+  assets/archetypes/    eleven fallback compositions — the fallback, not the default
   scripts/              beats, intake, capture, render, check-video
 src/
   core/                 reading floor, frame sizes, the Beat schema

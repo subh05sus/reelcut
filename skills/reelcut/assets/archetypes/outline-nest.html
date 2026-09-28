@@ -1,0 +1,56 @@
+<!doctype html>
+<!-- archetype seconds=3.4 -->
+<html lang="de">
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <style>
+        /* AN OUTLINE THAT NESTS. For a beat about depth, hierarchy or structure: rows arrive top-down,
+           each indented to its level, joined by the tree's own connectors, and the level the sentence
+           is about is picked out last. Rows are abstract bars on purpose — invented titles would be
+           content nobody wrote. Indent is 90px per level; row pitch is 72px. */
+        #root { position: absolute; inset: 0; background: #ede9e3; color: #14110e;
+                font-family: Inter, Arial, Helvetica, sans-serif; overflow: hidden; }
+        #root .line { position: absolute; left: 72px; top: 92px; width: 936px;
+                      font-size: 56px; font-weight: 700; line-height: 1.14; letter-spacing: -0.026em; }
+        #root .line .accent { color: #d02d1c; }
+        #root .row { position: absolute; height: 44px; display: flex; align-items: center; gap: 18px; }
+        #root .dot { width: 18px; height: 18px; border-radius: 4px; background: #9c948a; flex: none; }
+        #root .bar { height: 18px; border-radius: 9px; background: #cfc8bd; }
+        #root .row.deep .dot, #root .row.deep .bar { background: #d02d1c; }
+        #root .stem { position: absolute; width: 3px; background: #bdb5aa; transform-origin: 50% 0%; }
+      </style>
+
+      <div id="root" data-composition-id="outline-nest" data-width="1080" data-height="1080">
+        <div class="line">Je <span class="accent">tiefer</span> die Recherche, desto mehr zählt die Struktur.</div>
+
+        <!-- A stem runs from under its parent's dot (row left + 9) to the last child at that level. -->
+        <div class="stem" style="left: 81px; top: 452px; height: 430px"></div>
+        <div class="stem" style="left: 171px; top: 524px; height: 218px"></div>
+        <div class="stem" style="left: 261px; top: 596px; height: 74px"></div>
+
+        <div class="row" data-row style="left: 72px; top: 430px"><i class="dot"></i><i class="bar" style="width: 860px"></i></div>
+        <div class="row" data-row style="left: 162px; top: 502px"><i class="dot"></i><i class="bar" style="width: 780px"></i></div>
+        <div class="row" data-row style="left: 252px; top: 574px"><i class="dot"></i><i class="bar" style="width: 640px"></i></div>
+        <div class="row deep" data-row style="left: 342px; top: 646px"><i class="dot"></i><i class="bar" style="width: 600px"></i></div>
+        <div class="row" data-row style="left: 252px; top: 718px"><i class="dot"></i><i class="bar" style="width: 560px"></i></div>
+        <div class="row" data-row style="left: 162px; top: 790px"><i class="dot"></i><i class="bar" style="width: 740px"></i></div>
+        <div class="row" data-row style="left: 162px; top: 862px"><i class="dot"></i><i class="bar" style="width: 660px"></i></div>
+      </div>
+
+      <script>
+        (function () {
+          var tl = gsap.timeline({ paused: true });
+          // Reading floor: 9 words is 2.7s settled. The line is in by 0.28s and then holds.
+          tl.fromTo("#root .line", { y: 12, opacity: 0.55 }, { y: 0, opacity: 1, duration: 0.28, ease: "power3.out" }, 0);
+          tl.fromTo("#root .stem", { scaleY: 0 }, { scaleY: 1, duration: 0.5, ease: "power2.out", stagger: 0.12 }, 0.22);
+          tl.fromTo("#root [data-row]", { x: -22, opacity: 0 }, { x: 0, opacity: 1, duration: 0.24, ease: "power3.out", stagger: 0.1 }, 0.26);
+          // The level the sentence is about is picked out once the tree is complete.
+          tl.fromTo("#root .row.deep", { scale: 1 }, { scale: 1.06, duration: 0.22, ease: "power2.out" }, 1.25);
+          tl.to("#root .row.deep", { scale: 1, duration: 0.3, ease: "power2.inOut" }, 1.47);
+          window.__timelines["outline-nest"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

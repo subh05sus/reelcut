@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- archetype seconds=3.2 -->
 <html lang="de">
   <head><meta charset="UTF-8"></head>
   <body>
@@ -15,7 +16,7 @@
         #root .stack { padding-left: 42px; }
       </style>
 
-      <div data-hf-id="hf-jv16" id="root" data-composition-id="sc-03" data-width="1080" data-height="1080">
+      <div data-hf-id="hf-jv16" id="root" data-composition-id="depth-list" data-width="1080" data-height="1080">
         <div data-hf-id="hf-9cvb" class="depth"></div>
         <div data-hf-id="hf-d1zs" class="stack">
           <div data-hf-id="hf-3n46" class="row" data-row=""><span data-hf-id="hf-u22q" class="adj">Große</span> Codebasen.</div>
@@ -28,13 +29,13 @@
         (function () {
           // DEPTH. Three things that are all about scale, so they accumulate downward against a
           // single vertical measure that grows with them. Vertical stack here, and a spread field
-          // in sc-07, so the two beats read as opposites rather than as two lists.
+          // in breadth-field, so the two beats read as opposites rather than as two lists.
           const tl = gsap.timeline({ paused: true });
           tl.fromTo("#root .depth", { scaleY: 0.3 }, { scaleY: 1, duration: 0.46, ease: "power3.out" }, 0);
           // The first row leads so the cut into this beat never shows an empty field.
           tl.fromTo("#root [data-row]:first-child", { x: -14, opacity: 0.55 }, { x: 0, opacity: 1, duration: 0.26, ease: "power3.out" }, 0);
           tl.fromTo("#root [data-row]:not(:first-child)", { x: -26, opacity: 0 }, { x: 0, opacity: 1, duration: 0.3, ease: "power3.out", stagger: 0.11 }, 0.12);
-          window.__timelines["sc-03"] = tl;
+          window.__timelines["depth-list"] = tl;
         })();
       </script>
     </template>
