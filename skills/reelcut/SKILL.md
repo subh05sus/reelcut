@@ -18,9 +18,11 @@ on a quarter of the frame and read as generic. **You compose each beat.** The ar
 
 ```
 /reelcut script.txt
-/reelcut script.srt --format vertical
+/reelcut script.srt --format vertical --text minimal
 /reelcut script.txt --short          # a 15-25s cut instead of the whole thing
 /reelcut script.txt --assets ./logos # a folder to take assets from
+/reelcut script.srt --text none --visuals "real product screens, no abstract shapes"
+/reelcut script.txt --palette "#0a0a0a #f2efe9 #ff4b1f" make it feel like late-90s broadcast
 ```
 
 | Option | Values | Default |
@@ -30,6 +32,20 @@ on a quarter of the frame and read as generic. **You compose each beat.** The ar
 | `--assets <dir>` | where to look for files already provided | `assets/in/` |
 | `--fps` | | 30 |
 | `--no-data` | skip data sourcing and charts | data on |
+| `--text` | `full`, `key-lines`, `minimal`, `none` | **depends on voiceover** |
+| `--motion` | `restrained`, `default`, `energetic` | `default` |
+| `--palette` | `"#ground #ink #accent"` | taken from the source |
+| `--look` | freeform art direction | inferred |
+| `--visuals` | freeform register steer | inferred |
+
+**Anything else typed is kept as freeform direction** and carried into the plan verbatim.
+"Make it feel like a museum exhibit" is real direction no flag will capture.
+
+**`--text` defaults on whether there is a voiceover.** An `.srt` means spoken audio, so the
+default is `key-lines` — putting every line on screen makes the viewer read what they are
+already hearing. A plain `.txt` defaults to `full`, because then type is the only thing
+speaking. Full detail, and what direction may never override:
+[references/direction.md](references/direction.md).
 
 Assets can also simply be handed over in the conversation. Anything dropped in is matched against
 what the script needs before anything is searched for.
@@ -55,7 +71,9 @@ skill". Don't guess it — a plugin install, a `~/.claude/skills/` copy and this
 
 ## Step 1 — Script to beats
 
-**Read:** [references/step-1-script.md](references/step-1-script.md)
+**Read:** [references/step-1-script.md](references/step-1-script.md), and
+[references/direction.md](references/direction.md) when direction was given — the briefs are
+written under it, and `--text` changes what `mustRead` may contain.
 
 Parse the script, segment it into beats, and write a `BeatBrief` for each. An `.srt` gives exact
 timings; a `.txt` is estimated from words per minute.
