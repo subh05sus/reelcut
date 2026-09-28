@@ -1,0 +1,96 @@
+# Step 2 — Acquire what the script needs
+
+Each brief's `mustShow` becomes an `AssetRequirement`:
+
+```ts
+{
+  name: "Claude Logo",
+  reason: "The beat names two products",
+  sceneUsage: "Beside the ChatGPT mark in the comparison beat",
+  visualRole: "brand mark",
+  acceptedFormats: ["svg", "png"],
+  priority: "required" | "optional",
+  assetKind: "identity" | "generic",
+}
+```
+
+## `assetKind` is the field everything turns on
+
+**`identity`** is a specific real-world thing that cannot be faked — a named company's logo, a real
+screenshot of a real UI, a real captured interaction.
+
+**`generic`** is conceptual — an arrow, a divider, a diagram element — where a drawn shape is an
+honest stand-in.
+
+The consequences are absolute:
+
+- A missing **required identity** asset **blocks the reel**. There is no honest substitute for a
+  specific real thing.
+- A missing **generic** one never stalls anything. Draw it.
+- **Drawing an identity asset is never an option**, and the code will not offer it to you.
+  A generated logo is a fabricated logo.
+
+## Resolve in this order
+
+### 1. What was already provided
+
+```bash
+npm run intake -- --dir assets/in
+```
+
+`intakeDrops` scores each file against each open requirement and reports a confidence:
+
+- **`exact`** — every significant word of the requirement's name is in the filename and the format
+  fits. Safe to apply without asking.
+- **`likely`** / **`guess`** — a proposal. Show it and wait.
+
+One file answers at most one requirement. A single PNG cannot be both the product screenshot and
+the logo, and letting it claim both hides a real gap behind a filled slot.
+
+Assets handed over in the conversation count the same way — match them before searching for
+anything.
+
+### 2. Capture a real product screen
+
+Use the **Claude in Chrome** extension when the capture needs judgement: signing in, dismissing a
+cookie banner, scrolling to the right section, deciding what the crop should contain.
+
+Capture the **element**, not the viewport:
+
+```bash
+npm run capture -- <url> --selector "<css>" --target-width 0.8 --must-contain "Passendes Modell"
+```
+
+Three things are checked and any of them fails the capture:
+
+1. **Legibility.** `renderedPx = minFontSizePx × (targetWidthInFrame ÷ captureWidth)`. Below 11px
+   the capture is refused and told what crop it needs. This is arithmetic, not a judgement — the
+   browser knows the smallest computed `font-size` in the node.
+2. **Consent or login pattern** in the captured DOM.
+3. **`--must-contain`**, so a sign-in page cannot pass as a dashboard.
+
+Read [sourcing.md](sourcing.md) before capturing anything. Real screens hold real customer data.
+
+### 3. The brand's own source, for a mark
+
+Only the brand's own press or brand page. Record the source URL and the licence terms with the
+asset. A mark from a blog, a logo aggregator or an image search is a **proposal** that names where
+it came from — never applied automatically, because a fan-made or superseded logo passes every
+downstream gate exactly as a fabricated statistic does.
+
+### 4. Draw it — `generic` only
+
+## Report what is still open
+
+```ts
+formatGapReport(reportAssetGaps([{ requirement, status: "acquisition_failed", detail: "login wall" }]))
+```
+
+The report names what is missing, whether it stops the reel, why the beat wants it, and the ordered
+ways out — capture, official source, provide the file, substitute, draw, omit if optional, or
+recompose the beat without it.
+
+**`recompose` is always last and always present.** Changing the beat so it does not need the asset
+is a real creative concession, but it means nothing is ever simply stuck.
+
+Never end this step with "2 assets missing" and nothing else. That is the behaviour this replaces.
