@@ -4,7 +4,8 @@ import path from "node:path";
 import { frameSizeFor, isOutputFormat } from "../../../src/core/constants.js";
 import { buildProject, ProjectError, type ProjectBeat, type ProjectFile, type SfxCue } from "../../../src/render/project.js";
 import { renderHyperframesProject } from "../../../src/render/hyperframes.js";
-import { checkVideo } from "../../../src/verify/checkVideo.js";
+import { checkVideo, type VideoReport } from "../../../src/verify/checkVideo.js";
+import { choosePosterTime } from "../../../src/render/poster.js";
 
 /**
  * Turn a reel manifest into rendered clips and a master.
@@ -40,6 +41,8 @@ interface Manifest {
   format?: string;
   fps?: number;
   ground?: string;
+  /** Seconds into the master to use as the thumbnail. Chosen automatically when absent. */
+  poster?: number;
   beats: ManifestBeat[];
 }
 
@@ -99,6 +102,7 @@ interface Outcome {
   status: "ok" | "render_failed" | "check_failed";
   detail?: string;
   file?: string;
+  report?: VideoReport;
 }
 
 async function renderOne(id: string, projectDir: string, outFile: string, quality: Args["quality"]): Promise<Outcome> {
@@ -110,7 +114,45 @@ async function renderOne(id: string, projectDir: string, outFile: string, qualit
   if (report.findings.length > 0) {
     return { id, status: "check_failed", file: result.outputPath, detail: report.findings.map((f) => `${f.at.toFixed(1)}s ${f.kind}`).join(", ") };
   }
-  return { id, status: "ok", file: result.outputPath };
+  return { id, status: "ok", file: result.outputPath, report };
+}
+
+function frameCount(file: string): number {
+  const out = execFileSync("ffprobe", ["-v", "error", "-count_frames", "-select_streams", "v:0", "-show_entries", "stream=nb_read_frames", "-of", "default=noprint_wrappers=1:nokey=1", file], { encoding: "utf8" });
+  return Number(out.trim());
+}
+
+/**
+ * Extract the chosen frame as poster.jpg, then bake it in as frame 0 of the master.
+ *
+ * Frame 0 is REPLACED, never added: an extra leading frame would shift every beat, every sound
+ * effect and any voiceover laid against the cut by one frame. The frame count is checked before
+ * and after, and the baked file is only kept if they match.
+ */
+function bakePoster(master: string, at: number, posterPath: string): { ok: boolean; detail: string } {
+  execFileSync("ffmpeg", ["-v", "error", "-y", "-ss", String(at), "-i", master, "-frames:v", "1", "-q:v", "2", posterPath]);
+
+  const baked = master.replace(/\.mp4$/, ".baked.mp4");
+  execFileSync("ffmpeg", [
+    "-v", "error", "-y",
+    "-i", master,
+    "-i", posterPath,
+    "-filter_complex", "[0:v][1:v]overlay=0:0:enable='eq(n\,0)'[v]",
+    "-map", "[v]", "-map", "0:a?",
+    "-c:v", "libx264", "-crf", "16", "-pix_fmt", "yuv420p", "-c:a", "copy",
+    baked,
+  ]);
+
+  const before = frameCount(master);
+  const after = frameCount(baked);
+  if (before !== after) {
+    rmSync(baked, { force: true });
+    return { ok: false, detail: `frame count changed ${before} -> ${after}; kept the original` };
+  }
+  rmSync(master, { force: true });
+  copyFileSync(baked, master);
+  rmSync(baked, { force: true });
+  return { ok: true, detail: `${after} frames, unchanged` };
 }
 
 async function main(): Promise<void> {
@@ -176,6 +218,15 @@ async function main(): Promise<void> {
     const outcome = await renderOne("master", dir, path.join(base, "master.mp4"), args.quality);
     outcomes.push(outcome);
     console.log(outcome.status === "ok" ? "ok" : `${outcome.status}: ${outcome.detail}`);
+
+    if (outcome.status === "ok" && outcome.file && outcome.report) {
+      // The first beat is the hook, and the hook is the beat whose job is to say what this is.
+      const first = built.placements[0]!;
+      const choice = choosePosterTime(outcome.report, manifest.poster, { from: first.startSeconds, to: first.startSeconds + first.durationSeconds });
+      const posterPath = path.join(base, "poster.jpg");
+      const baked = bakePoster(outcome.file, choice.at, posterPath);
+      console.log(`  poster … ${choice.at.toFixed(2)}s (${choice.reason})${baked.ok ? `, baked as frame 0 — ${baked.detail}` : ` — NOT baked: ${baked.detail}`}`);
+    }
   }
 
   const failed = outcomes.filter((o) => o.status !== "ok");

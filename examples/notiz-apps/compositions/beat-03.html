@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="de">
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <style>
+        /* A DIAGRAM THAT BUILDS. The line says you throw a whole project in and link across old
+           entries — so the frame shows exactly that: scattered notes, a new project dropping into
+           the middle, and the links drawing out from it and then across between the old ones. It
+           assembles in the order the sentence explains it, which is what makes it an argument
+           rather than an illustration. Notara's palette: ink-blue ground, teal accent. */
+        #root { position: absolute; inset: 0; background: #121a2b; color: #efe9df;
+                font-family: Inter, Arial, Helvetica, sans-serif; overflow: hidden; }
+        #root .line { position: absolute; left: 72px; top: 92px; width: 936px;
+                      font-size: 46px; font-weight: 700; line-height: 1.22; letter-spacing: -0.02em; }
+        #root .line .accent { color: #7fd3c3; }
+        #root svg { position: absolute; left: 0; top: 0; }
+        #root .card { position: absolute; width: 160px; height: 100px; border-radius: 10px;
+                      background: #1d2740; border: 2px solid #34425f; }
+        #root .card .bar { position: absolute; left: 16px; height: 9px; border-radius: 5px; background: #3e4d6c; }
+        #root .card .b1 { top: 22px; width: 96px; background: #5c6d8f; }
+        #root .card .b2 { top: 46px; width: 124px; }
+        #root .card .b3 { top: 66px; width: 80px; }
+        #root .project { position: absolute; left: 410px; top: 560px; width: 260px; height: 140px; border-radius: 14px;
+                         background: #7fd3c3; color: #121a2b; display: flex; align-items: center; justify-content: center;
+                         font-size: 46px; font-weight: 800; letter-spacing: -0.02em; }
+      </style>
+
+      <div id="root" data-composition-id="beat-03" data-width="1080" data-height="1080">
+        <div class="line">Du wirfst ein ganzes <span class="accent">Projekt</span> hinein, verlinkst quer durch alte Einträge</div>
+        <svg width="1080" height="1080" viewBox="0 0 1080 1080">
+          <g stroke="#7fd3c3" stroke-width="4" stroke-linecap="round" fill="none">
+            <line data-link x1="540" y1="630" x2="190" y2="380" />
+            <line data-link x1="540" y1="630" x2="890" y2="380" />
+            <line data-link x1="540" y1="630" x2="160" y2="690" />
+            <line data-link x1="540" y1="630" x2="920" y2="710" />
+            <line data-link x1="540" y1="630" x2="280" y2="910" />
+            <line data-link x1="540" y1="630" x2="780" y2="910" />
+          </g>
+          <g stroke="#4f6f86" stroke-width="3" stroke-linecap="round" fill="none">
+            <line data-cross x1="190" y1="380" x2="160" y2="690" />
+            <line data-cross x1="890" y1="380" x2="920" y2="710" />
+            <line data-cross x1="280" y1="910" x2="780" y2="910" />
+          </g>
+        </svg>
+        <div class="card" data-card style="left: 110px; top: 330px"><i class="bar b1"></i><i class="bar b2"></i><i class="bar b3"></i></div>
+        <div class="card" data-card style="left: 810px; top: 330px"><i class="bar b1"></i><i class="bar b2"></i><i class="bar b3"></i></div>
+        <div class="card" data-card style="left: 80px; top: 640px"><i class="bar b1"></i><i class="bar b2"></i><i class="bar b3"></i></div>
+        <div class="card" data-card style="left: 840px; top: 660px"><i class="bar b1"></i><i class="bar b2"></i><i class="bar b3"></i></div>
+        <div class="card" data-card style="left: 200px; top: 860px"><i class="bar b1"></i><i class="bar b2"></i><i class="bar b3"></i></div>
+        <div class="card" data-card style="left: 700px; top: 860px"><i class="bar b1"></i><i class="bar b2"></i><i class="bar b3"></i></div>
+        <div class="project">Projekt</div>
+      </div>
+
+      <script>
+        (function () {
+          // Line lengths come from the fixed coordinates above, computed once at setup. Never
+          // measured at tween time, which desyncs across parallel render workers.
+          function prime(selector) {
+            document.querySelectorAll(selector).forEach(function (el) {
+              var len = Math.hypot(el.x2.baseVal.value - el.x1.baseVal.value, el.y2.baseVal.value - el.y1.baseVal.value);
+              el.setAttribute("stroke-dasharray", len + " " + len);
+              el.setAttribute("stroke-dashoffset", String(len));
+            });
+          }
+          prime("#root [data-link]");
+          prime("#root [data-cross]");
+
+          var tl = gsap.timeline({ paused: true });
+          // Reading floor: 11 words needs 3.3s settled in 4.07s, so the line is in by ~0.3s.
+          tl.fromTo("#root .line", { y: 14, opacity: 0.55 }, { y: 0, opacity: 1, duration: 0.3, ease: "power3.out" }, 0);
+          // The old entries are already there…
+          tl.fromTo("#root [data-card]", { scale: 0.88, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(1.5)", stagger: 0.06 }, 0.18);
+          // …the project is thrown in…
+          tl.fromTo("#root .project", { y: -60, scale: 0.9, opacity: 0 }, { y: 0, scale: 1, opacity: 1, duration: 0.42, ease: "back.out(1.6)" }, 0.62);
+          // …and it links out to them, then across between them.
+          tl.to("#root [data-link]", { attr: { "stroke-dashoffset": 0 }, duration: 0.38, ease: "power2.inOut", stagger: 0.12 }, 1.0);
+          tl.to("#root [data-cross]", { attr: { "stroke-dashoffset": 0 }, duration: 0.42, ease: "power2.inOut", stagger: 0.14 }, 1.85);
+          window.__timelines["beat-03"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

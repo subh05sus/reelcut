@@ -33,25 +33,51 @@ window.__timelines["reel"] = gsap.timeline({ paused: true });
 
 Give every host clip a stable `id` — without one, Studio cannot target it and `lint` warns.
 
-## Render
+## Write the manifest, then render
+
+After composing, write `reel.json` beside the compositions:
+
+```json
+{
+  "format": "1:1",
+  "fps": 30,
+  "ground": "#121a2b",
+  "beats": [
+    { "id": "beat-00", "durationSeconds": 6.667, "composition": "compositions/beat-00.html" },
+    { "id": "beat-03", "durationSeconds": 4.066, "composition": "compositions/beat-03.html",
+      "sfx": [{ "source": "sfx/whoosh.ogg", "at": 0.2 }] }
+  ]
+}
+```
+
+Durations come from the beats **verbatim** — never recomputed from word counts, or the cut drifts
+against the voice. `"poster": <seconds>` is optional and overrides the automatic thumbnail.
 
 ```bash
-npx hyperframes check --samples 34          # the gate. Non-zero samples, or it did not run.
-npx hyperframes render --quality looks --output out/master.mp4
-# then once per clip host
-npx hyperframes render --quality looks --output out/clips/beat-03.mp4
+npm run render -- out/reel.json [--sfx] [--clips-only] [--master-only]
 ```
 
-Or through the connector, which runs the gate first and reads the report properly:
+This builds the project, renders every clip as its own project, renders the master, checks every
+file, and bakes the thumbnail. It refuses the whole project up front if any composition's ids
+disagree — a mismatched timeline key renders **frozen at t=0** without an error, so it is caught
+before anything renders rather than after.
 
-```ts
-import { renderHyperframesProject } from "../../../src/render/hyperframes.js";
-```
+A worked, renderable example is in `examples/notiz-apps/`.
 
-Two details in there worth not rediscovering: the CLI goes through a shell because `npx` on Windows
-is `npx.cmd` and Node refuses to spawn a `.cmd` directly; and `layout.samples` is an array while
-`motion.samples` is a number that is legitimately 0 without motion assertions, so a naive search
-for "samples" reads a clean check as empty.
+### What it guarantees
+
+- **Isolation.** Each beat is its own project directory. A beat that fails fails alone and is
+  reported; every other clip still ships.
+- **Exact frame counts.** Times are written a hair below each frame boundary, so the renderer lands
+  on exactly the intended frame. Placement rounds each beat's *end* on the cumulative timeline, so
+  error never accumulates past half a frame, however long the reel.
+- **A real thumbnail.** Frame 0 is replaced by the fullest settled frame of the hook — the beat whose
+  job is to say what the video is. Replaced, never added: an extra leading frame would shift every
+  beat and every sound by one frame. The frame count is compared before and after, and the baked file
+  is discarded if they differ.
+- **Sound only when asked.** `--sfx` is opt-in. Effects sit at 0.35 under everything by default,
+  every `<audio>` gets an id (an id-less one is silently dropped from the mix), and a cue is
+  beat-relative inside a clip and shifted onto the master timeline in the master.
 
 ## Verify every clip
 
@@ -69,12 +95,6 @@ entrance started from `opacity: 0`.
 A render-time warning about a "suspect small frame" on a dark beat is usually a false alarm — the
 heuristic is byte-size based and a flat dark ground compresses small whatever is on it. Check the
 frame before believing it.
-
-## Poster
-
-Pull the strongest **settled** frame — text fully in, not mid-transition — to `out/poster.jpg`, and
-bake it as frame 0 of the master so every platform's thumbnail shows it. Replace frame 0 rather than
-adding one, so duration and audio sync are unchanged.
 
 ## Deliver
 

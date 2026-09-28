@@ -2,6 +2,12 @@
 
 **A script goes in. A folder of motion-graphics clips comes out.**
 
+<p align="center">
+  <img src="examples/notiz-apps/poster.jpg" width="420" alt="The thumbnail reelcut chose for its example reel: the hook frame, two product names in their own colours around the word oder, with the question beneath." />
+  <br />
+  <sub>The thumbnail reelcut picked for <a href="examples/notiz-apps">its example reel</a> — the hook, fully settled, chosen and baked in automatically.</sub>
+</p>
+
 `reelcut` is a Claude Code skill. Give it a spoken script — plain text or an `.srt` — and it
 segments it into beats, finds and verifies the assets each beat needs, captures real product
 screens, sources data for any charts, composes every beat as HTML + GSAP, and renders one clip per
@@ -12,9 +18,10 @@ not from pouring text into templates. Rendering is [HyperFrames](https://hyperfr
 
 **There is no model API key.** The agent running the skill is the director.
 
-> **Status.** Steps 1–3 are built and verified. Composition and render (steps 4–5) exist as
-> instructions plus a tested render connector, and have not yet produced a video inside this repo.
-> See [What works today](#what-works-today).
+> **Status.** The pipeline runs end to end: a script becomes beats, composed beats become a
+> HyperFrames project, and the project renders to per-beat clips and a master with an automatic
+> thumbnail. Data sourcing and charts are specified but not built. See
+> [What works today](#what-works-today).
 
 ---
 
@@ -353,6 +360,41 @@ npm run intake -- --dir assets/in --requirements out/requirements.json
 Reports matches with a confidence and everything still open with its ways out. Exits non-zero only
 when a gap actually blocks the reel. Reports only — it never moves or renames a file.
 
+### `npm run render` — beats to clips, a master and a thumbnail
+
+```bash
+npm run render -- examples/notiz-apps/reel.json [--sfx] [--clips-only] [--master-only]
+```
+
+`reel.json` lists the beats, their durations and their compositions. Every beat renders as its own
+project, so one broken beat fails alone and the rest still ship. Each file then goes through the
+frame checker, and only files that rendered **and** passed are reported as delivered.
+
+```
+4 beats, 18.13s, 1080x1080 @ 30fps, silent
+  beat-00 … ok
+  beat-03 … ok
+  beat-10 … ok
+  beat-13 … ok
+  master … ok
+  poster … 6.25s (hook_settled), baked as frame 0 — 544 frames, unchanged
+
+5 of 5 rendered and passed.
+```
+
+Three things it checks that would otherwise fail silently:
+
+- **Ids.** A sub-composition whose timeline key does not match its host renders **frozen at t=0**
+  with no error. The project is refused instead.
+- **Frame count.** Times are written a hair below each frame boundary, so the renderer lands on
+  exactly the frame intended. The first version wrote 122 frames as `4.0667` and got 123.
+- **The thumbnail.** Frame 0 is replaced — never added to, which would shift every beat — by the
+  fullest settled frame of the **hook**, the beat whose job is to say what the video is. Override
+  with `"poster": <seconds>` in the manifest.
+
+`--sfx` adds sound effects placed in the manifest, mixed under the voice at 0.35 by default. Off
+unless asked for.
+
 ### `npm run check-video` — the frame checker
 
 ```bash
@@ -365,7 +407,7 @@ hold on a payoff is the reading floor working, not a defect.
 ### `npm test`
 
 ```bash
-npm test          # 132 tests
+npm test          # 168 tests
 npm run typecheck
 ```
 
@@ -395,15 +437,15 @@ npm run typecheck
 | | |
 |---|---|
 | Script → beats → short cut | ✅ verified on a 14-beat German script |
-| Brief contract and validation | ✅ 21 tests |
-| Asset intake and gap reporting | ✅ 20 tests, verified end to end |
-| Capture with all four gates | ✅ 36 tests, verified against a live page |
-| Creative direction | ✅ 22 tests |
-| Frame checker | ✅ 16 tests, catches a real blank panel in a third-party video |
-| The skill's instructions | ✅ nine references |
-| **Compose → render** | ⚠️ instructions and a tested render connector; **no video produced yet** |
+| Brief contract and validation | ✅ tested |
+| Creative direction | ✅ tested |
+| Asset intake and gap reporting | ✅ tested, verified end to end |
+| Capture with all four gates | ✅ tested, verified against a live page |
+| Beats → HyperFrames project | ✅ tested, including the frozen-render and drift invariants |
+| Render → clips, master, thumbnail | ✅ **produced a real 18s reel**, every frame count exact |
+| Frame checker | ✅ tested, catches a real blank panel in a third-party video |
+| Sound effects (`--sfx`) | ⚠️ placement and mixing tested; no sound library ships |
 | Data sourcing and charts | ⚠️ specified, not built |
-| `project.ts` (beats → HyperFrames project) | ❌ not built — scaffold by hand for now |
 
 ---
 
@@ -414,7 +456,7 @@ skills/reelcut/
   SKILL.md              the router: five steps and the hard rules
   references/           direction, the five steps, visual vocabulary, sourcing, archetypes
   assets/archetypes/    six seed compositions — the fallback, not the default
-  scripts/              beats, intake, capture, check-video
+  scripts/              beats, intake, capture, render, check-video
 src/
   core/                 reading floor, frame sizes, the Beat schema
   planner/              parse, segment, merge, density, short cut
@@ -422,8 +464,8 @@ src/
   capture/              legibility gate, secrets scan, Puppeteer capture
   direction/            creative direction and its enforcement
   verify/               the frame checker
-  render/               the HyperFrames render route
-examples/               a real script to try it on
+  render/               project builder, poster choice, the HyperFrames render route
+examples/               a script to try it on, and a composed, renderable reel from it
 ```
 
 `src/` is plain TypeScript with two runtime dependencies (`zod`, `puppeteer-core`). It was ported

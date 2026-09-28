@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="de">
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <style>
+        /* PAYOFF, and a bookend. The hook's either/or returns with the two names stacked around
+           the question mark, and nothing resolves — no highlight, no winner. The question is the
+           ending, so the frame holds it. */
+        #root { position: absolute; inset: 0; background: #efe6d8; color: #1c1712;
+                font-family: Inter, Arial, Helvetica, sans-serif; overflow: hidden; }
+        #root .setup { position: absolute; left: 72px; top: 150px; width: 936px;
+                       font-size: 50px; font-weight: 700; line-height: 1.2; letter-spacing: -0.02em; color: #4a4036; }
+        #root .face { position: absolute; left: 72px; top: 360px; width: 936px; }
+        #root .tail { display: block; font-size: 50px; font-weight: 700; color: #4a4036; margin-top: 22px; letter-spacing: -0.02em; }
+        #root .name { display: block; font-size: 128px; font-weight: 800; line-height: 1; letter-spacing: -0.045em; }
+        #root .n1 { color: #121a2b; }
+        #root .n2 { color: #e0592a; }
+        #root .mark { display: block; font-size: 96px; font-weight: 800; color: #1c1712; line-height: 1; margin: 12px 0 12px 4px; }
+      </style>
+
+      <div id="root" data-composition-id="beat-13" data-width="1080" data-height="1080">
+        <div class="setup">Wenn du nur eine behalten dürftest, würdest du</div>
+        <div class="face">
+          <span class="name n1">Notara</span>
+          <span class="mark">oder</span>
+          <span class="name n2">Kettlebrief</span>
+          <span class="tail">wählen?</span>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          const tl = gsap.timeline({ paused: true });
+          tl.fromTo("#root .setup", { y: 14, opacity: 0.55 }, { y: 0, opacity: 1, duration: 0.28, ease: "power3.out" }, 0);
+          tl.fromTo("#root .n1", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: "power3.out" }, 0.18);
+          tl.fromTo("#root .mark", { opacity: 0 }, { opacity: 1, duration: 0.2, ease: "power2.out" }, 0.3);
+          // 12 words needs 3.6s settled in a 4.43s beat: everything is in by 0.72s and then holds.
+          tl.fromTo("#root .n2", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: "power3.out" }, 0.42);
+          tl.fromTo("#root .tail", { opacity: 0 }, { opacity: 1, duration: 0.22, ease: "power2.out" }, 0.56);
+          window.__timelines["beat-13"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

@@ -167,7 +167,28 @@ export function placeBeats(beats: readonly { id: string; durationSeconds: number
   return out;
 }
 
-const seconds = (value: number): string => Number(value.toFixed(4)).toString();
+/**
+ * A time in seconds, written so the renderer lands on exactly the frame intended.
+ *
+ * Rounded DOWN at six decimals, never to nearest. The first version rounded to four, which wrote
+ * 122 frames at 30fps as `4.0667` — that is 122.001 frames, and the renderer rounds up, so the clip
+ * came out 123 frames long. Worse, it was intermittent: `6.6667` is also 200.001 frames and rendered
+ * correctly, because whether float noise tips a value over the boundary depends on the value. Every
+ * placement here is a whole number of frames, so writing each a hair below its boundary makes the
+ * frame count exact regardless of how the renderer rounds.
+ */
+export function formatSeconds(value: number): string {
+  if (value <= 0) return "0";
+  /*
+   * Floor alone is not enough. When the true value is a clean decimal — 7 frames at 25fps is
+   * exactly 0.28 — flooring changes nothing, and 0.28 × 25 in floating point is 7.000000000000001:
+   * one unit over the boundary, which is the very failure this exists to prevent. Found by the
+   * exhaustive test over 1–3000 frames at four frame rates. Subtracting a micro-unit before
+   * flooring puts every value clearly below its frame, never on it.
+   */
+  return (Math.floor(value * 1e6 - 1e-6) / 1e6).toString();
+}
+const seconds = formatSeconds;
 
 function audioElements(cues: readonly SfxCue[], offsetSeconds: number, idPrefix: string, assets: BuiltProject["assets"]): string {
   return cues

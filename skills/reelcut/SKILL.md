@@ -134,8 +134,9 @@ hard rules below — a clean-looking report with zero samples means nothing ran.
 
 **Read:** [references/step-5-render.md](references/step-5-render.md)
 
-Render each beat as its own clip and a master that mounts them all. Check every clip. Write the
-report.
+Write `reel.json`, then `npm run render -- reel.json`. It renders each beat as its own clip and a
+master that mounts them all, checks every file, and bakes the hook's strongest settled frame in as
+the thumbnail. Add `--sfx` for sound effects. Write the report.
 
 **Gate:** every clip passes `checkVideo.ts` with zero findings, and `report.md` has a provenance
 line for every asset and every number.

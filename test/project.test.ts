@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ProjectError, SFX_DEFAULT_VOLUME, assertComposition, buildProject, inspectComposition, placeBeats, type ProjectBeat } from "../src/render/project.js";
+import { ProjectError, SFX_DEFAULT_VOLUME, assertComposition, buildProject, formatSeconds, inspectComposition, placeBeats, type ProjectBeat } from "../src/render/project.js";
 
 const OPTIONS = { width: 1080, height: 1080, fps: 30 };
 
@@ -91,7 +91,7 @@ describe("buildProject", () => {
     const built = buildProject(beats, OPTIONS);
     const index = built.master.find((f) => f.path === "index.html")!.contents;
     expect(index).toContain('data-composition-src="compositions/beat-00.html" data-start="0"');
-    expect(index).toContain('data-composition-src="compositions/beat-03.html" data-start="2.5667"');
+    expect(index).toContain('data-composition-src="compositions/beat-03.html" data-start="2.566666"');
     expect(built.master.filter((f) => f.path.startsWith("compositions/"))).toHaveLength(3);
   });
 
@@ -140,13 +140,14 @@ describe("buildProject", () => {
 
     it("places a cue on the master timeline at the beat's start plus its offset", () => {
       const index = buildProject(withCue, OPTIONS, true).master.find((f) => f.path === "index.html")!.contents;
-      expect(index).toContain('data-start="0.2"');
-      expect(index).toContain('data-start="2.6667"'); // beat-03 starts at 77 frames = 2.5667s, + 0.1
+      // Written a microsecond early by formatSeconds, which keeps every time below its boundary.
+      expect(index).toContain('data-start="0.199999"');
+      expect(index).toContain('data-start="2.666666"'); // beat-03 starts at 77 frames = 2.566666s, + 0.1
     });
 
     it("keeps a cue beat-relative inside the beat's own clip", () => {
       const clip = buildProject(withCue, OPTIONS, true).clips["beat-03"]!.find((f) => f.path === "index.html")!.contents;
-      expect(clip).toContain('data-start="0.1"');
+      expect(clip).toContain('data-start="0.099999"');
     });
 
     it("gives every audio element an id, since an id-less one is silently dropped from the mix", () => {
@@ -163,5 +164,28 @@ describe("buildProject", () => {
     it("copies a shared sound once, not once per use", () => {
       expect(buildProject(withCue, OPTIONS, true).assets).toEqual([{ source: "sfx/whoosh.ogg", target: "assets/sfx/whoosh.ogg" }]);
     });
+  });
+});
+
+describe("formatSeconds", () => {
+  /*
+   * Found by counting frames in a real render: 122 frames at 30fps written as "4.0667" is 122.001
+   * frames, the renderer rounded up, and the clip came out 123 frames long. It was intermittent —
+   * "6.6667" is also 200.001 and rendered correctly — because float noise decides which side of
+   * the boundary a value lands on. Writing every time a hair BELOW its frame makes it exact.
+   */
+  it("never writes a whole-frame time above its frame boundary", () => {
+    for (const fps of [24, 25, 30, 60]) {
+      for (let frames = 1; frames <= 3000; frames++) {
+        const product = Number(formatSeconds(frames / fps)) * fps;
+        expect(product).toBeLessThanOrEqual(frames);
+        expect(frames - product).toBeLessThan(0.001);
+      }
+    }
+  });
+
+  it("writes the case that broke as a value that rounds up to the right frame", () => {
+    expect(Number(formatSeconds(122 / 30)) * 30).toBeLessThanOrEqual(122);
+    expect(Math.ceil(Number(formatSeconds(122 / 30)) * 30)).toBe(122);
   });
 });

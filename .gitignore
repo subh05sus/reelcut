@@ -9,3 +9,7 @@ Thumbs.db
 *.mp4
 *.png
 !skills/reelcut/assets/**/*.png
+
+# Render output of the examples — regenerable, like out/.
+examples/*/project/
+examples/*/clips/

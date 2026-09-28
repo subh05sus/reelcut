@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="de">
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <style>
+        /* HOOK. The line is an either/or, so the two names are the composition, each in its own
+           product's colour, with "oder" as the hinge. Notara is ink-blue, Kettlebrief is orange —
+           the same two colours carry through the reel, so the viewer tracks whose beat it is. */
+        #root { position: absolute; inset: 0; background: #efe6d8; color: #1c1712;
+                font-family: Inter, Arial, Helvetica, sans-serif; overflow: hidden; }
+        #root .names { position: absolute; left: 72px; top: 150px; width: 936px; }
+        #root .name { position: relative; display: inline-block; font-size: 124px; font-weight: 800; line-height: 1; letter-spacing: -0.045em; }
+        #root .line { display: block; }
+        /* Anchored to the word, so the underline is exactly as wide as the name it points at. */
+        #root .u { position: absolute; left: 0; right: 0; bottom: -14px; height: 7px; transform-origin: 0% 50%; }
+        #root .n1 .u { background: #121a2b; }
+        #root .n2 .u { background: #e0592a; }
+        #root .n1 { color: #121a2b; }
+        #root .n2 { color: #e0592a; }
+        #root .oder { display: block; font-size: 44px; font-weight: 700; color: #8a7f70; margin: 14px 0 10px 4px; }
+        #root .q { position: absolute; left: 72px; top: 590px; width: 936px;
+                   font-size: 46px; font-weight: 700; line-height: 1.28; letter-spacing: -0.015em; }
+        #root .q .accent { color: #e0592a; }
+      </style>
+
+      <div id="root" data-composition-id="beat-00" data-width="1080" data-height="1080">
+        <div class="names">
+          <span class="line"><span class="name n1">Notara<span class="u"></span></span></span>
+          <span class="oder">oder</span>
+          <span class="line"><span class="name n2">Kettlebrief?<span class="u"></span></span></span>
+        </div>
+        <div class="q">Wenn du heute nur eine Notiz-App für deine Arbeit auswählen könntest, <span class="accent">welche</span> würdest du nehmen?</div>
+      </div>
+
+      <script>
+        (function () {
+          const tl = gsap.timeline({ paused: true });
+          // Frame 0 is the thumbnail: the first name is already legible and only settles.
+          tl.fromTo("#root .n1", { y: 16, opacity: 0.55 }, { y: 0, opacity: 1, duration: 0.3, ease: "power3.out" }, 0);
+          tl.fromTo("#root .oder", { opacity: 0 }, { opacity: 1, duration: 0.2, ease: "power2.out" }, 0.12);
+          tl.fromTo("#root .n2", { y: 34, opacity: 0 }, { y: 0, opacity: 1, duration: 0.32, ease: "power3.out" }, 0.2);
+          // Reading floor: 20 words needs 5.4s settled in a 6.67s beat, so the whole line is in by ~0.8s.
+          tl.fromTo("#root .q", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.36, ease: "power3.out" }, 0.4);
+          // During the hold, the question points at the choice: each name is underlined in turn.
+          tl.fromTo("#root .n1 .u", { scaleX: 0 }, { scaleX: 1, duration: 0.45, ease: "power3.out" }, 2.6);
+          tl.fromTo("#root .n2 .u", { scaleX: 0 }, { scaleX: 1, duration: 0.55, ease: "power3.out" }, 3.4);
+          window.__timelines["beat-00"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

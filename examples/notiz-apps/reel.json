@@ -1,0 +1,11 @@
+{
+  "format": "1:1",
+  "fps": 30,
+  "ground": "#121a2b",
+  "beats": [
+    { "id": "beat-00", "durationSeconds": 6.667, "composition": "compositions/beat-00.html" },
+    { "id": "beat-03", "durationSeconds": 4.066, "composition": "compositions/beat-03.html" },
+    { "id": "beat-10", "durationSeconds": 2.967, "composition": "compositions/beat-10.html" },
+    { "id": "beat-13", "durationSeconds": 4.433, "composition": "compositions/beat-13.html" }
+  ]
+}
