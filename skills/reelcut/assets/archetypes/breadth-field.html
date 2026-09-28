@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- archetype seconds=3.0 -->
 <html lang="de">
   <head><meta charset="UTF-8"></head>
   <body>
@@ -16,7 +15,7 @@
         #root .w:nth-child(even) { color: #f0a58f; }
       </style>
 
-      <div data-hf-id="hf-fmee" id="root" data-composition-id="breadth-field" data-width="1080" data-height="1080">
+      <div data-hf-id="hf-fmee" id="root" data-composition-id="sc-07" data-width="1080" data-height="1080">
         <div data-hf-id="hf-0ztw" class="field">
           <div data-hf-id="hf-h9fw" class="w" data-w="">Coding.</div>
           <div data-hf-id="hf-i9vt" class="w" data-w="">Recherche.</div>
@@ -31,11 +30,11 @@
         (function () {
           // BREADTH. Six things spread across the whole field, arriving almost together rather
           // than in a queue — breadth is a fact about extent, not about sequence. The deliberate
-          // opposite of depth-list's single accumulating column.
+          // opposite of sc-03's single accumulating column.
           const tl = gsap.timeline({ paused: true });
           tl.fromTo("#root [data-w]:first-child", { scale: 0.96, opacity: 0.6 }, { scale: 1, opacity: 1, duration: 0.22, ease: "back.out(1.4)" }, 0);
           tl.fromTo("#root [data-w]:not(:first-child)", { scale: 0.9, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.26, ease: "back.out(1.6)", stagger: 0.055 }, 0.06);
-          window.__timelines["breadth-field"] = tl;
+          window.__timelines["sc-07"] = tl;
         })();
       </script>
     </template>

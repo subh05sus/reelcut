@@ -7,13 +7,10 @@ If you reach for these because they are quicker, you have rebuilt the thing this
 replace. The predecessor pipeline picked from a vocabulary of layouts and poured text into them,
 and its beats put content on a quarter of the frame.
 
-## The eleven
+## The six
 
 All in `../assets/archetypes/`, all 1080×1080, all a `<template>` with scoped CSS and one paused
-GSAP timeline, and each file's `data-composition-id` and timeline key are its filename. Each
-declares the length it wants in a header comment, `<!-- archetype seconds=4.2 -->`.
-
-### Type
+GSAP timeline.
 
 | file | for a beat that | layout | motion signature |
 |---|---|---|---|
@@ -23,23 +20,6 @@ declares the length it wants in a header comment, `<!-- archetype seconds=4.2 --
 | `thesis-negation.html` | rejects something | one paragraph, the rejected word wrapped | entrance, then nothing until a strike draws at ~3.0s |
 | `measure-extent.html` | claims extent or reach | one line, the noun accented | a rule opens to the full frame width |
 | `payoff-bookend.html` | closes by reopening the question | flex row: name · mark · name | four staged reveals, rule draws centre-out |
-
-### Not type
-
-Five registers where the frame does something other than set words. Reach for these first when a
-beat's claim is a structure, a number, an action or a product — a sentence about clicking once is
-better *shown* clicking once than set in 96px.
-
-| file | for a beat that | what it does |
-|---|---|---|
-| `diagram-links.html` | says one thing connects to many | nodes are already there; the new thing drops into the middle; links draw out, then across. Six nodes is the ceiling |
-| `outline-nest.html` | is about depth, hierarchy or structure | indented rows arrive top-down with their connectors, then the level the sentence is about is picked out. Rows are abstract bars — invented titles would be content nobody wrote |
-| `counter-resolves.html` | has one number as its point | each digit is a 0–9 strip rolled with `translateY` to its target, so every seeked frame shows an exact value. **Only with an approved Datum**, and the source line stays on the frame |
-| `cursor-click.html` | says "one click and it's done" | cursor travels on an arc (different eases on x and y), hovers, presses, ripples — and the click visibly *causes* something: a row changes state and a confirmation arrives |
-| `device-surface.html` | shows a product screen | a minimal bezel (no traffic lights, no URL bar) rises in, the camera pushes slowly toward the region that matters, a focus ring draws, the rest dims, one label names it. The screen is a slot: swap the placeholder for a capture that passed the legibility gate |
-
-`cursor-click` and `device-surface` carry drawn placeholders so they render on their own. With a
-real capture, the capture replaces the placeholder and the motion stays.
 
 `depth-list` and `breadth-field` are deliberate opposites — one column that accumulates versus a
 field that fills at once. If a script contrasts depth against breadth, using both is the point.
@@ -76,8 +56,7 @@ These are not style settings. Each is load-bearing:
 
 Copy the file into `out/project/compositions/beat-NN.html`, change `data-composition-id` to the
 beat's id in **both** the root element and the `window.__timelines[...]` key, then substitute the
-text, palette and timings. The render refuses the project if the two disagree — a mismatch would
-otherwise render frozen at t=0 without an error.
+text, palette and timings.
 
 Then check the reading floor by hand. An archetype's timings were written for the beat it came
 from; a longer line in the same slot will need a longer hold, and the archetype will not tell you.
@@ -87,19 +66,6 @@ from; a longer line in the same slot will need a longer hold, and the archetype 
 Only when a beat's shape recurs. An archetype earns its place by being needed twice, and a library
 that grows faster than that is a template system wearing a different name.
 
-A new one must: use the fixed constants above, lead its entrance at `opacity: 0.55`, carry its
-`archetype seconds=` header, use its filename as its id, be named for **what the beat does** — not
-for the beat it came from (`payoff-bookend`, not `sc-17`) — and pass
-
-```bash
-npm run archetypes:check -- <name>
-```
-
-which renders it alone through `hyperframes check`, the renderer and the frame checker. Then look
-at the frames. Two traps the check caught on the non-type set, both worth knowing:
-
-- **A timeline `fromTo` renders its FROM state from frame 0.** A ripple written as
-  `fromTo({opacity: 0.4}, …, 1.97)` sat on screen as a stray dot for two seconds. Use `tl.set` at
-  the start time, then `tl.to`.
-- **A container on screen before its contents is a blank panel.** Bring a panel's rows in with it,
-  and give every flat area in a placeholder marks down its whole length.
+A new one must: use the fixed constants above, lead its entrance at `opacity: 0.55`, pass
+`hyperframes check` with a non-zero sample count on its own, and be named for **what the beat does**
+— not for the beat it came from. `payoff-bookend`, not `sc-17`.

@@ -119,7 +119,6 @@ That is the whole invocation. Everything else is optional.
 | `--fps` | | `30` |
 | `--assets <dir>` | where to look for files you already have | `assets/in/` |
 | `--no-data` | skip data sourcing and charts entirely | data on |
-| `--sfx` | add sound effects from the bundled set | silent |
 | `--text` | `full`, `key-lines`, `minimal`, `none` | depends on voiceover |
 | `--motion` | `restrained`, `default`, `energetic` | `default` |
 | `--palette` | `"#ground #ink #accent"` | taken from the source |
@@ -221,14 +220,6 @@ scale change within the beat, texture.
 The [HyperFrames registry](https://hyperframes.heygen.com/) has roughly 400 ready blocks and
 components — charts, terminals, device frames, maps, film grain, glitch, shimmer sweeps — and the
 skill searches it before hand-building anything named.
-
-When composing fails, or nobody is there to compose, eleven archetypes are the fallback — six type
-layouts, and five that are not type: a **diagram that builds**, an **outline that nests**, a
-**counter that resolves** (digits roll to an exact value on every seeked frame, with the source
-printed under it), a **simulated cursor click** (curved path, hover, press, ripple, and a visible
-consequence), and a **product surface in a minimal frame** (slow push-in, focus ring, one label).
-Every one renders on its own and passes every gate — see
-[archetypes.md](skills/reelcut/references/archetypes.md).
 
 ### 5 · Render and deliver
 
@@ -401,21 +392,8 @@ Three things it checks that would otherwise fail silently:
   fullest settled frame of the **hook**, the beat whose job is to say what the video is. Override
   with `"poster": <seconds>` in the manifest.
 
-`--sfx` adds sound effects placed in the manifest, mixed at 0.35 by default. Off unless asked for.
-
-### Sound effects
-
-Five effects ship in `skills/reelcut/assets/sfx/` — whoosh, swipe, tick, typing and thud. They are **synthesised, not recorded**: each is a formula in `tools/generate-sfx.ts`, so the
-set is original, carries no licence, regenerates byte-identical, and is 40KB in total. Every one is
-normalised to the same −3 dBFS peak, so a single volume setting behaves the same across all of them.
-
-```bash
-npm run sfx:generate      # rebuild the set
-```
-
-Rendered with `--sfx`, the example reel's three effects land within ~5ms of where they were placed
-— under one frame. See [sound.md](skills/reelcut/references/sound.md) for what goes under what, and
-why three sounds in 18 seconds is about right.
+`--sfx` adds sound effects placed in the manifest, mixed under the voice at 0.35 by default. Off
+unless asked for.
 
 ### `npm run check-video` — the frame checker
 
@@ -426,22 +404,10 @@ npm run check-video -- out/clips/*.mp4
 Blank panels are the only hard failure. Static holds and grid ink are reported, never gated: a long
 hold on a payoff is the reading floor working, not a defect.
 
-### `npm run archetypes:check` — render the whole fallback library
-
-```bash
-npm run archetypes:check                  # all eleven
-npm run archetypes:check -- cursor-click  # just one
-```
-
-Wraps each archetype as a one-beat reel and sends it through the real render path: the id check,
-`hyperframes check`, the render, the frame checker. Clips land in `out/archetypes/clips/`. The
-first run caught two real defects in new archetypes — an empty sidebar and a panel on screen
-before its rows — which is what it is for.
-
 ### `npm test`
 
 ```bash
-npm test          # 202 tests
+npm test          # 168 tests
 npm run typecheck
 ```
 
@@ -477,9 +443,8 @@ npm run typecheck
 | Capture with all four gates | ✅ tested, verified against a live page |
 | Beats → HyperFrames project | ✅ tested, including the frozen-render and drift invariants |
 | Render → clips, master, thumbnail | ✅ **produced a real 18s reel**, every frame count exact |
-| Archetype fallback library | ✅ eleven, five non-type; every one rendered and passing |
 | Frame checker | ✅ tested, catches a real blank panel in a third-party video |
-| Sound effects (`--sfx`) | ✅ five synthesised effects; verified landing within 5ms in a real render |
+| Sound effects (`--sfx`) | ⚠️ placement and mixing tested; no sound library ships |
 | Data sourcing and charts | ⚠️ specified, not built |
 
 ---
@@ -490,7 +455,7 @@ npm run typecheck
 skills/reelcut/
   SKILL.md              the router: five steps and the hard rules
   references/           direction, the five steps, visual vocabulary, sourcing, archetypes
-  assets/archetypes/    eleven fallback compositions — the fallback, not the default
+  assets/archetypes/    six seed compositions — the fallback, not the default
   scripts/              beats, intake, capture, render, check-video
 src/
   core/                 reading floor, frame sizes, the Beat schema
