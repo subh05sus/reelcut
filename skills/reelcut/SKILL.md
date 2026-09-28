@@ -96,12 +96,16 @@ retyped.
 
 ## Step 4 — Compose each beat
 
-**Read:** [references/step-4-compose.md](references/step-4-compose.md), and
+**Read:** [references/visual-vocabulary.md](references/visual-vocabulary.md) — what a beat can be
+made of, and why type alone is not a motion-graphics video. Then
+[references/step-4-compose.md](references/step-4-compose.md).
 [references/archetypes.md](references/archetypes.md) only if authoring fails.
 
-**Read the HyperFrames skills** — `hyperframes-core` for the composition contract and the `data-*`
-timing attributes, `hyperframes-animation` for motion. This skill owns the story, the beats, the
-assets and the creative laws; HyperFrames owns the composition mechanics and the render.
+**Read the HyperFrames skills** — `hyperframes-registry` **first**, because roughly 400 blocks and
+components already exist and searching is free; `hyperframes-core` for the composition contract and
+the `data-*` timing attributes; `hyperframes-animation` for motion rules, blueprints, transitions
+and the named text effects. This skill owns the story, the beats, the assets and the creative laws;
+HyperFrames owns the composition mechanics and the render.
 
 **Gate:** `npx hyperframes check --samples 24` passes **with a non-zero sample count**. See the
 hard rules below — a clean-looking report with zero samples means nothing ran.

@@ -2,8 +2,16 @@
 
 One HyperFrames sub-composition per beat. You write it: HTML, scoped CSS, one paused GSAP timeline.
 
-**Read `hyperframes-core` first** for the composition contract, and `hyperframes-animation` for
-motion. This file owns the creative laws; those own the mechanics.
+**Read [visual-vocabulary.md](visual-vocabulary.md) first** — it decides what register the beat is
+in, and getting that wrong is more expensive than any amount of polish afterwards.
+
+Then the HyperFrames skills. **`hyperframes-registry` before you hand-build any named visual**: a
+chart, a terminal, a device frame, film grain, a shimmer sweep — roughly 400 are already written
+and seek-safe, and search costs nothing. `hyperframes-core` for the composition contract and the
+`data-*` attributes. `hyperframes-animation` for motion rules, blueprints, the transition catalog
+and 24 named text effects.
+
+This file owns the creative laws; those own the mechanics.
 
 ## The rule everything else serves
 
@@ -49,7 +57,8 @@ next to it is decoration, and decoration reads as filler.
 **Every frozen frame postable.** Applied to any frame, not just the good one.
 
 **Adjacent beats differ in structure**, not only in words. Two stacked-headline beats in a row read
-as one long beat.
+as one long beat — and differ in *register* too, not just layout: type, then a product surface,
+then a number, then type. See [visual-vocabulary.md](visual-vocabulary.md).
 
 ## Frame 0 is legible
 
