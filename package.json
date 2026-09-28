@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "description": "Turn a spoken script into motion-graphics clips, one per beat.",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
@@ -14,11 +16,11 @@
     "check-video": "tsx skills/reelcut/scripts/checkVideo.ts"
   },
   "dependencies": {
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "puppeteer-core": "^25.11.0"
   },
   "devDependencies": {
     "@types/node": "^22.9.0",
-    "puppeteer-core": "^25.11.0",
     "tsx": "^4.19.2",
     "typescript": "^5.6.3",
     "vitest": "^2.1.4"
