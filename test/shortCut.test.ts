@@ -6,6 +6,7 @@ import {
   validateShortCut,
   type CutBeat,
   type ShortCut,
+  startsSentence,
 } from "../src/planner/shortCut.js";
 
 /** The real shape of reel 765c6d40: 14 directed beats over 55.8s. */
@@ -161,5 +162,33 @@ describe("validateShortCut", () => {
     const cut = asCut(reel().slice(0, 5));
     cut.totalSeconds = 99;
     expect(validateShortCut(cut).some((i) => /beats sum to/.test(i.message))).toBe(true);
+  });
+});
+
+describe("sentence fragments", () => {
+  it("knows a continuation from a start", () => {
+    expect(startsSentence("es verliert den Faden nicht.")).toBe(false);
+    expect(startsSentence("Kettlebrief ist der Allrounder.")).toBe(true);
+    expect(startsSentence("„Nicht welcher besser ist.")).toBe(true);
+    expect(startsSentence("…und dann")).toBe(false);
+  });
+
+  /*
+   * The defect found by running the planner on the example script: it chose "es verliert den
+   * Faden nicht" as a highlight — the tail of a sentence whose head was a different beat.
+   */
+  it("never picks a fragment as a highlight when a standalone beat exists", () => {
+    const beats = reel();
+    beats[4] = { ...beats[4]!, text: "es verliert den Faden nicht und bleibt dabei." };
+    beats[6] = { ...beats[6]!, text: "und genau darum geht es hier am Ende." };
+    const cut = planShortCut(beats);
+    if (!("beats" in cut)) throw new Error("expected a cut");
+    for (const b of cut.beats.slice(1, -1)) expect(startsSentence(b.text)).toBe(true);
+  });
+
+  it("still produces a cut when every middle beat is a fragment", () => {
+    const beats = reel().map((b, i) => (i === 0 || i === 11 ? b : { ...b, text: `und ${b.text.toLowerCase()}` }));
+    const cut = planShortCut(beats);
+    expect("beats" in cut).toBe(true);
   });
 });

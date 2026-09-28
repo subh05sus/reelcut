@@ -153,7 +153,23 @@ export function planShortCut(beats: readonly CutBeat[], options: PlanShortCutOpt
 
   const first = usable[0]!;
   const last = usable[usable.length - 1]!;
-  const middlePool = usable.slice(1, -1);
+  /*
+   * A highlight has to stand on its own, and a beat that opens mid-sentence cannot.
+   *
+   * Segmentation splits long sentences at clause connectors (", und", ", aber" …), so a beat can
+   * begin "es verliert den Faden nicht" — the second half of a thought whose first half was cut.
+   * Run on the example script, the first version of this planner picked exactly that beat as a
+   * highlight. In German a lowercase first letter is strong evidence of a continuation, because
+   * sentences and nouns both start uppercase while the pronouns and verbs that open a clause do
+   * not. An uppercase start is not proof of a sentence start, but a lowercase one is proof of a
+   * fragment, which is the direction that matters.
+   *
+   * Falls back to the whole pool if every middle beat is a fragment, because a cut with a fragment
+   * in it beats no cut at all.
+   */
+  const allMiddle = usable.slice(1, -1);
+  const standalone = allMiddle.filter((b) => startsSentence(b.text));
+  const middlePool = standalone.length > 0 ? standalone : allMiddle;
 
   const seconds = (b: CutBeat): number => b.durationMs / 1000;
   const ends = seconds(first) + seconds(last);
@@ -196,4 +212,16 @@ export function planShortCut(beats: readonly CutBeat[], options: PlanShortCutOpt
 
   const issues = validateShortCut(out);
   return issues.length > 0 ? { issues } : out;
+}
+
+/**
+ * Whether a beat opens a sentence rather than continuing one.
+ *
+ * The first letter decides: lowercase is a continuation. Leading punctuation and quotes are
+ * skipped, so `„Nicht welcher…"` counts as a start.
+ */
+export function startsSentence(text: string): boolean {
+  const first = /\p{L}/u.exec(text);
+  if (!first) return true;
+  return first[0] === first[0].toUpperCase();
 }
