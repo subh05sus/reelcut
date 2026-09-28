@@ -405,9 +405,8 @@ Three things it checks that would otherwise fail silently:
 
 ### Sound effects
 
-Seven effects ship in `skills/reelcut/assets/sfx/` — whoosh, swipe, tick, pop, thud, rise and
-chime. They are **synthesised, not recorded**: each is a formula in `tools/generate-sfx.ts`, so the
-set is original, carries no licence, regenerates byte-identical, and is 45KB in total. Every one is
+Five effects ship in `skills/reelcut/assets/sfx/` — whoosh, swipe, tick, typing and thud. They are **synthesised, not recorded**: each is a formula in `tools/generate-sfx.ts`, so the
+set is original, carries no licence, regenerates byte-identical, and is 40KB in total. Every one is
 normalised to the same −3 dBFS peak, so a single volume setting behaves the same across all of them.
 
 ```bash
@@ -480,7 +479,7 @@ npm run typecheck
 | Render → clips, master, thumbnail | ✅ **produced a real 18s reel**, every frame count exact |
 | Archetype fallback library | ✅ eleven, five non-type; every one rendered and passing |
 | Frame checker | ✅ tested, catches a real blank panel in a third-party video |
-| Sound effects (`--sfx`) | ✅ seven synthesised effects; verified landing within 5ms in a real render |
+| Sound effects (`--sfx`) | ✅ five synthesised effects; verified landing within 5ms in a real render |
 | Data sourcing and charts | ⚠️ specified, not built |
 
 ---

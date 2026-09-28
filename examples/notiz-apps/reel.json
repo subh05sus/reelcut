@@ -7,7 +7,7 @@
       "id": "beat-00",
       "durationSeconds": 6.667,
       "composition": "compositions/beat-00.html",
-      "sfx": [{ "source": "../../skills/reelcut/assets/sfx/pop.ogg", "at": 0.22 }]
+      "sfx": [{ "source": "../../skills/reelcut/assets/sfx/swipe.ogg", "at": 0.2 }]
     },
     {
       "id": "beat-03",
@@ -20,7 +20,7 @@
       "id": "beat-13",
       "durationSeconds": 4.433,
       "composition": "compositions/beat-13.html",
-      "sfx": [{ "source": "../../skills/reelcut/assets/sfx/chime.ogg", "at": 0.46 }]
+      "sfx": [{ "source": "../../skills/reelcut/assets/sfx/thud.ogg", "at": 0.72 }]
     }
   ]
 }

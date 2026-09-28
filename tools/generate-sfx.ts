@@ -56,6 +56,30 @@ interface Sound {
 
 const SAMPLE_RATE = 44100;
 
+/**
+ * Keystroke onsets in seconds, and each one's strength. Hand-written rather than generated so the
+ * rhythm reads as a person: ~10 keys a second — the pace a type-on reveals characters at — with
+ * uneven gaps, a short pause where a word would break, and no two neighbours equally loud. A
+ * perfectly even run sounds like a machine gun, which is the first thing viewers notice.
+ */
+const TYPING_KEYS: readonly (readonly [number, number])[] = [
+  [0.0, 0.9], [0.085, 0.7], [0.19, 1.0], [0.262, 0.75], [0.36, 0.85], [0.448, 0.65],
+  [0.63, 0.95], [0.71, 0.7], [0.815, 0.9], [0.89, 0.6], [0.99, 0.85], [1.07, 0.75],
+];
+
+/**
+ * One key is two parts: a click (noise with a ~5ms decay) and a faint body (a 210Hz tone decaying
+ * over ~15ms) — the plastic and the desk under it. `random(0)` is ffmpeg's expression PRNG with its
+ * seed held in variable 0, which starts at zero, so the noise is identical on every generation.
+ * `gte(t,k)` gates each key on at its onset.
+ */
+function typingExpression(): string {
+  return TYPING_KEYS.map(([k, a]) => {
+    const since = `(t-${k})`;
+    return `${a}*gte(t,${k})*((2*random(0)-1)*exp(-200*${since})+0.45*sin(2*PI*210*${since})*exp(-70*${since}))`;
+  }).join("+");
+}
+
 export const SOUNDS: readonly Sound[] = [
   {
     name: "whoosh",
@@ -77,31 +101,16 @@ export const SOUNDS: readonly Sound[] = [
     graph: "anoisesrc=d={d}:c=white:r=44100:a=0.5:seed=3,highpass=f=2200,volume='exp(-120*t)':eval=frame",
   },
   {
-    name: "pop",
-    duration: 0.14,
-    use: "a small element arriving — a badge, a node, a data point",
-    // Falling pitch, 900Hz toward ~230Hz, with a fast decay.
-    graph: "aevalsrc='0.6*sin(2*PI*(900*t-2400*t*t))*exp(-28*t)':d={d}:s=44100",
+    name: "typing",
+    duration: TYPING_KEYS[TYPING_KEYS.length - 1]![0] + 0.12,
+    use: "a run of keystrokes under text that types on; trim it with durationSeconds to the type-on's length",
+    graph: `aevalsrc='${typingExpression()}':d={d}:s=44100,highpass=f=140,lowpass=f=9000`,
   },
   {
     name: "thud",
     duration: 0.45,
     use: "something landing with weight — a heavy card settling, a headline slamming in",
     graph: "aevalsrc='0.85*sin(2*PI*62*t)*exp(-9*t)':d={d}:s=44100",
-  },
-  {
-    name: "rise",
-    duration: 0.8,
-    use: "a build before a reveal; end it exactly where the reveal lands",
-    // A chirp from 180Hz up to ~1140Hz, growing louder as it climbs.
-    graph: "aevalsrc='0.35*sin(2*PI*(180*t+600*t*t))*(t/{d})':d={d}:s=44100",
-  },
-  {
-    name: "chime",
-    duration: 1.1,
-    use: "a resolution or a payoff landing; once per reel, not once per beat",
-    // Three partials of A5, decaying together, with a 5ms attack so it does not click.
-    graph: "aevalsrc='min(1,t*200)*(0.5*sin(2*PI*880*t)+0.3*sin(2*PI*1320*t)+0.15*sin(2*PI*1760*t))*exp(-3.5*t)':d={d}:s=44100",
   },
 ];
 
