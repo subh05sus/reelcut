@@ -1,6 +1,10 @@
 {
   "name": "reelcut",
-  "owner": { "name": "zeisedigital" },
+  "description": "A script goes in. A folder of motion-graphics clips comes out.",
+  "owner": {
+    "name": "subh05sus",
+    "url": "https://github.com/subh05sus"
+  },
   "plugins": [
     {
       "name": "reelcut",

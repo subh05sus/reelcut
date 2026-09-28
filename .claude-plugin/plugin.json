@@ -1,14 +1,12 @@
 {
   "name": "reelcut",
-  "version": "0.1.0",
   "description": "Turn a spoken script into motion-graphics clips, one per beat.",
-  "author": "zeisedigital",
+  "version": "0.1.0",
+  "author": {
+    "name": "subh05sus"
+  },
   "license": "MIT",
-  "keywords": [
-    "video",
-    "script",
-    "motion-graphics",
-    "hyperframes",
-    "skill"
-  ]
+  "homepage": "https://github.com/subh05sus/reelcut",
+  "repository": "https://github.com/subh05sus/reelcut",
+  "keywords": ["video", "script", "motion-graphics", "hyperframes", "skill"]
 }
