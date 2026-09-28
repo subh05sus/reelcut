@@ -3,9 +3,24 @@
   "fps": 30,
   "ground": "#121a2b",
   "beats": [
-    { "id": "beat-00", "durationSeconds": 6.667, "composition": "compositions/beat-00.html" },
-    { "id": "beat-03", "durationSeconds": 4.066, "composition": "compositions/beat-03.html" },
+    {
+      "id": "beat-00",
+      "durationSeconds": 6.667,
+      "composition": "compositions/beat-00.html",
+      "sfx": [{ "source": "../../skills/reelcut/assets/sfx/pop.ogg", "at": 0.22 }]
+    },
+    {
+      "id": "beat-03",
+      "durationSeconds": 4.066,
+      "composition": "compositions/beat-03.html",
+      "sfx": [{ "source": "../../skills/reelcut/assets/sfx/thud.ogg", "at": 0.98 }]
+    },
     { "id": "beat-10", "durationSeconds": 2.967, "composition": "compositions/beat-10.html" },
-    { "id": "beat-13", "durationSeconds": 4.433, "composition": "compositions/beat-13.html" }
+    {
+      "id": "beat-13",
+      "durationSeconds": 4.433,
+      "composition": "compositions/beat-13.html",
+      "sfx": [{ "source": "../../skills/reelcut/assets/sfx/chime.ogg", "at": 0.46 }]
+    }
   ]
 }

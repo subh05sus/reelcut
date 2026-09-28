@@ -32,6 +32,7 @@ on a quarter of the frame and read as generic. **You compose each beat.** The ar
 | `--assets <dir>` | where to look for files already provided | `assets/in/` |
 | `--fps` | | 30 |
 | `--no-data` | skip data sourcing and charts | data on |
+| `--sfx` | flag — add sound effects from the bundled set | silent |
 | `--text` | `full`, `key-lines`, `minimal`, `none` | **depends on voiceover** |
 | `--motion` | `restrained`, `default`, `energetic` | `default` |
 | `--palette` | `"#ground #ink #accent"` | taken from the source |
@@ -46,6 +47,9 @@ default is `key-lines` — putting every line on screen makes the viewer read wh
 already hearing. A plain `.txt` defaults to `full`, because then type is the only thing
 speaking. Full detail, and what direction may never override:
 [references/direction.md](references/direction.md).
+
+**Sound is opt-in.** Without `--sfx` every file renders silent. With it, place effects from the
+bundled set against the motion they belong to — see [references/sound.md](references/sound.md).
 
 Assets can also simply be handed over in the conversation. Anything dropped in is matched against
 what the script needs before anything is searched for.

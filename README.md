@@ -119,6 +119,7 @@ That is the whole invocation. Everything else is optional.
 | `--fps` | | `30` |
 | `--assets <dir>` | where to look for files you already have | `assets/in/` |
 | `--no-data` | skip data sourcing and charts entirely | data on |
+| `--sfx` | add sound effects from the bundled set | silent |
 | `--text` | `full`, `key-lines`, `minimal`, `none` | depends on voiceover |
 | `--motion` | `restrained`, `default`, `energetic` | `default` |
 | `--palette` | `"#ground #ink #accent"` | taken from the source |
@@ -392,8 +393,22 @@ Three things it checks that would otherwise fail silently:
   fullest settled frame of the **hook**, the beat whose job is to say what the video is. Override
   with `"poster": <seconds>` in the manifest.
 
-`--sfx` adds sound effects placed in the manifest, mixed under the voice at 0.35 by default. Off
-unless asked for.
+`--sfx` adds sound effects placed in the manifest, mixed at 0.35 by default. Off unless asked for.
+
+### Sound effects
+
+Seven effects ship in `skills/reelcut/assets/sfx/` — whoosh, swipe, tick, pop, thud, rise and
+chime. They are **synthesised, not recorded**: each is a formula in `tools/generate-sfx.ts`, so the
+set is original, carries no licence, regenerates byte-identical, and is 45KB in total. Every one is
+normalised to the same −3 dBFS peak, so a single volume setting behaves the same across all of them.
+
+```bash
+npm run sfx:generate      # rebuild the set
+```
+
+Rendered with `--sfx`, the example reel's three effects land within ~5ms of where they were placed
+— under one frame. See [sound.md](skills/reelcut/references/sound.md) for what goes under what, and
+why three sounds in 18 seconds is about right.
 
 ### `npm run check-video` — the frame checker
 
@@ -444,7 +459,7 @@ npm run typecheck
 | Beats → HyperFrames project | ✅ tested, including the frozen-render and drift invariants |
 | Render → clips, master, thumbnail | ✅ **produced a real 18s reel**, every frame count exact |
 | Frame checker | ✅ tested, catches a real blank panel in a third-party video |
-| Sound effects (`--sfx`) | ⚠️ placement and mixing tested; no sound library ships |
+| Sound effects (`--sfx`) | ✅ seven synthesised effects; verified landing within 5ms in a real render |
 | Data sourcing and charts | ⚠️ specified, not built |
 
 ---
