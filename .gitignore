@@ -1,0 +1,11 @@
+node_modules/
+out/
+out-*/
+assets/in/
+*.log
+.DS_Store
+Thumbs.db
+# Rendered output and captures are regenerable.
+*.mp4
+*.png
+!skills/reelcut/assets/**/*.png

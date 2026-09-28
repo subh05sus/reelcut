@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head><meta charset="UTF-8"></head>
+  <body>
+    <template>
+      <style>
+        #root { position: absolute; inset: 0; background: #ede9e3; color: #14110e;
+                font-family: Arial, Helvetica, sans-serif; overflow: hidden; }
+        #root .setup { position: absolute; left: 72px; top: 262px; width: 936px;
+                       font-size: 50px; font-weight: 700; line-height: 1.16; letter-spacing: -0.015em; color: #4a443c; }
+        #root .face { position: absolute; left: 72px; top: 508px; width: 936px;
+                      display: flex; align-items: center; justify-content: space-between; }
+        #root .name { font-size: 104px; font-weight: 700; letter-spacing: -0.035em; }
+        #root .mark { font-size: 148px; font-weight: 700; color: #d02d1c; line-height: 0.8; }
+        #root .rule { position: absolute; left: 72px; top: 700px; width: 936px; height: 5px;
+                      background: #14110e; transform-origin: 50% 50%; }
+      </style>
+
+      <div data-hf-id="hf-h5l7" id="root" data-composition-id="sc-17" data-width="1080" data-height="1080">
+        <div data-hf-id="hf-ymd9" class="setup">Aber wenn du nur einen<br data-hf-id="hf-x5px">behalten dürftest:</div>
+        <div data-hf-id="hf-ce6r" class="face">
+          <span data-hf-id="hf-dabb" class="name" data-name="">Claude</span>
+          <span data-hf-id="hf-zg6z" class="mark">?</span>
+          <span data-hf-id="hf-qq8o" class="name" data-name="">ChatGPT</span>
+        </div>
+        <div data-hf-id="hf-a46i" class="rule"></div>
+      </div>
+
+      <script>
+        (function () {
+          // PAYOFF, and a bookend: the hook's either/or returns, but now the two names face each
+          // other across the question mark and neither is picked. Nothing highlights, nothing
+          // resolves — the question is the ending, so the frame holds it.
+          const tl = gsap.timeline({ paused: true });
+          tl.fromTo("#root .setup", { y: 14, opacity: 0.55 }, { y: 0, opacity: 1, duration: 0.3, ease: "power3.out" }, 0);
+          tl.fromTo("#root [data-name]", { y: 34, opacity: 0 }, { y: 0, opacity: 1, duration: 0.34, ease: "power3.out", stagger: 0.1 }, 0.26);
+          tl.fromTo("#root .mark", { scale: 0.7, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.34, ease: "back.out(2)" }, 0.44);
+          tl.fromTo("#root .rule", { scaleX: 0 }, { scaleX: 1, duration: 0.44, ease: "power3.out" }, 0.6);
+          window.__timelines["sc-17"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

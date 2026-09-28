@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head><meta charset="UTF-8"></head>
+  <body>
+    <template>
+      <style>
+        #root { position: absolute; inset: 0; background: #ede9e3; color: #14110e;
+                font-family: Arial, Helvetica, sans-serif; overflow: hidden; }
+        #root .names { position: absolute; left: 72px; top: 268px; width: 936px;
+                       font-size: 132px; font-weight: 700; line-height: 1.02; letter-spacing: -0.035em; }
+        #root .oder { display: block; font-size: 52px; font-weight: 700; letter-spacing: 0.02em;
+                      color: #8a8177; margin: 10px 0 10px 6px; }
+        #root .q { color: #d02d1c; }
+        #root .sub { position: absolute; left: 72px; top: 688px; width: 936px;
+                     font-size: 42px; font-weight: 700; letter-spacing: -0.01em; color: #4a443c; }
+        #root .seam { position: absolute; left: 72px; top: 648px; width: 380px; height: 5px;
+                      background: #14110e; transform-origin: 0% 50%; }
+      </style>
+
+      <div data-hf-id="hf-pcoj" id="root" data-composition-id="sc-00" data-width="1080" data-height="1080">
+        <div data-hf-id="hf-yie8" class="names">
+          <span data-hf-id="hf-2grk" class="n1">Claude</span>
+          <span data-hf-id="hf-ez91" class="oder">oder</span>
+          <span data-hf-id="hf-b8g4" class="n2">ChatGPT<span data-hf-id="hf-7c97" class="q">?</span></span>
+        </div>
+        <div data-hf-id="hf-30oq" class="seam"></div>
+        <div data-hf-id="hf-foch" class="sub">Zwei der bekanntesten KI-Modelle.</div>
+      </div>
+
+      <script>
+        (function () {
+          // HOOK. The line is an either/or, so the two names are the composition and "oder" is
+          // the hinge between them. They arrive one after the other, which is what an either/or
+          // sounds like.
+          const tl = gsap.timeline({ paused: true });
+          // Frame 0 is the thumbnail, so the first name is already legible there and only
+          // settles. Opacity leads position: it is at full by 0.1s while the move keeps easing.
+          tl.fromTo("#root .n1", { y: 18, opacity: 0.55 }, { y: 0, opacity: 1, duration: 0.3, ease: "power3.out" }, 0);
+          tl.fromTo("#root .oder", { opacity: 0 }, { opacity: 1, duration: 0.2, ease: "power2.out" }, 0.14);
+          tl.fromTo("#root .n2", { y: 34, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: "power3.out" }, 0.22);
+          tl.fromTo("#root .seam", { scaleX: 0 }, { scaleX: 1, duration: 0.28, ease: "power3.out" }, 0.34);
+          tl.fromTo("#root .sub", { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.28, ease: "power2.out" }, 0.38);
+          window.__timelines["sc-00"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

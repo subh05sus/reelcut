@@ -1,0 +1,11 @@
+{
+  "name": "reelcut",
+  "owner": { "name": "zeisedigital" },
+  "plugins": [
+    {
+      "name": "reelcut",
+      "source": "./",
+      "description": "Turn a spoken script into motion-graphics clips, one per beat."
+    }
+  ]
+}

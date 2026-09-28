@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head><meta charset="UTF-8"></head>
+  <body>
+    <template>
+      <style>
+        /* ChatGPT's beats are ink-ground, Claude's are paper. The palette carries the comparison
+           so the viewer knows whose side of the argument they are on without being told. */
+        #root { position: absolute; inset: 0; background: #14110e; color: #f2efe9;
+                font-family: Arial, Helvetica, sans-serif; overflow: hidden; }
+        #root .field { position: absolute; left: 72px; top: 250px; width: 936px; height: 560px;
+                       display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, 1fr);
+                       column-gap: 48px; row-gap: 10px; align-items: center; }
+        #root .w { font-size: 76px; font-weight: 700; letter-spacing: -0.03em; }
+        #root .w:nth-child(even) { color: #f0a58f; }
+      </style>
+
+      <div data-hf-id="hf-fmee" id="root" data-composition-id="sc-07" data-width="1080" data-height="1080">
+        <div data-hf-id="hf-0ztw" class="field">
+          <div data-hf-id="hf-h9fw" class="w" data-w="">Coding.</div>
+          <div data-hf-id="hf-i9vt" class="w" data-w="">Recherche.</div>
+          <div data-hf-id="hf-6ebn" class="w" data-w="">Schreiben.</div>
+          <div data-hf-id="hf-hwaj" class="w" data-w="">Datenanalyse.</div>
+          <div data-hf-id="hf-wm7w" class="w" data-w="">Bilder.</div>
+          <div data-hf-id="hf-4bg3" class="w" data-w="">Tools.</div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // BREADTH. Six things spread across the whole field, arriving almost together rather
+          // than in a queue — breadth is a fact about extent, not about sequence. The deliberate
+          // opposite of sc-03's single accumulating column.
+          const tl = gsap.timeline({ paused: true });
+          tl.fromTo("#root [data-w]:first-child", { scale: 0.96, opacity: 0.6 }, { scale: 1, opacity: 1, duration: 0.22, ease: "back.out(1.4)" }, 0);
+          tl.fromTo("#root [data-w]:not(:first-child)", { scale: 0.9, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.26, ease: "back.out(1.6)", stagger: 0.055 }, 0.06);
+          window.__timelines["sc-07"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

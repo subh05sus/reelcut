@@ -1,0 +1,186 @@
+---
+name: reelcut
+description: Turn a spoken script into a set of motion-graphics clips — one per beat, plus a master cut. Finds and verifies the assets the script needs, captures real product screens, sources data for charts, and composes each beat as HTML + GSAP. Use when someone says "/reelcut", gives you a script or an SRT and wants video out of it, or asks for clips for a reel.
+---
+
+# /reelcut
+
+A script goes in. A folder of clips comes out, each one composed for what its line actually says.
+
+## What this is not
+
+It is not a template filler. There is no library of layouts to pick from and pour text into — that
+approach is what the predecessor to this skill did for a year, and it is why its beats put content
+on a quarter of the frame and read as generic. **You compose each beat.** The archetypes in
+`assets/archetypes/` exist for when authoring fails or a run is unattended, not as the default.
+
+## Invocation
+
+```
+/reelcut script.txt
+/reelcut script.srt --format vertical
+/reelcut script.txt --short          # a 15-25s cut instead of the whole thing
+/reelcut script.txt --assets ./logos # a folder to take assets from
+```
+
+| Option | Values | Default |
+|---|---|---|
+| `--format` | `1:1`, `9:16`, `16:9`, `4:5` | `1:1` |
+| `--short` | flag — cut to 15–25s | whole script |
+| `--assets <dir>` | where to look for files already provided | `assets/in/` |
+| `--fps` | | 30 |
+| `--no-data` | skip data sourcing and charts | data on |
+
+Assets can also simply be handed over in the conversation. Anything dropped in is matched against
+what the script needs before anything is searched for.
+
+## Output
+
+```
+out/
+  clips/beat-03.mp4 …   one per beat — the deliverable
+  master.mp4            all of them, hard cuts
+  poster.jpg
+  plan.md               beats, briefs, what each one does
+  report.md             every asset and every number, with where it came from
+  project/              the HyperFrames project, kept so a beat can be re-rendered
+```
+
+Use a timestamped `out-YYYY-MM-DD-HHmmss/` when `out/` already exists.
+
+`<skill-dir>` is the directory holding this file. Claude Code prints it as "Base directory for this
+skill". Don't guess it — a plugin install, a `~/.claude/skills/` copy and this repo all differ.
+
+---
+
+## Step 1 — Script to beats
+
+**Read:** [references/step-1-script.md](references/step-1-script.md)
+
+Parse the script, segment it into beats, and write a `BeatBrief` for each. An `.srt` gives exact
+timings; a `.txt` is estimated from words per minute.
+
+You are the director. There is no model API in this pipeline — the brief is yours to write.
+
+**Gate:** every beat has a brief that passes `validateBeatBrief`. That check enforces the reading
+floor, so no line can be scheduled into less time than it takes to read.
+
+---
+
+## Step 2 — Acquire what the script needs
+
+**Read:** [references/step-2-acquire.md](references/step-2-acquire.md) and
+[references/sourcing.md](references/sourcing.md)
+
+Each brief's `mustShow` becomes an `AssetRequirement`. Resolve in this order: files already
+provided, then a capture of the real product screen, then the brand's own source for a mark, then
+— only for `generic` requirements — draw it.
+
+Report everything still open with its ways out. Never stall silently.
+
+**Gate:** no `identity` requirement is satisfied by a drawn asset. Ever.
+
+---
+
+## Step 3 — Data and charts
+
+**Read:** [references/step-3-data.md](references/step-3-data.md)
+
+Only when the script states a figure. Find it, record the source and a verbatim quote, re-fetch to
+confirm the quote is still there, and put the whole lot in front of the user before it renders.
+
+**Gate:** every number on screen traces to an approved datum. Axis labels are read from it, never
+retyped.
+
+---
+
+## Step 4 — Compose each beat
+
+**Read:** [references/step-4-compose.md](references/step-4-compose.md), and
+[references/archetypes.md](references/archetypes.md) only if authoring fails.
+
+**Read the HyperFrames skills** — `hyperframes-core` for the composition contract and the `data-*`
+timing attributes, `hyperframes-animation` for motion. This skill owns the story, the beats, the
+assets and the creative laws; HyperFrames owns the composition mechanics and the render.
+
+**Gate:** `npx hyperframes check --samples 24` passes **with a non-zero sample count**. See the
+hard rules below — a clean-looking report with zero samples means nothing ran.
+
+---
+
+## Step 5 — Render and deliver
+
+**Read:** [references/step-5-render.md](references/step-5-render.md)
+
+Render each beat as its own clip and a master that mounts them all. Check every clip. Write the
+report.
+
+**Gate:** every clip passes `checkVideo.ts` with zero findings, and `report.md` has a provenance
+line for every asset and every number.
+
+---
+
+## Hard rules
+
+These are not style preferences. Each one is here because its absence produced a defect that
+shipped.
+
+**Nothing is invented.** Not a statistic, not a logo, not a testimonial, not a claim. If the script
+does not say it and no source supports it, it does not go on screen. A generated logo is a
+fabricated logo.
+
+**Nothing secret leaves the capture step.** You are photographing real product screens, which hold
+real customer names, addresses, invoice numbers and internal hostnames. Everything captured can end
+up in a video that gets posted. Scan captures for those shapes; mask or reject, and say which in
+the report.
+
+**A capture that cannot be read is a failed capture.** Compute it, don't eyeball it: the browser
+knows the smallest computed `font-size` in the node you captured, so
+`renderedPx = minFontSizePx × (targetWidthInFrame ÷ captureWidth)`. Below 11px, refuse the capture
+and say what crop it needs. The predecessor's screenshots were full browser windows at 1512×792
+landing at 35% of a 1080 frame — body text rendered at about three pixels.
+
+**`check` reporting `0 sample(s)` is a failure, not a pass.** A lint *error* switches the layout and
+contrast audits off entirely, and the report then reads clean because nothing ran. Confirm the
+sample count every time.
+
+**Every beat boundary is a hard cut.** This is settled, not a preference. A cross-fade between two
+compositions ghosts; a wipe cuts through type — eight clipped boundaries the last time one was
+tried. Continuity comes from matching the outgoing exit direction to the incoming entry edge.
+
+**Frame 0 of every beat is legible.** Opacity leads position: full opacity within a few frames while
+the move keeps easing. An entrance from `opacity: 0` makes the first frame of a hard cut blank, and
+frame 0 of the first beat is the thumbnail.
+
+**Determinism.** No `Date.now()`, no `performance.now()`, no unseeded `Math.random()`, no
+render-time network, no `repeat: -1`. Every frame must be reproducible from its time alone.
+
+---
+
+## The reading floor
+
+The one number this skill will not bend on, because pace comes from motion and cuts — never from
+pulling text away before it can be read.
+
+| | settled on screen |
+|---|---|
+| a label, 1–3 words | ~0.8s |
+| a sentence | ~0.3s per word, never under 1.2s |
+
+Counted from when the *whole line* is visible and settled, not from when it starts entering. An
+entrance is not reading time.
+
+Plan that floor first, then make everything else fast — entrances stay 0.3–0.6s. A line slams in
+and then holds; that reads as punchy *and* legible. **The payoff gets the most time, not the least.**
+The commonest defect in the predecessor's output was a punchline scheduled into the last 25 frames
+of a beat, so it arrived and left inside 0.83 seconds.
+
+---
+
+## Requirements
+
+- Node 22+
+- FFmpeg on `PATH`
+- `npx hyperframes` (check with `npx hyperframes doctor`)
+- For captures that need judgement: the Claude in Chrome extension. Puppeteer handles unattended
+  re-captures of the same target.

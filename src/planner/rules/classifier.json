@@ -1,0 +1,59 @@
+{
+  "_comment": "INVENTED (reel-visual-planner skill did not exist on this machine to port from — see LEARNINGS.md). This is a starter keyword-priority ruleset, not encoded real judgment. Edit this file to tune classification; visualTypeClassifier.ts should never need to change for a rule tweak.",
+  "rules": [
+    {
+      "visualType": "ui_simulation",
+      "priority": 100,
+      "descriptionPrefix": "UI simulation",
+      "keywords": [
+        "claude", "chatgpt", "gpt", "cursor", "lovable", "oberflaeche", "bildschirm",
+        "app zeigt", "tippt", "eingibt", "schreibt", "antwortet", "chat", "chatfenster",
+        "eingabefeld", "prompt eingeben", "modell", "einstellungen", "sidebar"
+      ]
+    },
+    {
+      "visualType": "logo",
+      "priority": 90,
+      "descriptionPrefix": "Logo pop-in",
+      "keywords": ["logo", "marke", "brand", "icon erscheint"]
+    },
+    {
+      "visualType": "ai_clip",
+      "priority": 80,
+      "descriptionPrefix": "AI-generated clip",
+      "keywords": [
+        "stell dir vor", "stellen sie sich vor", "wie waere es", "zukunft", "szene",
+        "kamerafahrt", "cinematic"
+      ]
+    },
+    {
+      "visualType": "static_graphic",
+      "priority": 70,
+      "descriptionPrefix": "Static graphic",
+      "keywords": [
+        "statistik", "prozent", "vergleich", "diagramm", "zahlen", "grafik", "uebersicht",
+        "faktoren", "liste von"
+      ]
+    },
+    {
+      "visualType": "animation",
+      "priority": 60,
+      "descriptionPrefix": "Animation",
+      "keywords": [
+        "schritt fuer schritt", "prozess", "workflow", "ablauf", "so funktioniert",
+        "in drei schritten", "zeigt wie"
+      ]
+    },
+    {
+      "visualType": "text_overlay",
+      "priority": 50,
+      "descriptionPrefix": "Kinetic text overlay",
+      "keywords": [
+        "wichtig", "merke dir", "kurz gesagt", "zusammengefasst", "das bedeutet", "kernaussage",
+        "denk daran"
+      ]
+    }
+  ],
+  "defaultVisualType": "none",
+  "defaultDescription": "No visual planned — deliberate breathing room."
+}

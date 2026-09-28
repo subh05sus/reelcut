@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head><meta charset="UTF-8"></head>
+  <body>
+    <template>
+      <style>
+        #root { position: absolute; inset: 0; background: #14110e; color: #f2efe9;
+                font-family: Arial, Helvetica, sans-serif; overflow: hidden; }
+        #root .line { position: absolute; left: 72px; top: 330px; width: 936px;
+                      font-size: 96px; font-weight: 700; line-height: 1.06; letter-spacing: -0.03em; }
+        #root .breite { color: #f0a58f; }
+        #root .measure { position: absolute; left: 72px; top: 636px; height: 7px;
+                         width: 936px; background: #f0a58f; transform-origin: 0% 50%; }
+      </style>
+
+      <div data-hf-id="hf-n6mx" id="root" data-composition-id="sc-15" data-width="1080" data-height="1080">
+        <div data-hf-id="hf-78xk" class="line">Hier punktet ChatGPT<br data-hf-id="hf-x5px">mit seiner <span data-hf-id="hf-bfov" class="breite">Breite</span>.</div>
+        <div data-hf-id="hf-xa1k" class="measure"></div>
+      </div>
+
+      <script>
+        (function () {
+          // The claim is about extent, so the frame measures it: a rule opens to the full width
+          // of the frame under the word. The word says breadth and the composition is wide.
+          const tl = gsap.timeline({ paused: true });
+          tl.fromTo("#root .line", { y: 18, opacity: 0.55 }, { y: 0, opacity: 1, duration: 0.34, ease: "power3.out" }, 0);
+          tl.fromTo("#root .measure", { scaleX: 0 }, { scaleX: 1, duration: 0.6, ease: "power3.out" }, 0.34);
+          window.__timelines["sc-15"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>
