@@ -315,20 +315,23 @@ npm install
 ### `npm run beats` — script → beats → cut
 
 ```bash
-npm run beats -- examples/claude-vs-chatgpt.txt --short
+npm run beats -- examples/notiz-apps.txt --short
 ```
 ```
-claude-vs-chatgpt.txt — 15 beats, 62.3s, durations ESTIMATED from words per minute
+notiz-apps.txt — 14 beats, 59.6s, durations ESTIMATED from words per minute
 
   #   secs  floor
-   0  6.67  5.40        Claude oder ChatGPT? Wenn du heute nur eine KI für deine Arbeit…
-   1  5.20  4.20        Beide sind extrem leistungsfähig, aber sie fühlen sich…
+   0  6.67  5.40        Notara oder Kettlebrief? Wenn du heute nur eine Notiz-App für deine…
+   1  4.80  3.90        Beide sind erstaunlich gut, aber sie fühlen sich beim Arbeiten völlig…
   …
 
-short cut — 4 of 15 beats, 17.8s
-  hook      # 0  6.67s  Claude oder ChatGPT? …
-  payoff    #14  4.43s  Wenn du nur eines behalten dürftest…
+short cut — 4 of 14 beats, 18.2s
+  hook      # 0  6.67s  Notara oder Kettlebrief? …
+  payoff    #13  4.43s  Wenn du nur eine behalten dürftest, würdest du Notara oder…
 ```
+
+The example is a fictional comparison of two invented note apps. It has the shape of a real
+reel — comparison, contrast, thesis, payoff — without being anyone's actual script.
 
 ### `npm run capture` — a product surface, with all four gates
 
@@ -391,7 +394,7 @@ npm run typecheck
 
 | | |
 |---|---|
-| Script → beats → short cut | ✅ verified on a real 15-beat German script |
+| Script → beats → short cut | ✅ verified on a 14-beat German script |
 | Brief contract and validation | ✅ 21 tests |
 | Asset intake and gap reporting | ✅ 20 tests, verified end to end |
 | Capture with all four gates | ✅ 36 tests, verified against a live page |

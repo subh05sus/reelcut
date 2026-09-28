@@ -113,7 +113,7 @@ export function frameSizeFor(format: OutputFormat): { width: number; height: num
 }
 
 /**
- * Overlay (alpha-channel) assets render BOTH codecs until Julius confirms which his NLE takes
+ * Overlay (alpha-channel) assets render BOTH codecs until the editor confirms which their NLE takes
  * natively (user decision 2026-09-15: "render both"). Full-frame assets never use alpha.
  */
 export const OVERLAY_CODECS = ["prores4444", "vp9-alpha"] as const;

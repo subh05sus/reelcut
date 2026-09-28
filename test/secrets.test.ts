@@ -27,7 +27,7 @@ describe("passesLuhn", () => {
 
 describe("scanForSecrets — what it must catch", () => {
   it("finds a real-looking account email", () => {
-    expect(kinds("Signed in as julius.zeise@gptmarlon.com")).toContain("email");
+    expect(kinds("Signed in as a.muster@kundenportal.de")).toContain("email");
   });
 
   it("finds an IBAN", () => {
@@ -68,7 +68,7 @@ describe("scanForSecrets — what it must NOT catch", () => {
    * flagged two well-composed title cards. Precision first.
    */
   it("ignores placeholder and role addresses", () => {
-    for (const text of ["jane@example.com", "user@test.de", "info@acme.com", "hello@gptmarlon.com", "support@anything.io", "noreply@service.com"]) {
+    for (const text of ["jane@example.com", "user@test.de", "info@acme.com", "hello@beispiel.de", "support@anything.io", "noreply@service.com"]) {
       expect(kinds(text)).not.toContain("email");
     }
   });
@@ -110,9 +110,9 @@ describe("scanForSecrets — what it must NOT catch", () => {
 
 describe("formatSecrets", () => {
   it("never repeats the value back in full", () => {
-    const text = formatSecrets(scanForSecrets("julius.zeise@gptmarlon.com"));
-    expect(text).not.toContain("julius.zeise@gptmarlon.com");
-    expect(text).toMatch(/jul\*\*\*/);
+    const text = formatSecrets(scanForSecrets("a.muster@kundenportal.de"));
+    expect(text).not.toContain("a.muster@kundenportal.de");
+    expect(text).toMatch(/a\.m\*\*\*/);
   });
 
   it("counts by kind and says what to do", () => {
