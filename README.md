@@ -7,9 +7,8 @@ segments it into beats, finds and verifies the assets each beat needs, captures 
 screens, sources data for any charts, composes every beat as HTML + GSAP, and renders one clip per
 beat plus a master cut.
 
-It is modelled on [`/brag`](https://github.com/latent-spaces/brag) and shares its central bet: the
-quality comes from the model composing each beat against a few hard rules, not from pouring text
-into templates. Rendering is [HyperFrames](https://hyperframes.heygen.com/).
+Its central bet: the quality comes from the model composing each beat against a few hard rules,
+not from pouring text into templates. Rendering is [HyperFrames](https://hyperframes.heygen.com/).
 
 **There is no model API key.** The agent running the skill is the director.
 
@@ -141,10 +140,9 @@ workable, but if the voiceover already exists, use the SRT.
 **The default depends on whether there is a voiceover.** An `.srt` means spoken audio, so the
 default is `key-lines`. A plain `.txt` defaults to `full`.
 
-This is the axis most worth thinking about, and the one `/brag` has no equivalent for — `/brag`
-makes silent videos, so type must carry everything. These reels have a voice. Putting every line
-on screen makes the viewer read the sentence they are already hearing, and spends the whole frame
-doing it.
+This is the axis most worth thinking about. A silent video has no choice — type must carry
+everything. These reels have a voice, so putting every line on screen makes the viewer read the
+sentence they are already hearing, and spends the whole frame doing it.
 
 `none` is not a gimmick. With the words handled by the voice, the frame is free for the product,
 the data and the motion — and the reading floor stops applying, because there is nothing to read,
@@ -430,5 +428,4 @@ out of a larger Remotion pipeline; what came across is the part that was never e
 
 ## Credits
 
-- Modelled on [`/brag`](https://github.com/latent-spaces/brag) by latent-spaces.
 - Rendering by [HyperFrames](https://hyperframes.heygen.com/).
