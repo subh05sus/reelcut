@@ -2,8 +2,11 @@
 
 One HyperFrames sub-composition per beat. You write it: HTML, scoped CSS, one paused GSAP timeline.
 
-**Read [visual-vocabulary.md](visual-vocabulary.md) first** — it decides what register the beat is
-in, and getting that wrong is more expensive than any amount of polish afterwards.
+**Read [design-system.md](design-system.md) first** — what ~800 shipped launch films actually look
+like, and the grammar they share. Then [visual-vocabulary.md](visual-vocabulary.md), which decides
+what register the beat is in. Build on the kit ([kit.md](kit.md)) — `data-look` on the root gets you
+the fonts, grounds, texture, UI pieces and motion helpers — and open the pattern nearest your beat
+in `assets/patterns/` ([patterns.md](patterns.md)) to see the moves done properly.
 
 Then the HyperFrames skills. **`hyperframes-registry` before you hand-build any named visual**: a
 chart, a terminal, a device frame, film grain, a shimmer sweep — roughly 400 are already written
@@ -28,12 +31,24 @@ beat measured 6.7% mean ink. Composed for its own sentence, 29.6%.
 
 ## The creative laws
 
-**Commit to the ground.** Full-bleed colour or full-bleed image. A tinted off-white with safe
-margins and a hairline rule is the look of a page that has not decided anything.
+**Commit to the ground.** One of the kit's looks, held for the reel: paper, ink, flood, sky,
+cinema, poster. Texture under it — grain always, mesh or bloom behind. A flat colour with a block
+of type pinned to one corner is the look of a page that has not decided anything.
 
-**Type carries the composition.** Oversized, tight-tracked, cropped by the frame, asymmetric. On a
-1080 square a headline is 90px and up, a payoff 140px and up. Medium-sized centred type with even
-margins means nothing was designed.
+**Scale contrast is the hierarchy.** On a 1080 square a headline is 90–120px, a hero word 200px and
+up, the supporting line 30–40px. Tracking tight (−0.04em and tighter) at display sizes. One word in
+italic serif and the accent colour carries the meaning of the line.
+
+**Centre one idea, with room.** Shipped films centre a single idea and leave half the frame empty.
+Off-centre is a decision — a bottom-left statement, a headline above a chart — never a default
+72px gutter with nothing on the right.
+
+**Product surfaces are big and real.** A UI card spans 60–85% of the frame, has real labels and
+numbers, depth from radius and shadow, and something happens in it. See
+[design-system.md](design-system.md#product-surfaces--real-large-alive).
+
+**Resolve, don't slide.** Entrances come out of blur (`RC.words`, `RC.blurIn`), 0.6–0.8s,
+`expo.out`. And nothing is ever quite still: a camera push or a drift runs under every beat.
 
 **The reading floor**, counted from when the whole line is on screen and settled:
 
@@ -112,5 +127,5 @@ least once; the rendered frame has not.
 
 ## When authoring fails
 
-Fall back to [archetypes.md](archetypes.md). A filled archetype is worse than a composed beat and
+Fall back to [patterns.md](patterns.md): adapt the nearest pattern. An adapted pattern is worse than a composed beat and
 much better than no clip.

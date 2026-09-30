@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* COLLAGE POSTER. Condensed caps slam in one word per hit over blocks of loud ink, a halftone
+     disc and a sticker — a zine page assembling to the beat. The Higgsfield register: for energy,
+     a manifesto line, a campaign. Fast cuts inside the beat; every hit holds long enough to read. */
+  #root .blk { position: absolute; }
+  #root .b1 { left: 60px; top: 150px; width: 620px; height: 250px; background: var(--accent); }
+  #root .b2 { left: 500px; top: 470px; width: 560px; height: 230px; background: var(--accent-2); }
+  #root .w { position: absolute; font-size: 270px; line-height: .8; color: var(--ink); }
+  #root .w1 { left: 76px; top: 150px; color: #fff; }
+  #root .w2 { left: 76px; top: 440px; }
+  #root .w3 { left: 520px; top: 478px; color: #fff; font-size: 210px; }
+  #root .w4 { left: 76px; top: 760px; }
+  #root .ht { position: absolute; left: 700px; top: 90px; width: 330px; height: 330px; border-radius: 50%;
+              background-image: radial-gradient(var(--ink) 34%, transparent 36%); background-size: 22px 22px; }
+  #root .stk { position: absolute; left: 740px; top: 800px; width: 230px; height: 230px; border-radius: 50%; background: #ffd23f; color: var(--ink);
+               display: grid; place-items: center; text-align: center; font: 900 44px/0.95 var(--font-display); font-variation-settings: "wdth" 100; text-transform: uppercase; }
+</style>
+<div id="root" data-look="poster" data-composition-id="collage-poster" data-width="1080" data-height="1080">
+  <div class="ht"></div>
+  <div class="blk b1"></div>
+  <div class="blk b2"></div>
+  <div class="w w1 rc-display">Don't</div>
+  <div class="w w2 rc-display">ship</div>
+  <div class="w w3 rc-display">quiet</div>
+  <div class="w w4 rc-display">again.</div>
+  <div class="stk">v2.0<br />out<br />now</div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  tl.fromTo("#root .ht", { scale: 0.5, rotation: -40, opacity: 0.6 }, { scale: 1, rotation: 0, opacity: 1, duration: 1.2, ease: "expo.out" }, 0);
+  RC.wipe(tl, "#root .b1", 0, { dir: "right", duration: 0.35, ease: "power4.out" });
+  // One hit per word. Each slams from a squash, like a stamp.
+  [["w1", 0.05], ["w2", 0.5], ["w3", 0.95], ["w4", 1.45]].forEach(([w, t], i) => {
+    tl.fromTo("#root ." + w, { scaleY: i === 0 ? 0.7 : 0.2, opacity: i === 0 ? 0.6 : 0, transformOrigin: "50% 100%" }, { scaleY: 1, opacity: 1, duration: 0.32, ease: "back.out(2.5)" }, t);
+  });
+  RC.wipe(tl, "#root .b2", 0.85, { dir: "left", duration: 0.35, ease: "power4.out" });
+  tl.fromTo("#root .stk", { scale: 0, rotation: -90 }, { scale: 1, rotation: -12, duration: 0.6, ease: "back.out(2)" }, 2.0);
+  tl.fromTo("#root .ht", { rotation: 0 }, { rotation: 25, duration: 2.8, ease: "none", immediateRender: false }, 1.2);
+  RC.hold(tl, 3.95);
+  window.__timelines["collage-poster"] = tl;
+})();
+</script>
+</template>
+</body></html>

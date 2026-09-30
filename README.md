@@ -166,8 +166,9 @@ long a line stays on screen.
 `--palette` takes three hex values in order. When given, every beat must use them — a beat that
 quietly picks its own is a finding, not a variation.
 
-`--look` is art direction ("warm editorial", "late-90s broadcast"). `--visuals` steers the register
-("lots of real product screens", "data-forward", "typographic only").
+`--look` names one of six looks — `paper`, `ink`, `flood`, `sky`, `cinema`, `poster` — or is
+freeform art direction ("warm editorial", "late-90s broadcast") translated into the nearest one.
+`--visuals` steers the register ("lots of real product screens", "data-forward", "typographic only").
 
 ### Direction is enforced, not suggested
 
@@ -221,6 +222,15 @@ A chart renders from approved data only, and prints its source on the frame.
 
 One HyperFrames sub-composition per beat — HTML, scoped CSS, one paused GSAP timeline — written for
 what that beat says rather than picked from a layout menu.
+
+It composes on a design system distilled from ~800 shipped launch films on
+[whatships.com](https://whatships.com): six looks, one sans + one italic serif + mono, real-looking
+UI pieces (prompts, agent steps, windows, phones, code, toasts, cursors), and motion helpers that do
+what those films do — words resolving out of blur, values rolling in place, a cursor that curves and
+clicks and causes something, a slow camera push under everything. A beat opts in with
+`data-look="paper"` on its root. Sixteen reference patterns in `skills/reelcut/assets/patterns/`
+show each recurring move done properly; `npm run render -- examples/patterns/reel.json` renders
+them all.
 
 The registers available: type, a real product surface, a simulated interaction, a number that
 resolves, a diagram that builds, footage, a logo moment. Plus the structural half — depth, masking,
@@ -481,6 +491,7 @@ npm run typecheck
 | Render → clips, master, thumbnail | ✅ **produced a real 18s reel**, every frame count exact |
 | Frame checker | ✅ tested, catches a real blank panel in a third-party video |
 | Asset library and studio | ✅ tested; a library asset rendered into a real clip and re-rendered from the studio |
+| Design kit and patterns | ✅ sixteen patterns and the example reel render and pass every gate |
 | Sound effects (`--sfx`) | ⚠️ placement and mixing tested; no sound library ships |
 | Data sourcing and charts | ⚠️ specified, not built |
 
@@ -491,8 +502,9 @@ npm run typecheck
 ```
 skills/reelcut/
   SKILL.md              the router: the steps and the hard rules
-  references/           direction, steps 0–5, visual vocabulary, sourcing, archetypes
-  assets/archetypes/    six seed compositions — the fallback, not the default
+  references/           steps 0–5, design system, kit, patterns, direction, sourcing
+  assets/kit/           shared looks, UI pieces and motion helpers, injected via data-look
+  assets/patterns/      sixteen reference compositions, one per recurring move
   scripts/              beats, intake, capture, render, check-video, library (+ studio)
 src/
   core/                 reading floor, frame sizes, the Beat schema

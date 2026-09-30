@@ -31,7 +31,7 @@ would pick first, marked `(Recommended)`, and make every option's description sa
 |---|---|---|
 | **Text on screen** | no `--text` | `full` · `key-lines` · `minimal` · `none`. Recommend by voiceover: an `.srt` → `key-lines`, a `.txt` → `full`. Name the count: "key-lines puts about 5 of the 14 lines on screen". |
 | **Length** | no `--short`, and the full script runs over ~30s | The whole script (say its length) · a 15–25s short cut (say which beats it keeps). |
-| **Look and palette** | no `--palette` and no `--look` | 2–3 concrete palettes, each as `#ground #ink #accent` with a one-line register. If the script names a product or brand, the first option is *its* colours. Use `preview` to show the hex values side by side. "Other" lets the user type their own. |
+| **Look and palette** | no `--palette` and no `--look` | 2–3 of the kit's looks (`paper`, `ink`, `flood`, `sky`, `cinema`, `poster` — see [design-system.md](design-system.md#grounds--commit-to-one-per-reel)), each with the accent it would use and a one-line register tied to this script. If the script names a product or brand, the first option uses *its* colour as the accent. Use `preview` to show ground, ink and accent side by side. "Other" lets the user type their own. |
 | **Motion** | no `--motion` | `restrained` · `default` · `energetic`, each described against this script ("energetic suits the list in beats 4–7"). |
 
 ### Round 2 — production

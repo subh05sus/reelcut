@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* CONSTELLATION. One label in the middle, and the things it connects to arrive from depth around
+     it while lines draw out to each. Integrations, sources, a team — "1,000+ sessions across
+     providers", Cosmos's library. The ring turns slowly so the held frame still lives.
+     Tiles here are abstract glyphs: a real reel uses the real marks, sourced, or none. */
+  #root .ring { position: absolute; inset: 0; transform-origin: 540px 540px; }
+  #root svg.links { position: absolute; left: 0; top: 0; }
+  #root svg.links line { stroke: rgba(255,255,255,.28); stroke-width: 2; stroke-dasharray: 4 8; }
+  #root .t { position: absolute; width: 150px; height: 150px; margin: -75px 0 0 -75px; border-radius: 38px; display: grid; place-items: center;
+             background: linear-gradient(160deg, rgba(255,255,255,.1), rgba(255,255,255,.02)); border: 1px solid rgba(255,255,255,.12);
+             box-shadow: 0 30px 60px -20px rgba(0,0,0,.8); backdrop-filter: blur(10px); }
+  #root .t i { display: block; width: 62px; height: 62px; }
+  #root .c { position: absolute; left: 540px; top: 500px; transform: translate(-50%, -50%); padding: 26px 40px; border-radius: 999px; white-space: nowrap;
+             background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.16); font-size: 58px; font-weight: 600; letter-spacing: -0.035em; backdrop-filter: blur(16px); }
+  #root .c b { color: var(--accent); font-weight: 600; }
+  #root .cap { position: absolute; left: 0; right: 0; top: 950px; text-align: center; font-size: 30px; color: var(--muted); }
+</style>
+<div id="root" data-look="ink" data-composition-id="constellation" data-width="1080" data-height="1080">
+  <div class="rc-bloom" style="opacity:.8"></div>
+  <div class="ring">
+    <svg class="links" width="1080" height="1080"></svg>
+  </div>
+  <div class="c"><b>●</b> Your stack</div>
+  <div class="cap">Connects to the tools you already use.</div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  // Eight tiles on an ellipse. Glyphs are simple shapes so nothing here pretends to be a brand.
+  const glyphs = [
+    '<i style="border-radius:50%;background:linear-gradient(135deg,#8b7bff,#3ddc97)"></i>',
+    '<i style="background:#ff6b4a;clip-path:polygon(50% 0,100% 100%,0 100%)"></i>',
+    '<i style="border-radius:12px;background:linear-gradient(135deg,#4aa8ff,#8b7bff)"></i>',
+    '<i style="background:#f4f2ee;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></i>',
+    '<i style="border-radius:50%;border:10px solid #ffc94a"></i>',
+    '<i style="background:linear-gradient(90deg,#3ddc97 0 33%,transparent 33% 50%,#3ddc97 50% 83%,transparent 83%)"></i>',
+    '<i style="border-radius:50% 50% 50% 8px;background:#ff5fa2"></i>',
+    '<i style="background:#8b7bff;clip-path:polygon(0 0,100% 0,100% 30%,30% 30%,30% 100%,0 100%)"></i>'];
+  const ring = document.querySelector("#root .ring");
+  const svg = document.querySelector("#root svg.links");
+  const pts = glyphs.map((g, i) => {
+    const a = (-90 + i * 45) * Math.PI / 180, x = 540 + Math.cos(a) * 400, y = 500 + Math.sin(a) * 330;
+    const el = document.createElement("div"); el.className = "t"; el.style.left = x + "px"; el.style.top = y + "px"; el.innerHTML = g; ring.appendChild(el);
+    const ln = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    ln.setAttribute("x1", 540); ln.setAttribute("y1", 500); ln.setAttribute("x2", x); ln.setAttribute("y2", y); svg.appendChild(ln);
+    return el;
+  });
+  tl.fromTo("#root .c", { opacity: 0.6, scale: 0.9, filter: "blur(6px)" }, { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.7, ease: "expo.out" }, 0);
+  RC.flyIn(tl, pts, 0.35, { from: 0.4, blur: 20, y: 0, stagger: 0.09 });
+  tl.fromTo("#root svg.links line", { opacity: 0 }, { opacity: 1, duration: 0.5, stagger: 0.09 }, 0.55);
+  tl.fromTo("#root .ring", { rotation: -8 }, { rotation: 8, duration: 4.4, ease: "sine.inOut" }, 0);
+  tl.fromTo(pts, { rotation: 8 }, { rotation: -8, duration: 4.4, ease: "sine.inOut" }, 0);
+  RC.blurIn(tl, "#root .cap", 1.6, { blur: 8, y: 10 });
+  RC.hold(tl, 4.35);
+  window.__timelines["constellation"] = tl;
+})();
+</script>
+</template>
+</body></html>

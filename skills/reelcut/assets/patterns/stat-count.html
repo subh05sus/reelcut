@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* STAT COUNT. One number, counted, huge, with a line that draws the trend beneath it and a pill
+     that says what the number means. The figure is the frame — "1,069,244", "189", "2x more".
+     Only ever from an approved datum (step 3); the one here is a placeholder. */
+  #root .k { position: absolute; left: 0; right: 0; top: 300px; text-align: center; font-size: 24px; }
+  #root .n { position: absolute; left: 0; right: 0; top: 350px; text-align: center; font-size: 186px; font-weight: 700; letter-spacing: -0.06em; font-variant-numeric: tabular-nums; }
+  #root .spark { position: absolute; left: 150px; top: 590px; }
+  #root .spark path { fill: none; stroke: var(--accent); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
+  #root .spark .area { fill: url(#sc-fade); stroke: none; }
+  #root .pill { position: absolute; left: 0; right: 0; top: 800px; display: flex; justify-content: center; }
+  #root .pill span { padding: 18px 36px; border-radius: 999px; background: var(--ink); color: var(--ground); font-size: 38px; font-weight: 600; letter-spacing: -0.02em; }
+  #root .pill b { color: #ff9a7a; }
+</style>
+<div id="root" data-look="paper" data-composition-id="stat-count" data-width="1080" data-height="1080">
+  <div class="rc-dots"></div>
+  <div class="k rc-kicker">Reels rendered · September</div>
+  <div class="n">1,240,000</div>
+  <svg class="spark" width="780" height="170" viewBox="0 0 780 170">
+    <defs><linearGradient id="sc-fade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e2562a" stop-opacity=".22"/><stop offset="1" stop-color="#e2562a" stop-opacity="0"/></linearGradient></defs>
+    <path class="area" d="M0 150 C 90 140, 150 132, 230 120 S 360 110, 430 88 S 560 70, 620 44 S 720 18, 780 10 L 780 170 L 0 170 Z"/>
+    <path class="ln" d="M0 150 C 90 140, 150 132, 230 120 S 360 110, 430 88 S 560 70, 620 44 S 720 18, 780 10"/>
+  </svg>
+  <div class="pill"><span><b>+38%</b> on August</span></div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  RC.blurIn(tl, "#root .k", 0, { lead: true, blur: 8, y: 10 });
+  tl.fromTo("#root .n", { opacity: 0.55, filter: "blur(8px)", scale: 0.96 }, { opacity: 1, filter: "blur(0px)", scale: 1, duration: 0.7, ease: "expo.out" }, 0);
+  RC.count(tl, "#root .n", 0.05, { from: 0, to: 1240000, duration: 1.6, ease: "expo.out" });
+  RC.draw(tl, "#root .spark .ln", 0.3, { duration: 1.5, ease: "expo.inOut" });
+  tl.fromTo("#root .spark .area", { opacity: 0 }, { opacity: 1, duration: 0.8 }, 1.1);
+  RC.pop(tl, "#root .pill span", 1.7);
+  RC.hold(tl, 3.95);
+  window.__timelines["stat-count"] = tl;
+})();
+</script>
+</template>
+</body></html>

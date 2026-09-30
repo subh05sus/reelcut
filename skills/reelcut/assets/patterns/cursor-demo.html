@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* CURSOR DEMO. A real-looking product surface settles out of a 3D tilt, a hand-like cursor
+     curves to one control and clicks, and the click causes the change: the row flips to approved
+     and a toast confirms it. The camera leans toward the thing that changed. Koast, Codex, Figma. */
+  #root .h { position: absolute; left: 0; right: 0; top: 118px; text-align: center; font-size: 76px; font-weight: 650; letter-spacing: -0.045em; }
+  #root .h em { color: var(--accent); font-size: 1.08em; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 780px 560px; }
+  #root .win { left: 110px; top: 290px; width: 860px; height: 470px; transform-origin: 50% 0%; }
+  #root .win .rc-body { padding: 26px 30px; }
+  #root .th { display: flex; justify-content: space-between; font-size: 20px; color: var(--card-muted); letter-spacing: .06em; font-family: var(--font-mono); padding: 0 20px 14px; }
+  #root .row { display: flex; align-items: center; gap: 18px; height: 88px; padding: 0 20px; border-top: 1px solid var(--line); font-size: 27px; }
+  #root .row .nm { flex: 1; font-weight: 550; }
+  #root .row .amt { width: 150px; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+  #root .row .st { width: 170px; display: grid; justify-items: end; }
+  #root .row .st > * { grid-area: 1 / 1; }
+  #root .pend { padding: 8px 16px; border-radius: 999px; background: rgba(13,20,51,.07); color: var(--card-muted); font-size: 20px; font-weight: 600; }
+  #root .appr { padding: 8px 16px; border-radius: 999px; background: #1f9d4c; color: #fff; font-size: 20px; font-weight: 700; opacity: 0; }
+  #root .btn { padding: 10px 20px; border-radius: 12px; background: var(--accent); color: #fff; font-size: 21px; font-weight: 650; }
+  #root .toast { left: 290px; top: 820px; }
+  #root .toast .rc-check { background: #16753a; }
+</style>
+<div id="root" data-look="sky" data-composition-id="cursor-demo" data-width="1080" data-height="1080">
+  <div class="rc-mesh"></div>
+  <div class="h">Approve in <em class="rc">one click.</em></div>
+  <div class="cam">
+    <div class="rc-window rc-glass win"><div class="rc-bar">Spend · Approvals</div>
+      <div class="rc-body">
+        <div class="th"><span>REQUEST</span><span>AMOUNT · STATUS</span></div>
+        <div class="row"><span class="rc-avatar"></span><span class="nm">Design offsite</span><span class="amt">€1,120</span><span class="st"><span class="pend">Pending</span></span></div>
+        <div class="row r2"><span class="rc-avatar" style="background: linear-gradient(135deg,#ff9a62,#ff5f8f)"></span><span class="nm">GPU credits · Q3</span><span class="amt">€2,400</span><span class="st"><span class="btn">Approve</span><span class="appr">Approved</span></span></div>
+        <div class="row"><span class="rc-avatar" style="background: linear-gradient(135deg,#5ee0b1,#2f8cff)"></span><span class="nm">Conference travel</span><span class="amt">€860</span><span class="st"><span class="pend">Pending</span></span></div>
+      </div>
+    </div>
+  </div>
+  <div class="rc-toast toast"><span class="rc-check">✓</span>€2,400 approved · paid today</div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  const cur = RC.cursorEl("#root");
+  RC.words(tl, "#root .h", 0, { lead: true, stagger: 0.07 });
+  tl.fromTo("#root .win", { rotationX: 24, y: 80, scale: 0.92, opacity: 0.6, transformPerspective: 1400 }, { rotationX: 0, y: 0, scale: 1, opacity: 1, duration: 1.3, ease: "expo.out" }, 0.05);
+  RC.cursor(tl, cur, 0.0, [[1000, 1040, 0], [852, 552, 1.1]]);
+  tl.fromTo(cur, { opacity: 0 }, { opacity: 1, duration: 0.2 }, 0.9);
+  RC.click(tl, cur, 2.1, { target: "#root .r2 .btn" });
+  // The consequence, 0.12s after the press.
+  tl.to("#root .r2 .btn", { opacity: 0, scale: 0.9, duration: 0.2 }, 2.22);
+  tl.fromTo("#root .r2 .appr", { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(2.4)" }, 2.24);
+  tl.fromTo("#root .r2", { backgroundColor: "rgba(31,157,76,0)" }, { backgroundColor: "rgba(31,157,76,.08)", duration: 0.3 }, 2.22);
+  tl.fromTo("#root .toast", { opacity: 0, y: 40, scale: 0.94 }, { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: "expo.out" }, 2.45);
+  tl.to(cur, { x: 980, y: 700, opacity: 0, duration: 0.8, ease: "power2.in" }, 2.6);
+  RC.camera(tl, "#root .cam", 1.3, { duration: 3.2, to: { scale: 1.08 } });
+  RC.drift(tl, "#root .rc-mesh", 0, { duration: 4.6, x: 60, y: -40, scale: 1.1 });
+  RC.hold(tl, 4.55);
+  window.__timelines["cursor-demo"] = tl;
+})();
+</script>
+</template>
+</body></html>

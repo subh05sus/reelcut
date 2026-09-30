@@ -1,0 +1,87 @@
+{
+  "format": "1:1",
+  "fps": 30,
+  "ground": "#111111",
+  "beats": [
+    {
+      "id": "brand-flood",
+      "durationSeconds": 4,
+      "composition": "../../skills/reelcut/assets/patterns/brand-flood.html"
+    },
+    {
+      "id": "word-build",
+      "durationSeconds": 4,
+      "composition": "../../skills/reelcut/assets/patterns/word-build.html"
+    },
+    {
+      "id": "one-word",
+      "durationSeconds": 3.5,
+      "composition": "../../skills/reelcut/assets/patterns/one-word.html"
+    },
+    {
+      "id": "statement-roll",
+      "durationSeconds": 3.6,
+      "composition": "../../skills/reelcut/assets/patterns/statement-roll.html"
+    },
+    {
+      "id": "agent-run",
+      "durationSeconds": 4.6,
+      "composition": "../../skills/reelcut/assets/patterns/agent-run.html"
+    },
+    {
+      "id": "cursor-demo",
+      "durationSeconds": 4.6,
+      "composition": "../../skills/reelcut/assets/patterns/cursor-demo.html"
+    },
+    {
+      "id": "stat-count",
+      "durationSeconds": 4,
+      "composition": "../../skills/reelcut/assets/patterns/stat-count.html"
+    },
+    {
+      "id": "bars-compare",
+      "durationSeconds": 4,
+      "composition": "../../skills/reelcut/assets/patterns/bars-compare.html"
+    },
+    {
+      "id": "constellation",
+      "durationSeconds": 4.4,
+      "composition": "../../skills/reelcut/assets/patterns/constellation.html"
+    },
+    {
+      "id": "device-flank",
+      "durationSeconds": 4.5,
+      "composition": "../../skills/reelcut/assets/patterns/device-flank.html"
+    },
+    {
+      "id": "inline-ui",
+      "durationSeconds": 4.3,
+      "composition": "../../skills/reelcut/assets/patterns/inline-ui.html"
+    },
+    {
+      "id": "strike-replace",
+      "durationSeconds": 4.5,
+      "composition": "../../skills/reelcut/assets/patterns/strike-replace.html"
+    },
+    {
+      "id": "code-focus",
+      "durationSeconds": 4.4,
+      "composition": "../../skills/reelcut/assets/patterns/code-focus.html"
+    },
+    {
+      "id": "collage-poster",
+      "durationSeconds": 4,
+      "composition": "../../skills/reelcut/assets/patterns/collage-poster.html"
+    },
+    {
+      "id": "cinema-line",
+      "durationSeconds": 4.4,
+      "composition": "../../skills/reelcut/assets/patterns/cinema-line.html"
+    },
+    {
+      "id": "end-card",
+      "durationSeconds": 3.5,
+      "composition": "../../skills/reelcut/assets/patterns/end-card.html"
+    }
+  ]
+}

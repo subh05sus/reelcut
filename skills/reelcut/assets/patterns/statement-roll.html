@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* STATEMENT ROLL. A two-line statement sits huge in the bottom-left, and its last word rolls
+     through the claim's variants while a mono value above it rolls in step. The a13n move:
+     "Your models. / Your stack. / Your cloud." Product UI floats out of focus behind, so the frame
+     is about the words but clearly about software. */
+  #root .ui { position: absolute; right: -120px; top: 90px; width: 820px; height: 500px; filter: blur(3px); opacity: .55; }
+  #root .mono { position: absolute; left: 80px; top: 640px; font-size: 32px; color: var(--muted); }
+  #root .mono b { color: var(--ink); font-weight: 500; }
+  #root .mono i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); margin-right: 18px; vertical-align: 4px; }
+  #root .st { position: absolute; left: 76px; top: 720px; font-size: 150px; line-height: .92; }
+</style>
+<div id="root" data-look="ink" data-composition-id="statement-roll" data-width="1080" data-height="1080">
+  <div class="ui">
+    <div class="rc-window" style="left:0; top:40px; width:520px; height:380px"><div class="rc-bar">agents</div>
+      <div class="rc-body"><div class="rc-skel" style="width:70%"></div><div class="rc-skel" style="width:45%; margin-top:18px"></div><div class="rc-skel" style="width:85%; margin-top:18px"></div><div class="rc-skel" style="width:60%; margin-top:18px; background: var(--accent)"></div></div></div>
+    <div class="rc-window" style="left:380px; top:0; width:440px; height:300px"><div class="rc-bar">runs</div>
+      <div class="rc-body"><div class="rc-skel" style="width:60%"></div><div class="rc-skel" style="width:80%; margin-top:18px"></div></div></div>
+  </div>
+  <div class="mono rc-mono"><i></i>model=<b class="m">"lumen-2"</b></div>
+  <div class="st rc-display">Your<br /><span class="v">models.</span></div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  RC.flyIn(tl, "#root .ui .rc-window", 0.0, { from: 0.9, blur: 10, stagger: 0.15 });
+  RC.blurIn(tl, "#root .st", 0.0, { lead: true, blur: 18, y: 30 });
+  RC.blurIn(tl, "#root .mono", 0.35, { blur: 8, y: 10 });
+  RC.roll(tl, "#root .st .v", 1.3, { values: ["models.", "stack.", "cloud."], each: 0.9 });
+  RC.roll(tl, "#root .mono .m", 1.3, { values: ['"lumen-2"', '"python · ts · go"', '"your-vpc-eu-1"'], each: 0.9 });
+  RC.drift(tl, "#root .ui", 0, { duration: 3.6, x: -50, y: 16, scale: 1.05 });
+  RC.hold(tl, 3.55);
+  window.__timelines["statement-roll"] = tl;
+})();
+</script>
+</template>
+</body></html>

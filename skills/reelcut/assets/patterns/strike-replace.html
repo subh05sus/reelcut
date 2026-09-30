@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* STRIKE REPLACE. The old claim is stated plainly, struck through, and the new one arrives under
+     it with its key word in italic serif. "Every app was built on a ~~Mac~~. Now it's built in a
+     sentence." A before/after in two lines, with the strike as the turn. */
+  #root .a { position: absolute; left: 0; right: 0; top: 330px; text-align: center; font-size: 82px; font-weight: 600; letter-spacing: -0.045em; color: var(--muted); }
+  #root .b { position: absolute; left: 0; right: 0; top: 470px; text-align: center; font-size: 104px; font-weight: 650; letter-spacing: -0.05em; line-height: 1.05; }
+  #root .b em { color: var(--accent); font-size: 1.12em; }
+  #root .a .rc-strike { color: var(--ink); }
+</style>
+<div id="root" data-look="paper" data-composition-id="strike-replace" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(226,86,42,.12); --mesh-2: rgba(18,18,18,.05)"></div>
+  <div class="a">Every app was built on a <span class="rc-strike">Mac<span class="rc-rule"></span></span>.</div>
+  <div class="b">Now it's built<br />in a <em class="rc">sentence.</em></div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  RC.words(tl, "#root .a", 0, { lead: true, stagger: 0.07 });
+  RC.mark(tl, "#root .a .rc-strike", 1.2, { duration: 0.45 });
+  tl.to("#root .a .rc-strike", { opacity: 0.45, duration: 0.3 }, 1.6);
+  RC.words(tl, "#root .b", 1.75, { stagger: 0.09, blur: 18, y: 30 });
+  RC.hold(tl, 4.45);
+  window.__timelines["strike-replace"] = tl;
+})();
+</script>
+</template>
+</body></html>

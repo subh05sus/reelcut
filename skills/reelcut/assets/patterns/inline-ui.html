@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* INLINE UI. A real control sits inside the sentence where a word would be, and it changes
+     while the line holds: "Change [the easing] anything." The powermove / Koast move — the
+     sentence and the product are the same object. */
+  #root .h { position: absolute; left: 0; right: 0; top: 340px; text-align: center; font-size: 116px; font-weight: 650; letter-spacing: -0.05em; line-height: 1.22; white-space: nowrap; }
+  #root .ui { display: inline-flex; align-items: center; gap: 16px; vertical-align: 18px; margin: 0 0 0 22px; padding: 18px 34px 18px 20px;
+              border-radius: 999px; background: var(--card); box-shadow: var(--shadow); font-size: 54px; font-weight: 550; letter-spacing: -0.025em; }
+  /* The icon is drawn, not typed: a glyph in a coloured disc is text, and fails contrast. */
+  #root .ui .rc-ico { width: 52px; height: 52px; border-radius: 50%; background: var(--accent); position: relative; }
+  #root .ui .rc-ico::after { content: ""; position: absolute; inset: 15px; background: #fff; clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); }
+  #root .ui .v { color: var(--accent); }
+  #root .sub { position: absolute; left: 0; right: 0; top: 700px; text-align: center; font-size: 32px; color: var(--muted); }
+</style>
+<div id="root" data-look="paper" data-composition-id="inline-ui" data-width="1080" data-height="1080">
+  <div class="rc-dots" style="opacity:.6"></div>
+  <div class="h"><span class="w1">Change</span><span class="ui"><span class="rc-ico"></span><span class="v">the easing</span></span><br /><span class="w2">anything.</span></div>
+  <div class="sub">One sentence. Any part of the film.</div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  RC.blurIn(tl, "#root .w1", 0, { lead: true, blur: 16 });
+  // Scale may overshoot; blur may not (an overshooting ease drives it below zero and it flickers).
+  tl.fromTo("#root .ui", { scale: 0.6 }, { scale: 1, duration: 0.7, ease: "back.out(1.6)" }, 0.2);
+  tl.fromTo("#root .ui", { opacity: 0, filter: "blur(10px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.5, ease: "expo.out" }, 0.2);
+  RC.blurIn(tl, "#root .w2", 0.4, { blur: 16 });
+  RC.roll(tl, "#root .ui .v", 1.3, { values: ["the easing", "the palette", "the voice", "the pace"], each: 0.75 });
+  tl.fromTo("#root .ui .rc-ico", { rotation: 0 }, { rotation: 360, duration: 2.4, ease: "expo.inOut" }, 1.2);
+  RC.blurIn(tl, "#root .sub", 1.0, { blur: 8, y: 10 });
+  RC.camera(tl, "#root .h", 0, { duration: 4.3, to: { scale: 1.03 } });
+  RC.hold(tl, 4.25);
+  window.__timelines["inline-ui"] = tl;
+})();
+</script>
+</template>
+</body></html>

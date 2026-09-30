@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* WORD BUILD. A sentence assembles in place, centred, one word at a time, and the word that
+     carries the meaning arrives last in italic serif. The move from 0xdesigner, launchvideo.dev,
+     Ramp: the frame is almost empty, so the sentence is the event. */
+  #root { --accent: #e2562a; }
+  #root .stage { position: absolute; inset: 0; }
+  #root .h { position: absolute; left: 90px; right: 90px; top: 380px; text-align: center;
+             font-size: 96px; font-weight: 600; line-height: 1.02; letter-spacing: -0.045em; }
+  #root .h em { font-size: 1.14em; color: var(--accent); position: relative; }
+  #root .u { position: absolute; left: 4%; right: 2%; bottom: .02em; height: .045em; background: var(--accent); border-radius: 1em; transform-origin: 0 50%; }
+  #root .sub { position: absolute; left: 0; right: 0; top: 660px; text-align: center; font-size: 30px; color: var(--muted); letter-spacing: -0.01em; }
+</style>
+<div id="root" data-look="paper" data-composition-id="word-build" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(226,86,42,.16); --mesh-2: rgba(47,91,255,.08)"></div>
+  <div class="stage">
+    <div class="h">The first launch film<br />that writes <em class="rc">itself.<span class="u"></span></em></div>
+    <div class="sub">Give it a script. Get a reel.</div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  RC.words(tl, "#root .h", 0.0, { lead: true, stagger: 0.085, blur: 16, y: 26 });
+  tl.fromTo("#root .u", { scaleX: 0 }, { scaleX: 1, duration: 0.6, ease: "power3.inOut" }, 1.25);
+  RC.blurIn(tl, "#root .sub", 1.6, { blur: 10, y: 12 });
+  RC.camera(tl, "#root .stage", 0, { duration: 4, to: { scale: 1.045 } });
+  RC.drift(tl, "#root .rc-mesh", 0, { duration: 4, x: -40, y: 30 });
+  RC.hold(tl, 3.95);
+  window.__timelines["word-build"] = tl;
+})();
+</script>
+</template>
+</body></html>

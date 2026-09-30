@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* BARS COMPARE. A claim in serif, then the evidence: muted bars for everyone else, one accent
+     bar that grows last and tallest. Labels in mono, read from the datum, never retyped.
+     The Bend and Vercel register — a chart that makes one point. Figures here are placeholders. */
+  #root .h { position: absolute; left: 90px; top: 100px; font-size: 92px; letter-spacing: -0.035em; line-height: 1.1; font-weight: 600; }
+  #root .h em { color: var(--accent); font-size: 1.1em; }
+  #root .rc-bars { left: 110px; right: 110px; top: 380px; height: 470px; }
+  /* Values sit inside the top of each bar: a label floating above its bar is text outside its box. */
+  #root .rc-bars > div > b { top: 16px; font-size: 26px; color: var(--ink); }
+  #root .rc-bars > div.rc-on > b { color: #fff; font-size: 34px; }
+  #root .lab { position: absolute; left: 110px; right: 110px; top: 872px; display: flex; gap: 22px; }
+  #root .lab span { flex: 1; text-align: center; font: 500 20px var(--font-mono); color: var(--muted); letter-spacing: .02em; }
+  #root .lab span.on { color: var(--ink); font-weight: 700; }
+  #root .base { position: absolute; left: 110px; right: 110px; top: 850px; height: 2px; background: var(--ink); opacity: .7; transform-origin: 0 50%; }
+</style>
+<div id="root" data-look="paper" data-composition-id="bars-compare" data-width="1080" data-height="1080">
+  <div class="rc-grid" style="opacity:.5"></div>
+  <div class="h">Four times<br /><em class="rc">faster.</em></div>
+  <div class="rc-bars">
+    <div style="height: 22%"><b>41s</b></div>
+    <div style="height: 27%"><b>50s</b></div>
+    <div style="height: 34%"><b>63s</b></div>
+    <div style="height: 30%"><b>56s</b></div>
+    <div class="rc-on" style="height: 92%"><b>4×</b></div>
+  </div>
+  <div class="base"></div>
+  <div class="lab"><span>tool a</span><span>tool b</span><span>tool c</span><span>tool d</span><span class="on">lumen</span></div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  RC.words(tl, "#root .h", 0, { lead: true, stagger: 0.09 });
+  tl.fromTo("#root .base", { scaleX: 0 }, { scaleX: 1, duration: 0.7, ease: "expo.inOut" }, 0.3);
+  tl.fromTo("#root .rc-bars > div:not(.rc-on)", { scaleY: 0 }, { scaleY: 1, duration: 0.7, ease: "expo.out", stagger: 0.08 }, 0.55);
+  tl.fromTo("#root .rc-bars > div > b", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4, stagger: 0.08 }, 0.9);
+  tl.fromTo("#root .rc-bars .rc-on", { scaleY: 0 }, { scaleY: 1, duration: 1.1, ease: "expo.inOut" }, 1.3);
+  RC.blurIn(tl, "#root .lab span", 0.7, { blur: 6, y: 8, stagger: 0.06 });
+  RC.hold(tl, 3.95);
+  window.__timelines["bars-compare"] = tl;
+})();
+</script>
+</template>
+</body></html>

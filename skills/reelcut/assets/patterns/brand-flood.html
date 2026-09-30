@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* BRAND FLOOD. A point becomes a mark on black, the mark's own colour irises open to fill the
+     frame, and the name slams in as extended heavy caps under a viewfinder HUD. The Claude motion
+     reel's opening — for a hook or a sign-off that has to feel like a brand, not a slide.
+     The mark here is a placeholder shape: in a real reel it is the brand's own mark, sourced. */
+  #root .pre { position: absolute; inset: 0; background: #0c0c0c; }
+  #root .mark { position: absolute; left: 540px; top: 470px; width: 0; height: 0; }
+  #root .mark svg { position: absolute; left: -130px; top: -130px; overflow: visible; }
+  #root .ring { position: absolute; left: 540px; top: 470px; width: 260px; height: 260px; margin: -130px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.25); }
+  #root .flood { position: absolute; inset: 0; background: var(--ground); }
+  #root .name { position: absolute; left: 0; right: 0; top: 400px; text-align: center; font-size: 208px; color: var(--ink); }
+  #root .sub { position: absolute; left: 0; right: 0; top: 628px; text-align: center; font-size: 64px; color: var(--ink); }
+  #root .rule { position: absolute; left: 120px; right: 120px; top: 360px; height: 2px; background: var(--ink); transform-origin: 50% 50%; opacity: .8; }
+</style>
+<div id="root" data-look="flood" data-composition-id="brand-flood" data-width="1080" data-height="1080">
+  <div class="pre">
+    <div class="ring"></div>
+    <div class="mark"><svg width="260" height="260" viewBox="-130 -130 260 260"><g stroke="#ef4b2d" stroke-width="16" stroke-linecap="round">
+      <line x1="0" y1="-24" x2="0" y2="-110"/><line x1="0" y1="24" x2="0" y2="110"/><line x1="-24" y1="0" x2="-110" y2="0"/><line x1="24" y1="0" x2="110" y2="0"/>
+      <line x1="17" y1="-17" x2="78" y2="-78"/><line x1="-17" y1="17" x2="-78" y2="78"/><line x1="-17" y1="-17" x2="-78" y2="-78"/><line x1="17" y1="17" x2="78" y2="78"/></g>
+      <circle r="14" fill="#ef4b2d"/></svg></div>
+  </div>
+  <div class="flood">
+    <div class="rule"></div>
+    <div class="name rc-display"><span class="nm">Lumen</span></div>
+    <div class="sub rc-serif">motion, written.</div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  // Two HUDs: a light one on the black intro, a dark one inside the flood. The iris reveals the
+  // second over the first, so the labels always read against whatever is behind them.
+  const labels = { tl: "LUMEN · MOTION REEL", tr: "01 / 24", bl: "00:00:00:00", br: "1080 × 1080 · 30P" };
+  const hudPre = RC.hud("#root .pre", labels); hudPre.style.color = "#a9a9a9";
+  const hud = RC.hud("#root .flood", labels);
+  // Frame 0: the dot and ring are already there, so the cut into this beat is never black.
+  tl.fromTo("#root .ring", { scale: 0.35, opacity: 0.7 }, { scale: 1.25, opacity: 0.35, duration: 1.1, ease: "expo.out" }, 0);
+  tl.fromTo("#root .mark svg circle", { scale: 1.6, transformOrigin: "50% 50%" }, { scale: 1, duration: 0.5, ease: "back.out(2)" }, 0);
+  RC.draw(tl, "#root .mark line", 0.2, { duration: 0.55, stagger: 0.04, ease: "expo.out" });
+  tl.fromTo("#root .mark", { rotation: -30 }, { rotation: 90, duration: 1.4, ease: "expo.inOut" }, 0.2);
+  RC.iris(tl, "#root .flood", 1.2, { duration: 0.8, from: "50% 43.5%" });
+  tl.fromTo("#root .rule", { scaleX: 0 }, { scaleX: 1, duration: 0.7, ease: "expo.inOut" }, 1.6);
+  RC.chars(tl, "#root .name .nm", 1.55, { stagger: 0.045, blur: 12, y: 30, duration: 0.6 });
+  // Width settles from stretched, like the extended face exhaling. scaleX, never letterSpacing:
+  // spacing reflows text and snaps to whole pixels frame by frame.
+  tl.fromTo("#root .name", { scaleX: 1.35 }, { scaleX: 1, duration: 1.0, ease: "expo.out" }, 1.55);
+  RC.words(tl, "#root .sub", 2.15, { stagger: 0.1, blur: 10, y: 14 });
+  tl.fromTo(hudPre, { opacity: 0.6 }, { opacity: 1, duration: 0.6 }, 0);
+  // Text left under an opaque layer is still text: fade the intro's HUD as the iris opens, and
+  // drop the intro layer once the flood covers it.
+  tl.to(hudPre, { opacity: 0, duration: 0.25 }, 1.15);
+  tl.to("#root .pre", { opacity: 0, duration: 0.01 }, 2.05);
+  RC.hold(tl, 3.95);
+  window.__timelines["brand-flood"] = tl;
+})();
+</script>
+</template>
+</body></html>

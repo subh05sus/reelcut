@@ -1,46 +1,60 @@
 <!doctype html>
-<html lang="de">
-  <head><meta charset="UTF-8" /></head>
-  <body>
-    <template>
-      <style>
-        /* PAYOFF, and a bookend. The hook's either/or returns with the two names stacked around
-           the question mark, and nothing resolves — no highlight, no winner. The question is the
-           ending, so the frame holds it. */
-        #root { position: absolute; inset: 0; background: #efe6d8; color: #1c1712;
-                font-family: Inter, Arial, Helvetica, sans-serif; overflow: hidden; }
-        #root .setup { position: absolute; left: 72px; top: 150px; width: 936px;
-                       font-size: 50px; font-weight: 700; line-height: 1.2; letter-spacing: -0.02em; color: #4a4036; }
-        #root .face { position: absolute; left: 72px; top: 360px; width: 936px; }
-        #root .tail { display: block; font-size: 50px; font-weight: 700; color: #4a4036; margin-top: 22px; letter-spacing: -0.02em; }
-        #root .name { display: block; font-size: 128px; font-weight: 800; line-height: 1; letter-spacing: -0.045em; }
-        #root .n1 { color: #121a2b; }
-        #root .n2 { color: #e0592a; }
-        #root .mark { display: block; font-size: 96px; font-weight: 800; color: #1c1712; line-height: 1; margin: 12px 0 12px 4px; }
-      </style>
-
-      <div id="root" data-composition-id="beat-13" data-width="1080" data-height="1080">
-        <div class="setup">Wenn du nur eine behalten dürftest, würdest du</div>
-        <div class="face">
-          <span class="name n1">Notara</span>
-          <span class="mark">oder</span>
-          <span class="name n2">Kettlebrief</span>
-          <span class="tail">wählen?</span>
-        </div>
-      </div>
-
-      <script>
-        (function () {
-          const tl = gsap.timeline({ paused: true });
-          tl.fromTo("#root .setup", { y: 14, opacity: 0.55 }, { y: 0, opacity: 1, duration: 0.28, ease: "power3.out" }, 0);
-          tl.fromTo("#root .n1", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: "power3.out" }, 0.18);
-          tl.fromTo("#root .mark", { opacity: 0 }, { opacity: 1, duration: 0.2, ease: "power2.out" }, 0.3);
-          // 12 words needs 3.6s settled in a 4.43s beat: everything is in by 0.72s and then holds.
-          tl.fromTo("#root .n2", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: "power3.out" }, 0.42);
-          tl.fromTo("#root .tail", { opacity: 0 }, { opacity: 1, duration: 0.22, ease: "power2.out" }, 0.56);
-          window.__timelines["beat-13"] = tl;
-        })();
-      </script>
-    </template>
-  </body>
-</html>
+<html lang="de"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* PAYOFF — "if you could keep only one, Notara or Kettlebrief?" The answer is the viewer's, so the
+     frame hands them the choice: a poll card with the two apps as options, each in its own colour,
+     and a cursor that hovers from one to the other and never clicks. No vote counts: nobody voted. */
+  #root { --notara: #2440d8; --kettle: #e2562a; }
+  #root .q { position: absolute; left: 90px; right: 90px; top: 120px; text-align: center; font-size: 58px; font-weight: 600; line-height: 1.18; letter-spacing: -0.035em; }
+  #root .q .a { color: var(--notara); } #root .q .b { color: var(--kettle); }
+  #root .q em { font-size: 1.1em; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 540px 660px; }
+  #root .poll { left: 170px; top: 470px; width: 740px; padding: 34px 36px; }
+  #root .poll .k { font: 500 17px var(--font-mono); color: var(--card-muted); letter-spacing: .08em; margin-bottom: 20px; }
+  #root .opt { position: relative; display: flex; align-items: center; gap: 18px; height: 96px; padding: 0 26px; border-radius: 20px; border: 2px solid var(--line);
+               font-size: 38px; font-weight: 650; letter-spacing: -0.03em; }
+  #root .opt + .opt { margin-top: 16px; }
+  #root .opt i { width: 30px; height: 30px; border-radius: 50%; border: 3px solid currentColor; flex: none; }
+  #root .o1 { color: var(--notara); } #root .o2 { color: var(--kettle); }
+  #root .opt .glow { position: absolute; inset: -2px; border-radius: 20px; opacity: 0; }
+  #root .o1 .glow { box-shadow: 0 0 0 3px var(--notara), 0 16px 40px -12px rgba(36,64,216,.45); }
+  #root .o2 .glow { box-shadow: 0 0 0 3px var(--kettle), 0 16px 40px -12px rgba(226,86,42,.45); }
+  #root .you { position: absolute; left: 0; right: 0; top: 890px; text-align: center; font-size: 34px; color: var(--muted); }
+</style>
+<div id="root" data-look="paper" data-composition-id="beat-13" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(36,64,216,.1); --mesh-2: rgba(226,86,42,.12)"></div>
+  <div class="q">Wenn du nur eine behalten dürftest, würdest du <span class="a">Notara</span> <em class="rc">oder</em> <span class="b">Kettlebrief</span> wählen?</div>
+  <div class="cam">
+    <div class="rc-card poll"><div class="k">NUR EINE DARF BLEIBEN</div>
+      <div class="opt o1"><span class="glow"></span><i></i>Notara</div>
+      <div class="opt o2"><span class="glow"></span><i></i>Kettlebrief</div>
+    </div>
+  </div>
+  <div class="you">Jetzt bist du dran.</div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  const cur = RC.cursorEl("#root .cam");
+  // 13 words, 3.6s floor in a 4.43s beat: in by 0.8s.
+  RC.words(tl, "#root .q", 0, { lead: true, stagger: 0.045, blur: 12, y: 14, duration: 0.5 });
+  tl.fromTo("#root .poll", { rotationX: 20, y: 70, opacity: 0.6, transformPerspective: 1400 }, { rotationX: 0, y: 0, opacity: 1, duration: 1.0, ease: "expo.out" }, 0.1);
+  RC.rise(tl, "#root .opt", 0.35, { y: 24, stagger: 0.1, duration: 0.6 });
+  // The cursor weighs it up: hovers Notara, drifts to Kettlebrief, back again. It never clicks.
+  RC.cursor(tl, cur, 0.9, [[980, 1060, 0], [600, 640, 0.7], [640, 752, 0.8], [590, 650, 0.8]]);
+  tl.fromTo(cur, { opacity: 0 }, { opacity: 1, duration: 0.2 }, 0.9);
+  tl.fromTo("#root .o1 .glow", { opacity: 0 }, { opacity: 1, duration: 0.25 }, 1.55)
+    .to("#root .o1 .glow", { opacity: 0, duration: 0.25 }, 1.95)
+    .fromTo("#root .o2 .glow", { opacity: 0 }, { opacity: 1, duration: 0.25 }, 2.3)
+    .to("#root .o2 .glow", { opacity: 0, duration: 0.25 }, 2.75)
+    .to("#root .o1 .glow", { opacity: 1, duration: 0.25 }, 3.1);
+  RC.blurIn(tl, "#root .you", 1.2, { blur: 10, y: 12 });
+  RC.camera(tl, "#root .cam", 0, { duration: 4.4, to: { scale: 1.04 } });
+  RC.hold(tl, 4.4);
+  window.__timelines["beat-13"] = tl;
+})();
+</script>
+</template>
+</body></html>

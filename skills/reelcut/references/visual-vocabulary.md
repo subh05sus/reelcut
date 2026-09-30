@@ -6,9 +6,9 @@ Read this **before** composing, alongside [step-4-compose.md](step-4-compose.md)
 
 Type on a field is the easiest thing to compose and the easiest thing to overuse. A reel made
 entirely of headlines is legible, tasteful, and not a motion-graphics video — it is a slide deck
-that fades. The six archetypes shipped with this skill contain **zero images, zero SVG and zero
-canvas** between them, and the reel they came from measured 8.2% mean ink. Do not treat them as
-the range of what is possible. They are the floor.
+that fades. The archetypes this skill used to ship contained **zero images, zero SVG and zero
+canvas** between them, and the reel they came from measured 8.2% mean ink. They were replaced by
+the kit and the patterns for exactly that reason.
 
 A professional piece moves between registers. Type, then a real product surface, then a number
 that counts, then a diagram that builds, then type again. The variety is not decoration — it is
@@ -85,7 +85,8 @@ consecutive type beats are usually one beat too many; three is a slide deck.
 
 When the script genuinely is all argument and no product, the variety has to come from
 *structure* — a stacked list, then a spread field, then a single line, then a split. The
-`depth-list` and `breadth-field` archetypes are a deliberate pair for exactly this reason.
+`one-word` and `constellation` patterns are opposites in exactly this way: one thing owning the
+frame, then many things arriving around a centre.
 
 ## What still applies
 

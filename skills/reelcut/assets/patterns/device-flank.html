@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* DEVICE FLANK. A phone rises into the middle of a sentence and the words sit either side of
+     it: "Say [phone] it." Then the verb rolls — "Build it." — while the screen answers.
+     Vibecode's rhythm: the product is literally inside the line. */
+  #root .l, #root .r { position: absolute; top: 470px; font-size: 118px; font-weight: 700; letter-spacing: -0.05em; line-height: 1; }
+  #root .l { right: 770px; text-align: right; }
+  #root .r { left: 770px; }
+  #root .r .dot { color: var(--accent); }
+  #root .rc-phone { left: 350px; top: 150px; }
+  #root .scr { position: absolute; inset: 0; padding: 86px 22px 22px; display: flex; flex-direction: column; gap: 14px; background: #f7f6f2; }
+  #root .scr .rc-bubble { font-size: 21px; padding: 12px 18px; border-radius: 20px; }
+  #root .scr .me { align-self: flex-end; background: #fbe0d6; color: #8a2a12; }
+  #root .scr .hd { display: flex; align-items: center; justify-content: space-between; font-size: 20px; font-weight: 650; padding: 0 6px 6px; color: #121212; }
+  #root .scr .hd span { font: 500 15px var(--font-mono); color: #6b675f; }
+  /* The preview area is never empty: a loading skeleton sits in it until the app resolves over it. */
+  #root .scr .pv { position: relative; flex: 1; margin-top: 6px; border-radius: 24px; background: #ebe8e1; overflow: hidden; }
+  #root .scr .pv .sk { position: absolute; left: 22px; right: 22px; height: 18px; border-radius: 9px; background: #dcd8cf; }
+  #root .scr .app { position: absolute; inset: 0; border-radius: 24px; background: linear-gradient(160deg, #2f5bff, #8f6bff); overflow: hidden; }
+  #root .scr .app .ring { position: absolute; left: 50%; top: 88px; width: 150px; height: 150px; margin-left: -75px; border-radius: 50%; border: 16px solid rgba(255,255,255,.3); border-top-color: #fff; border-right-color: #fff; }
+  #root .scr .cmp { display: flex; align-items: center; gap: 10px; padding: 12px 12px 12px 18px; border-radius: 22px; background: #fff; box-shadow: 0 6px 16px -8px rgba(0,0,0,.2); font-size: 18px; color: #6b675f; }
+  #root .scr .cmp b { margin-left: auto; width: 34px; height: 34px; border-radius: 50%; background: #121212; }
+  #root .scr .app i { position: absolute; left: 22px; right: 22px; height: 16px; border-radius: 8px; background: rgba(255,255,255,.35); }
+  #root .scr .app b { position: absolute; left: 22px; bottom: 28px; font-size: 34px; color: #fff; font-weight: 700; letter-spacing: -0.03em; }
+</style>
+<div id="root" data-look="paper" data-composition-id="device-flank" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(226,86,42,.14); --mesh-2: rgba(47,91,255,.1)"></div>
+  <div class="l"><span class="v">Say</span></div>
+  <div class="rc-phone"><div class="rc-screen"><div class="scr">
+    <div class="hd">New app <span>9:41</span></div>
+    <div class="rc-bubble me m1">a habit tracker with streaks</div>
+    <div class="rc-bubble m2">Building it now…</div>
+    <div class="pv"><i class="sk" style="top:28px; width:55%"></i><i class="sk" style="top:62px; width:35%"></i><i class="sk" style="top:120px; height:120px; border-radius:60px; left:50%; width:120px; margin-left:-60px"></i><i class="sk" style="bottom:30px; width:70%"></i>
+      <div class="app"><i style="top:24px; width:55%"></i><i style="top:54px; width:35%"></i><div class="ring"></div><b>21-day streak</b></div></div>
+    <div class="cmp">Describe an app…<b></b></div>
+  </div></div></div>
+  <div class="r">it<span class="dot">.</span></div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  tl.fromTo("#root .rc-phone", { y: 260, rotation: 6, opacity: 0.6, filter: "blur(8px)" }, { y: 0, rotation: 0, opacity: 1, filter: "blur(0px)", duration: 1.1, ease: "expo.out" }, 0);
+  RC.blurIn(tl, "#root .l", 0.35, { blur: 16, x: 40, y: 0 });
+  RC.blurIn(tl, "#root .r", 0.45, { blur: 16, x: -40, y: 0 });
+  RC.rise(tl, "#root .m1", 0.3, { lead: true, y: 20, duration: 0.5 });
+  RC.rise(tl, "#root .m2", 0.9, { y: 20, duration: 0.5 });
+  tl.fromTo("#root .pv .sk", { opacity: 0.5 }, { opacity: 1, duration: 0.5, ease: "sine.inOut", yoyo: true, repeat: 3 }, 0.2);
+  RC.roll(tl, "#root .l .v", 1.9, { values: ["Say", "Build", "Ship"], each: 0.9 });
+  RC.flyIn(tl, "#root .app", 2.0, { from: 0.9, blur: 12, y: 0 });
+  tl.fromTo("#root .app .ring", { rotation: -90 }, { rotation: 0, duration: 1.2, ease: "expo.out" }, 2.1);
+  RC.camera(tl, "#root .rc-phone", 1.1, { duration: 3.4, to: { scale: 1.04, y: -10 } });
+  RC.hold(tl, 4.45);
+  window.__timelines["device-flank"] = tl;
+})();
+</script>
+</template>
+</body></html>

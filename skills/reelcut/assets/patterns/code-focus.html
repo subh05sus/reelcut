@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* CODE FOCUS. Code on a dark card, turned in space, settling flat while its lines write in; the
+     line that matters lights up and the camera leans to it. For a beat about an API, an SDK, a
+     one-line install — what a developer would screenshot. */
+  #root .h { position: absolute; left: 90px; top: 110px; font-size: 84px; font-weight: 650; letter-spacing: -0.045em; line-height: 1.12; }
+  #root .h em { color: var(--accent); font-size: 1.08em; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 540px 640px; }
+  #root .rc-code { left: 70px; top: 330px; width: 940px; font-size: 31px; padding: 38px 40px; transform-origin: 50% 40%; }
+  #root .rc-code .ln { display: block; }
+  #root .file { position: absolute; left: 90px; top: 300px; font: 500 20px var(--font-mono); color: var(--muted); letter-spacing: .04em; }
+</style>
+<div id="root" data-look="ink" data-composition-id="code-focus" data-width="1080" data-height="1080">
+  <div class="rc-bloom" style="left: 70%; top: 70%; opacity: .7"></div>
+  <div class="h">Three lines.<br /><em class="rc">Shipped.</em></div>
+  <div class="cam">
+    <div class="rc-code"><span class="ln"><span class="k">import</span> { Lumen } <span class="k">from</span> <span class="s">"@lumen/sdk"</span></span><span class="ln"> </span><span class="ln"><span class="k">const</span> reel <span class="k">=</span> <span class="k">await</span> Lumen.<span class="f">cut</span>(<span class="s">"script.srt"</span>)</span><span class="ln rc-hlline"><span class="k">await</span> reel.<span class="f">render</span>({ format: <span class="s">"9:16"</span> })</span><span class="ln"><span class="c">// → out/master.mp4  18.2s  <span class="n">0</span> findings</span></span></div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  RC.words(tl, "#root .h", 0, { lead: true, stagger: 0.1 });
+  tl.fromTo("#root .rc-code", { rotationX: 28, rotationY: -18, y: 90, opacity: 0.6, transformPerspective: 1600 }, { rotationX: 0, rotationY: 0, y: 0, opacity: 1, duration: 1.4, ease: "expo.out" }, 0.1);
+  // Lines write in one after another, each revealed along the reading direction.
+  tl.fromTo("#root .rc-code .ln", { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.45, ease: "power2.out", stagger: 0.22 }, 0.45);
+  tl.fromTo("#root .rc-hlline", { backgroundColor: "rgba(139,123,255,0)", boxShadow: "inset 0 0 0 #8b7bff" }, { backgroundColor: "rgba(139,123,255,.18)", boxShadow: "inset 4px 0 0 #8b7bff", duration: 0.5 }, 1.9);
+  RC.camera(tl, "#root .cam", 1.8, { duration: 2.6, to: { scale: 1.07 } });
+  RC.hold(tl, 4.35);
+  window.__timelines["code-focus"] = tl;
+})();
+</script>
+</template>
+</body></html>

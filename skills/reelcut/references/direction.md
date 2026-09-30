@@ -45,12 +45,15 @@ secondary motion a beat carries. It does **not** affect how long a line stays on
 ### `--palette "#ground #ink #accent"`
 
 Three hex values, in that order. When given, every beat must use them — a beat that quietly picks
-its own is a finding, not a variation.
+its own is a finding, not a variation. On the kit they become `--ground`, `--ink` and `--accent` on
+each beat's `#root`.
 
 ### `--look` and `--visuals`
 
-Freeform. `--look` is art direction ("warm editorial", "Swiss print annual report", "late-90s
-broadcast"). `--visuals` steers the register ("lots of real product screens", "data-forward",
+`--look` names one of the kit's looks — `paper`, `ink`, `flood`, `sky`, `cinema`, `poster` (what each
+is for: [design-system.md](design-system.md#grounds--commit-to-one-per-reel)) — or is freeform art
+direction ("warm editorial", "Swiss print annual report", "late-90s broadcast") that you translate
+into the nearest look plus overrides. `--visuals` steers the register ("lots of real product screens", "data-forward",
 "typographic only") — see [visual-vocabulary.md](visual-vocabulary.md).
 
 ## What direction may never do

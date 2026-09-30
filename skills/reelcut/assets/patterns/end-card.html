@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* END CARD. The lockup, centred, with room: mark and name, one line of what it is, and where to
+     go. Almost every launch film ends on exactly this, and the good ones hold it — the sign-off
+     gets the longest settle in the reel. The mark is a placeholder shape. */
+  #root .lock { position: absolute; left: 0; right: 0; top: 410px; display: flex; justify-content: center; align-items: center; gap: 28px; }
+  #root .mk { width: 108px; height: 108px; border-radius: 30px; background: linear-gradient(145deg, #1a1a1a, #3a3a3a); position: relative; box-shadow: var(--shadow); }
+  #root .mk::after { content: ""; position: absolute; inset: 28px; border-radius: 50%; border: 12px solid var(--accent); border-right-color: transparent; }
+  #root .nm { font-size: 118px; font-weight: 700; letter-spacing: -0.055em; }
+  #root .tag { position: absolute; left: 0; right: 0; top: 580px; text-align: center; font-size: 40px; color: var(--muted); letter-spacing: -0.02em; }
+  #root .tag em { color: var(--ink); font-size: 1.15em; }
+  #root .url { position: absolute; left: 0; right: 0; top: 700px; display: flex; justify-content: center; }
+  #root .url span { padding: 14px 30px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--card); font: 500 26px var(--font-mono); box-shadow: var(--shadow); }
+</style>
+<div id="root" data-look="paper" data-composition-id="end-card" data-width="1080" data-height="1080">
+  <div class="rc-horizon" style="--glow: rgba(226,86,42,.28)"></div>
+  <div class="lock"><div class="mk"></div><div class="nm">Lumen</div></div>
+  <div class="tag">Launch films, <em class="rc">written.</em></div>
+  <div class="url"><span>lumen.app</span></div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  tl.fromTo("#root .mk", { scale: 0.6, rotation: -30, opacity: 0.6 }, { scale: 1, rotation: 0, opacity: 1, duration: 0.9, ease: "back.out(1.8)" }, 0);
+  RC.chars(tl, "#root .nm", 0.15, { lead: true, stagger: 0.04 });
+  RC.words(tl, "#root .tag", 0.7, { stagger: 0.08, blur: 10, y: 14 });
+  RC.rise(tl, "#root .url span", 1.1, { y: 20 });
+  tl.fromTo("#root .rc-horizon", { yPercent: 30, opacity: 0.4 }, { yPercent: 0, opacity: 1, duration: 2.4, ease: "expo.out" }, 0);
+  RC.camera(tl, "#root .lock", 0, { duration: 3.5, to: { scale: 1.03 } });
+  RC.hold(tl, 3.45);
+  window.__timelines["end-card"] = tl;
+})();
+</script>
+</template>
+</body></html>

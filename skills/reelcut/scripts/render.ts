@@ -1,8 +1,9 @@
 import { execFileSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { frameSizeFor, isOutputFormat } from "../../../src/core/constants.js";
-import { buildProject, ProjectError, type ProjectBeat, type ProjectFile, type SfxCue } from "../../../src/render/project.js";
+import { buildProject, ProjectError, type Kit, type ProjectBeat, type ProjectFile, type SfxCue } from "../../../src/render/project.js";
 import { renderHyperframesProject } from "../../../src/render/hyperframes.js";
 import { checkVideo, type VideoReport } from "../../../src/verify/checkVideo.js";
 import { choosePosterTime } from "../../../src/render/poster.js";
@@ -34,6 +35,12 @@ import { LIBRARY_ASSET_DIR, blobPath, libraryRefsIn, loadIndex, recordRun, recor
  * copied into the project and the use is recorded. Every render is recorded in `~/.reelcut/runs.json`
  * so the studio can list it.
  */
+
+/** The design kit ships beside this script; a composition with `data-look` gets it injected. */
+function loadKit(): Kit {
+  const dir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "assets", "kit");
+  return { css: readFileSync(path.join(dir, "kit.css"), "utf8"), js: readFileSync(path.join(dir, "kit.js"), "utf8") };
+}
 
 interface ManifestBeat {
   id: string;
@@ -247,7 +254,7 @@ async function main(): Promise<void> {
 
   let built;
   try {
-    built = buildProject(beats, { width, height, fps, ...(manifest.ground ? { ground: manifest.ground } : {}) }, args.sfx);
+    built = buildProject(beats, { width, height, fps, kit: loadKit(), ...(manifest.ground ? { ground: manifest.ground } : {}) }, args.sfx);
   } catch (error) {
     if (error instanceof ProjectError) {
       console.error(`project refused: ${error.message}`);

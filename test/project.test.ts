@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ProjectError, SFX_DEFAULT_VOLUME, assertComposition, buildProject, formatSeconds, inspectComposition, placeBeats, type ProjectBeat } from "../src/render/project.js";
+import { ProjectError, SFX_DEFAULT_VOLUME, assertComposition, buildProject, formatSeconds, injectKit, inspectComposition, placeBeats, type ProjectBeat } from "../src/render/project.js";
 
 const OPTIONS = { width: 1080, height: 1080, fps: 30 };
 
@@ -187,5 +187,30 @@ describe("formatSeconds", () => {
   it("writes the case that broke as a value that rounds up to the right frame", () => {
     expect(Number(formatSeconds(122 / 30)) * 30).toBeLessThanOrEqual(122);
     expect(Math.ceil(Number(formatSeconds(122 / 30)) * 30)).toBe(122);
+  });
+});
+
+describe("the design kit", () => {
+  const kit = { css: "#x { color: red }", js: "window.RC = { cost: '$1' };" };
+  const withLook = (id: string) => composition(id).replace('data-composition-id="', 'data-look="paper" data-composition-id="');
+
+  it("is injected at the top of the template only when the root chooses a look", () => {
+    const injected = injectKit(withLook("beat-01"), kit);
+    expect(injected.indexOf("data-rc-kit")).toBeGreaterThan(injected.indexOf("<template>"));
+    expect(injected.indexOf("data-rc-kit")).toBeLessThan(injected.indexOf('id="root"'));
+    // `$` in the kit survives: it is not read as a replacement pattern.
+    expect(injected).toContain("'$1'");
+    expect(injectKit(composition("beat-02"), kit)).toBe(composition("beat-02"));
+  });
+
+  it("is injected once, however many times the project is built", () => {
+    const once = injectKit(withLook("beat-01"), kit);
+    expect(injectKit(once, kit)).toBe(once);
+  });
+
+  it("reaches every clip and the master through buildProject", () => {
+    const built = buildProject([{ id: "beat-01", durationSeconds: 2, compositionHtml: withLook("beat-01") }], { ...OPTIONS, kit });
+    expect(built.clips["beat-01"]!.find((f) => f.path.endsWith("beat-01.html"))!.contents).toContain("data-rc-kit");
+    expect(built.master.find((f) => f.path.endsWith("beat-01.html"))!.contents).toContain("data-rc-kit");
   });
 });

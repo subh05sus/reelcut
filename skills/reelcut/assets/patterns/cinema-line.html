@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* CINEMA LINE. Letterboxed dark, heavy grain, a warm light leak crossing the frame, and one line
+     in serif resolving slowly out of focus, its key word in gold italic. For the emotional turn —
+     "Every launch matters." AchX, Applied Electrodynamics, the film-trailer register. */
+  #root .leak { position: absolute; left: -500px; top: 180px; width: 900px; height: 700px; border-radius: 50%;
+                background: radial-gradient(closest-side, rgba(255,170,90,.55), rgba(232,90,40,.18) 55%, transparent); filter: blur(30px); mix-blend-mode: screen; }
+  #root .bars::before, #root .bars::after { content: ""; position: absolute; left: 0; right: 0; height: 130px; background: #000; z-index: 5; }
+  #root .bars::before { top: 0; } #root .bars::after { bottom: 0; }
+  #root .k { position: absolute; left: 0; right: 0; top: 380px; text-align: center; letter-spacing: .5em; color: var(--muted); }
+  #root .h { position: absolute; left: 60px; right: 60px; top: 440px; text-align: center; font-size: 108px; line-height: 1.14; }
+  #root .h em { color: var(--accent); }
+</style>
+<div id="root" data-look="cinema" data-composition-id="cinema-line" data-width="1080" data-height="1080">
+  <div class="leak"></div>
+  <div class="k rc-kicker">A film by Lumen</div>
+  <div class="h rc-display">Every launch<br />deserves a <em class="rc">film.</em></div>
+  <div class="rc-vignette"></div>
+  <div class="bars"></div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  tl.fromTo("#root .leak", { x: 0, opacity: 0.5 }, { x: 1300, opacity: 1, duration: 4.2, ease: "sine.inOut" }, 0);
+  RC.blurIn(tl, "#root .k", 0, { lead: true, blur: 6, y: 0, duration: 1.2, ease: "sine.out" });
+  RC.words(tl, "#root .h", 0.4, { stagger: 0.16, blur: 24, y: 10, duration: 1.3, ease: "power2.out" });
+  RC.camera(tl, "#root .h", 0, { duration: 4.4, to: { scale: 1.05 } });
+  RC.hold(tl, 4.35);
+  window.__timelines["cinema-line"] = tl;
+})();
+</script>
+</template>
+</body></html>

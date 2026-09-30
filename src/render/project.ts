@@ -45,6 +45,39 @@ export interface ProjectOptions {
   fps: number;
   /** Colour behind everything, visible only if a beat fails to paint. */
   ground?: string;
+  /** The design kit, injected into every composition that opts in with `data-look`. */
+  kit?: Kit;
+}
+
+/** `skills/reelcut/assets/kit/`: shared CSS and motion helpers. */
+export interface Kit {
+  css: string;
+  js: string;
+}
+
+/** A composition opts into the kit by choosing a look on its root. */
+export function usesKit(html: string): boolean {
+  return /<[^>]+\sdata-look\s*=/.test(html);
+}
+
+/**
+ * Put the kit at the top of a composition's `<template>`.
+ *
+ * Inside the template, because a sub-composition's styles and scripts outside it are discarded;
+ * first, so the helpers exist before the composition's own script runs and the font `@import` is
+ * the stylesheet's first rule. A composition that already carries the kit is left alone.
+ */
+export function injectKit(html: string, kit: Kit): string {
+  if (!usesKit(html) || html.includes("data-rc-kit")) return html;
+  // `$` in the kit's text must not be read as a replacement pattern.
+  return html.replace(/<template(\s[^>]*)?>/i, (open) => `${open}
+<style data-rc-kit>
+${kit.css}
+</style>
+<script data-rc-kit>
+${kit.js}
+</script>
+`);
 }
 
 export interface ProjectFile {
@@ -255,6 +288,11 @@ export function buildProject(beats: readonly ProjectBeat[], options: ProjectOpti
     if (seen.has(beat.id)) throw new ProjectError(`duplicate beat id ${beat.id}`);
     seen.add(beat.id);
     assertComposition(beat, options);
+  }
+
+  if (options.kit) {
+    const kit = options.kit;
+    beats = beats.map((beat) => ({ ...beat, compositionHtml: injectKit(beat.compositionHtml, kit) }));
   }
 
   const placements = placeBeats(beats, options.fps);

@@ -1,54 +1,63 @@
 <!doctype html>
-<html lang="de">
-  <head><meta charset="UTF-8" /></head>
-  <body>
-    <template>
-      <style>
-        /* AN OUTLINE THAT NESTS. The claim is about nested research, so the frame nests: rows arrive
-           top-down, each indented to its level, joined by the tree's own connectors, and the
-           deepest one is picked out last. Abstract rows, no invented titles. */
-        #root { position: absolute; inset: 0; background: #121a2b; color: #efe9df;
-                font-family: Inter, Arial, Helvetica, sans-serif; overflow: hidden; }
-        #root .line { position: absolute; left: 72px; top: 92px; width: 936px;
-                      font-size: 54px; font-weight: 700; line-height: 1.16; letter-spacing: -0.025em; }
-        #root .line .accent { color: #7fd3c3; }
-        #root .row { position: absolute; height: 44px; display: flex; align-items: center; gap: 18px; }
-        #root .dot { width: 18px; height: 18px; border-radius: 4px; background: #4f6f86; flex: none; }
-        #root .bar { height: 18px; border-radius: 9px; background: #34425f; }
-        #root .row.deep .dot, #root .row.deep .bar { background: #7fd3c3; }
-        #root .stem { position: absolute; width: 3px; background: #2c3a56; transform-origin: 50% 0%; }
-      </style>
-
-      <div id="root" data-composition-id="beat-10" data-width="1080" data-height="1080">
-        <div class="line">Für lange, <span class="accent">verschachtelte</span> Rechercheprojekte kann Notara hervorragend funktionieren.</div>
-
-        <div class="stem" style="left: 81px; top: 452px; height: 430px"></div>
-        <div class="stem" style="left: 171px; top: 524px; height: 218px"></div>
-        <div class="stem" style="left: 261px; top: 596px; height: 74px"></div>
-
-        <div class="row" data-row style="left: 72px; top: 430px"><i class="dot"></i><i class="bar" style="width: 860px"></i></div>
-        <div class="row" data-row style="left: 162px; top: 502px"><i class="dot"></i><i class="bar" style="width: 780px"></i></div>
-        <div class="row" data-row style="left: 252px; top: 574px"><i class="dot"></i><i class="bar" style="width: 640px"></i></div>
-        <div class="row deep" data-row style="left: 342px; top: 646px"><i class="dot"></i><i class="bar" style="width: 600px"></i></div>
-        <div class="row" data-row style="left: 252px; top: 718px"><i class="dot"></i><i class="bar" style="width: 560px"></i></div>
-        <div class="row" data-row style="left: 162px; top: 790px"><i class="dot"></i><i class="bar" style="width: 740px"></i></div>
-        <div class="row" data-row style="left: 162px; top: 862px"><i class="dot"></i><i class="bar" style="width: 660px"></i></div>
+<html lang="de"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* HIGHLIGHT — "long, nested research projects". A Notara window on ink, and inside it an outline
+     that keeps nesting: each level indents and draws its guide line, and the deepest row lights in
+     Notara's blue. The line is short on time (2.97s), so it lands in half a second. */
+  #root { --notara: #6f86ff; --accent: #6f86ff; }
+  #root .h { position: absolute; left: 80px; right: 80px; top: 86px; font-size: 56px; font-weight: 600; line-height: 1.18; letter-spacing: -0.035em; }
+  #root .h em { color: var(--notara); font-size: 1.1em; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 560px 760px; }
+  #root .win { left: 80px; top: 330px; width: 920px; height: 640px; }
+  #root .win .rc-body { padding: 30px 34px; }
+  #root .row { position: relative; display: flex; align-items: center; gap: 16px; height: 62px; font-size: 26px; color: var(--card-ink); }
+  #root .row i { width: 12px; height: 12px; border-radius: 50%; background: #6b6a74; flex: none; }
+  #root .row span { color: var(--card-muted); font: 500 16px var(--font-mono); margin-left: auto; }
+  #root .row.deep { color: #fff; }
+  #root .row.deep i { background: var(--notara); box-shadow: 0 0 0 6px rgba(111,134,255,.25); }
+  #root .hlr { position: absolute; left: 20px; right: 20px; height: 62px; border-radius: 12px; background: rgba(111,134,255,.16); box-shadow: inset 3px 0 0 var(--notara); }
+  #root .guide { position: absolute; width: 2px; background: rgba(255,255,255,.14); transform-origin: 50% 0; }
+</style>
+<div id="root" data-look="ink" data-composition-id="beat-10" data-width="1080" data-height="1080">
+  <div class="rc-bloom" style="left: 60%; top: 78%; --glow: rgba(111,134,255,.3)"></div>
+  <div class="h">Für lange, <em class="rc">verschachtelte</em> Rechercheprojekte kann Notara hervorragend funktionieren.</div>
+  <div class="cam">
+    <div class="rc-window win"><div class="rc-bar">Notara · Recherche</div>
+      <div class="rc-body">
+        <div class="hlr"></div>
+        <div class="row" style="padding-left:0"><i></i>Marktanalyse<span>12 Seiten</span></div>
+        <div class="row" style="padding-left:44px"><i></i>Interviews<span>8</span></div>
+        <div class="row" style="padding-left:88px"><i></i>Einkauf &amp; Logistik<span>3</span></div>
+        <div class="row" style="padding-left:132px"><i></i>Lieferanten Q3<span>5</span></div>
+        <div class="row deep" style="padding-left:176px"><i></i>Zitat: „Lieferzeit ist alles“<span>↗ 4 Links</span></div>
+        <div class="row" style="padding-left:44px"><i></i>Quellen<span>41</span></div>
+        <div class="row" style="padding-left:0"><i></i>Zusammenfassung<span>Entwurf</span></div>
       </div>
-
-      <script>
-        (function () {
-          var tl = gsap.timeline({ paused: true });
-          // Reading floor: 8 words needs 2.4s settled in a 2.97s beat — the tightest of the four.
-          // The line is fully in by 0.28s and then does not move.
-          tl.fromTo("#root .line", { y: 12, opacity: 0.55 }, { y: 0, opacity: 1, duration: 0.28, ease: "power3.out" }, 0);
-          tl.fromTo("#root .stem", { scaleY: 0 }, { scaleY: 1, duration: 0.5, ease: "power2.out", stagger: 0.12 }, 0.22);
-          tl.fromTo("#root [data-row]", { x: -22, opacity: 0 }, { x: 0, opacity: 1, duration: 0.24, ease: "power3.out", stagger: 0.1 }, 0.26);
-          // The deepest level is the point of the sentence, so it is picked out once the tree is built.
-          tl.fromTo("#root .row.deep", { scale: 1 }, { scale: 1.06, duration: 0.22, ease: "power2.out" }, 1.25);
-          tl.to("#root .row.deep", { scale: 1, duration: 0.3, ease: "power2.inOut" }, 1.47);
-          window.__timelines["beat-10"] = tl;
-        })();
-      </script>
-    </template>
-  </body>
-</html>
+    </div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  // Guides: one vertical rule per nesting level, drawn down as its children arrive.
+  const body = document.querySelector("#root .win .rc-body");
+  [[40, 92, 290], [84, 154, 186], [128, 216, 124], [172, 278, 62]].forEach(([x, y, h]) => {
+    const g = document.createElement("div"); g.className = "guide";
+    g.style.left = (x + 4) + "px"; g.style.top = (y + 30) + "px"; g.style.height = h + "px"; body.appendChild(g);
+  });
+  // 10 words, 2.4s floor in a 2.97s beat: in by 0.5s.
+  RC.words(tl, "#root .h", 0, { lead: true, stagger: 0.03, blur: 10, y: 12, duration: 0.45 });
+  tl.fromTo("#root .win", { rotationX: 18, y: 60, opacity: 0.6, transformPerspective: 1400 }, { rotationX: 0, y: 0, opacity: 1, duration: 0.9, ease: "expo.out" }, 0);
+  RC.blurIn(tl, "#root .row", 0.2, { stagger: 0.09, x: -24, y: 0, blur: 6, duration: 0.45 });
+  tl.fromTo("#root .guide", { scaleY: 0 }, { scaleY: 1, duration: 0.5, ease: "power3.out", stagger: 0.09 }, 0.3);
+  tl.set("#root .hlr", { top: 30 + 4 * 62 }, 0);
+  tl.fromTo("#root .hlr", { opacity: 0, scaleX: 0.96 }, { opacity: 1, scaleX: 1, duration: 0.4, ease: "power2.out" }, 0.85);
+  RC.camera(tl, "#root .cam", 0.4, { duration: 2.55, to: { scale: 1.07 } });
+  RC.hold(tl, 2.93);
+  window.__timelines["beat-10"] = tl;
+})();
+</script>
+</template>
+</body></html>

@@ -84,6 +84,8 @@ export interface CheckReport {
   /** Text nodes the contrast audit examined. */
   contrastChecked?: number;
   errors?: number;
+  /** The error findings themselves, one line each: what failed, where, and when. */
+  failures?: string[];
 }
 
 /**
@@ -138,6 +140,24 @@ export function parseCheckReport(stdout: string): CheckReport {
   }
   if (errors !== undefined) out.errors = errors;
 
+  // Group repeats of one finding on one element: a contrast failure seen at 24 sample times is one
+  // problem, and the agent needs its selector and message, not 24 lines of it.
+  const failures = new Map<string, { line: string; times: number[] }>();
+  for (const name of ["lint", "runtime", "layout", "motion", "contrast"]) {
+    const findings = section(name)?.findings;
+    if (!Array.isArray(findings)) continue;
+    for (const f of findings as Record<string, unknown>[]) {
+      if (f.severity !== "error") continue;
+      const key = `${name}:${String(f.code)}:${String(f.selector ?? "")}`;
+      const entry = failures.get(key) ?? { line: `${name} ${String(f.code)} ${String(f.selector ?? "")} — ${String(f.message ?? "").slice(0, 160)}`, times: [] };
+      if (typeof f.time === "number") entry.times.push(f.time);
+      failures.set(key, entry);
+    }
+  }
+  if (failures.size > 0) {
+    out.failures = [...failures.values()].map(({ line, times }) => (times.length ? `${line} (at ${times.map((t) => t.toFixed(1)).join(", ")}s)` : line));
+  }
+
   return out;
 }
 
@@ -158,14 +178,18 @@ export async function renderHyperframesProject(options: HyperframesRenderOptions
       });
       const report = parseCheckReport(stdout);
       if (report.ok === false || (report.errors ?? 0) > 0) {
-        return { status: "failed", error: `check reported ${report.errors ?? "some"} error(s)`, ...(report.layoutSamples === undefined ? {} : { checkSamples: report.layoutSamples }) };
+        return { status: "failed", error: checkFailure(report), ...(report.layoutSamples === undefined ? {} : { checkSamples: report.layoutSamples }) };
       }
       if (report.layoutSamples === 0) {
         return { status: "failed", error: "check audited 0 layout samples — a lint error switches the layout and contrast audits off, so this is not a pass", checkSamples: 0 };
       }
       return await renderOnly({ projectDir, outputPath, quality, timeoutMs, checkSamples: report.layoutSamples });
     } catch (error) {
-      // A non-zero exit from `check` is a real gate failure: findings, or a lint error.
+      // A non-zero exit from `check` is a real gate failure: findings, or a lint error. Its JSON is
+      // still on stdout, and that — not stderr's font-fetch log — says what to fix.
+      const stdout = error && typeof error === "object" && "stdout" in error ? String((error as { stdout?: unknown }).stdout ?? "") : "";
+      const report = parseCheckReport(stdout);
+      if (report.failures?.length) return { status: "failed", error: checkFailure(report) };
       return { status: "failed", error: `check failed: ${messageOf(error)}` };
     }
   }
@@ -200,6 +224,11 @@ async function renderOnly(args: {
   }
 
   return { status: "rendered", outputPath: path.resolve(outputPath), ...(checkSamples === undefined ? {} : { checkSamples }) };
+}
+
+function checkFailure(report: CheckReport): string {
+  const head = `check reported ${report.errors ?? "some"} error(s)`;
+  return report.failures?.length ? `${head}:\n    ${report.failures.join("\n    ")}` : head;
 }
 
 function messageOf(error: unknown): string {

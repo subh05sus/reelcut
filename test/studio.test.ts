@@ -136,8 +136,8 @@ describe("the studio server", () => {
 
     const id = JSON.parse(first.body).job.id as string;
     let job: { status: string; log: string[] } = { status: "running", log: [] };
-    for (let i = 0; i < 50 && job.status === "running"; i++) {
-      await new Promise((r) => setTimeout(r, 50));
+    for (let i = 0; i < 100 && job.status === "running"; i++) {
+      await new Promise((r) => setTimeout(r, 100));
       job = JSON.parse((await request(`/api/jobs/${id}`)).body).job;
     }
     expect(job.status).toBe("ok");

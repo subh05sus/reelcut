@@ -11,8 +11,8 @@ A script goes in. A folder of clips comes out, each one composed for what its li
 
 It is not a template filler. There is no library of layouts to pick from and pour text into — that
 approach is what the predecessor to this skill did for a year, and it is why its beats put content
-on a quarter of the frame and read as generic. **You compose each beat.** The archetypes in
-`assets/archetypes/` exist for when authoring fails or a run is unattended, not as the default.
+on a quarter of the frame and read as generic. **You compose each beat**, on the kit in
+`assets/kit/`, looking at the patterns in `assets/patterns/` for how each move is done properly.
 
 ## Invocation
 
@@ -131,10 +131,13 @@ retyped.
 
 ## Step 4 — Compose each beat
 
-**Read:** [references/visual-vocabulary.md](references/visual-vocabulary.md) — what a beat can be
-made of, and why type alone is not a motion-graphics video. Then
-[references/step-4-compose.md](references/step-4-compose.md).
-[references/archetypes.md](references/archetypes.md) only if authoring fails.
+**Read:** [references/design-system.md](references/design-system.md) — what ~800 shipped launch films
+look like and the grammar they share. Then
+[references/visual-vocabulary.md](references/visual-vocabulary.md) — what a beat can be made of —
+and [references/step-4-compose.md](references/step-4-compose.md). Compose on the kit
+([references/kit.md](references/kit.md): `data-look` on the root injects looks, UI pieces and
+motion helpers) and open the nearest pattern ([references/patterns.md](references/patterns.md))
+before you start a beat of its kind.
 
 **Read the HyperFrames skills** — `hyperframes-registry` **first**, because roughly 400 blocks and
 components already exist and searching is free; `hyperframes-core` for the composition contract and

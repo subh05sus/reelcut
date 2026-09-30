@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* AGENT RUN. A request is typed into a prompt, sent, and the agent's steps resolve one by one
+     into a result card. The Ramp × Stripe structure — the commonest product beat in AI launch
+     films, because it shows the product working instead of describing it. */
+  #root .stage { position: absolute; inset: 0; }
+  #root .p { left: 120px; top: 170px; width: 840px; font-size: 34px; }
+  #root .steps { position: absolute; left: 150px; top: 330px; display: grid; gap: 26px; }
+  #root .steps .rc-step { font-size: 32px; gap: 18px; }
+  #root .steps .rc-dot { width: 26px; height: 26px; }
+  #root .res { left: 120px; top: 560px; width: 840px; padding: 38px 42px; }
+  #root .res .t { font-size: 20px; color: var(--card-muted); letter-spacing: .08em; font-family: var(--font-mono); }
+  #root .res .n { font-size: 58px; font-weight: 650; letter-spacing: -0.03em; margin: 10px 0 20px; }
+  #root .res .l { display: flex; justify-content: space-between; align-items: center; font-size: 26px; color: var(--card-muted); }
+  #root .res .l b { color: var(--card-ink); font-weight: 600; font-size: 34px; }
+  #root .res .rc-badge { background: rgba(40,200,64,.14); color: #0d6128; }
+</style>
+<div id="root" data-look="paper" data-composition-id="agent-run" data-width="1080" data-height="1080">
+  <div class="rc-dots" style="opacity:.7"></div>
+  <div class="stage">
+    <div class="rc-prompt p"><span class="rc-plus">+</span><span class="rc-text"><span class="tx"></span><span class="rc-caret"></span></span><span class="rc-send">↑</span></div>
+    <div class="steps">
+      <div class="rc-step s1"><span class="rc-dot"></span>Checking team calendar</div>
+      <div class="rc-step s2"><span class="rc-dot"></span>Comparing 12 venues</div>
+      <div class="rc-step s3"><span class="rc-dot"></span>Holding 14 seats</div>
+    </div>
+    <div class="rc-card res">
+      <div class="t">OFFSITE · LISBON · 12–14 JUNE</div>
+      <div class="n">Casa do Largo</div>
+      <div class="l"><span>14 seats held</span><span class="rc-badge">● Within policy</span><b>€4,180</b></div>
+    </div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  RC.rise(tl, "#root .p", 0, { lead: true, y: 30 });
+  RC.type(tl, "#root .p .tx", 0.25, { text: "Book the team offsite in Lisbon", cps: 30 });
+  tl.to("#root .p .rc-send", { scale: 0.86, duration: 0.08 }, 1.35).to("#root .p .rc-send", { scale: 1, duration: 0.3, ease: "back.out(3)" }, 1.43);
+  tl.to("#root .p", { y: -60, scale: 0.9, duration: 0.7, ease: "expo.inOut" }, 1.45);
+  // Each step appears, spins while it works, then resolves: the done state is the consequence.
+  ["s1", "s2", "s3"].forEach((s, i) => {
+    const t = 1.7 + i * 0.42;
+    RC.blurIn(tl, "#root ." + s, t, { blur: 8, y: 12, duration: 0.5 });
+    tl.fromTo("#root ." + s + " .rc-dot", { rotation: 0 }, { rotation: 540, duration: 0.6, ease: "none" }, t);
+    tl.fromTo("#root ." + s + " .rc-dot", { borderColor: "currentColor", backgroundColor: "rgba(0,0,0,0)" }, { borderColor: "#28c840", backgroundColor: "#28c840", duration: 0.15 }, t + 0.6);
+    tl.fromTo("#root ." + s, { color: "#6b675f" }, { color: "#121212", duration: 0.2 }, t + 0.6);
+  });
+  RC.flyIn(tl, "#root .res", 3.0, { from: 0.92, blur: 14, y: 50 });
+  RC.camera(tl, "#root .stage", 0, { duration: 4.6, to: { scale: 1.04, y: -10 } });
+  RC.hold(tl, 4.55);
+  window.__timelines["agent-run"] = tl;
+})();
+</script>
+</template>
+</body></html>
