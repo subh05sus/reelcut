@@ -108,6 +108,10 @@ async function main(): Promise<void> {
   console.log("");
   console.log(`wrote ${result.outputPath}`);
   console.log(`      ${result.outputPath}.json — provenance, for report.md`);
+  console.log("");
+  // Not added automatically: a capture may still need masking before it is fit to reuse.
+  console.log("Once it is checked (and masked if it held real data), keep it for later reels:");
+  console.log(`  npm run library -- add "${path.relative(process.env.INIT_CWD ?? process.cwd(), result.outputPath ?? args.out)}" --kind identity --tags <product>,screen`);
 }
 
 main().catch((error: unknown) => {

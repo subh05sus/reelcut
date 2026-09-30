@@ -69,6 +69,21 @@ skill". Don't guess it — a plugin install, a `~/.claude/skills/` copy and this
 
 ---
 
+## Step 0 — Ask before cutting
+
+**Read:** [references/step-0-ask.md](references/step-0-ask.md)
+
+Run `npm run beats` on the script first, then ask the user — with the AskUserQuestion tool, at most
+two rounds — about everything the invocation left open: how much text goes on screen, the length,
+the look and palette, motion, format, sound, and whether to open the studio. Options are tailored
+to *this* script, the recommended one first. Never ask about what a flag or the freeform direction
+already answered, and skip the questions when the run is unattended.
+
+**Gate:** every open axis has an answer or a recorded default, and the studio question has been
+answered, before any brief is written.
+
+---
+
 ## Step 1 — Script to beats
 
 **Read:** [references/step-1-script.md](references/step-1-script.md), and
@@ -90,11 +105,13 @@ floor, so no line can be scheduled into less time than it takes to read.
 **Read:** [references/step-2-acquire.md](references/step-2-acquire.md) and
 [references/sourcing.md](references/sourcing.md)
 
-Each brief's `mustShow` becomes an `AssetRequirement`. Resolve in this order: files already
+Each brief's `mustShow` becomes an `AssetRequirement`. Resolve in this order: the library
+(`~/.reelcut/library`, what earlier reels already acquired and verified), files already
 provided, then a capture of the real product screen, then the brand's own source for a mark, then
 — only for `generic` requirements — draw it.
 
-Report everything still open with its ways out. Never stall silently.
+Report everything still open with its ways out. Never stall silently. Once an identity asset is
+accepted, add it to the library with its source so the next reel does not acquire it again.
 
 **Gate:** no `identity` requirement is satisfied by a drawn asset. Ever.
 
@@ -136,7 +153,8 @@ hard rules below — a clean-looking report with zero samples means nothing ran.
 
 Write `reel.json`, then `npm run render -- reel.json`. It renders each beat as its own clip and a
 master that mounts them all, checks every file, and bakes the hook's strongest settled frame in as
-the thumbnail. Add `--sfx` for sound effects. Write the report.
+the thumbnail. Add `--sfx` for sound effects. Write the report. The run is recorded; open the studio
+(http://localhost:5198) or not, as the user chose in Step 0.
 
 **Gate:** every clip passes `checkVideo.ts` with zero findings, and `report.md` has a provenance
 line for every asset and every number.

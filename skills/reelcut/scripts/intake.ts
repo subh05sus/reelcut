@@ -3,14 +3,19 @@ import path from "node:path";
 import { intakeDrops, formatIntake, type DroppedFile } from "../../../src/brief/assetIntake.js";
 import { formatGapReport, reportAssetGaps } from "../../../src/brief/assetGaps.js";
 import { AssetRequirementSchema, type AssetRequirement } from "../../../src/brief/assetRequirementTypes.js";
+import { formatLibraryMatches, LibraryError, loadIndex, matchLibrary, type LibraryMatchResult } from "../../../src/library/index.js";
 
 /**
  * Match what has been handed over against what the script needs, and report the rest.
  *
- *   npm run intake -- [--dir assets/in] [--requirements out/requirements.json] [--json]
+ *   npm run intake -- [--dir assets/in] [--requirements out/requirements.json] [--tags chatgpt] [--no-library] [--json]
  *
  * `requirements.json` is an array of `AssetRequirement`, written by the agent in step 2. Without
  * it this just lists what is in the folder, which is still useful before the requirements exist.
+ *
+ * The library (`~/.reelcut/library`) is searched first: an asset reelcut already acquired and
+ * verified does not need acquiring again. Only an `auto` library match closes a requirement; a
+ * proposal is shown, and the requirement stays open for the folder to answer too.
  *
  * Reports, never moves or renames anything. A script that rearranges the files it is describing
  * is a script whose output you cannot check.
@@ -22,6 +27,8 @@ interface Args {
   dir: string;
   requirementsPath?: string;
   json: boolean;
+  library: boolean;
+  tags: string[];
 }
 
 function parseArgs(argv: readonly string[]): Args {
@@ -29,13 +36,17 @@ function parseArgs(argv: readonly string[]): Args {
   let dir = path.resolve(cwd, "assets/in");
   let requirementsPath: string | undefined;
   let json = false;
+  let library = true;
+  const tags: string[] = [];
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]!;
     if (arg === "--dir") dir = path.resolve(cwd, argv[++i] ?? "");
     else if (arg === "--requirements") requirementsPath = path.resolve(cwd, argv[++i] ?? "");
     else if (arg === "--json") json = true;
+    else if (arg === "--no-library") library = false;
+    else if (arg === "--tags") tags.push(...(argv[++i] ?? "").split(",").filter(Boolean));
   }
-  return { dir, ...(requirementsPath ? { requirementsPath } : {}), json };
+  return { dir, ...(requirementsPath ? { requirementsPath } : {}), json, library, tags };
 }
 
 /** Every media file in the folder, one level deep. Sidecars and dotfiles are not assets. */
@@ -98,15 +109,31 @@ function main(): void {
     return;
   }
 
-  const result = intakeDrops(requirements, drops);
+  let fromLibrary: LibraryMatchResult = { matches: [], stillOpen: requirements };
+  if (args.library) {
+    try {
+      fromLibrary = matchLibrary(requirements, loadIndex().assets, { tags: args.tags });
+    } catch (error) {
+      // A broken library is reported, not allowed to stop intake from the folder.
+      if (!(error instanceof LibraryError)) throw error;
+      console.error(`library skipped: ${error.message}`);
+    }
+  }
+  const closed = new Set(fromLibrary.matches.filter((m) => m.decision === "auto").map((m) => m.requirement.name));
+  const result = intakeDrops(requirements.filter((r) => !closed.has(r.name)), drops);
   const gaps = reportAssetGaps(result.stillOpen.map((requirement) => ({ requirement, status: "not_provided" as const })));
 
   if (args.json) {
-    console.log(JSON.stringify({ matches: result.matches, unmatched: result.unmatched, gaps }, null, 2));
+    console.log(JSON.stringify({ library: fromLibrary.matches, matches: result.matches, unmatched: result.unmatched, gaps }, null, 2));
   } else {
     console.log(`${drops.length} file(s) in ${args.dir}, ${requirements.length} requirement(s)`);
+    if (args.library) {
+      console.log("");
+      console.log(formatLibraryMatches(fromLibrary));
+      if (closed.size > 0) console.log("Refer to a library asset in a composition by the path shown; the render copies it in.");
+    }
     console.log("");
-    console.log(formatIntake(result));
+    console.log(formatIntake(result).replace(/^(ok {2}|\? {3}|\?\? {2})/gm, "$1drop:"));
     console.log("");
     console.log(formatGapReport(gaps));
   }

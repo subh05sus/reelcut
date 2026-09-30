@@ -30,7 +30,7 @@ not from pouring text into templates. Rendering is [HyperFrames](https://hyperfr
 - [Getting started](#getting-started)
 - [Invocation and every option](#invocation-and-every-option)
 - [Creative direction](#creative-direction)
-- [The five steps](#the-five-steps)
+- [The steps](#the-steps)
 - [Handing it assets](#handing-it-assets)
 - [The gates](#the-gates)
 - [Running the pieces yourself](#running-the-pieces-yourself)
@@ -177,9 +177,18 @@ screen before it can be read.
 
 ---
 
-## The five steps
+## The steps
 
 The skill stops at each gate rather than pushing through.
+
+### 0 · Ask before cutting
+
+Once the script is segmented, it asks — one or two rounds of multiple choice — about everything you
+did not already say: how much text goes on screen, full length or a short cut, the palette and
+look (proposed from the script's own product when it names one), motion, format, sound, and
+whether to open the studio when the reel is done. Options are tailored to the script, with a
+recommendation first. Anything you gave as a flag or in plain words is never asked again, and an
+unattended run skips the questions and records the defaults.
 
 ### 1 · Script to beats
 
@@ -249,6 +258,33 @@ requirement, so a single PNG cannot quietly fill two slots.
 
 **Let it fetch them.** Brand marks come from the brand's own press page with the licence recorded.
 Product screens are captured live.
+
+### The library: acquire once
+
+Everything accepted can be kept in `~/.reelcut/library` with its source and tags, and every later
+reel checks there first. An exact match with a recorded source is reused without asking; a capture
+older than 90 days, or an asset with no source, is only proposed. Superseded assets are never
+offered.
+
+```bash
+npm run library -- add assets/in/claude-logo.svg --kind identity --tags claude,logo --url https://www.anthropic.com/brand
+npm run library -- list --tags chatgpt
+npm run library -- tag <id> +openai -old
+npm run library -- supersede <old-id> <new-id>
+```
+
+A composition uses one as `assets/library/<id>.<ext>`; the render copies it in and records the use.
+
+### The studio
+
+```bash
+npm run studio          # http://localhost:5198
+```
+
+A local page with three views. **Library**: every asset, filterable by tag, with provenance,
+and editable name, tags and status. **Reels**: every render, with the master, each clip, and the
+report. **Jobs**: re-renders started from a clip's button, one at a time. It listens on
+127.0.0.1 only, and only serves files from the library or from a recorded reel's folder.
 
 ### When something is missing
 
@@ -444,6 +480,7 @@ npm run typecheck
 | Beats → HyperFrames project | ✅ tested, including the frozen-render and drift invariants |
 | Render → clips, master, thumbnail | ✅ **produced a real 18s reel**, every frame count exact |
 | Frame checker | ✅ tested, catches a real blank panel in a third-party video |
+| Asset library and studio | ✅ tested; a library asset rendered into a real clip and re-rendered from the studio |
 | Sound effects (`--sfx`) | ⚠️ placement and mixing tested; no sound library ships |
 | Data sourcing and charts | ⚠️ specified, not built |
 
@@ -453,10 +490,10 @@ npm run typecheck
 
 ```
 skills/reelcut/
-  SKILL.md              the router: five steps and the hard rules
-  references/           direction, the five steps, visual vocabulary, sourcing, archetypes
+  SKILL.md              the router: the steps and the hard rules
+  references/           direction, steps 0–5, visual vocabulary, sourcing, archetypes
   assets/archetypes/    six seed compositions — the fallback, not the default
-  scripts/              beats, intake, capture, render, check-video
+  scripts/              beats, intake, capture, render, check-video, library (+ studio)
 src/
   core/                 reading floor, frame sizes, the Beat schema
   planner/              parse, segment, merge, density, short cut
@@ -465,6 +502,8 @@ src/
   direction/            creative direction and its enforcement
   verify/               the frame checker
   render/               project builder, poster choice, the HyperFrames render route
+  library/              the asset library, its reuse policy, and the record of every run
+  studio/               the local server and its one page
 examples/               a script to try it on, and a composed, renderable reel from it
 ```
 

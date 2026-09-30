@@ -32,6 +32,36 @@ The consequences are absolute:
 
 ## Resolve in this order
 
+### 0. The library
+
+`~/.reelcut/library` holds every asset an earlier reel acquired and verified, with where it came
+from. `npm run intake` searches it first (below); `--tags chatgpt` narrows it to assets carrying
+that tag, when the user asks for "the ChatGPT ones".
+
+A library match is **`auto`** — use it without asking — only when all of these hold:
+
+- the match is `exact`,
+- the asset is `active` (superseded and retired assets are never offered),
+- an `identity` asset has a source someone can check: a URL, a capture sidecar, or the user
+  having handed it over,
+- a capture was taken within the last 90 days.
+
+Anything else is a **proposal** and says why. The rule exists because a brand that refreshed its
+mark, or a product that redesigned the screen, would otherwise keep getting last year's version,
+and that passes every later gate.
+
+Use a library asset in a composition as `assets/library/<id>.<ext>`, exactly as intake prints it.
+The render copies it in and records which reel used it.
+
+When you accept a new identity asset, add it, so the next reel skips this whole step for it:
+
+```bash
+npm run library -- add assets/in/claude-logo.svg --kind identity --tags claude,anthropic,logo --url https://www.anthropic.com/brand --licence "brand guidelines, nominative use"
+```
+
+A capture's `*.png.json` sidecar is read automatically. When a mark changes, add the new one and
+`npm run library -- supersede <old-id> <new-id>`.
+
 ### 1. What was already provided
 
 ```bash

@@ -14,7 +14,9 @@
     "intake": "tsx skills/reelcut/scripts/intake.ts",
     "capture": "tsx skills/reelcut/scripts/capture.ts",
     "check-video": "tsx skills/reelcut/scripts/checkVideo.ts",
-    "render": "tsx skills/reelcut/scripts/render.ts"
+    "render": "tsx skills/reelcut/scripts/render.ts",
+    "library": "tsx skills/reelcut/scripts/library.ts",
+    "studio": "tsx skills/reelcut/scripts/library.ts serve"
   },
   "dependencies": {
     "zod": "^3.23.8",

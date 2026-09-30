@@ -64,6 +64,15 @@ before anything renders rather than after.
 
 A worked, renderable example is in `examples/notiz-apps/`.
 
+`--only beat-03` renders just that beat's clip. Compositions that refer to
+`assets/library/<id>.<ext>` get those blobs copied into the project; a reference the library does
+not have stops the render before anything runs. Every render is recorded in `~/.reelcut/runs.json`
+and shows up in the studio:
+
+```bash
+npm run studio          # http://localhost:5198 — library, every reel, re-render one beat
+```
+
 ### What it guarantees
 
 - **Isolation.** Each beat is its own project directory. A beat that fails fails alone and is
@@ -114,3 +123,24 @@ the last check before handing over.
 
 Then say, in one or two sentences, what the creative angle was and which beats you would change
 first. Offer to re-render a single beat — the project is kept precisely so that costs seconds.
+
+## Open the studio — or not
+
+The user answered this in [Step 0](step-0-ask.md#the-studio-question); act on that answer and do
+not ask again. Only if Step 0 was skipped with someone still present, ask now. Never start it
+unasked: it is a server on the user's machine.
+
+- **When the reel is done** — start it now, in the background (it keeps running after the turn).
+- **Now** — it was started in the background at Step 0 with a plain `npm run studio`; run the
+  command below anyway, which finds that server and opens it onto this reel.
+- **No** — mention `npm run studio` once and leave it.
+
+To start it, or bring an already-running one up on this reel:
+
+```bash
+npm run studio -- --reel <out dir>
+```
+
+It opens the browser on that reel. If a studio for this library is already running on 5198, the
+command just opens the page and exits, so saying yes twice never starts two servers. Tell the user
+the URL it printed, and that Ctrl+C in that terminal (or stopping the background task) ends it.

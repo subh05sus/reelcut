@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>reelcut studio</title>
+<style>
+  :root {
+    --bg: #f4f2ee; --panel: #ffffff; --ink: #16161a; --muted: #6b6a67; --line: #e2dfd9;
+    --accent: #ff4b1f; --ok: #1f8a4c; --warn: #b7791f; --bad: #c0392b; --chip: #ecE8e1;
+    color-scheme: light dark; --radius: 10px; --mono: ui-monospace, "Cascadia Code", Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #111113; --panel: #1a1a1d; --ink: #eceae6; --muted: #8e8c88; --line: #2a2a2e;
+      --chip: #26262a; --ok: #3fbf74; --warn: #e0a84a; --bad: #ef6b5b;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { display: flex; align-items: center; gap: 24px; padding: 14px 24px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--bg); z-index: 5; }
+  header h1 { font-size: 15px; margin: 0; letter-spacing: -0.01em; }
+  header h1 span { color: var(--accent); }
+  nav { display: flex; gap: 4px; }
+  nav a { color: var(--muted); text-decoration: none; padding: 6px 12px; border-radius: 999px; }
+  nav a.on { background: var(--ink); color: var(--bg); }
+  nav a .n { font-variant-numeric: tabular-nums; opacity: .7; margin-left: 4px; }
+  main { padding: 20px 24px 60px; max-width: 1400px; margin: 0 auto; }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 16px; }
+  input, select, textarea { font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; }
+  input[type=search] { min-width: 240px; }
+  button { font: inherit; cursor: pointer; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 8px; padding: 6px 12px; }
+  button.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  button:disabled { opacity: .5; cursor: default; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; background: var(--chip); color: var(--ink); border: 1px solid transparent; font-size: 12px; cursor: pointer; user-select: none; }
+  .chip.on { border-color: var(--accent); color: var(--accent); }
+  .chip .n { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; cursor: pointer; transition: border-color .15s; }
+  .card:hover { border-color: var(--muted); }
+  .card.sel { border-color: var(--accent); }
+  .thumb { aspect-ratio: 1 / 1; background: repeating-conic-gradient(var(--chip) 0 25%, transparent 0 50%) 0 0 / 16px 16px; display: grid; place-items: center; overflow: hidden; }
+  .thumb img, .thumb video { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+  .thumb .ext { font: 600 22px var(--mono); color: var(--muted); text-transform: uppercase; }
+  .meta { padding: 10px 12px; }
+  .meta .name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .meta .sub { color: var(--muted); font-size: 12px; display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+  .badge { font-size: 11px; padding: 1px 7px; border-radius: 4px; background: var(--chip); color: var(--muted); }
+  .badge.identity { color: var(--accent); }
+  .badge.superseded, .badge.retired, .badge.missing { color: var(--bad); }
+  .badge.ok { color: var(--ok); } .badge.running { color: var(--warn); } .badge.failed { color: var(--bad); }
+  .split { display: grid; grid-template-columns: 1fr 380px; gap: 20px; align-items: start; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; position: sticky; top: 70px; max-height: calc(100vh - 90px); overflow: auto; }
+  .panel h2 { font-size: 16px; margin: 0 0 12px; word-break: break-word; }
+  .panel .preview { margin-bottom: 12px; }
+  dl { display: grid; grid-template-columns: 90px 1fr; gap: 6px 10px; margin: 0 0 14px; font-size: 13px; }
+  dt { color: var(--muted); } dd { margin: 0; word-break: break-all; }
+  label { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 4px; }
+  label + input, label + select, label + textarea { width: 100%; }
+  code, .mono { font-family: var(--mono); font-size: 12px; }
+  .ref { display: flex; gap: 6px; align-items: center; background: var(--chip); padding: 6px 8px; border-radius: 6px; margin-bottom: 12px; }
+  .ref code { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .empty { color: var(--muted); padding: 40px 0; text-align: center; }
+  .empty code { background: var(--chip); padding: 2px 6px; border-radius: 4px; }
+  .reel-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .reel-head h2 { margin: 0; font-size: 18px; }
+  .master { background: #000; border-radius: var(--radius); overflow: hidden; margin-bottom: 18px; display: grid; place-items: center; }
+  .master video { max-width: 100%; max-height: 70vh; display: block; }
+  .clips { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; margin-bottom: 20px; }
+  .clip { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  .clip video { width: 100%; display: block; background: #000; aspect-ratio: 1/1; object-fit: contain; }
+  .clip .meta { display: flex; justify-content: space-between; align-items: center; }
+  details { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 10px; }
+  summary { cursor: pointer; font-weight: 600; }
+  pre { white-space: pre-wrap; font: 12px/1.5 var(--mono); margin: 10px 0 0; max-height: 420px; overflow: auto; }
+  .job { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 10px; }
+  .job .top { display: flex; gap: 10px; align-items: center; }
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 8px 16px; border-radius: 8px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+  .toast.on { opacity: 1; }
+  a { color: inherit; }
+  @media (max-width: 860px) { .split { grid-template-columns: 1fr; } .panel { position: static; max-height: none; } header { flex-wrap: wrap; gap: 10px; } main { padding: 16px; } input[type=search] { min-width: 0; width: 100%; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>reelcut <span>studio</span></h1>
+  <nav>
+    <a href="#library" data-tab="library">Library<span class="n" id="n-library"></span></a>
+    <a href="#reels" data-tab="reels">Reels<span class="n" id="n-reels"></span></a>
+    <a href="#jobs" data-tab="jobs">Jobs<span class="n" id="n-jobs"></span></a>
+  </nav>
+</header>
+<main id="main"></main>
+<div class="toast" id="toast"></div>
+<script>
+const $ = (sel, el = document) => el.querySelector(sel);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const IMG = new Set(["png", "jpg", "jpeg", "gif", "webp", "avif", "svg"]);
+const VID = new Set(["mp4", "webm", "mov"]);
+const state = { tagFilter: new Set(), q: "", selected: null, assets: [], tags: {}, runs: [], jobs: [] };
+
+async function api(path, init) {
+  const res = await fetch(path, { headers: { "Content-Type": "application/json" }, ...init });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(body.error || res.statusText);
+  return body;
+}
+function toast(text) {
+  const t = $("#toast"); t.textContent = text; t.classList.add("on");
+  clearTimeout(toast.timer); toast.timer = setTimeout(() => t.classList.remove("on"), 2200);
+}
+function when(iso) { return iso ? new Date(iso).toLocaleString() : "—"; }
+function media(src, ext, attrs = "") {
+  if (IMG.has(ext)) return `<img src="${src}" alt="" loading="lazy" ${attrs}>`;
+  if (VID.has(ext)) return `<video src="${src}" muted preload="metadata" ${attrs}></video>`;
+  return `<span class="ext">${esc(ext || "?")}</span>`;
+}
+
+// ---------- library
+async function loadLibrary() {
+  const tags = [...state.tagFilter].join(",");
+  const [a, t] = await Promise.all([api(`/api/assets?tags=${encodeURIComponent(tags)}&q=${encodeURIComponent(state.q)}`), api("/api/tags")]);
+  state.assets = a.assets; state.tags = t.tags;
+}
+function renderLibrary() {
+  const tagEntries = Object.entries(state.tags).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  const sel = state.assets.find((a) => a.id === state.selected);
+  $("#main").innerHTML = `
+    <div class="bar">
+      <input type="search" id="q" placeholder="Search name, tag or source…" value="${esc(state.q)}">
+      ${tagEntries.map(([t, n]) => `<span class="chip ${state.tagFilter.has(t) ? "on" : ""}" data-tag="${esc(t)}">#${esc(t)} <span class="n">${n}</span></span>`).join("")}
+    </div>
+    <div class="${sel ? "split" : ""}">
+      <div>${state.assets.length === 0 ? emptyLibrary() : `<div class="grid">${state.assets.map(assetCard).join("")}</div>`}</div>
+      ${sel ? assetPanel(sel) : ""}
+    </div>`;
+  $("#q").addEventListener("input", debounce(async (e) => { state.q = e.target.value; await loadLibrary(); renderLibrary(); $("#q").focus(); $("#q").setSelectionRange(state.q.length, state.q.length); }, 200));
+  document.querySelectorAll("[data-tag]").forEach((el) => el.addEventListener("click", async () => {
+    const t = el.dataset.tag; state.tagFilter.has(t) ? state.tagFilter.delete(t) : state.tagFilter.add(t);
+    await loadLibrary(); renderLibrary();
+  }));
+  document.querySelectorAll("[data-asset]").forEach((el) => el.addEventListener("click", () => { state.selected = state.selected === el.dataset.asset ? null : el.dataset.asset; renderLibrary(); }));
+  if (sel) bindPanel(sel);
+}
+function emptyLibrary() {
+  if (state.tagFilter.size || state.q) return `<p class="empty">Nothing matches that filter.</p>`;
+  return `<p class="empty">The library is empty. Add an asset with<br><br><code>npm run library -- add assets/in/claude-logo.svg --kind identity --tags claude,anthropic,logo --url https://anthropic.com/brand</code></p>`;
+}
+function assetCard(a) {
+  return `<div class="card ${a.id === state.selected ? "sel" : ""}" data-asset="${a.id}">
+    <div class="thumb">${media(`/files/asset/${a.id}`, a.ext)}</div>
+    <div class="meta">
+      <div class="name" title="${esc(a.name)}">${esc(a.name)}</div>
+      <div class="sub"><span class="badge ${a.assetKind}">${a.assetKind}</span>${a.status !== "active" ? `<span class="badge ${a.status}">${a.status}</span>` : ""}${a.tags.slice(0, 4).map((t) => `<span>#${esc(t)}</span>`).join("")}</div>
+    </div>
+  </div>`;
+}
+function assetPanel(a) {
+  const p = a.provenance;
+  const ref = `assets/library/${a.file.split("/").pop()}`;
+  return `<aside class="panel">
+    <div class="preview thumb">${media(`/files/asset/${a.id}`, a.ext, VID.has(a.ext) ? "controls" : "")}</div>
+    <h2>${esc(a.name)}</h2>
+    <div class="ref"><code title="${ref}">${ref}</code><button id="copy">Copy</button></div>
+    <dl>
+      <dt>Kind</dt><dd>${a.assetKind}</dd>
+      <dt>Status</dt><dd>${a.status}${a.supersededBy ? ` → <a href="#" data-goto="${a.supersededBy}">${a.supersededBy}</a>` : ""}</dd>
+      <dt>Source</dt><dd>${esc(p.source)}${p.url ? ` · <a href="${esc(p.url)}" target="_blank" rel="noopener noreferrer">${esc(p.url)}</a>` : ""}</dd>
+      ${p.licence ? `<dt>Licence</dt><dd>${esc(p.licence)}</dd>` : ""}
+      ${p.capturedAt ? `<dt>Captured</dt><dd>${when(p.capturedAt)}</dd>` : ""}
+      ${p.note ? `<dt>Note</dt><dd>${esc(p.note)}</dd>` : ""}
+      <dt>Added</dt><dd>${when(a.addedAt)}</dd>
+      <dt>Last used</dt><dd>${when(a.lastUsedAt)}</dd>
+      <dt>Used in</dt><dd>${a.usedIn.length ? a.usedIn.map((r) => `<a href="#reels/${r}">${r}</a>`).join(", ") : "—"}</dd>
+      <dt>Size</dt><dd>${(a.bytes / 1024).toFixed(0)} kB · ${a.ext}</dd>
+    </dl>
+    <label for="f-name">Name</label><input id="f-name" value="${esc(a.name)}">
+    <label for="f-tags">Tags, comma separated</label><input id="f-tags" value="${esc(a.tags.join(", "))}">
+    <label for="f-status">Status</label>
+    <select id="f-status">${["active", "superseded", "retired"].map((s) => `<option ${s === a.status ? "selected" : ""}>${s}</option>`).join("")}</select>
+    <label for="f-sup">Superseded by (asset id)</label><input id="f-sup" class="mono" value="${esc(a.supersededBy || "")}" placeholder="the newer asset's id">
+    <label for="f-note">Note for report.md</label><input id="f-note" value="${esc(p.note || "")}" placeholder="e.g. masked: account email in header">
+    <div class="row"><button class="primary" id="save">Save</button><button id="close">Close</button></div>
+  </aside>`;
+}
+function bindPanel(a) {
+  $("#copy").addEventListener("click", () => { navigator.clipboard.writeText($(".ref code").textContent); toast("Reference copied"); });
+  $("#close").addEventListener("click", () => { state.selected = null; renderLibrary(); });
+  document.querySelectorAll("[data-goto]").forEach((el) => el.addEventListener("click", (e) => { e.preventDefault(); state.selected = el.dataset.goto; renderLibrary(); }));
+  $("#save").addEventListener("click", async () => {
+    const patch = {
+      name: $("#f-name").value,
+      tags: $("#f-tags").value.split(",").map((t) => t.trim()).filter(Boolean),
+      status: $("#f-status").value,
+      note: $("#f-note").value,
+    };
+    const sup = $("#f-sup").value.trim();
+    if (sup && sup !== a.supersededBy) patch.supersededBy = sup;
+    try { await api(`/api/assets/${a.id}`, { method: "PATCH", body: JSON.stringify(patch) }); toast("Saved"); await loadLibrary(); renderLibrary(); }
+    catch (e) { toast(e.message); }
+  });
+}
+
+// ---------- reels
+async function loadRuns() { state.runs = (await api("/api/runs")).runs; }
+function runFile(run, rel) { return `/files/run/${run.id}/${rel.split("/").map(encodeURIComponent).join("/")}`; }
+function runTitle(run) { const parts = run.outDir.split(/[\\/]/).filter(Boolean); return parts.slice(-2).join("/"); }
+function renderReels() {
+  if (state.runs.length === 0) {
+    $("#main").innerHTML = `<p class="empty">No reels yet. Every <code>npm run render -- reel.json</code> shows up here.</p>`;
+    return;
+  }
+  $("#main").innerHTML = `<div class="grid">${state.runs.map((r) => `
+    <a class="card" href="#reels/${r.id}" style="text-decoration:none">
+      <div class="thumb">${r.missing ? `<span class="ext">gone</span>` : r.poster ? `<img src="${runFile(r, r.poster)}" alt="">` : r.clips[0] ? `<video src="${runFile(r, r.clips[0])}#t=0.5" muted preload="metadata"></video>` : `<span class="ext">—</span>`}</div>
+      <div class="meta"><div class="name" title="${esc(r.outDir)}">${esc(runTitle(r))}</div>
+        <div class="sub"><span>${when(r.renderedAt)}</span><span>${r.clips.length} clips</span>${r.missing ? `<span class="badge missing">missing</span>` : ""}</div></div>
+    </a>`).join("")}</div>`;
+}
+async function renderReel(id) {
+  let data;
+  try { data = await api(`/api/runs/${id}`); } catch (e) { $("#main").innerHTML = `<p class="empty">${esc(e.message)}</p>`; return; }
+  const { run, plan, report } = data;
+  const running = state.jobs.find((j) => j.status === "running");
+  $("#main").innerHTML = `
+    <div class="reel-head"><a href="#reels">← Reels</a><h2>${esc(runTitle(run))}</h2><span class="mono" style="color:var(--muted)">${esc(run.outDir)}</span>${run.missing ? `<span class="badge missing">folder missing</span>` : ""}</div>
+    ${run.master && !run.missing ? `<div class="master"><video src="${runFile(run, run.master)}" controls preload="metadata" ${run.poster ? `poster="${runFile(run, run.poster)}"` : ""}></video></div>` : ""}
+    <div class="clips">${run.beats.map((b) => {
+      const clip = run.clips.find((c) => c === `clips/${b}.mp4`);
+      return `<div class="clip">
+        ${clip && !run.missing ? `<video src="${runFile(run, clip)}?v=${encodeURIComponent(run.renderedAt)}" controls preload="metadata"></video>` : `<div class="thumb"><span class="ext">no clip</span></div>`}
+        <div class="meta"><span class="mono">${esc(b)}</span><button data-render="${esc(b)}" ${run.missing || running ? "disabled" : ""}>Re-render</button></div>
+      </div>`; }).join("")}</div>
+    ${run.libraryAssets.length ? `<details open><summary>Library assets used (${run.libraryAssets.length})</summary><p>${run.libraryAssets.map((a) => `<a href="#library" data-lib="${a}" class="mono">${a}</a>`).join(" · ")}</p></details>` : ""}
+    ${report ? `<details><summary>report.md</summary><pre>${esc(report)}</pre></details>` : ""}
+    ${plan ? `<details><summary>plan.md</summary><pre>${esc(plan)}</pre></details>` : ""}`;
+  document.querySelectorAll("[data-lib]").forEach((el) => el.addEventListener("click", () => { state.selected = el.dataset.lib; }));
+  document.querySelectorAll("[data-render]").forEach((el) => el.addEventListener("click", async () => {
+    try { await api(`/api/runs/${run.id}/render`, { method: "POST", body: JSON.stringify({ beat: el.dataset.render }) }); toast(`Rendering ${el.dataset.render}…`); location.hash = "#jobs"; }
+    catch (e) { toast(e.message); }
+  }));
+}
+
+// ---------- jobs
+async function loadJobs() { state.jobs = (await api("/api/jobs")).jobs; }
+function renderJobs() {
+  if (state.jobs.length === 0) { $("#main").innerHTML = `<p class="empty">No renders started from the studio yet.</p>`; return; }
+  $("#main").innerHTML = state.jobs.map((j) => `
+    <div class="job"><div class="top"><span class="badge ${j.status}">${j.status}</span><strong class="mono">${esc(j.beat)}</strong>
+      <a href="#reels/${j.runId}">reel ${j.runId}</a><span style="color:var(--muted)">${when(j.startedAt)}</span></div>
+      <pre>${esc(j.log.slice(-40).join("\n")) || "…"}</pre></div>`).join("");
+}
+
+// ---------- shell
+function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+let poll;
+async function route() {
+  const [tab, id] = (location.hash.slice(1) || "library").split("/");
+  document.querySelectorAll("nav a").forEach((a) => a.classList.toggle("on", a.dataset.tab === tab));
+  clearTimeout(poll);
+  try {
+    await Promise.all([loadLibrary(), loadRuns(), loadJobs()]);
+    $("#n-library").textContent = state.assets.length || "";
+    $("#n-reels").textContent = state.runs.length || "";
+    $("#n-jobs").textContent = state.jobs.filter((j) => j.status === "running").length ? "●" : "";
+    if (tab === "reels" && id) await renderReel(id);
+    else if (tab === "reels") renderReels();
+    else if (tab === "jobs") renderJobs();
+    else renderLibrary();
+  } catch (e) { $("#main").innerHTML = `<p class="empty">${esc(e.message)}</p>`; }
+  if (tab === "jobs" && state.jobs.some((j) => j.status === "running")) poll = setTimeout(route, 2000);
+}
+window.addEventListener("hashchange", route);
+route();
+</script>
+</body>
+</html>

@@ -6,11 +6,12 @@ import { buildProject, ProjectError, type ProjectBeat, type ProjectFile, type Sf
 import { renderHyperframesProject } from "../../../src/render/hyperframes.js";
 import { checkVideo, type VideoReport } from "../../../src/verify/checkVideo.js";
 import { choosePosterTime } from "../../../src/render/poster.js";
+import { LIBRARY_ASSET_DIR, blobPath, libraryRefsIn, loadIndex, recordRun, recordUse, type LibraryAsset } from "../../../src/library/index.js";
 
 /**
  * Turn a reel manifest into rendered clips and a master.
  *
- *   npm run render -- out/reel.json [--sfx] [--clips-only] [--master-only] [--quality looks]
+ *   npm run render -- out/reel.json [--sfx] [--clips-only] [--master-only] [--only beat-03] [--quality looks]
  *
  * `reel.json`, written by the agent after composing:
  *
@@ -28,6 +29,10 @@ import { choosePosterTime } from "../../../src/render/poster.js";
  *
  * Each rendered file then goes through the frame checker. A clip is only reported as done when it
  * rendered AND passed, because a file existing is not the same as a file being right.
+ *
+ * A composition uses a library asset by referring to `assets/library/<id>.<ext>`; those blobs are
+ * copied into the project and the use is recorded. Every render is recorded in `~/.reelcut/runs.json`
+ * so the studio can list it.
  */
 
 interface ManifestBeat {
@@ -51,6 +56,8 @@ interface Args {
   sfx: boolean;
   clips: boolean;
   master: boolean;
+  /** Render only these beats' clips. */
+  only: string[];
   quality: "draft" | "looks" | "delivery";
 }
 
@@ -61,15 +68,17 @@ function parseArgs(argv: readonly string[]): Args | undefined {
   let clips = true;
   let master = true;
   let quality: Args["quality"] = "looks";
+  const only: string[] = [];
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]!;
     if (arg === "--sfx") sfx = true;
     else if (arg === "--clips-only") master = false;
     else if (arg === "--master-only") clips = false;
+    else if (arg === "--only") only.push(...(argv[++i] ?? "").split(",").filter(Boolean));
     else if (arg === "--quality") quality = (argv[++i] ?? "looks") as Args["quality"];
     else if (!arg.startsWith("--")) manifest = path.resolve(cwd, arg);
   }
-  return manifest ? { manifest, sfx, clips, master, quality } : undefined;
+  return manifest ? { manifest, sfx, clips, master, only, quality } : undefined;
 }
 
 /** Sound effects need a duration on the element; probe it rather than trusting the manifest. */
@@ -94,6 +103,35 @@ function copyAssets(dir: string, assets: readonly { source: string; target: stri
     const target = path.join(dir, asset.target);
     mkdirSync(path.dirname(target), { recursive: true });
     copyFileSync(asset.source, target);
+  }
+}
+
+/** Copy the library blobs a project refers to into its `assets/library/`. */
+function copyLibraryAssets(dir: string, assets: readonly LibraryAsset[]): void {
+  for (const asset of assets) {
+    const target = path.join(dir, LIBRARY_ASSET_DIR, path.basename(asset.file));
+    mkdirSync(path.dirname(target), { recursive: true });
+    copyFileSync(blobPath(asset), target);
+  }
+}
+
+/** Record the run for the studio. A library problem is reported, never allowed to fail a render. */
+function recordForStudio(base: string, manifestPath: string, beatIds: readonly string[], outcomes: readonly Outcome[], libraryIds: readonly string[]): void {
+  try {
+    const ok = (id: string) => outcomes.some((o) => o.id === id && o.status === "ok");
+    const run = recordRun({
+      outDir: base,
+      manifest: manifestPath,
+      beats: [...beatIds],
+      clips: beatIds.filter((id) => existsSync(path.join(base, "clips", `${id}.mp4`))).map((id) => `clips/${id}.mp4`),
+      ...(ok("master") ? { master: "master.mp4" } : {}),
+      ...(ok("master") && existsSync(path.join(base, "poster.jpg")) ? { poster: "poster.jpg" } : {}),
+      libraryAssets: [...libraryIds],
+    });
+    recordUse(libraryIds, run.id);
+    console.log(`  recorded as run ${run.id} — watch it with: npm run studio -- --reel "${base}"`);
+  } catch (error) {
+    console.warn(`  (not recorded for the studio: ${error instanceof Error ? error.message : String(error)})`);
   }
 }
 
@@ -158,7 +196,7 @@ function bakePoster(master: string, at: number, posterPath: string): { ok: boole
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
   if (!args) {
-    console.error("usage: render.ts <reel.json> [--sfx] [--clips-only] [--master-only] [--quality looks]");
+    console.error("usage: render.ts <reel.json> [--sfx] [--clips-only] [--master-only] [--only beat-03] [--quality looks]");
     process.exitCode = 2;
     return;
   }
@@ -180,6 +218,33 @@ async function main(): Promise<void> {
     return { id: b.id, durationSeconds: b.durationSeconds, compositionHtml: readFileSync(compositionPath, "utf8"), sfx };
   });
 
+  const unknown = args.only.filter((id) => !beats.some((b) => b.id === id));
+  if (unknown.length > 0) {
+    console.error(`--only: no beat ${unknown.join(", ")} in ${args.manifest}`);
+    process.exitCode = 2;
+    return;
+  }
+
+  // Resolve library references up front: a composition naming an asset the library does not
+  // have would render a broken image that no later check is guaranteed to notice.
+  const refsByBeat = new Map(beats.map((b) => [b.id, libraryRefsIn(b.compositionHtml)]));
+  const allRefs = [...new Set([...refsByBeat.values()].flat())];
+  const libraryById = new Map<string, LibraryAsset>();
+  if (allRefs.length > 0) {
+    const index = loadIndex();
+    for (const id of allRefs) {
+      const asset = index.assets.find((a) => a.id === id);
+      if (!asset || !existsSync(blobPath(asset))) {
+        console.error(`a composition refers to ${LIBRARY_ASSET_DIR}/${id}, which is not in the library`);
+        process.exitCode = 1;
+        return;
+      }
+      if (asset.status !== "active") console.warn(`  warning: library asset ${id} (${asset.name}) is ${asset.status}${asset.supersededBy ? ` by ${asset.supersededBy}` : ""}`);
+      libraryById.set(id, asset);
+    }
+  }
+  const libraryFor = (ids: readonly string[]) => ids.map((id) => libraryById.get(id)!);
+
   let built;
   try {
     built = buildProject(beats, { width, height, fps, ...(manifest.ground ? { ground: manifest.ground } : {}) }, args.sfx);
@@ -200,9 +265,11 @@ async function main(): Promise<void> {
 
   if (args.clips) {
     for (const beat of beats) {
+      if (args.only.length > 0 && !args.only.includes(beat.id)) continue;
       const dir = path.join(projectRoot, "clips", beat.id);
       writeFiles(dir, built.clips[beat.id]!);
       copyAssets(dir, built.assets);
+      copyLibraryAssets(dir, libraryFor(refsByBeat.get(beat.id) ?? []));
       process.stdout.write(`  ${beat.id} … `);
       const outcome = await renderOne(beat.id, dir, path.join(clipsOut, `${beat.id}.mp4`), args.quality);
       outcomes.push(outcome);
@@ -214,6 +281,7 @@ async function main(): Promise<void> {
     const dir = path.join(projectRoot, "master");
     writeFiles(dir, built.master);
     copyAssets(dir, built.assets);
+    copyLibraryAssets(dir, libraryFor(allRefs));
     process.stdout.write("  master … ");
     const outcome = await renderOne("master", dir, path.join(base, "master.mp4"), args.quality);
     outcomes.push(outcome);
@@ -228,6 +296,8 @@ async function main(): Promise<void> {
       console.log(`  poster … ${choice.at.toFixed(2)}s (${choice.reason})${baked.ok ? `, baked as frame 0 — ${baked.detail}` : ` — NOT baked: ${baked.detail}`}`);
     }
   }
+
+  recordForStudio(base, args.manifest, beats.map((b) => b.id), outcomes, allRefs);
 
   const failed = outcomes.filter((o) => o.status !== "ok");
   console.log("");
