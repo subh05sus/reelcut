@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* TYPE SLAM. Kinetic type where the letters ARE the picture: three words, each stamped onto its
+     own band one beat after the last, then on the downbeat the stack inverts — ink becomes ground
+     and ground becomes ink — while a halftone disc turns. Condensed caps and two inks only: one
+     accent, one black, on warm paper. For a manifesto line, a campaign, a release-day shout. */
+  #root { --accent: #2437ff; --ground: #f1ece2; }
+  #root .row { position: absolute; left: 60px; padding: 0 34px; line-height: .86; transform-origin: 0 100%; }
+  #root .row .t { display: block; font-size: 300px; padding-top: .07em; }
+  #root .r1 { top: 120px; background: var(--accent); color: #f1ece2; }
+  #root .r2 { top: 430px; background: transparent; color: #121212; }
+  #root .r3 { top: 740px; background: #121212; color: #f1ece2; }
+  #root .ht { position: absolute; left: 640px; top: 110px; width: 330px; height: 330px; border-radius: 50%;
+              background-image: radial-gradient(#121212 34%, transparent 36%); background-size: 22px 22px; opacity: .9; }
+  #root .tag { position: absolute; right: 60px; top: 770px; width: 250px; text-align: right; font: 500 24px var(--font-mono); letter-spacing: .08em; color: #121212; text-transform: uppercase; line-height: 1.5; }
+  #root .rule { position: absolute; left: 60px; right: 60px; top: 1040px; height: 2px; background: #121212; transform-origin: 0 50%; }
+</style>
+<div id="root" data-look="poster" data-composition-id="type-slam" data-width="1080" data-height="1080">
+  <div class="ht"></div>
+  <div class="row r1"><span class="t rc-display">Ship</span></div>
+  <div class="row r2"><span class="t rc-display">Faster</span></div>
+  <div class="row r3"><span class="t rc-display">Now.</span></div>
+  <div class="tag">v2.0<br />out today</div>
+  <div class="rule"></div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  // Each word lands from a squash, like a stamp. The first is already legible at frame 0.
+  [["r1", 0.05, true], ["r2", 0.5, false], ["r3", 0.95, false]].forEach(([r, t, lead]) => {
+    tl.fromTo("#root ." + r, { scaleY: lead ? 0.72 : 0.15, opacity: lead ? 0.6 : 0 }, { scaleY: 1, opacity: 1, duration: 0.42, ease: "expo.out" }, t);
+  });
+  tl.fromTo("#root .ht", { scale: 0.6, rotation: -40, opacity: 0.6 }, { scale: 1, rotation: 0, opacity: 0.9, duration: 1.2, ease: "expo.out" }, 0);
+  tl.fromTo("#root .rule", { scaleX: 0 }, { scaleX: 1, duration: 1.0, ease: "expo.inOut" }, 0.2);
+  RC.blurIn(tl, "#root .tag", 1.5, { blur: 6, y: 10 });
+  // The downbeat: the stack inverts, one band after another, top to bottom.
+  [["r1", 2.4, "#2437ff", "#121212"], ["r2", 2.5, "rgba(18,18,18,0)", "#2437ff"], ["r3", 2.6, "#121212", "#f1ece2"]].forEach(([r, t, from, to]) => {
+    tl.fromTo("#root ." + r, { backgroundColor: from }, { backgroundColor: to, duration: 0.2, ease: "power2.inOut", immediateRender: false }, t);
+  });
+  tl.fromTo("#root .r1 .t", { color: "#f1ece2" }, { color: "#f1ece2", duration: 0.2, immediateRender: false }, 2.4);
+  tl.fromTo("#root .r2 .t", { color: "#121212" }, { color: "#f1ece2", duration: 0.2, immediateRender: false }, 2.5);
+  tl.fromTo("#root .r3 .t", { color: "#f1ece2" }, { color: "#121212", duration: 0.2, immediateRender: false }, 2.6);
+  tl.fromTo("#root .ht", { rotation: 0 }, { rotation: 35, duration: 3.2, ease: "none", immediateRender: false }, 1.2);
+  RC.camera(tl, "#root .row.r2", 2.4, { duration: 1.6, to: { scale: 1.03 } });
+  RC.hold(tl, 3.95);
+  window.__timelines["type-slam"] = tl;
+})();
+</script>
+</template>
+</body></html>

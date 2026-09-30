@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* PAPER PLANE. Illustration as a journey: a folded-paper plane flies a dotted route — a lazy loop,
+     then a climb — leaving a solid trail behind it, and as it crosses the frame a receipt rises
+     below: Delivered. Action, then consequence. The plane's position and heading are computed from
+     the path every frame (point at length, tangent), so it seeks exactly and never drifts. For
+     "send", "ship", "publish", "reach". Two inks: the accent and black, on warm paper. */
+  #root { --accent: #2f5bff; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 540px 600px; }
+  #root svg.pl { position: absolute; left: 0; top: 0; overflow: visible; }
+  #root .guide { fill: none; stroke: rgba(18,18,18,.3); stroke-width: 5; stroke-linecap: round; stroke-dasharray: 1 15; }
+  #root .trail { fill: none; stroke: var(--accent); stroke-width: 6; stroke-linecap: round; }
+  #root .toast { left: 500px; top: 770px; width: 480px; height: 150px; }
+  #root .toast .ck { position: absolute; left: 34px; top: 41px; width: 68px; height: 68px; border-radius: 50%; background: var(--accent); }
+  #root .toast .ck svg { position: absolute; left: 0; top: 0; }
+  #root .toast .ck path { fill: none; stroke: #fff; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+  #root .toast .a { position: absolute; left: 128px; top: 38px; font-size: 44px; line-height: 50px; font-weight: 650; letter-spacing: -0.03em; }
+  #root .toast .b { position: absolute; left: 128px; top: 92px; font: 500 20px var(--font-mono); letter-spacing: .05em; color: var(--card-muted); white-space: nowrap; }
+  #root .h { position: absolute; left: 84px; top: 96px; font-size: 92px; font-weight: 650; letter-spacing: -0.045em; line-height: 1.02; }
+  #root .h em { color: var(--accent); font-size: 1.1em; }
+</style>
+<div id="root" data-look="paper" data-composition-id="paper-plane" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(47,91,255,.12); --mesh-2: rgba(226,86,42,.08)"></div>
+  <div class="rc-dots" style="opacity:.5"></div>
+  <div class="h">Say it once.<br /><em class="rc">Reach everyone.</em></div>
+  <div class="cam">
+    <svg class="pl" width="1080" height="1080" viewBox="0 0 1080 1080">
+      <path class="guide" d="M 130 880 C 260 900, 380 820, 430 720 C 480 620, 360 570, 330 640 C 300 710, 450 760, 600 680 C 720 616, 800 600, 1180 360"/>
+      <path class="trail" d="M 130 880 C 260 900, 380 820, 430 720 C 480 620, 360 570, 330 640 C 300 710, 450 760, 600 680 C 720 616, 800 600, 1180 360"/>
+      <g class="plane">
+        <polygon points="64,0 -58,-40 -30,0" fill="#2f5bff"/>
+        <polygon points="64,0 -58,40 -30,0" fill="#1a36c4"/>
+        <polygon points="-30,0 -58,-40 -44,0 -58,40" fill="#121212" opacity=".16"/>
+      </g>
+    </svg>
+    <div class="rc-card toast">
+      <div class="ck"><svg width="68" height="68" viewBox="0 0 68 68"><path d="M 20 35 L 30 45 L 49 24"/></svg></div>
+      <div class="a">Delivered</div>
+      <div class="b">2,418 INBOXES · 0.4S</div>
+    </div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  const trail = document.querySelector("#root .trail"), plane = document.querySelector("#root .plane");
+  const L = trail.getTotalLength();
+  trail.style.strokeDasharray = "0 " + L;
+  const st = { p: 0 };
+  // Heading comes from the tangent a hair ahead; the plane is drawn at 1.25x.
+  function fly() {
+    const a = trail.getPointAtLength(L * st.p), b = trail.getPointAtLength(Math.min(L, L * st.p + 6));
+    const ang = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+    plane.setAttribute("transform", "translate(" + a.x.toFixed(1) + " " + a.y.toFixed(1) + ") rotate(" + ang.toFixed(1) + ") scale(1.25)");
+    trail.style.strokeDasharray = (L * st.p).toFixed(1) + " " + L.toFixed(1);
+  }
+  fly();
+  tl.fromTo(st, { p: 0 }, { p: 1, duration: 3.6, ease: "power1.inOut", onUpdate: fly, immediateRender: false }, 0.3);
+  RC.words(tl, "#root .h", 0, { lead: true, stagger: 0.09, blur: 14, y: 20 });
+  // The receipt answers the plane as it crosses the frame.
+  tl.fromTo("#root .toast", { y: 40, opacity: 0, transformPerspective: 1200, rotationX: 14 }, { y: 0, opacity: 1, rotationX: 0, duration: 0.9, ease: "expo.out" }, 2.55);
+  tl.fromTo("#root .toast", { filter: "blur(10px)" }, { filter: "blur(0px)", duration: 0.7, ease: "expo.out" }, 2.55);
+  RC.draw(tl, "#root .toast .ck path", 2.95, { duration: 0.35 });
+  RC.camera(tl, "#root .cam", 0, { duration: 4.6, to: { scale: 1.035 } });
+  RC.drift(tl, "#root .rc-mesh", 0, { duration: 4.6, x: 50, y: -30, scale: 1.08 });
+  RC.hold(tl, 4.55);
+  window.__timelines["paper-plane"] = tl;
+})();
+</script>
+</template>
+</body></html>

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* GLYPH SWARM. Illustration as a mark that behaves: a small outline glyph is drawn nine times,
+     the flock scatters across the frame, turns, then regroups in a ring around the one glyph in
+     the accent colour. The Sakana move — the logo is a creature, and "many agents, one answer"
+     is shown by the creatures doing it. Stroke only: no fills, so it reads as drawn, not placed.
+     The glyph is an abstract leaf; a real reel draws the brand's own mark or none. */
+  #root { --accent: #d8232a; }
+  #root svg.sw { position: absolute; left: 0; top: 0; overflow: visible; }
+  #root .gl path { fill: none; stroke: var(--ink); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+  #root .gl.hot path { stroke: var(--accent); stroke-width: 3.4; }
+  #root .l1 { position: absolute; left: 0; right: 0; top: 800px; text-align: center; font-size: 92px; font-weight: 650; letter-spacing: -0.045em; line-height: 1; }
+  #root .l2 { position: absolute; left: 0; right: 0; top: 900px; text-align: center; font-size: 92px; font-weight: 650; letter-spacing: -0.045em; line-height: 1; }
+  #root .l2 em { color: var(--accent); font-size: 1.1em; }
+</style>
+<div id="root" data-look="paper" data-composition-id="glyph-swarm" data-width="1080" data-height="1080">
+  <div class="rc-dots" style="opacity:.55"></div>
+  <svg class="sw" width="1080" height="1080" viewBox="0 0 1080 1080"></svg>
+  <div class="l1">Many models.</div>
+  <div class="l2">One <em class="rc">answer.</em></div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  const svg = document.querySelector("#root svg.sw");
+  const NS = "http://www.w3.org/2000/svg";
+  const LEAF = "M0 -34 C 22 -16 22 16 0 34 C -22 16 -22 -16 0 -34 Z M0 -34 L0 34 M0 -8 L13 -20 M0 8 L13 -4 M0 -8 L-13 -20 M0 8 L-13 -4";
+  const rnd = RC.rand(7);
+  const N = 9, CX = 540, CY = 390;
+  const gs = [];
+  for (let i = 0; i < N; i++) {
+    const g = document.createElementNS(NS, "g"); g.setAttribute("class", "gl" + (i === 0 ? " hot" : ""));
+    const p = document.createElementNS(NS, "path"); p.setAttribute("d", LEAF); g.appendChild(p); svg.appendChild(g); gs.push({ g, p });
+  }
+  // Three poses: a loose grid (start), a seeded scatter that keeps one glyph per cell so nothing
+  // collides, and a ring around the accent glyph.
+  const start = gs.map((_, i) => ({ x: 540 + ((i % 3) - 1) * 190, y: 190 + Math.floor(i / 3) * 170, r: 0, s: 1.6 }));
+  const scatter = gs.map((_, i) => ({ x: 200 + (i % 3) * 340 + (rnd() - 0.5) * 90, y: 190 + Math.floor(i / 3) * 215 + (rnd() - 0.5) * 70, r: (rnd() - 0.5) * 220, s: 1.5 + rnd() * 0.5 }));
+  const ring = gs.map((_, i) => {
+    if (i === 0) return { x: CX, y: CY, r: 0, s: 4 };
+    const a = ((i - 1) / (N - 1)) * Math.PI * 2 - Math.PI / 2;
+    return { x: CX + Math.cos(a) * 290, y: CY + Math.sin(a) * 290, r: a * 180 / Math.PI + 90 + 180, s: 1.9 };
+  });
+  gs.forEach((o, i) => gsap.set(o.g, { x: start[i].x, y: start[i].y, scale: start[i].s, svgOrigin: "0 0" }));
+  // Draw the flock on, one glyph at a time. The accent glyph is already there: frame 0 is legible.
+  RC.draw(tl, gs.slice(1).map((o) => o.p), 0.15, { duration: 0.55, stagger: 0.11, ease: "power2.out" });
+  gs.forEach((o, i) => {
+    const d = i * 0.03;
+    tl.fromTo(o.g, { x: start[i].x, y: start[i].y, rotation: 0, scale: start[i].s }, { x: scatter[i].x, y: scatter[i].y, rotation: scatter[i].r, scale: scatter[i].s, duration: 1.15, ease: "expo.inOut", immediateRender: false }, 1.5 + d);
+    tl.fromTo(o.g, { x: scatter[i].x, y: scatter[i].y, rotation: scatter[i].r, scale: scatter[i].s }, { x: ring[i].x, y: ring[i].y, rotation: ring[i].r, scale: ring[i].s, duration: 1.2, ease: "expo.inOut", immediateRender: false }, 2.95 + d);
+  });
+  RC.words(tl, "#root .l1", 0, { lead: true, stagger: 0.08, blur: 14, y: 20 });
+  RC.words(tl, "#root .l2", 3.2, { stagger: 0.09, blur: 14, y: 20 });
+  tl.fromTo("#root .l2", { opacity: 0.001 }, { opacity: 1, duration: 0.01 }, 3.2);
+  RC.hold(tl, 4.55);
+  window.__timelines["glyph-swarm"] = tl;
+})();
+</script>
+</template>
+</body></html>

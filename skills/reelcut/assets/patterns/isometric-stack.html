@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* ISOMETRIC STACK. Illustration as architecture: four flat slabs are stacked tight, then the
+     stack comes apart vertically — an exploded view — and each layer gets a mono label on a leader
+     line. The Linear and Vercel way to say "here is how it fits together". Drawn in SVG with three
+     polygons per slab (top, left face, right face); no 3D engine, so it is exact and seekable. */
+  #root svg.iso { position: absolute; left: 0; top: 0; overflow: visible; }
+  #root .lab { position: absolute; left: 790px; font: 500 36px var(--font-mono); letter-spacing: -0.01em; color: var(--ink); white-space: nowrap; }
+  #root .lab small { display: block; font-size: 20px; color: var(--muted); letter-spacing: .08em; margin-top: 4px; }
+  #root .ld { stroke: rgba(255,255,255,.3); stroke-width: 2; stroke-dasharray: 3 7; fill: none; }
+  #root .h { position: absolute; left: 80px; top: 100px; font-size: 84px; font-weight: 650; letter-spacing: -0.045em; line-height: 1; }
+  #root .h em { color: #b3a8ff; font-size: 1.1em; }
+</style>
+<div id="root" data-look="ink" data-composition-id="isometric-stack" data-width="1080" data-height="1080">
+  <div class="rc-bloom" style="left: 40%; top: 62%; opacity:.6"></div>
+  <div class="h">Four layers.<br /><em class="rc">One system.</em></div>
+  <svg class="iso" width="1080" height="1080" viewBox="0 0 1080 1080"></svg>
+  <div class="lab l1" style="top: 816px">Model<small>reasoning</small></div>
+  <div class="lab l2" style="top: 696px">Memory<small>context</small></div>
+  <div class="lab l3" style="top: 576px">Tools<small>actions</small></div>
+  <div class="lab l4" style="top: 456px">Sandbox<small>isolation</small></div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  const NS = "http://www.w3.org/2000/svg", svg = document.querySelector("#root svg.iso");
+  const W = 190, D = 108, T = 30, CX = 400;
+  const cols = [["#6d5dfc", "#5243d6", "#3f33a8"], ["#9a8dff", "#7a6cf0", "#5f52cf"], ["#cbc5ff", "#a79df0", "#8579d0"], ["#f4f2ee", "#c9c7c2", "#a4a29d"]];
+  // Slab centre y. Tight: a stack. Open: exploded, with the top slab clear of the headline.
+  const tight = [840, 806, 772, 738], open = [840, 720, 600, 480];
+  const poly = (pts, fill) => { const p = document.createElementNS(NS, "polygon"); p.setAttribute("points", pts); p.setAttribute("fill", fill); return p; };
+  const slabs = cols.map((c, i) => {
+    const g = document.createElementNS(NS, "g");
+    g.appendChild(poly(`0,${-D} ${W},0 0,${D} ${-W},0`, c[0]));
+    g.appendChild(poly(`${-W},0 0,${D} 0,${D + T} ${-W},${T}`, c[1]));
+    g.appendChild(poly(`0,${D} ${W},0 ${W},${T} 0,${D + T}`, c[2]));
+    svg.appendChild(g); gsap.set(g, { x: CX, y: tight[i], svgOrigin: "0 0" }); return g;
+  });
+  // Leader lines from each slab's right corner to its label.
+  const lines = slabs.map((_, i) => { const l = document.createElementNS(NS, "path"); l.setAttribute("class", "ld"); svg.appendChild(l); return l; });
+  RC.words(tl, "#root .h", 0, { lead: true, stagger: 0.08, blur: 14, y: 20 });
+  slabs.forEach((g, i) => {
+    // Each slab settles from just above its place, out of soft focus: a stack resolving, not dropping.
+    tl.fromTo(g, { y: tight[i] - 70, opacity: i === 0 ? 0.7 : 0 }, { y: tight[i], opacity: 1, duration: 0.7, ease: "expo.out" }, 0.1 + i * 0.14);
+    tl.fromTo(g, { filter: "blur(8px)" }, { filter: "blur(0px)", duration: 0.6, ease: "expo.out" }, 0.1 + i * 0.14);
+    tl.fromTo(g, { y: tight[i] }, { y: open[i], duration: 1.0, ease: "expo.inOut", immediateRender: false }, 1.6 + (3 - i) * 0.05);
+  });
+  lines.forEach((l, i) => {
+    const y = open[i];
+    l.setAttribute("d", `M ${CX + W + 6} ${y} L ${770} ${y - 4 + 0}`);
+  });
+  RC.draw(tl, lines, 2.55, { duration: 0.4, stagger: 0.1 });
+  RC.blurIn(tl, "#root .lab", 2.6, { blur: 6, x: -14, y: 0, stagger: 0.1, duration: 0.45 });
+  RC.camera(tl, "#root svg.iso", 1.6, { duration: 2.8, to: { scale: 1.03 } });
+  RC.hold(tl, 4.55);
+  window.__timelines["isometric-stack"] = tl;
+})();
+</script>
+</template>
+</body></html>

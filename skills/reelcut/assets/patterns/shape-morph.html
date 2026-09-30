@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* SHAPE MORPH. Illustration as pure form: five blocks, three colours, change what they are —
+     circle to square to leaf to half-moon — sliding into a new arrangement on each beat, like a
+     logo system assembling itself. Nothing is drawn: every block is a square whose corners are
+     animated (clip-path `inset(round)`, same function either side, so it tweens). One accent, ink
+     and stone on warm paper, a large soft shadow under the set, and a faint mesh behind — the same
+     restraint as the product patterns. Say "simple things, made well", or cover a list of five. */
+  #root { --accent: #c2410c; }
+  #root .set { position: absolute; left: 0; top: 0; width: 1080px; height: 1080px; filter: drop-shadow(0 34px 34px rgba(40,30,20,.16)); }
+  #root .s { position: absolute; left: 0; top: 0; width: 176px; height: 176px; }
+  #root .s1 { background: #121212; } #root .s2 { background: #d6d0c4; } #root .s3 { background: var(--accent); }
+  #root .s4 { background: #fbfaf7; box-shadow: inset 0 0 0 1.5px rgba(18,18,18,.14); } #root .s5 { background: #121212; }
+  #root .h { position: absolute; left: 84px; top: 96px; font-size: 92px; font-weight: 650; letter-spacing: -0.045em; line-height: 1.02; }
+  #root .h em { color: var(--accent); font-size: 1.1em; }
+  #root .idx span { color: #3d3a34; } #root .idx { position: absolute; left: 84px; bottom: 84px; right: 84px; display: flex; justify-content: space-between; }
+</style>
+<div id="root" data-look="paper" data-composition-id="shape-morph" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(226,86,42,.14); --mesh-2: rgba(18,18,18,.06)"></div>
+  <div class="rc-dots" style="opacity:.5"></div>
+  <div class="h">Simple things,<br /><em class="rc">made well.</em></div>
+  <div class="set">
+    <div class="s s1"></div><div class="s s2"></div><div class="s s3"></div><div class="s s4"></div><div class="s s5"></div>
+  </div>
+  <div class="idx rc-kicker"><span>01</span><span>02</span><span>03</span></div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  const C = "inset(0% 0% 0% 0% round 50% 50% 50% 50%)";   // circle
+  const Q = "inset(0% 0% 0% 0% round 6% 6% 6% 6%)";       // soft square
+  const L = "inset(0% 0% 0% 0% round 50% 0% 50% 0%)";     // leaf
+  const H = "inset(0% 0% 0% 0% round 50% 50% 0% 0%)";     // half-moon
+  // Left/top edges of each block. A row across the frame, a staircase, then a tight cluster.
+  const pose = {
+    a: [[67, 470], [261, 470], [455, 470], [649, 470], [843, 470]],
+    b: [[140, 780], [310, 660], [480, 540], [650, 420], [820, 300]],
+    c: [[300, 400], [476, 400], [388, 576], [564, 576], [652, 400]],
+  };
+  const shape = { a: [C, C, C, C, C], b: [Q, Q, Q, Q, Q], c: [L, H, L, H, C] };
+  const rot = { a: [0, 0, 0, 0, 0], b: [0, 0, 0, 0, 0], c: [0, 0, 180, 180, 0] };
+  const names = ["a", "b", "c"], at = [0, 1.55, 3.0];
+  for (let i = 1; i <= 5; i++) {
+    const sel = "#root .s" + i, k0 = i - 1;
+    gsap.set(sel, { clipPath: C });
+    // Arrive from soft focus, small and a little low: the row resolves, it does not pop.
+    tl.fromTo(sel, { x: pose.a[k0][0], y: pose.a[k0][1] + 40, scale: 0.7, opacity: i === 1 ? 0.6 : 0 }, { x: pose.a[k0][0], y: pose.a[k0][1], scale: 1, opacity: 1, duration: 0.8, ease: "expo.out" }, 0.05 + i * 0.09);
+    tl.fromTo(sel, { filter: "blur(10px)" }, { filter: "blur(0px)", duration: 0.7, ease: "expo.out" }, 0.05 + i * 0.09);
+    for (let k = 1; k < 3; k++) {
+      const p0 = pose[names[k - 1]][k0], p1 = pose[names[k]][k0], t = at[k] + i * 0.07;
+      tl.fromTo(sel, { x: p0[0], y: p0[1], rotation: rot[names[k - 1]][k0] }, { x: p1[0], y: p1[1], rotation: rot[names[k]][k0], duration: 1.0, ease: "expo.inOut", immediateRender: false }, t);
+      tl.fromTo(sel, { clipPath: shape[names[k - 1]][k0] }, { clipPath: shape[names[k]][k0], duration: 1.0, ease: "expo.inOut", immediateRender: false }, t);
+    }
+  }
+  RC.words(tl, "#root .h", 0, { lead: true, stagger: 0.09, blur: 14, y: 20 });
+  RC.blurIn(tl, "#root .idx span", 0.9, { blur: 6, y: 6, stagger: 0.15, duration: 0.5 });
+  RC.camera(tl, "#root .set", 0, { duration: 5, to: { scale: 1.035 } });
+  RC.drift(tl, "#root .rc-mesh", 0, { duration: 5, x: 50, y: -30, scale: 1.08 });
+  RC.hold(tl, 4.95);
+  window.__timelines["shape-morph"] = tl;
+})();
+</script>
+</template>
+</body></html>

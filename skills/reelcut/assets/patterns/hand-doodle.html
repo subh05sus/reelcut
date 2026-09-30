@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&display=block');
+  /* HAND DOODLE. Illustration as annotation: a real product card sits still while a pen goes over
+     it — underlines the title with a squiggle, circles the one figure that matters, and writes a
+     note with an arrow that curls back to it. Hand-drawn marks on clean UI is the commonest
+     "illustrated" move in launch films, because it does what a highlight does and reads as a
+     person. The card is laid out on fixed pixels (every row 110px, every figure in a 200px box) so
+     the pen's coordinates are exact whatever the font does. One pen colour: the accent. */
+  #root { --accent: #c2410c; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 450px 600px; }
+  #root .card { left: 100px; top: 340px; width: 700px; height: 520px; }
+  #root .card .k { position: absolute; left: 46px; top: 32px; font: 500 18px var(--font-mono); letter-spacing: .12em; color: var(--card-muted); }
+  #root .card .t { position: absolute; left: 46px; top: 60px; font-size: 46px; line-height: 56px; font-weight: 650; letter-spacing: -0.03em; white-space: nowrap; }
+  #root .card .r { position: absolute; left: 0; right: 0; height: 110px; display: flex; align-items: center; padding: 0 50px 0 46px; border-top: 1px solid var(--line); }
+  #root .card .r .av { width: 38px; height: 38px; border-radius: 50%; margin-right: 18px; flex: none; }
+  #root .card .r .nm { font-size: 28px; color: var(--card-ink); letter-spacing: -0.015em; }
+  #root .card .r .dl { margin-left: auto; margin-right: 12px; padding: 5px 12px; border-radius: 999px; background: rgba(31,157,76,.12); color: #0f6a31; font-size: 17px; font-weight: 700; }
+  #root .card .r .v { width: 200px; text-align: center; font-size: 44px; font-weight: 650; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+  #root svg.pen { position: absolute; left: 0; top: 0; overflow: visible; }
+  #root svg.pen path { fill: none; stroke: var(--accent); stroke-width: 5.5; stroke-linecap: round; stroke-linejoin: round; }
+  #root .note { position: absolute; left: 836px; top: 442px; font-family: 'Caveat', cursive; font-weight: 700; font-size: 78px; line-height: .9; color: var(--accent); transform: rotate(-7deg); transform-origin: 0 50%; }
+  #root .h { position: absolute; left: 84px; top: 96px; font-size: 92px; font-weight: 650; letter-spacing: -0.045em; line-height: 1.02; }
+  #root .h em { color: var(--accent); font-size: 1.1em; }
+</style>
+<div id="root" data-look="paper" data-composition-id="hand-doodle" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(226,86,42,.13); --mesh-2: rgba(47,91,255,.07)"></div>
+  <div class="rc-dots" style="opacity:.5"></div>
+  <div class="h">Spot what<br /><em class="rc">matters.</em></div>
+  <div class="cam">
+    <div class="rc-card card">
+      <div class="k">WEEKLY REPORT</div>
+      <div class="t">Revenue by plan</div>
+      <div class="r" style="top:150px"><span class="av" style="background:linear-gradient(135deg,#9aa4ff,#5b6cff)"></span><span class="nm">Starter</span><span class="dl">+4%</span><span class="v">€1,240</span></div>
+      <div class="r" style="top:260px"><span class="av" style="background:linear-gradient(135deg,#ffb38a,#ff7a4d)"></span><span class="nm">Team</span><span class="dl">+38%</span><span class="v hot">€4,180</span></div>
+      <div class="r" style="top:370px"><span class="av" style="background:linear-gradient(135deg,#7fe0b4,#2fb67b)"></span><span class="nm">Enterprise</span><span class="dl">+12%</span><span class="v">€2,905</span></div>
+    </div>
+    <div class="note">this<br />one!</div>
+    <svg class="pen" width="1080" height="1080" viewBox="0 0 1080 1080">
+      <path class="und" d="M 146 470 C 196 482, 236 460, 288 476 S 376 482, 420 468 S 470 478, 492 470"/>
+      <path class="circ" d="M 752 630 C 730 612, 580 610, 548 643 C 524 670, 580 700, 650 700 C 730 700, 768 668, 744 638 C 724 614, 660 606, 612 612"/>
+      <path class="arw" d="M 888 556 C 906 620, 852 668, 776 660"/>
+      <path class="ah1" d="M 776 660 L 812 636"/><path class="ah2" d="M 776 660 L 814 684"/>
+    </svg>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  RC.words(tl, "#root .h", 0, { lead: true, stagger: 0.09, blur: 14, y: 20 });
+  // The card settles out of a slight tilt and is fully legible from frame 0; the pen comes after.
+  tl.fromTo("#root .card", { rotationX: 16, y: 60, opacity: 0.85, transformPerspective: 1400 }, { rotationX: 0, y: 0, opacity: 1, duration: 1.1, ease: "expo.out" }, 0.05);
+  RC.draw(tl, "#root .und", 1.2, { duration: 0.6 });
+  RC.draw(tl, "#root .circ", 1.9, { duration: 0.75, ease: "power1.inOut" });
+  // The figure answers the circle: it turns the accent just after the pen lifts.
+  tl.fromTo("#root .card .hot", { color: "#121212" }, { color: "#c2410c", duration: 0.3, immediateRender: false }, 2.7);
+  RC.blurIn(tl, "#root .note", 2.85, { blur: 8, y: 0, x: 26, duration: 0.55 });
+  RC.draw(tl, "#root .arw", 3.15, { duration: 0.55 });
+  RC.draw(tl, "#root .ah1, #root .ah2", 3.65, { duration: 0.18, stagger: 0.06 });
+  RC.camera(tl, "#root .cam", 0, { duration: 5.2, to: { scale: 1.035, rotation: -0.6 } });
+  RC.drift(tl, "#root .rc-mesh", 0, { duration: 5.2, x: 50, y: -30, scale: 1.08 });
+  RC.hold(tl, 5.15);
+  window.__timelines["hand-doodle"] = tl;
+})();
+</script>
+</template>
+</body></html>

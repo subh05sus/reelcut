@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* MASCOT HOP. Illustration as a character: a flat blob with two eyes crosses the frame in three
+     hops — squashing before each take-off, stretching in the air, squashing on landing — blinks,
+     and stops to say one word in a speech bubble. The only animation principle that makes a flat
+     shape feel alive is squash and stretch; everything else here is timing. The shadow shrinks
+     as it rises. A real reel draws the brand's own mascot; this one is a placeholder. */
+  #root .shadow { position: absolute; left: 0; top: 0; }
+  #root svg.ch { position: absolute; left: 0; top: 0; overflow: visible; }
+  #root .bubble { position: absolute; left: 520px; top: 270px; font-size: 76px; font-weight: 650; letter-spacing: -0.04em; padding: 22px 46px 30px; border-radius: 44px; background: var(--card); color: var(--card-ink); box-shadow: var(--shadow); transform-origin: 0 100%; }
+  #root .ground { position: absolute; left: 0; right: 0; top: 760px; height: 4px; background: var(--ink); opacity: .85; transform-origin: 0 50%; }
+  #root .h { position: absolute; left: 0; right: 0; top: 860px; text-align: center; font-size: 48px; color: var(--muted); letter-spacing: -0.02em; }
+</style>
+<div id="root" data-look="paper" data-composition-id="mascot-hop" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(47,91,255,.12); --mesh-2: rgba(226,86,42,.1)"></div>
+  <div class="ground"></div>
+  <svg class="ch" width="1080" height="1080" viewBox="0 0 1080 1080">
+    <ellipse class="shadow" cx="0" cy="0" rx="150" ry="20" fill="rgba(18,18,18,.16)"/>
+    <g class="body"><g transform="scale(1.6)">
+      <rect x="-92" y="-182" width="184" height="182" rx="92" ry="92" fill="#2f5bff"/>
+      <path d="M -62 -150 C -40 -176 -4 -178 14 -172" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="9" stroke-linecap="round"/>
+      <g class="eyes">
+        <g class="eye e1"><circle cx="-34" cy="-110" r="22" fill="#fff"/><circle class="pp" cx="-28" cy="-108" r="10" fill="#121212"/></g>
+        <g class="eye e2"><circle cx="34" cy="-110" r="22" fill="#fff"/><circle class="pp" cx="40" cy="-108" r="10" fill="#121212"/></g>
+      </g>
+      <path class="mouth" d="M -22 -70 Q 0 -50 22 -70" fill="none" stroke="#121212" stroke-width="6" stroke-linecap="round"/>
+    </g></g>
+  </svg>
+  <div class="bubble">Shipped!</div>
+  <div class="h">A small launch. A big hop.</div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  const GY = 760;                      // ground line
+  const xs = [250, 430, 610, 790];     // take-off / landing points
+  const B = "#root .body";
+  gsap.set(B, { x: xs[0], y: GY, svgOrigin: "0 0" });
+  gsap.set("#root .shadow", { x: xs[0], y: GY + 8 });
+  // Each hop: crouch (0.18s) -> air (0.5s) -> land squash (0.14s) -> settle (0.2s).
+  for (let h = 0; h < 3; h++) {
+    const t = 0.3 + h * 1.0, x0 = xs[h], x1 = xs[h + 1];
+    tl.fromTo(B, { scaleX: 1, scaleY: 1 }, { scaleX: 1.16, scaleY: 0.8, duration: 0.18, ease: "power2.out", immediateRender: false }, t);
+    tl.fromTo(B, { scaleX: 1.16, scaleY: 0.8 }, { scaleX: 0.88, scaleY: 1.18, duration: 0.14, ease: "power2.out", immediateRender: false }, t + 0.18);
+    tl.fromTo(B, { x: x0 }, { x: x1, duration: 0.56, ease: "none", immediateRender: false }, t + 0.18);
+    tl.fromTo(B, { y: GY }, { y: GY - 260, duration: 0.28, ease: "power2.out", immediateRender: false }, t + 0.18);
+    tl.fromTo(B, { y: GY - 260 }, { y: GY, duration: 0.28, ease: "power2.in", immediateRender: false }, t + 0.46);
+    tl.fromTo(B, { scaleX: 0.88, scaleY: 1.18 }, { scaleX: 1.2, scaleY: 0.78, duration: 0.1, ease: "power2.in", immediateRender: false }, t + 0.66);
+    tl.fromTo(B, { scaleX: 1.2, scaleY: 0.78 }, { scaleX: 1, scaleY: 1, duration: 0.3, ease: "elastic.out(1, 0.5)", immediateRender: false }, t + 0.76);
+    tl.fromTo("#root .shadow", { x: x0, scaleX: 1, opacity: 1 }, { x: x1, scaleX: 0.55, opacity: 0.5, duration: 0.28, ease: "power2.out", immediateRender: false }, t + 0.18);
+    tl.fromTo("#root .shadow", { x: x1, scaleX: 0.55, opacity: 0.5 }, { x: x1, scaleX: 1, opacity: 1, duration: 0.28, ease: "power2.in", immediateRender: false }, t + 0.46);
+  }
+  // Blink twice after landing; eyes squash on y.
+  [3.45, 3.85].forEach((t) => {
+    tl.fromTo("#root .eye", { scaleY: 1, transformOrigin: "50% 50%" }, { scaleY: 0.1, duration: 0.07, ease: "power1.in", immediateRender: false }, t);
+    tl.fromTo("#root .eye", { scaleY: 0.1 }, { scaleY: 1, duration: 0.09, ease: "power1.out", immediateRender: false }, t + 0.07);
+  });
+  tl.fromTo("#root .ground", { scaleX: 0 }, { scaleX: 1, duration: 0.7, ease: "expo.out" }, 0);
+  tl.fromTo("#root .bubble", { scale: 0.3, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.45, ease: "back.out(2.4)" }, 3.55);
+  RC.blurIn(tl, "#root .h", 0, { lead: true, blur: 8, y: 10, duration: 0.6 });
+  RC.hold(tl, 4.55);
+  window.__timelines["mascot-hop"] = tl;
+})();
+</script>
+</template>
+</body></html>

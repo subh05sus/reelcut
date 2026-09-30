@@ -1,6 +1,6 @@
 # Patterns — the moves, done properly
 
-`assets/patterns/` holds sixteen finished compositions, each one a move that recurs across shipped
+`assets/patterns/` holds twenty-five finished compositions, each one a move that recurs across shipped
 launch films, built on the kit and passing `hyperframes check`. Open the nearest one before
 composing a beat of that kind: read how the timing, scale and motion are set, then compose *your*
 beat for *its* sentence.
@@ -11,13 +11,13 @@ films; `one-word` (values rolling, 2%) and `strike-replace` (1%) show rare moves
 staples. See the counts in [design-system.md](design-system.md#the-moves-counted).
 
 They are references, not templates. A reel assembled by pouring script lines into these files would
-be sixteen good-looking beats that say nothing in particular — the failure this skill exists to
+be twenty-five good-looking beats that say nothing in particular — the failure this skill exists to
 replace, only prettier. Lift the move; recompose the frame.
 
 When authoring genuinely fails, or a run is unattended, copying a pattern and adapting its text,
 palette and timings is the fallback. It beats no clip. It does not beat a composed beat.
 
-## The sixteen
+## The twenty-five
 
 | pattern | look | for a beat that | the move |
 |---|---|---|---|
@@ -37,6 +37,15 @@ palette and timings is the fallback. It beats no clip. It does not beat a compos
 | `collage-poster` | poster | is a manifesto or campaign | condensed caps stamp in over ink blocks, halftone, sticker |
 | `cinema-line` | cinema | is the emotional turn | letterboxed, grain, light leak; serif line resolves slowly |
 | `end-card` | paper | closes | mark + name, tagline with serif word, URL pill; horizon glow; held |
+| `type-slam` | poster | is a shout or a release | three condensed words stamp onto bands; on the downbeat the stack inverts; halftone turns |
+| `shape-morph` | paper | says simple, or covers a list of five | five blocks in three colours become circle, square, leaf, half-moon across three poses |
+| `hand-doodle` | paper | points at the one figure that matters | a card settles; a pen underlines, circles the figure, writes a note and an arrow |
+| `isometric-stack` | ink | shows how layers fit | four slabs resolve into a stack, pull apart, each gets a leader line and a label |
+| `glyph-swarm` | paper | is many-into-one | nine outline glyphs scatter and regroup around the one in the accent colour |
+| `flat-scene` | paper | is a new day, "now open" | a sun climbs behind four drifting hill layers under a dark headline |
+| `mascot-hop` | paper | wants a character | a blob hops with squash and stretch, blinks, says one word |
+| `paper-plane` | paper | sends, ships, reaches | a plane flies a dotted route and leaves a trail; a Delivered receipt answers it |
+| `line-waves` | cinema | turns noise into signal | thirty sine lines swell, then collapse to one line under the word |
 
 ## Render them
 
@@ -44,7 +53,7 @@ palette and timings is the fallback. It beats no clip. It does not beat a compos
 npm run render -- examples/patterns/reel.json --clips-only
 ```
 
-`examples/patterns/reel.json` mounts all sixteen. Render it after changing the kit: if a helper
+`examples/patterns/reel.json` mounts all twenty-five. Render it after changing the kit: if a helper
 breaks, some pattern shows it.
 
 ## Adapting one
@@ -61,3 +70,5 @@ sourced mark or none, and every figure with an approved datum.
 When a move recurs in the films and none of these makes it. It must be built on the kit, lead its
 first entrance with `lead: true`, pass `hyperframes check` with a non-zero sample count, render in
 the pattern reel, and be named for what the beat does.
+
+More moves not yet built as patterns are catalogued in [motion-ideas.md](motion-ideas.md).

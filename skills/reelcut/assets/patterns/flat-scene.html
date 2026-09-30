@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* FLAT SCENE. Illustration as a place: a sun comes up behind three layers of hills, each layer
+     drifting at its own speed, while two clouds slide the other way — the parallax of a
+     picture book, all flat vector. The headline sits in the open sky in dark ink, so it keeps
+     its contrast while the ground behind it warms. For a launch that is about a new day, a fresh
+     start, "now open". Everything is SVG paths; nothing is a picture. */
+  #root { --ground: #ffe7d0; }
+  #root .sky { position: absolute; inset: 0; background: linear-gradient(#ffc9a3 0%, #ffe7d0 62%, #fff3e6 100%); }
+  #root svg.sc { position: absolute; left: 0; top: 0; overflow: visible; }
+  #root .h { position: absolute; left: 0; right: 0; top: 150px; text-align: center; font-size: 104px; font-weight: 650; letter-spacing: -0.045em; line-height: 1; color: #2a1830; }
+  #root .h em { color: #d2451e; font-size: 1.1em; }
+</style>
+<div id="root" data-look="paper" data-composition-id="flat-scene" data-width="1080" data-height="1080">
+  <div class="sky"></div>
+  <svg class="sc" width="1080" height="1080" viewBox="0 0 1080 1080">
+    <circle class="halo" cx="540" cy="640" r="250" fill="#ffb088" opacity=".28"/>
+    <circle class="sun" cx="540" cy="640" r="150" fill="#ff7a4d"/>
+    <g class="cl1" fill="#fff7ee"><ellipse cx="200" cy="470" rx="110" ry="32"/><ellipse cx="270" cy="448" rx="70" ry="30"/></g>
+    <g class="cl2" fill="#fff7ee"><ellipse cx="860" cy="380" rx="90" ry="26"/><ellipse cx="810" cy="362" rx="56" ry="24"/></g>
+    <path class="h3" d="M -80 760 C 120 640 300 660 460 720 C 640 790 800 660 1000 700 C 1100 720 1160 760 1160 760 L 1160 1100 L -80 1100 Z" fill="#f0a07a"/>
+    <path class="h2" d="M -80 830 C 100 730 280 770 440 820 C 620 880 820 760 1160 830 L 1160 1100 L -80 1100 Z" fill="#d9775f"/>
+    <path class="h1" d="M -80 910 C 140 850 340 900 520 930 C 720 960 900 880 1160 920 L 1160 1100 L -80 1100 Z" fill="#8a4b5e"/>
+    <path class="h0" d="M -80 990 C 200 960 420 1000 640 990 C 860 980 1000 960 1160 990 L 1160 1100 L -80 1100 Z" fill="#3a2440"/>
+  </svg>
+  <div class="h">Good morning,<br /><em class="rc">world.</em></div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  RC.words(tl, "#root .h", 0, { lead: true, stagger: 0.09, blur: 14, y: 20 });
+  // The sun was already low at frame 0; it climbs and the hills slide out from under it.
+  tl.fromTo("#root .halo", { y: 40, scale: 0.94, svgOrigin: "540 640" }, { y: -110, scale: 1.06, duration: 4.4, ease: "sine.inOut" }, 0);
+  tl.fromTo("#root .sun", { y: 40, scale: 0.94, svgOrigin: "540 640" }, { y: -110, scale: 1.06, duration: 4.4, ease: "sine.inOut" }, 0);
+  [["h3", -40, 6], ["h2", 50, 6], ["h1", -70, 6], ["h0", 90, 6]].forEach(([c, dx, z], i) => {
+    tl.fromTo("#root ." + c, { x: -dx * 0.5, y: 60 - i * 8 }, { x: dx * 0.5, y: 0, duration: 4.4, ease: "sine.inOut" }, 0);
+  });
+  tl.fromTo("#root .cl1", { x: -70 }, { x: 50, duration: 4.5, ease: "none" }, 0);
+  tl.fromTo("#root .cl2", { x: 60 }, { x: -50, duration: 4.5, ease: "none" }, 0);
+  RC.hold(tl, 4.45);
+  window.__timelines["flat-scene"] = tl;
+})();
+</script>
+</template>
+</body></html>

@@ -82,6 +82,51 @@
       "id": "end-card",
       "durationSeconds": 3.5,
       "composition": "../../skills/reelcut/assets/patterns/end-card.html"
+    },
+    {
+      "id": "glyph-swarm",
+      "durationSeconds": 4.6,
+      "composition": "../../skills/reelcut/assets/patterns/glyph-swarm.html"
+    },
+    {
+      "id": "type-slam",
+      "durationSeconds": 4,
+      "composition": "../../skills/reelcut/assets/patterns/type-slam.html"
+    },
+    {
+      "id": "hand-doodle",
+      "durationSeconds": 4.6,
+      "composition": "../../skills/reelcut/assets/patterns/hand-doodle.html"
+    },
+    {
+      "id": "shape-morph",
+      "durationSeconds": 4,
+      "composition": "../../skills/reelcut/assets/patterns/shape-morph.html"
+    },
+    {
+      "id": "isometric-stack",
+      "durationSeconds": 4.6,
+      "composition": "../../skills/reelcut/assets/patterns/isometric-stack.html"
+    },
+    {
+      "id": "flat-scene",
+      "durationSeconds": 4.5,
+      "composition": "../../skills/reelcut/assets/patterns/flat-scene.html"
+    },
+    {
+      "id": "mascot-hop",
+      "durationSeconds": 4.6,
+      "composition": "../../skills/reelcut/assets/patterns/mascot-hop.html"
+    },
+    {
+      "id": "paper-plane",
+      "durationSeconds": 4.6,
+      "composition": "../../skills/reelcut/assets/patterns/paper-plane.html"
+    },
+    {
+      "id": "line-waves",
+      "durationSeconds": 4.6,
+      "composition": "../../skills/reelcut/assets/patterns/line-waves.html"
     }
   ]
 }

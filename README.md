@@ -491,7 +491,7 @@ npm run typecheck
 | Render → clips, master, thumbnail | ✅ **produced a real 18s reel**, every frame count exact |
 | Frame checker | ✅ tested, catches a real blank panel in a third-party video |
 | Asset library and studio | ✅ tested; a library asset rendered into a real clip and re-rendered from the studio |
-| Design kit and patterns | ✅ sixteen patterns and the example reel render and pass every gate |
+| Design kit and patterns | ✅ twenty-five patterns and the example reel render and pass every gate |
 | Sound effects (`--sfx`) | ⚠️ placement and mixing tested; no sound library ships |
 | Data sourcing and charts | ⚠️ specified, not built |
 
@@ -504,7 +504,7 @@ skills/reelcut/
   SKILL.md              the router: the steps and the hard rules
   references/           steps 0–5, design system, kit, patterns, direction, sourcing
   assets/kit/           shared looks, UI pieces and motion helpers, injected via data-look
-  assets/patterns/      sixteen reference compositions, one per recurring move
+  assets/patterns/      twenty-five reference compositions, one per recurring move
   scripts/              beats, intake, capture, render, check-video, library (+ studio)
 src/
   core/                 reading floor, frame sizes, the Beat schema

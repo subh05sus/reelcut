@@ -40,9 +40,9 @@ Share of the 431 designed films that use each move at least once.
 | Huge type owning the frame | 42% | `one-word`, `statement-roll`, `collage-poster` | yes |
 | Things arriving from depth, collage-style | 25% | `RC.flyIn`, `constellation` | yes |
 | A 3D or photographed product object | 24% | — | **no** — needs real assets or a 3D scene |
-| Kinetic type (type that moves as a graphic) | 23% | `RC.chars`, `collage-poster` | partly |
+| Kinetic type (type that moves as a graphic) | 23% | `RC.chars`, `collage-poster`, `type-slam` | yes |
 | A cursor moving and clicking | 22% | `RC.cursor/click`, `cursor-demo` | yes |
-| Illustration or hand-drawn art | 20% | — | **no** |
+| Illustration or hand-drawn art | 20% | `hand-doodle`, `isometric-stack`, `flat-scene`, `glyph-swarm`, `mascot-hop`, `shape-morph`, `paper-plane`, `line-waves` | **partly** — drawn in SVG/CSS; a brand's own mark or mascot has to be sourced |
 | A big number or stat | 18% | `RC.count`, `stat-count` | yes |
 | An italic serif accent word | 17% | `em.rc` | yes |
 | A soft gradient mesh ground | 15% | `.rc-mesh` | yes |
@@ -63,8 +63,9 @@ films; huge type, arrivals from depth, kinetic type and a cursor are in a fifth 
 films each — the patterns for them (`one-word`, `strike-replace`) are single-move showpieces, and
 building a reel out of them would be unlike almost every real launch film.
 
-**Not yet covered:** illustration (20%) and 3D objects (24%) are two of the larger groups and have
-no pattern. Live footage cannot be made here, only sourced.
+**Not yet covered:** 3D objects (24%) have no pattern, and illustration is covered only by
+procedural vector drawing (the eight patterns above), not a brand's own artwork. Live footage
+cannot be made here, only sourced.
 
 ## Grounds — commit to one per reel
 
@@ -168,3 +169,32 @@ footage inside a designed film · `logo` brand mark · `icon` icon row · `bub` 
 Re-count with a few lines of script whenever the tally grows; the shares above came from exactly
 that. It covers 809 of the 2,317 films on the site (35%), taken from the site's category listings in
 order, so it over-represents the categories listed first.
+
+## The polish bar — what the cleanest patterns have in common
+
+Read from the clips that render cleanest (`inline-ui`, `strike-replace`, `device-flank`, `bars-compare`,
+`agent-run`, `cursor-demo`, `stat-count`, `constellation`, `statement-roll`). A new pattern is not
+done until it meets every line; most "off" drafts failed on the first four.
+
+1. **Three colours, not six.** One ground, one ink, one accent, used the same way in every frame.
+   A second hue appears only as a status (green for done). Primary-colour sets, rainbow stickers and
+   emoji read as a toy, not a product.
+2. **One hero.** One headline, in tight-tracked bold sans with one italic-serif accent word, and at
+   most one small muted mono or support line. Nothing else competes with it for attention.
+3. **The object is large and detailed.** It fills 60–85% of the frame width. Up close it has real
+   labels, hairline dividers, a pill or avatar, mono micro-type, a radius and a large soft shadow.
+   Small, sparse, generic clip-art in a big empty frame is the commonest failure.
+4. **Layered depth.** A faint mesh tint in the corners, something behind the hero blurred out of
+   focus, grain on top. A flat fill with nothing behind it looks unfinished.
+5. **Motion resolves, it does not pop.** Type and objects come out of blur with a small rise,
+   `expo.out`, 0.6–0.8s, staggered 70–100ms. No `back.out` overshoot on anything that is not a
+   button press. No hard cuts inside a beat unless the pattern is *about* the cut.
+6. **An action causes a consequence.** A click flips a status; a send starts the steps; a number
+   lands and a pill confirms it 0.1–0.2s later. Decoration that does not cause or confirm anything
+   is cut.
+7. **A slow camera under everything.** Scale 1 → 1.03–1.06 over the whole beat, or a drifting
+   background layer. Nothing is ever perfectly still.
+8. **Every freeze frame is postable.** Pause at any time: the frame is composed, centred or
+   deliberately off-centre, with clear margins and no half-drawn clutter.
+9. **Few elements.** Under about eight visible things at once. If a frame needs a legend, it is two
+   beats.

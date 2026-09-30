@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* LINE WAVES. Illustration as signal: thirty thin lines ripple across the upper frame, each a
+     sine with its own phase and a shared envelope, then settle — the envelope shrinks to nothing —
+     into one flat line, and the word underneath is the point: noise in, signal out. Every
+     frame is computed from time (path data rebuilt from one number), so it seeks exactly. */
+  #root svg.wv { position: absolute; left: 0; top: 0; overflow: visible; }
+  #root svg.wv path { fill: none; stroke: #c9f3ff; stroke-linecap: round; }
+  #root .h { position: absolute; left: 0; right: 0; top: 700px; text-align: center; font-family: var(--font-serif); font-size: 220px; line-height: 1; }
+  #root .h em { color: #8fe6ff; }
+  #root .sub { position: absolute; left: 0; right: 0; top: 628px; text-align: center; font-size: 26px; line-height: 1; }
+</style>
+<div id="root" data-look="cinema" data-composition-id="line-waves" data-width="1080" data-height="1080">
+  <div class="rc-bloom" style="top: 30%; --glow: rgba(120,210,255,.22)"></div>
+  <svg class="wv" width="1080" height="1080" viewBox="0 0 1080 1080"></svg>
+  <div class="sub rc-kicker">Turning noise into</div>
+  <div class="h"><em class="rc">signal.</em></div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  const NS = "http://www.w3.org/2000/svg", svg = document.querySelector("#root svg.wv");
+  const N = 30, X0 = 40, X1 = 1040, STEPS = 60, CY = 360;
+  const paths = Array.from({ length: N }, (_, i) => { const p = document.createElementNS(NS, "path"); p.setAttribute("stroke-width", i === N >> 1 ? 4 : 2); p.setAttribute("stroke-opacity", (0.25 + 0.75 * Math.sin((i + 0.5) / N * Math.PI)).toFixed(2)); svg.appendChild(p); return p; });
+  // amp: envelope (0..1). phase: travelling offset. Both are plain numbers driven by one tween each.
+  const st = { amp: 0.15, ph: 0, span: 440 };
+  function draw() {
+    paths.forEach((p, i) => {
+      const y0 = CY - st.span / 2 + (i / (N - 1)) * st.span, u = i / (N - 1), bulge = Math.sin(u * Math.PI);
+      let d = "";
+      for (let k = 0; k <= STEPS; k++) {
+        const x = X0 + (k / STEPS) * (X1 - X0), v = k / STEPS;
+        const env = Math.sin(v * Math.PI);                       // quiet at both edges
+        const y = y0 + Math.sin(v * 9 + i * 0.35 + st.ph) * 70 * st.amp * env * (0.35 + bulge)
+                     + Math.sin(v * 5 - i * 0.22 - st.ph * 0.6) * 48 * st.amp * env;
+        d += (k ? " L " : "M ") + x.toFixed(1) + " " + y.toFixed(1);
+      }
+      p.setAttribute("d", d);
+    });
+  }
+  draw();
+  // Lines are drawn at frame 0 already (amp .15), then swell, then collapse to flat.
+  tl.fromTo(st, { amp: 0.15 }, { amp: 1, duration: 1.3, ease: "sine.inOut", onUpdate: draw, immediateRender: false }, 0);
+  tl.fromTo(st, { amp: 1 }, { amp: 0, duration: 1.5, ease: "expo.inOut", onUpdate: draw, immediateRender: false }, 1.9);
+  // The stack of lines closes into one: the envelope dies, then the spacing does.
+  tl.fromTo(st, { span: 440 }, { span: 0, duration: 1.0, ease: "expo.inOut", onUpdate: draw, immediateRender: false }, 2.6);
+  tl.fromTo(st, { ph: 0 }, { ph: 14, duration: 3.6, ease: "none", onUpdate: draw, immediateRender: false }, 0);
+  RC.blurIn(tl, "#root .sub", 0, { lead: true, blur: 6, y: 8, duration: 0.7 });
+  RC.words(tl, "#root .h", 2.7, { stagger: 0.1, blur: 18, y: 10, duration: 0.9 });
+  tl.fromTo("#root .h", { opacity: 0.001 }, { opacity: 1, duration: 0.01 }, 2.7);
+  RC.hold(tl, 4.55);
+  window.__timelines["line-waves"] = tl;
+})();
+</script>
+</template>
+</body></html>
