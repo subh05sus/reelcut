@@ -223,7 +223,7 @@ A chart renders from approved data only, and prints its source on the frame.
 One HyperFrames sub-composition per beat — HTML, scoped CSS, one paused GSAP timeline — written for
 what that beat says rather than picked from a layout menu.
 
-It composes on a design system distilled from ~800 shipped launch films on
+It composes on a design system built from a review of 809 launch films on
 [whatships.com](https://whatships.com): six looks, one sans + one italic serif + mono, real-looking
 UI pieces (prompts, agent steps, windows, phones, code, toasts, cursors), and motion helpers that do
 what those films do — words resolving out of blur, values rolling in place, a cursor that curves and

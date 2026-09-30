@@ -5,6 +5,11 @@ launch films, built on the kit and passing `hyperframes check`. Open the nearest
 composing a beat of that kind: read how the timing, scale and motion are set, then compose *your*
 beat for *its* sentence.
 
+Not every pattern is equally typical. In the 809-film count, `word-build`, `agent-run`, `end-card`,
+`cursor-demo`, `stat-count`, `constellation` and `brand-flood` show moves seen in a fifth to most
+films; `one-word` (values rolling, 2%) and `strike-replace` (1%) show rare moves and are accents, not
+staples. See the counts in [design-system.md](design-system.md#the-moves-counted).
+
 They are references, not templates. A reel assembled by pouring script lines into these files would
 be sixteen good-looking beats that say nothing in particular — the failure this skill exists to
 replace, only prettier. Lift the move; recompose the frame.

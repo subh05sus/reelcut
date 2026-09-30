@@ -1,38 +1,70 @@
 # Design system — how shipped launch films actually look
 
-Read this **before composing any beat**. It is the distilled study of ~800 launch films from
-[whatships.com](https://whatships.com) (contact sheets of every film, ~120 studied closely, a
-handful frame by frame for timing). It replaces guesswork about "what looks professional" with
-what the films that got shipped actually do.
+Read this **before composing any beat**. It is built from a review of **809 launch films** on
+[whatships.com](https://whatships.com): every film as a 25-frame contact sheet, each one labelled
+for what it is made of (`whatships-tally.tsv`, one row per film), plus a handful of films read frame
+by frame for motion timing. It replaces guesswork about "what looks professional" with what the
+films that shipped actually do.
+
+**How solid the numbers are.** Labels are one reviewer's read of contact sheets, so treat each
+percentage as good to within a few points, not exact. About 15 of the 809 were labelled from an
+earlier look or the title rather than re-viewed. Motion *timing* (easing, durations, camera pushes)
+was read from only a few films and is **not counted** — those parts say "observed", not "X%".
 
 The kit (`assets/kit/`) implements it; the patterns (`assets/patterns/`) demonstrate it. Neither is
 a template. This file is the *why*.
 
 ## What the field looks like
 
-Roughly a third of launch films are live action (founders talking, product in hand), a third are
-screen-recorded product, and a third are motion typography and designed UI. reelcut makes the last
-kind, and borrows from the middle one through captures. Within that third, the same moves recur so
-often they are the grammar of the genre:
-
-| move | seen in | kit / pattern |
+| kind of film | films | share |
 |---|---|---|
-| Sentence builds word by word, blurring into focus | most | `RC.words`, `word-build` |
-| One key word in italic serif, accent colour | very common | `em.rc`, every paper pattern |
-| Real UI, large, on a committed ground, soft shadow | most product films | `.rc-card/.rc-window`, `cursor-demo` |
-| Prompt → thinking → steps → result | nearly every AI film | `.rc-prompt/.rc-step`, `agent-run` |
-| Cursor that curves, clicks, and causes a change | very common | `RC.cursor/click`, `cursor-demo` |
-| Slow camera push (scale 1 → 1.04–1.08) on everything | nearly all | `RC.camera` |
-| Blur as depth: out-of-focus UI behind sharp type | common | `filter: blur()`, `statement-roll` |
-| One huge word, then the next ("Faster. Better.") | common | `RC.roll`, `one-word` |
-| Statement + full stop, huge, bottom-left | dev tools | `statement-roll` |
-| Word list turning like a wheel, neighbours faded | common | `RC.wheel` |
-| A product object *inside* the sentence | common | `inline-ui`, `device-flank` |
-| Big counted number + one-line meaning | common | `RC.count`, `stat-count` |
-| Minimal chart, muted bars, one accent bar | data beats | `.rc-bars`, `bars-compare` |
-| Things arriving from depth around a centre | integrations | `RC.flyIn`, `constellation` |
-| Mark → iris → full-bleed brand colour → name | brand intros | `RC.iris`, `brand-flood` |
-| Logo lockup + URL, held | nearly every ending | `end-card` |
+| Designed motion graphics (type, UI, illustration, brand) | 431 | 53% |
+| Live action — founders talking, product in hand | 234 | 29% |
+| Screen recording of the product | 144 | 18% |
+
+reelcut makes the first kind, and borrows from the third through captures. The rest of this file is
+about the 431 designed films.
+
+**Grounds (of those 431):** light 45% · dark 36% · a brand colour 12% · mixed 7%. Light is the
+commonest, and dark is not far behind — neither is "the" default.
+
+## The moves, counted
+
+Share of the 431 designed films that use each move at least once.
+
+| move | films | kit / pattern | pattern exists? |
+|---|---|---|---|
+| A brand mark or logo (usually the ending) | 88% | `end-card`, `brand-flood` | yes |
+| Real-looking product UI on screen | 76% | `.rc-card`, `.rc-window` | yes |
+| Text that builds word by word | 62% | `RC.words`, `word-build` | yes |
+| Huge type owning the frame | 42% | `one-word`, `statement-roll`, `collage-poster` | yes |
+| Things arriving from depth, collage-style | 25% | `RC.flyIn`, `constellation` | yes |
+| A 3D or photographed product object | 24% | — | **no** — needs real assets or a 3D scene |
+| Kinetic type (type that moves as a graphic) | 23% | `RC.chars`, `collage-poster` | partly |
+| A cursor moving and clicking | 22% | `RC.cursor/click`, `cursor-demo` | yes |
+| Illustration or hand-drawn art | 20% | — | **no** |
+| A big number or stat | 18% | `RC.count`, `stat-count` | yes |
+| An italic serif accent word | 17% | `em.rc` | yes |
+| A soft gradient mesh ground | 15% | `.rc-mesh` | yes |
+| A chat or prompt with steps | 15% | `.rc-prompt`, `agent-run` | yes |
+| A device frame (phone, laptop) | 14% | `.rc-phone`, `device-flank` | yes |
+| Code on screen | 13% | `.rc-code`, `code-focus` | yes |
+| Live footage inside the designed film | 13% | — | no — needs footage |
+| Cards tilted in 3D | 8% | `rotationX` on `.rc-window` | yes |
+| A highlighter or box on a word | 7% | `.rc-hl`, `.rc-box` | yes |
+| Viewfinder HUD corners | 4% | `RC.hud`, `brand-flood` | yes |
+| A value rolling in place | 2% | `RC.roll`, `one-word` | yes — **rare** |
+| A strike through a word | 1% | `.rc-strike`, `strike-replace` | yes — **rare** |
+| A wheel of values | under 1% | `RC.wheel` | helper only — **rare** |
+
+Read it two ways. **What to lean on:** a logo ending, real UI, and text that builds are in most
+films; huge type, arrivals from depth, kinetic type and a cursor are in a fifth to two-fifths.
+**What to treat as an accent, not a staple:** roll, strike and wheel are moves from one or two
+films each — the patterns for them (`one-word`, `strike-replace`) are single-move showpieces, and
+building a reel out of them would be unlike almost every real launch film.
+
+**Not yet covered:** illustration (20%) and 3D objects (24%) are two of the larger groups and have
+no pattern. Live footage cannot be made here, only sourced.
 
 ## Grounds — commit to one per reel
 
@@ -68,8 +100,8 @@ Sizes on a 1080 frame: hero word 200–260px, headline 90–120px, supporting li
 18–22px mono uppercase. The gap between headline and support is large on purpose — scale contrast
 is the hierarchy.
 
-**Centre by default.** The shipped films centre a single idea with 50%+ of the frame empty. The
-exceptions are deliberate: bottom-left statements (dev tools), top-left serif headline over a chart.
+**Centre by default.** In the films read closely, a single idea is centred with half the frame or
+more empty (an observation, not a count). The exceptions are deliberate: bottom-left statements (dev tools), top-left serif headline over a chart.
 A block of type pinned top-left at 72px with the rest of the frame blank is not one of them.
 
 ## Product surfaces — real, large, alive
@@ -86,10 +118,11 @@ A block of type pinned top-left at 72px with the rest of the frame blank is not 
 
 ## Motion — resolve, don't slide
 
-Measured from frame-by-frame study:
+Observed in the few films read frame by frame (**not counted** across the 809 — treat the numbers as
+what those films did, not as an industry norm):
 
 - **Entrances resolve from blur**: `opacity 0→1`, `filter blur(14–18px)→0`, `y 20–30px→0`,
-  0.6–0.8s, `expo.out`. This, far more than any slide, is the look of a 2025–26 launch film.
+  0.6–0.8s, `expo.out`. This is what the closely read films do; it is not a counted share.
 - **Word stagger 0.07–0.1s**; char stagger 0.02–0.045s. The sentence finishes arriving within about
   a second.
 - **Ease is expo/power4 out** for arrivals, `power3.inOut` for moves between states, `sine.inOut` for
@@ -119,3 +152,19 @@ legible (every kit entrance takes `lead: true` for the first element), hard cuts
 determinism, and `hyperframes check` passing with a non-zero sample count. Nothing here authorises
 inventing a logo, a number or a testimonial — the patterns' "Lumen" and its figures are placeholders
 that a real reel replaces with sourced material.
+
+## The tally
+
+`whatships-tally.tsv` has one row per film: `slug`, register (`MG` designed motion graphics, `LA`
+live action, `SR` screen recording), ground (`L` light, `D` dark, `C` brand colour, `M` mixed) and
+the moves seen. Move tags: `wb` text builds word by word · `big` huge type · `kin` kinetic type ·
+`ser` italic serif accent · `hl` highlighter/box · `strike` strike-through · `roll`/`wheel` values
+rolling · `ui` real product UI · `cur` cursor · `chat` prompt or chat · `code` · `dev` device frame ·
+`tilt` 3D-tilted card · `fly` arrival from depth or collage · `num` big number · `mesh` gradient
+ground · `hud` viewfinder corners · `obj` 3D or photographed object · `ill` illustration · `foot`
+footage inside a designed film · `logo` brand mark · `icon` icon row · `bub` message bubbles ·
+`sr` screen recording inside a designed film · `cap` captions.
+
+Re-count with a few lines of script whenever the tally grows; the shares above came from exactly
+that. It covers 809 of the 2,317 films on the site (35%), taken from the site's category listings in
+order, so it over-represents the categories listed first.

@@ -131,8 +131,8 @@ retyped.
 
 ## Step 4 — Compose each beat
 
-**Read:** [references/design-system.md](references/design-system.md) — what ~800 shipped launch films
-look like and the grammar they share. Then
+**Read:** [references/design-system.md](references/design-system.md) — what 809 launch films look like
+and the moves they share, counted. Then
 [references/visual-vocabulary.md](references/visual-vocabulary.md) — what a beat can be made of —
 and [references/step-4-compose.md](references/step-4-compose.md). Compose on the kit
 ([references/kit.md](references/kit.md): `data-look` on the root injects looks, UI pieces and

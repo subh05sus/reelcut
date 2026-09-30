@@ -2,7 +2,7 @@
 
 One HyperFrames sub-composition per beat. You write it: HTML, scoped CSS, one paused GSAP timeline.
 
-**Read [design-system.md](design-system.md) first** — what ~800 shipped launch films actually look
+**Read [design-system.md](design-system.md) first** — what 809 launch films actually look
 like, and the grammar they share. Then [visual-vocabulary.md](visual-vocabulary.md), which decides
 what register the beat is in. Build on the kit ([kit.md](kit.md)) — `data-look` on the root gets you
 the fonts, grounds, texture, UI pieces and motion helpers — and open the pattern nearest your beat
