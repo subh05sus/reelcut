@@ -53,6 +53,40 @@ After composing, write `reel.json` beside the compositions:
 Durations come from the beats **verbatim** — never recomputed from word counts, or the cut drifts
 against the voice. `"poster": <seconds>` is optional and overrides the automatic thumbnail.
 
+Optional fields that let the studio learn from the reel (see [learnings.md](learnings.md)):
+
+```json
+{
+  "brand": "Notiz",
+  "direction": { "text": "key-lines", "motion": "restrained", "look": "cool" },
+  "appliedLearnings": ["r_1a2b3c4d", "u_9f8e7d6c"],
+  "beats": [{ "id": "beat-02", "durationSeconds": 4.6, "composition": "compositions/beat-02.html", "pattern": "cursor-demo" }]
+}
+```
+
+The render reads each beat's `data-look` and `--accent` itself; `pattern`, `brand`, `direction` and
+`appliedLearnings` are yours to write. All of them are optional, and none changes the render.
+
+### Sound effects from the library
+
+A cue's `source` may be a file path, or `library:<id>` for a sound in the user's library. The render
+resolves it, reads its duration, mixes it at the default level adjusted by the gain measured when
+the sound was ingested (the file itself is never changed), clips a cue that would run past the end of
+its beat, and records the use. Only sounds the user has approved should be used.
+
+```bash
+npm run sfx -- list                                   # the sounds, and which are approved
+npm run sfx -- find --event click --json              # the best fit for a moment
+npm run sfx -- suggest out/reel.json                  # propose cues from each beat's own moments
+npm run sfx -- suggest out/reel.json --apply          # write them into reel.json
+npm run render -- out/reel.json --sfx                 # and hear them
+```
+
+`suggest` loads every beat in Chrome and reads the moments the kit's helpers recorded (a click, a
+typing run, a count, a reveal). It is deliberately quiet: at most three cues a beat, one cue for a
+run of the same event, a different sound for each moment while the library has one. Silence is a
+choice; the user's `--sfx` answer in Step 0 decides whether sound is on at all.
+
 ```bash
 npm run render -- out/reel.json [--sfx] [--clips-only] [--master-only]
 ```

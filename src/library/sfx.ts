@@ -1,0 +1,212 @@
+import type { LibraryAsset } from "./schema.js";
+
+/**
+ * Sound effects from your own library: finding the right one for a moment, and proposing where a
+ * reel's moments are.
+ *
+ * Nothing here ships sounds and nothing is placed without being asked for: a proposal becomes a cue
+ * in `reel.json` only when `npm run sfx -- suggest --apply` is run, and a cue is only heard when the
+ * reel is rendered with `--sfx`. Only **approved** sounds are ever proposed — an unreviewed file is
+ * somebody's guess about a sound, and nobody has listened to it.
+ */
+
+/** The words that make a sound right for each kind of moment, best first. */
+export const EVENT_TAGS: Record<string, string[]> = {
+  click: ["click", "tick", "pop", "tap"],
+  type: ["type", "typing", "keyboard", "keys", "tick"],
+  count: ["count", "tick", "blip", "counter"],
+  roll: ["tick", "roll", "slide", "swipe"],
+  pop: ["pop", "bubble", "blip", "click"],
+  reveal: ["whoosh", "swoosh", "swipe", "riser", "swell"],
+  whoosh: ["whoosh", "swoosh", "swipe", "riser"],
+  hit: ["hit", "impact", "thud", "boom", "slam"],
+  cut: ["hit", "whoosh", "impact", "thud"],
+};
+
+/** How long a sound for each moment is allowed to be, in seconds. */
+const MAX_SECONDS: Record<string, number> = { click: 0.5, type: 3, count: 2, roll: 0.8, pop: 0.8, reveal: 2.5, whoosh: 2.5, hit: 3, cut: 3 };
+
+export interface SfxQuery {
+  event?: string;
+  tags?: readonly string[];
+  maxSeconds?: number;
+  /** Sound ids already used in this reel, which are passed over unless nothing else fits. */
+  avoid?: ReadonlySet<string>;
+}
+
+export interface SfxMatch {
+  asset: LibraryAsset;
+  score: number;
+  why: string;
+}
+
+/** A sound a reel may use: audio, active, approved. */
+export function isUsableSound(a: LibraryAsset): boolean {
+  return a.mediaType === "audio" && a.status === "active" && a.review.state === "approved";
+}
+
+export function searchSfx(assets: readonly LibraryAsset[], query: SfxQuery): SfxMatch[] {
+  const wanted = [...(query.event ? (EVENT_TAGS[query.event] ?? [query.event]) : []), ...(query.tags ?? []).map((t) => t.toLowerCase())];
+  if (wanted.length === 0) return [];
+  const max = query.maxSeconds ?? (query.event ? MAX_SECONDS[query.event] : undefined);
+  const out: SfxMatch[] = [];
+  for (const asset of assets) {
+    if (!isUsableSound(asset)) continue;
+    const seconds = asset.analysis.durationSeconds;
+    if (max !== undefined && seconds !== undefined && seconds > max) continue;
+    // The first words of the list are the best fit: a "click" for a click, a "tick" as a second choice.
+    let score = 0;
+    const hits: string[] = [];
+    wanted.forEach((w, i) => {
+      if (asset.tags.includes(w)) {
+        score += Math.max(1, 4 - i);
+        hits.push(w);
+      }
+    });
+    if (score === 0) continue;
+    // A sound that was only ever a machine's guess about itself is worth less than one a person tagged.
+    if (hits.every((h) => (asset.tagOrigin[h] ?? "user") !== "user")) score *= 0.6;
+    // Variety: the sound used last, or most, is the one to pass over.
+    score -= Math.min(2, asset.usedIn.length * 0.2);
+    if (query.avoid?.has(asset.id)) score -= 5;
+    out.push({ asset, score: Math.round(score * 100) / 100, why: `tagged ${hits.map((h) => `#${h}`).join(" ")}` });
+  }
+  return out.sort((a, b) => b.score - a.score || a.asset.id.localeCompare(b.asset.id));
+}
+
+export interface RcEvent {
+  type: string;
+  at: number;
+  duration?: number;
+}
+
+export interface CueProposal {
+  beat: string;
+  at: number;
+  event: string;
+  soundId: string;
+  name: string;
+  gainDb?: number;
+  durationSeconds?: number;
+  why: string;
+}
+
+export interface ProposeOptions {
+  /** Most cues in one beat. Silence is a choice too. */
+  perBeat?: number;
+  /** Events closer than this, of the same type, are one moment. */
+  spacing?: number;
+  /** Also propose a sound for the hard cut at the start of each beat after the first. */
+  cuts?: boolean;
+}
+
+/**
+ * Turn each beat's events into cue proposals.
+ *
+ * Quiet by design: at most three cues a beat, a run of rolling digits or ticking counts is one cue at
+ * its start rather than one per step, and the same sound is not reused for a second moment while
+ * another fits. A person can always ask for more.
+ */
+export function proposeCues(beats: readonly { id: string; durationSeconds: number; events: readonly RcEvent[] }[], assets: readonly LibraryAsset[], options: ProposeOptions = {}): CueProposal[] {
+  const perBeat = options.perBeat ?? 3;
+  const spacing = options.spacing ?? 1;
+  const used = new Set<string>();
+  const out: CueProposal[] = [];
+
+  beats.forEach((beat, index) => {
+    const events: RcEvent[] = [...beat.events].filter((e) => e.at >= 0 && e.at < beat.durationSeconds - 0.1);
+    if (options.cuts && index > 0) events.push({ type: "cut", at: 0 });
+    events.sort((a, b) => a.at - b.at);
+    const picked: RcEvent[] = [];
+    for (const e of events) {
+      if (picked.some((p) => p.type === e.type && e.at - p.at < spacing)) continue;
+      picked.push(e);
+    }
+    // A clicked moment outranks a counted one: keep the strongest few, then put them back in time order.
+    const rank = (t: string): number => ["cut", "click", "reveal", "whoosh", "hit", "pop", "type", "count", "roll"].indexOf(t);
+    const kept = [...picked].sort((a, b) => rank(a.type) - rank(b.type) || a.at - b.at).slice(0, perBeat).sort((a, b) => a.at - b.at);
+
+    for (const e of kept) {
+      const [best] = searchSfx(assets, { event: e.type, avoid: used });
+      if (!best) continue;
+      used.add(best.asset.id);
+      out.push({
+        beat: beat.id,
+        at: e.at,
+        event: e.type,
+        soundId: best.asset.id,
+        name: best.asset.name,
+        ...(best.asset.analysis.gainDb !== undefined ? { gainDb: best.asset.analysis.gainDb } : {}),
+        ...(e.type === "type" && e.duration && best.asset.analysis.durationSeconds ? { durationSeconds: Math.min(e.duration, best.asset.analysis.durationSeconds) } : {}),
+        why: `${e.type} at ${e.at}s: ${best.why}`,
+      });
+    }
+  });
+  return out;
+}
+
+// ---------------------------------------------------------------- resolving a cue at render time
+
+export interface RawCue {
+  source: string;
+  at: number;
+  durationSeconds?: number;
+  volume?: number;
+}
+
+export interface ResolvedCue {
+  source: string;
+  at: number;
+  durationSeconds: number;
+  volume?: number;
+  /** Set when the cue named a library sound, so the render can record its use. */
+  libraryId?: string;
+  warnings: string[];
+}
+
+export interface CueDeps {
+  assets: readonly LibraryAsset[];
+  /** Where a library asset's bytes are. */
+  blobPath: (asset: LibraryAsset) => string;
+  exists: (file: string) => boolean;
+  /** A file path in the manifest, made absolute. */
+  resolveFile: (source: string) => string;
+  /** Read a file's duration, for a cue that has none. */
+  probe: (file: string) => number;
+  /** The level a cue plays at when it names none. */
+  defaultVolume: number;
+}
+
+/**
+ * One manifest cue, made ready to mix.
+ *
+ * A `library:<id>` source resolves to the sound's bytes and plays at the default level adjusted by the
+ * gain measured when the sound was ingested — the file is never changed. A cue never runs past the end
+ * of its beat: at a hard cut it would bleed into the next beat. Returns `null` when the cue has no room
+ * left at all. Throws for a cue that names something that cannot be used — not in the library, not a
+ * sound, or rejected — because a silent reel with a missing sound is a worse surprise than a refusal.
+ */
+export function resolveCue(cue: RawCue, beat: { id: string; durationSeconds: number }, deps: CueDeps): ResolvedCue | null {
+  const warnings: string[] = [];
+  const named = /^library:([0-9a-f]{16})$/i.exec(cue.source);
+  let source: string;
+  let volume = cue.volume;
+  let natural: number | undefined;
+  let libraryId: string | undefined;
+  if (named) {
+    const asset = deps.assets.find((a) => a.id === named[1]!.toLowerCase());
+    if (!asset || asset.mediaType !== "audio" || !deps.exists(deps.blobPath(asset))) throw new Error(`${beat.id}: ${cue.source} is not a sound in the library`);
+    if (asset.review.state === "rejected") throw new Error(`${beat.id}: ${cue.source} (${asset.name}) was rejected`);
+    if (asset.review.state === "pending") warnings.push(`sound ${asset.id} (${asset.name}) has not been reviewed`);
+    if (asset.status !== "active") warnings.push(`sound ${asset.id} (${asset.name}) is ${asset.status}`);
+    source = deps.blobPath(asset);
+    natural = asset.analysis.durationSeconds;
+    libraryId = asset.id;
+    if (volume === undefined && asset.analysis.gainDb !== undefined) volume = Math.min(1, Math.max(0.05, deps.defaultVolume * 10 ** (asset.analysis.gainDb / 20)));
+  } else {
+    source = deps.resolveFile(cue.source);
+  }
+  const length = Math.min(cue.durationSeconds ?? natural ?? deps.probe(source), beat.durationSeconds - cue.at);
+  if (!(length >= 0.05)) return null;
+  return { source, at: cue.at, durationSeconds: length, ...(volume === undefined ? {} : { volume }), ...(libraryId ? { libraryId } : {}), warnings };
+}

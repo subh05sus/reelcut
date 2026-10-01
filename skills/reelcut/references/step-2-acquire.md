@@ -62,6 +62,16 @@ npm run library -- add assets/in/claude-logo.svg --kind identity --tags claude,a
 A capture's `*.png.json` sidecar is read automatically. When a mark changes, add the new one and
 `npm run library -- supersede <old-id> <new-id>`.
 
+A library asset has a **review state**. `approved` assets (added by hand, approved in the studio, or
+from a folder the user marked trusted) can be applied by themselves when the match is exact and the
+provenance checks out. `pending` ones (dropped in, not yet looked at) are only ever proposals, shown
+with "not reviewed yet", and an asset the user rejected is never offered. A dropped file is never
+assumed to be an identity asset: if the requirement is for a named brand's mark and the only
+candidate is pending and generic, show it and ask the user to confirm in the studio.
+
+`npm run library -- queue` lists what is waiting for Claude to look at, and `/reelcut tag-assets`
+works through it (see SKILL.md). `npm run library -- status` says how much is pending.
+
 ### 1. What was already provided
 
 ```bash

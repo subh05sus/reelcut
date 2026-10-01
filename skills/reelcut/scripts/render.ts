@@ -3,7 +3,9 @@ import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSyn
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { frameSizeFor, isOutputFormat } from "../../../src/core/constants.js";
-import { buildProject, ProjectError, type Kit, type ProjectBeat, type ProjectFile, type SfxCue } from "../../../src/render/project.js";
+import { buildProject, ProjectError, SFX_DEFAULT_VOLUME, type Kit, type ProjectBeat, type ProjectFile, type SfxCue } from "../../../src/render/project.js";
+import { recordSignals, usedSignals, type BeatUse, type Choices } from "../../../src/learnings/index.js";
+import { resolveCue } from "../../../src/library/sfx.js";
 import { renderHyperframesProject } from "../../../src/render/hyperframes.js";
 import { checkVideo, type VideoReport } from "../../../src/verify/checkVideo.js";
 import { choosePosterTime } from "../../../src/render/poster.js";
@@ -20,7 +22,7 @@ import { LIBRARY_ASSET_DIR, blobPath, libraryRefsIn, loadIndex, recordRun, recor
  *     "format": "1:1", "fps": 30, "ground": "#ede9e3",
  *     "beats": [
  *       { "id": "beat-00", "durationSeconds": 6.67, "composition": "compositions/beat-00.html",
- *         "sfx": [{ "source": "sfx/whoosh.ogg", "at": 0.2 }] }
+ *         "sfx": [{ "source": "sfx/whoosh.ogg", "at": 0.2 }, { "source": "library:3f2a9c1d5e7b8a40", "at": 1.4 }] }
  *     ]
  *   }
  *
@@ -46,6 +48,8 @@ interface ManifestBeat {
   id: string;
   durationSeconds: number;
   composition: string;
+  /** The pattern this beat was adapted from, if any. The studio learns which patterns you keep. */
+  pattern?: string;
   sfx?: { source: string; at: number; volume?: number; durationSeconds?: number }[];
 }
 
@@ -55,6 +59,12 @@ interface Manifest {
   ground?: string;
   /** Seconds into the master to use as the thumbnail. Chosen automatically when absent. */
   poster?: number;
+  /** The brand or product the reel is about. Scopes what the studio learns from it. */
+  brand?: string;
+  /** What was chosen in Step 0, so the studio can learn from it. */
+  direction?: { text?: string; motion?: string; look?: string };
+  /** Ids of the learned rules Claude applied (from `npm run learnings -- brief`). */
+  appliedLearnings?: string[];
   beats: ManifestBeat[];
 }
 
@@ -123,7 +133,15 @@ function copyLibraryAssets(dir: string, assets: readonly LibraryAsset[]): void {
 }
 
 /** Record the run for the studio. A library problem is reported, never allowed to fail a render. */
-function recordForStudio(base: string, manifestPath: string, beatIds: readonly string[], outcomes: readonly Outcome[], libraryIds: readonly string[]): void {
+/** What a render knows about the choices behind it, for the studio to learn from. */
+interface LearningContext {
+  brand?: string;
+  applied: string[];
+  choices: Choices;
+  beats: BeatUse[];
+}
+
+function recordForStudio(base: string, manifestPath: string, beatIds: readonly string[], outcomes: readonly Outcome[], libraryIds: readonly string[], learning: LearningContext): void {
   try {
     const ok = (id: string) => outcomes.some((o) => o.id === id && o.status === "ok");
     const run = recordRun({
@@ -134,8 +152,17 @@ function recordForStudio(base: string, manifestPath: string, beatIds: readonly s
       ...(ok("master") ? { master: "master.mp4" } : {}),
       ...(ok("master") && existsSync(path.join(base, "poster.jpg")) ? { poster: "poster.jpg" } : {}),
       libraryAssets: [...libraryIds],
+      ...(learning.brand ? { brand: learning.brand } : {}),
+      appliedLearnings: learning.applied,
     });
     recordUse(libraryIds, run.id);
+    // What this reel was made with: the beats that rendered, and the Step 0 choices. Never fatal.
+    try {
+      const rendered = learning.beats.filter((b) => ok(b.id));
+      if (rendered.length > 0) recordSignals(usedSignals({ reel: run.id, brand: learning.brand, choices: learning.choices, beats: rendered, at: new Date().toISOString() }));
+    } catch (error) {
+      console.warn(`  (not recorded for learning: ${error instanceof Error ? error.message : String(error)})`);
+    }
     console.log(`  recorded as run ${run.id} — watch it with: npm run studio -- --reel "${base}"`);
   } catch (error) {
     console.warn(`  (not recorded for the studio: ${error instanceof Error ? error.message : String(error)})`);
@@ -215,12 +242,20 @@ async function main(): Promise<void> {
   const { width, height } = frameSizeFor(format);
   const fps = manifest.fps ?? 30;
 
+  const sfxLibraryIds = new Set<string>();
   const beats: ProjectBeat[] = manifest.beats.map((b) => {
     const compositionPath = path.resolve(base, b.composition);
     if (!existsSync(compositionPath)) throw new Error(`${b.id}: composition not found at ${compositionPath}`);
-    const sfx: SfxCue[] = (b.sfx ?? []).map((cue) => {
-      const source = path.resolve(base, cue.source);
-      return { source, at: cue.at, durationSeconds: cue.durationSeconds ?? probeSeconds(source), ...(cue.volume === undefined ? {} : { volume: cue.volume }) };
+    const index = loadIndex();
+    const sfx: SfxCue[] = (b.sfx ?? []).flatMap((cue): SfxCue[] => {
+      const resolved = resolveCue(cue, b, { assets: index.assets, blobPath, exists: existsSync, resolveFile: (source) => path.resolve(base, source), probe: probeSeconds, defaultVolume: SFX_DEFAULT_VOLUME });
+      if (!resolved) {
+        console.warn(`  warning: ${b.id}: a cue at ${cue.at}s has no room before the beat ends; dropped`);
+        return [];
+      }
+      for (const w of resolved.warnings) console.warn(`  warning: ${w}`);
+      if (resolved.libraryId) sfxLibraryIds.add(resolved.libraryId);
+      return [{ source: resolved.source, at: resolved.at, durationSeconds: resolved.durationSeconds, ...(resolved.volume === undefined ? {} : { volume: resolved.volume }) }];
     });
     return { id: b.id, durationSeconds: b.durationSeconds, compositionHtml: readFileSync(compositionPath, "utf8"), sfx };
   });
@@ -304,7 +339,27 @@ async function main(): Promise<void> {
     }
   }
 
-  recordForStudio(base, args.manifest, beats.map((b) => b.id), outcomes, allRefs);
+  recordForStudio(base, args.manifest, beats.map((b) => b.id), outcomes, args.sfx ? [...new Set([...allRefs, ...sfxLibraryIds])] : allRefs, {
+    ...(manifest.brand ? { brand: manifest.brand } : {}),
+    applied: manifest.appliedLearnings ?? [],
+    choices: {
+      text: manifest.direction?.text,
+      motion: manifest.direction?.motion,
+      format,
+      sound: args.sfx ? "effects" : "silent",
+      look: manifest.direction?.look,
+    },
+    beats: manifest.beats.map((mb): BeatUse => {
+      const html = beats.find((b) => b.id === mb.id)?.compositionHtml ?? "";
+      return {
+        id: mb.id,
+        look: /\bdata-look\s*=\s*["']([a-z]+)["']/i.exec(html)?.[1]?.toLowerCase(),
+        accent: /--accent\s*:\s*(#[0-9a-f]{3,8})\b/i.exec(html)?.[1],
+        pattern: mb.pattern,
+        motion: manifest.direction?.motion,
+      };
+    }),
+  });
 
   const failed = outcomes.filter((o) => o.status !== "ok");
   console.log("");

@@ -162,6 +162,13 @@ under 16px. `--guides` draws the margins (magenta) and the content region (cyan)
 written to `out/measure/`. It reports and never fixes; it complements `hyperframes check`, which says
 whether a beat is broken, where this says whether it is exact.
 
+## What the helpers record
+
+As they schedule, `click`, `type`, `count`, `roll`, `pop`, `iris`, `wipe` and `smear` append
+`{ type, at, duration? }` to `window.__rcEvents`. Nothing reads a clock, so it is the same list on every
+load. `npm run sfx -- suggest` reads it to propose sound-effect cues; a composition that does not use
+the kit records nothing and gets no suggestions.
+
 ## Rules the helpers keep for you — and the ones they cannot
 
 They keep: determinism (no clocks, no `Math.random`, finite loops), a legible frame 0 when you pass

@@ -5,7 +5,9 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { AssetRequirement } from "../src/brief/assetRequirementTypes.js";
 import {
   addAsset,
+  annotateAsset,
   blockReason,
+  insertPrepared,
   libraryRefsIn,
   libraryRoot,
   listRuns,
@@ -14,9 +16,11 @@ import {
   mutateIndex,
   recordRun,
   recordUse,
+  setReview,
   updateAsset,
   LibraryError,
   type LibraryAsset,
+  type PreparedAsset,
 } from "../src/library/index.js";
 
 let home: string;
@@ -58,6 +62,11 @@ function asset(over: Partial<LibraryAsset> = {}): LibraryAsset {
     addedAt: "2026-09-01T00:00:00.000Z",
     usedIn: [],
     status: "active",
+    mediaType: "vector",
+    analysis: { dominantColors: [], descriptors: [] },
+    review: { state: "approved", by: "legacy" },
+    tagOrigin: {},
+    private: false,
     ...over,
   };
 }
@@ -200,5 +209,86 @@ describe("libraryRefsIn", () => {
   it("finds each referenced id once", () => {
     const html = `<img src="assets/library/0123456789abcdef.svg"><div style="background:url(assets/library/0123456789ABCDEF.svg)"></div><img src="assets/library/fedcba9876543210.png">`;
     expect(libraryRefsIn(html)).toEqual(["0123456789abcdef", "fedcba9876543210"]);
+  });
+});
+
+describe("review: what has been dropped in but not yet looked at", () => {
+  const pending = (over: Partial<LibraryAsset> = {}) => asset({ review: { state: "pending" }, provenance: { source: "user" }, tags: ["claude", "logo"], tagOrigin: { claude: "auto", logo: "auto" }, ...over });
+
+  it("is only ever proposed, however exact the match", () => {
+    const result = matchLibrary([req("Claude Logo")], [pending()], { now: NOW });
+    expect(result.matches).toHaveLength(1);
+    expect(result.matches[0]!.decision).toBe("proposal");
+    expect(result.matches[0]!.why).toContain("not reviewed yet");
+  });
+
+  it("is applied once a person approves it", () => {
+    addAsset(file("claude-logo.svg", "<svg/>"), { name: "Claude Logo", assetKind: "identity", tags: ["claude"], provenance: { source: "user" }, review: { state: "pending" }, tagOrigin: { claude: "auto" } });
+    const [added] = loadIndex().assets;
+    expect(matchLibrary([req("Claude Logo")], loadIndex().assets, { now: NOW }).matches[0]!.decision).toBe("proposal");
+
+    const [result] = setReview([added!.id], "approved", "user");
+    expect(result!.accepted).toEqual(["claude"]);
+    expect(matchLibrary([req("Claude Logo")], loadIndex().assets, { now: NOW }).matches[0]!.decision).toBe("auto");
+  });
+
+  it("never offers a rejected asset at all", () => {
+    const rejected = pending({ review: { state: "rejected" } });
+    expect(matchLibrary([req("Claude Logo")], [rejected], { now: NOW }).matches).toHaveLength(0);
+  });
+
+  it("does not guess that a dropped file is somebody's logo: a generic one is shown, never applied", () => {
+    const dropped = pending({ assetKind: "generic" });
+    const [match] = matchLibrary([req("Claude Logo")], [dropped], { now: NOW }).matches;
+    expect(match!.decision).toBe("proposal");
+    expect(match!.why).toContain("confirm it is the real Claude Logo");
+    // Once a person has decided it is generic, it never answers an identity requirement.
+    expect(matchLibrary([req("Claude Logo")], [{ ...dropped, review: { state: "approved", by: "user" } }], { now: NOW }).matches).toHaveLength(0);
+  });
+
+  it("is never made an identity asset by annotation: Claude can add tags and a description, nothing else", () => {
+    addAsset(file("mark.svg", "<svg/>"), { name: "mark", assetKind: "generic", provenance: { source: "user" }, review: { state: "pending" } });
+    const id = loadIndex().assets[0]!.id;
+    const annotated = annotateAsset(id, { tags: ["Claude", "logo"], description: "an orange starburst mark" });
+    expect(annotated.tags).toEqual(["claude", "logo"]);
+    expect(annotated.tagOrigin).toEqual({ claude: "claude", logo: "claude" });
+    expect(annotated.assetKind).toBe("generic");
+    expect(annotated.review.state).toBe("pending");
+    expect(annotated.analysis.description).toBe("an orange starburst mark");
+  });
+
+  it("keeps a person's own tags as theirs, and marks only new ones as theirs when they edit", () => {
+    addAsset(file("a.svg", "<svg/>"), { name: "a", assetKind: "generic", tags: ["logo"], provenance: { source: "user" }, review: { state: "pending" }, tagOrigin: { logo: "auto" } });
+    const id = loadIndex().assets[0]!.id;
+    const edited = updateAsset(id, { tags: ["logo", "brand"] });
+    expect(edited.tagOrigin).toEqual({ brand: "user", logo: "auto" });
+  });
+});
+
+describe("a rescan does not undo a decision", () => {
+  const prepared = (sha: string, over: Partial<PreparedAsset> = {}): PreparedAsset => ({
+    id: sha.slice(0, 16), sha256: sha, file: `files/${sha.slice(0, 16)}.png`, ext: "png", bytes: 3, name: "dropped", assetKind: "generic", tags: ["dropped"],
+    tagOrigin: { dropped: "auto" }, provenance: { source: "user" }, mediaType: "image", analysis: { dominantColors: [], descriptors: [] },
+    review: { state: "pending" }, private: false, ...over,
+  });
+  const sha = "a".repeat(64);
+
+  it("leaves a rejected or retired asset out when the same bytes turn up again", () => {
+    mutateIndex((index) => insertPrepared(index, prepared(sha), { now: "t", respectTombstones: true }));
+    setReview([sha.slice(0, 16)], "rejected", "user");
+    const again = mutateIndex((index) => insertPrepared(index, prepared(sha, { tags: ["extra"] }), { now: "t", respectTombstones: true }));
+    expect(again.blocked).toBe("rejected");
+    expect(loadIndex().assets[0]!.tags).toEqual(["dropped"]);
+
+    // A person adding the file by hand is overriding that, on purpose.
+    const manual = mutateIndex((index) => insertPrepared(index, prepared(sha, { review: { state: "approved", by: "cli" } }), { now: "t", respectTombstones: false }));
+    expect(manual.blocked).toBeUndefined();
+    expect(loadIndex().assets[0]!.review.state).toBe("approved");
+  });
+
+  it("never lets a folder rediscovering a file un-approve it", () => {
+    mutateIndex((index) => insertPrepared(index, prepared(sha, { review: { state: "approved", by: "user" } }), { now: "t", respectTombstones: true }));
+    mutateIndex((index) => insertPrepared(index, prepared(sha), { now: "t", respectTombstones: true }));
+    expect(loadIndex().assets[0]!.review.state).toBe("approved");
   });
 });

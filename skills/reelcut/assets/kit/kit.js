@@ -19,6 +19,17 @@
   if (window.RC) return;
   var gsap = window.gsap;
   var uid = 0;
+  /**
+   * What the beat does that a sound could go with, recorded as the helpers schedule it: a click, a typing
+   * run, a number counting, a reveal. Nothing reads the clock, so it is the same list on every load.
+   * `npm run sfx -- suggest` reads it to propose cues from the sound library.
+   */
+  var events = (window.__rcEvents = window.__rcEvents || []);
+  function emit(type, at, extra) {
+    var e = { type: type, at: Math.round(at * 1000) / 1000 };
+    if (extra) for (var k in extra) e[k] = extra[k];
+    events.push(e);
+  }
   var NS = "http://www.w3.org/2000/svg";
 
   function q(t) {
@@ -164,6 +175,7 @@
   /** Pop: scale from nothing with an overshoot. Icons, badges, the send button. */
   function pop(tl, target, at, o) {
     o = o || {};
+    emit("pop", at);
     tl.fromTo(q(target), { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: o.duration || 0.55, ease: o.ease || "back.out(2.2)", stagger: o.stagger || 0.05 }, at);
     return tl;
   }
@@ -178,6 +190,7 @@
     var text = o.text != null ? o.text : el.textContent;
     var cps = o.cps || 24;
     var dur = o.duration || text.length / cps;
+    emit("type", at, { duration: Math.round(dur * 1000) / 1000 });
     var state = { n: 0 };
     el.textContent = o.keep ? text : "";
     tl.fromTo(state, { n: 0 }, { n: text.length, duration: dur, ease: o.ease || "none",
@@ -202,6 +215,7 @@
     el.style.fontVariantNumeric = "tabular-nums";
     var from = o.from || 0, to = o.to == null ? Number(el.textContent.replace(/[^\d.-]/g, "")) : o.to;
     var dec = o.decimals || 0, pre = o.prefix || "", suf = o.suffix || "", loc = o.locale || "en-US";
+    emit("count", at, { duration: o.duration || 1.4 });
     var st = { v: from };
     var fmt = function (v) { return pre + v.toLocaleString(loc, { minimumFractionDigits: dec, maximumFractionDigits: dec }) + suf; };
     el.textContent = fmt(from);
@@ -225,6 +239,7 @@
     });
     for (var i = 1; i < spans.length; i++) {
       var t = at + (i - 1) * each;
+      emit("roll", t);
       // The outgoing value already has its own entrance tween; a second fromTo would stamp its
       // start state over frame 0. So it leaves with a plain to().
       tl.to(spans[i - 1], { yPercent: -100, opacity: 0, filter: "blur(6px)", duration: d, ease: "power3.inOut" }, t);
@@ -309,6 +324,7 @@
    */
   function click(tl, target, at, o) {
     o = o || {};
+    emit("click", at);
     var cur = one(target);
     if (cur) tl.to(cur, { scale: 0.82, duration: 0.09, ease: "power2.in", transformOrigin: "0 0" }, at)
              .to(cur, { scale: 1, duration: 0.22, ease: "back.out(3)" }, at + 0.09);
@@ -340,6 +356,7 @@
   /** Iris: a circle opens from a point to cover the frame. An in-beat transition that is not a fade. */
   function iris(tl, target, at, o) {
     o = o || {};
+    emit("reveal", at);
     var at0 = o.from || "50% 50%";
     tl.fromTo(q(target), { clipPath: "circle(0% at " + at0 + ")" }, { clipPath: "circle(" + (o.to || 150) + "% at " + at0 + ")", duration: o.duration || 0.9, ease: o.ease || "expo.inOut" }, at);
     return tl;
@@ -348,6 +365,7 @@
   /** Wipe: reveal along the reading direction. dir: "right" | "left" | "up" | "down". */
   function wipe(tl, target, at, o) {
     o = o || {};
+    emit("reveal", at);
     var from = { right: "inset(0 100% 0 0)", left: "inset(0 0 0 100%)", up: "inset(100% 0 0 0)", down: "inset(0 0 100% 0)" }[o.dir || "right"];
     tl.fromTo(q(target), { clipPath: from }, { clipPath: "inset(0 0% 0 0)", duration: o.duration || 0.8, ease: o.ease || "expo.inOut" }, at);
     return tl;
@@ -359,6 +377,7 @@
    */
   function smear(tl, target, at, o) {
     o = o || {};
+    emit("whoosh", at);
     q(target).forEach(function (el) {
       var id = "rc-smear-" + (++uid);
       var root = lookRoot(el);

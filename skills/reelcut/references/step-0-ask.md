@@ -15,6 +15,20 @@ Skip the questions entirely when nobody is there to answer — an unattended run
 or the user said "just do it" / "use the defaults". Then take the defaults below and record in
 `plan.md` that they were defaults, not choices.
 
+## Read what has been learned first
+
+Before the first question: `npm run learnings -- brief --script <script file>`. It lists the rules the
+user has switched on (and says how many are only proposed). Use them to build the options, never to
+skip the user's say:
+
+- the option a learned rule prefers goes first and is marked `(Recommended)`, with the reason in its
+  description ("you have used the cool look in your last four reels");
+- a question that a **pinned** rule answers is confirmed in one line instead of asked in full;
+- an answer the user gives now, or a flag, beats any learned rule, always.
+
+Carry the ids of the rules you applied into `reel.json` as `appliedLearnings`, and record the answers
+in `reel.json` as `direction` (`text`, `motion`, `look`) so the studio can learn from the choices.
+
 ## What to ask
 
 **Only what was not already said.** A flag, or freeform direction in the invocation ("make it feel

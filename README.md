@@ -294,10 +294,46 @@ A composition uses one as `assets/library/<id>.<ext>`; the render copies it in a
 npm run studio          # http://localhost:5198
 ```
 
-A local page with three views. **Library**: every asset, filterable by tag, with provenance,
-and editable name, tags and status. **Reels**: every render, with the master, each clip, and the
-report. **Jobs**: re-renders started from a clip's button, one at a time. It listens on
-127.0.0.1 only, and only serves files from the library or from a recorded reel's folder.
+A local page, and the place everything you keep lives. It listens on 127.0.0.1 only, and only serves
+files from the library or from a recorded reel's folder.
+
+- **Library** — every asset, filterable by type (images, vectors, video, sounds) and tag, with its
+  source, preview, measurements and editable name, tags, kind and status. **Drop files or whole folders
+  on the page** and each one is checked (by its bytes, never its extension), previewed, measured and
+  tagged on arrival.
+- **Review** — what was dropped in waits here. Nothing in it can be used by a reel on its own until you
+  approve it, singly or in batches; the machine's and Claude's tags show in *italics* until you have.
+  Nothing is ever inferred to be a real brand mark: only you set that.
+- **Folders** — point it at a folder (a Google Drive, Dropbox or OneDrive folder is just a place on this
+  computer) and new files are ingested while the studio runs, with a rescan as a backstop. Per folder:
+  a kind, *trusted* (skip review), *private* (never shown to Claude), pause, rescan. It reads these
+  folders and never writes to them. **A pause button at the top of every page stops all of it** — nothing
+  is read, scanned or indexed until you resume — and it holds if the studio restarts
+  (`npm run library -- pause|resume`).
+- **Learnings** — what the studio has noticed about your taste, as plain rules you can read, edit, pin,
+  switch off, delete, write yourself, export and import. Claude reads only the rules that are on, and
+  lists the ones it applied in each reel's plan. See [learnings.md](skills/reelcut/references/learnings.md).
+- **Reels** — every render, with the master, each clip and the report, and **Works / Not quite** and a
+  note on every beat: the clearest signal the studio gets.
+- **Jobs** — re-renders started from a clip's button, one at a time.
+
+What was dropped in and cannot be understood by a script (is it the real Claude mark, or a screenshot
+of it?) waits in a queue for Claude: run `/reelcut tag-assets`, and Claude views each preview and writes
+tags and a description. Claude suggests; it can never approve, and never marks an asset as an identity
+asset.
+
+**Sound effects** are the same kind of asset: drop your own sounds in, and each is measured (length, peak,
+loudness), given a waveform, and tagged with guesses from its shape (click, whoosh, riser, hit…). Once
+approved, `npm run sfx -- suggest reel.json --apply` proposes cues for each beat's own moments (a click, a
+typing run, a count, a reveal) from your library, and `--sfx` plays them. No sounds ship with reelcut.
+
+```bash
+npm run library -- ingest <file-or-folder>…           # one-off, from the command line
+npm run library -- folders add <path> --label "Brand kit" [--trusted] [--private]
+npm run library -- queue | annotate | review          # the Claude queue, and a person's decisions
+npm run sfx -- list | find --event click | suggest reel.json [--apply]
+npm run learnings -- brief | list | accept <id> | export | import
+```
 
 ### When something is missing
 
@@ -467,7 +503,7 @@ hold on a payoff is the reading floor working, not a defect.
 ### `npm test`
 
 ```bash
-npm test          # 456 tests
+npm test          # 550 tests
 npm run typecheck
 ```
 
@@ -519,7 +555,7 @@ skills/reelcut/
   references/           steps 0–5, design system, kit, patterns, direction, sourcing
   assets/kit/           shared looks, UI pieces and motion helpers, injected via data-look
   assets/patterns/      forty-one reference compositions, one per recurring move
-  scripts/              beats, intake, capture, render, measure, check-video, library (+ studio)
+  scripts/              beats, intake, capture, render, measure, check-video, library (+ studio), sfx, learnings
 src/
   core/                 reading floor, frame sizes, the Beat schema
   planner/              parse, segment, merge, density, short cut
@@ -528,7 +564,8 @@ src/
   direction/            creative direction and its enforcement
   verify/               the frame checker, and the layout measurer
   render/               project builder, poster choice, the HyperFrames render route
-  library/              the asset library, its reuse policy, and the record of every run
+  library/              the asset library, its reuse and review policy, ingest, watched folders, sound search, and the record of every run
+  learnings/            signals, proposed rules, and the brief Claude reads
   studio/               the local server and its one page
 examples/               a script to try it on, and a composed, renderable reel from it
 ```

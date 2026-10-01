@@ -19,6 +19,9 @@ import { normaliseTags, type LibraryAsset } from "./schema.js";
  * So `auto` needs all of:
  *   - an `exact` match,
  *   - status `active` (superseded and retired assets are never offered at all),
+ *   - review `approved`: an asset dropped in a folder or onto the dashboard has not been looked at,
+ *     so it is only ever *proposed*, however well its machine-written tags match (a rejected one is
+ *     never offered),
  *   - for `identity`: provenance someone can check — a source URL, a capture sidecar, or the
  *     user having handed it over,
  *   - for a capture: taken within `STALE_CAPTURE_DAYS`.
@@ -72,6 +75,7 @@ export function captureAgeDays(asset: LibraryAsset, now: Date): number | undefin
 
 /** Why an asset may not be applied without asking, or undefined when it may. */
 export function blockReason(asset: LibraryAsset, confidence: MatchConfidence, now: Date): string | undefined {
+  if (asset.review.state !== "approved") return "not reviewed yet — approve it in the studio (Review tab) to let reelcut use it by itself";
   if (confidence !== "exact") return `${confidence} match`;
   if (asset.status !== "active") return `status is ${asset.status}`;
   if (asset.assetKind === "identity" && !hasCheckableProvenance(asset)) return "identity asset with no recorded source";
@@ -94,7 +98,7 @@ export function filterByTags(assets: readonly LibraryAsset[], tags: readonly str
  */
 export function matchLibrary(open: readonly AssetRequirement[], assets: readonly LibraryAsset[], options: MatchOptions = {}): LibraryMatchResult {
   const now = options.now ?? new Date();
-  const pool = filterByTags(assets, options.tags ?? []).filter((a) => a.status === "active");
+  const pool = filterByTags(assets, options.tags ?? []).filter((a) => a.status === "active" && a.review.state !== "rejected");
 
   const matches: LibraryMatch[] = [];
   const stillOpen: AssetRequirement[] = [];
@@ -104,9 +108,12 @@ export function matchLibrary(open: readonly AssetRequirement[], assets: readonly
     for (const asset of pool) {
       const score = scoreMatch(requirement, { path: asset.file, name: matchName(asset) });
       if (!score) continue;
-      // An identity requirement is never answered by an asset that is only a generic stand-in.
-      if (requirement.assetKind === "identity" && asset.assetKind !== "identity") continue;
-      const blocked = blockReason(asset, score.confidence, now);
+      // An identity requirement is never answered by an asset that is only a generic stand-in —
+      // except as a proposal, when nobody has decided what the asset is yet. A dropped file's kind is
+      // never guessed, so a pending one that looks like the mark is shown for a person to confirm.
+      const unconfirmed = requirement.assetKind === "identity" && asset.assetKind !== "identity";
+      if (unconfirmed && asset.review.state === "approved") continue;
+      const blocked = unconfirmed ? `kind is ${asset.assetKind}: confirm it is the real ${requirement.name} before it is used` : blockReason(asset, score.confidence, now);
       const candidate: LibraryMatch = {
         requirement,
         asset,

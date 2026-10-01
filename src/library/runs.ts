@@ -24,9 +24,10 @@ export function loadRuns(): RunsFile {
   return readValidated(runsPath(), (raw) => RunsFileSchema.safeParse(raw), { version: 1, runs: [] });
 }
 
-export function recordRun(record: Omit<RunRecord, "id" | "renderedAt"> & { renderedAt?: string }): RunRecord {
+export function recordRun(record: Omit<RunRecord, "id" | "renderedAt" | "appliedLearnings"> & { renderedAt?: string; appliedLearnings?: string[] }): RunRecord {
   const full: RunRecord = {
     ...record,
+    appliedLearnings: record.appliedLearnings ?? [],
     outDir: path.resolve(record.outDir),
     manifest: path.resolve(record.manifest),
     id: runIdFor(record.outDir),
@@ -41,6 +42,8 @@ export function recordRun(record: Omit<RunRecord, "id" | "renderedAt"> & { rende
       full.clips = [...new Set([...previous.clips, ...full.clips])].sort();
       full.beats = [...new Set([...previous.beats, ...full.beats])];
       full.libraryAssets = [...new Set([...previous.libraryAssets, ...full.libraryAssets])];
+      full.appliedLearnings = [...new Set([...previous.appliedLearnings, ...full.appliedLearnings])];
+      full.brand ??= previous.brand;
       full.master ??= previous.master;
       full.poster ??= previous.poster;
       file.runs[at] = full;

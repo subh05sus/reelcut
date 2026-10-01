@@ -6,99 +6,134 @@
 <title>reelcut studio</title>
 <style>
   :root {
-    --bg: #f4f2ee; --panel: #ffffff; --ink: #16161a; --muted: #6b6a67; --line: #e2dfd9;
-    --accent: #ff4b1f; --ok: #1f8a4c; --warn: #b7791f; --bad: #c0392b; --chip: #ecE8e1;
+    --bg: #f4f2ee; --panel: #ffffff; --ink: #16161a; --muted: #67665f; --line: #e2dfd9;
+    --accent: #c2410c; --ok: #1f7a46; --warn: #a96a12; --bad: #b3372a; --chip: #ece8e1;
     color-scheme: light dark; --radius: 10px; --mono: ui-monospace, "Cascadia Code", Consolas, monospace;
   }
   @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #111113; --panel: #1a1a1d; --ink: #eceae6; --muted: #8e8c88; --line: #2a2a2e;
-      --chip: #26262a; --ok: #3fbf74; --warn: #e0a84a; --bad: #ef6b5b;
-    }
+    :root { --bg: #111113; --panel: #1a1a1d; --ink: #eceae6; --muted: #9a9894; --line: #2a2a2e; --chip: #26262a; --ok: #3fbf74; --warn: #e0a84a; --bad: #ef6b5b; --accent: #ff7a4d; }
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
-  header { display: flex; align-items: center; gap: 24px; padding: 14px 24px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--bg); z-index: 5; }
+  header { display: flex; align-items: center; gap: 20px; padding: 12px 24px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--bg); z-index: 5; flex-wrap: wrap; }
   header h1 { font-size: 15px; margin: 0; letter-spacing: -0.01em; }
   header h1 span { color: var(--accent); }
-  nav { display: flex; gap: 4px; }
+  nav { display: flex; gap: 4px; flex-wrap: wrap; }
   nav a { color: var(--muted); text-decoration: none; padding: 6px 12px; border-radius: 999px; }
   nav a.on { background: var(--ink); color: var(--bg); }
-  nav a .n { font-variant-numeric: tabular-nums; opacity: .7; margin-left: 4px; }
+  nav a .n { font-variant-numeric: tabular-nums; opacity: .75; margin-left: 4px; }
+  .sync { margin-left: auto; display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ok); display: inline-block; }
+  .dot.busy { background: var(--warn); } .dot.off { background: var(--bad); }
   main { padding: 20px 24px 60px; max-width: 1400px; margin: 0 auto; }
+  h2.sec { font-size: 15px; margin: 22px 0 10px; }
   .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 16px; }
   input, select, textarea { font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; }
   input[type=search] { min-width: 240px; }
+  input[type=checkbox] { padding: 0; }
   button { font: inherit; cursor: pointer; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 8px; padding: 6px 12px; }
   button.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  button.danger { color: var(--bad); }
   button:disabled { opacity: .5; cursor: default; }
-  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; background: var(--chip); color: var(--ink); border: 1px solid transparent; font-size: 12px; cursor: pointer; user-select: none; }
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; background: var(--chip); color: var(--ink); border: 1px solid transparent; cursor: pointer; user-select: none; }
   .chip.on { border-color: var(--accent); color: var(--accent); }
   .chip .n { color: var(--muted); font-variant-numeric: tabular-nums; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; cursor: pointer; transition: border-color .15s; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; cursor: pointer; transition: border-color .15s; position: relative; }
   .card:hover { border-color: var(--muted); }
   .card.sel { border-color: var(--accent); }
+  .card .pick { position: absolute; left: 8px; top: 8px; z-index: 2; width: 18px; height: 18px; }
   .thumb { aspect-ratio: 1 / 1; background: repeating-conic-gradient(var(--chip) 0 25%, transparent 0 50%) 0 0 / 16px 16px; display: grid; place-items: center; overflow: hidden; }
   .thumb img, .thumb video { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
   .thumb .ext { font: 600 22px var(--mono); color: var(--muted); text-transform: uppercase; }
+  .thumb.wave { aspect-ratio: 3 / 1; }
   .meta { padding: 10px 12px; }
   .meta .name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .meta .sub { color: var(--muted); font-size: 12px; display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
   .badge { font-size: 11px; padding: 1px 7px; border-radius: 4px; background: var(--chip); color: var(--muted); }
   .badge.identity { color: var(--accent); }
-  .badge.superseded, .badge.retired, .badge.missing { color: var(--bad); }
-  .badge.ok { color: var(--ok); } .badge.running { color: var(--warn); } .badge.failed { color: var(--bad); }
-  .split { display: grid; grid-template-columns: 1fr 380px; gap: 20px; align-items: start; }
+  .badge.superseded, .badge.retired, .badge.missing, .badge.rejected, .badge.failed { color: var(--bad); }
+  .badge.ok, .badge.approved { color: var(--ok); }
+  .badge.running, .badge.pending, .badge.queued, .badge.proposed { color: var(--warn); }
+  .split { display: grid; grid-template-columns: 1fr 390px; gap: 20px; align-items: start; }
   .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; position: sticky; top: 70px; max-height: calc(100vh - 90px); overflow: auto; }
   .panel h2 { font-size: 16px; margin: 0 0 12px; word-break: break-word; }
   .panel .preview { margin-bottom: 12px; }
+  .panel audio { width: 100%; margin-bottom: 12px; }
   dl { display: grid; grid-template-columns: 90px 1fr; gap: 6px 10px; margin: 0 0 14px; font-size: 13px; }
-  dt { color: var(--muted); } dd { margin: 0; word-break: break-all; }
+  dt { color: var(--muted); } dd { margin: 0; word-break: break-word; }
   label { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 4px; }
   label + input, label + select, label + textarea { width: 100%; }
+  label.inline select, label.inline input:not([type=checkbox]) { width: auto; }
+  label.inline { display: inline-flex; align-items: center; gap: 6px; margin: 0; color: var(--ink); font-size: 13px; }
   code, .mono { font-family: var(--mono); font-size: 12px; }
   .ref { display: flex; gap: 6px; align-items: center; background: var(--chip); padding: 6px 8px; border-radius: 6px; margin-bottom: 12px; }
   .ref code { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .row { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .row { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; align-items: center; }
   .empty { color: var(--muted); padding: 40px 0; text-align: center; }
   .empty code { background: var(--chip); padding: 2px 6px; border-radius: 4px; }
+  .note { color: var(--muted); font-size: 13px; }
+  .swatches { display: flex; gap: 6px; } .swatches i { width: 18px; height: 18px; border-radius: 4px; display: inline-block; border: 1px solid var(--line); }
+  .tag.auto { font-style: italic; color: var(--muted); }
+  .drop { border: 2px dashed var(--line); border-radius: var(--radius); padding: 18px; text-align: center; color: var(--muted); margin-bottom: 16px; background: var(--panel); transition: border-color .15s, background .15s; }
+  .drop.over { border-color: var(--accent); background: var(--chip); color: var(--ink); }
+  .drop .row { justify-content: center; margin-top: 10px; }
+  .uploads { margin: -4px 0 16px; font-size: 13px; }
+  .uploads .u { display: grid; grid-template-columns: 1fr 90px 160px; gap: 10px; align-items: center; padding: 3px 0; border-bottom: 1px solid var(--line); }
+  progress { width: 100%; height: 6px; }
   .reel-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
   .reel-head h2 { margin: 0; font-size: 18px; }
   .master { background: #000; border-radius: var(--radius); overflow: hidden; margin-bottom: 18px; display: grid; place-items: center; }
   .master video { max-width: 100%; max-height: 70vh; display: block; }
-  .clips { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; margin-bottom: 20px; }
+  .clips { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin-bottom: 20px; }
   .clip { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
   .clip video { width: 100%; display: block; background: #000; aspect-ratio: 1/1; object-fit: contain; }
-  .clip .meta { display: flex; justify-content: space-between; align-items: center; }
+  .clip .meta { display: flex; flex-direction: column; gap: 8px; }
+  .clip .meta .top { display: flex; justify-content: space-between; align-items: center; }
+  .clip .fb { display: flex; gap: 6px; align-items: center; }
+  .clip .fb input { flex: 1; min-width: 0; }
+  button.on { border-color: var(--accent); color: var(--accent); }
   details { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 10px; }
   summary { cursor: pointer; font-weight: 600; }
   pre { white-space: pre-wrap; font: 12px/1.5 var(--mono); margin: 10px 0 0; max-height: 420px; overflow: auto; }
-  .job { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 10px; }
-  .job .top { display: flex; gap: 10px; align-items: center; }
-  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 8px 16px; border-radius: 8px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+  .job, .rule, .folder { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 10px; }
+  .job .top, .rule .top, .folder .top { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .rule input.text { flex: 1; min-width: 220px; }
+  .rule.conflict { border-color: var(--warn); }
+  .bar2 { height: 6px; background: var(--chip); border-radius: 3px; width: 70px; overflow: hidden; } .bar2 i { display: block; height: 100%; background: var(--accent); }
+  .grow { flex: 1; }
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 8px 16px; border-radius: 8px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 20; }
   .toast.on { opacity: 1; }
   a { color: inherit; }
-  @media (max-width: 860px) { .split { grid-template-columns: 1fr; } .panel { position: static; max-height: none; } header { flex-wrap: wrap; gap: 10px; } main { padding: 16px; } input[type=search] { min-width: 0; width: 100%; } }
+  @media (max-width: 860px) { .split { grid-template-columns: 1fr; } .panel { position: static; max-height: none; } header { gap: 10px; } main { padding: 16px; } input[type=search] { min-width: 0; width: 100%; } .sync { margin-left: 0; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
 <header>
   <h1>reelcut <span>studio</span></h1>
-  <nav>
+  <nav aria-label="Sections">
     <a href="#library" data-tab="library">Library<span class="n" id="n-library"></span></a>
+    <a href="#review" data-tab="review">Review<span class="n" id="n-review"></span></a>
+    <a href="#folders" data-tab="folders">Folders<span class="n" id="n-folders"></span></a>
+    <a href="#learnings" data-tab="learnings">Learnings<span class="n" id="n-learnings"></span></a>
     <a href="#reels" data-tab="reels">Reels<span class="n" id="n-reels"></span></a>
     <a href="#jobs" data-tab="jobs">Jobs<span class="n" id="n-jobs"></span></a>
   </nav>
+  <div class="sync" aria-live="polite"><span class="dot" id="dot"></span><span id="sync-text">Indexing</span><button id="pause" title="Pause or resume reading watched folders">Pause</button></div>
 </header>
 <main id="main"></main>
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status"></div>
 <script>
 const $ = (sel, el = document) => el.querySelector(sel);
+const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const IMG = new Set(["png", "jpg", "jpeg", "gif", "webp", "avif", "svg"]);
 const VID = new Set(["mp4", "webm", "mov"]);
-const state = { tagFilter: new Set(), q: "", selected: null, assets: [], tags: {}, runs: [], jobs: [] };
+const AUD = new Set(["mp3", "wav", "ogg", "m4a", "flac", "aiff"]);
+const TYPES = [["", "All"], ["image", "Images"], ["vector", "Vectors"], ["video", "Video"], ["audio", "Sounds (SFX)"], ["document", "Documents"]];
+const state = { tagFilter: new Set(), q: "", type: "", selected: null, assets: [], counts: { all: 0, pending: 0, queue: 0, audio: 0 }, tags: {}, runs: [], jobs: [], folders: [], ingest: null, picked: new Set(), uploads: [], dropKind: "generic", dropPrivate: false, learn: null };
 
 async function api(path, init) {
   const res = await fetch(path, { headers: { "Content-Type": "application/json" }, ...init });
@@ -106,77 +141,122 @@ async function api(path, init) {
   if (!res.ok) throw new Error(body.error || res.statusText);
   return body;
 }
-function toast(text) {
-  const t = $("#toast"); t.textContent = text; t.classList.add("on");
-  clearTimeout(toast.timer); toast.timer = setTimeout(() => t.classList.remove("on"), 2200);
-}
+const post = (path, body) => api(path, { method: "POST", body: JSON.stringify(body ?? {}) });
+const patch = (path, body) => api(path, { method: "PATCH", body: JSON.stringify(body) });
+function toast(text) { const t = $("#toast"); t.textContent = text; t.classList.add("on"); clearTimeout(toast.timer); toast.timer = setTimeout(() => t.classList.remove("on"), 2400); }
 function when(iso) { return iso ? new Date(iso).toLocaleString() : "—"; }
-function media(src, ext, attrs = "") {
-  if (IMG.has(ext)) return `<img src="${src}" alt="" loading="lazy" ${attrs}>`;
-  if (VID.has(ext)) return `<video src="${src}" muted preload="metadata" ${attrs}></video>`;
-  return `<span class="ext">${esc(ext || "?")}</span>`;
+function dur(s) { return s == null ? "—" : s < 10 ? `${s.toFixed(2)} s` : `${Math.round(s)} s`; }
+function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+const fileUrl = (a) => `/files/asset/${a.id}`;
+function preview(a, controls = false) {
+  if (a.mediaType === "audio") return a.thumbUrl ? `<img src="${a.thumbUrl}" alt="waveform" loading="lazy">` : `<span class="ext">${esc(a.ext)}</span>`;
+  if (IMG.has(a.ext)) return `<img src="${fileUrl(a)}" alt="" loading="lazy">`;
+  if (VID.has(a.ext)) return controls ? `<video src="${fileUrl(a)}" controls preload="metadata"></video>` : a.thumbUrl ? `<img src="${a.thumbUrl}" alt="" loading="lazy">` : `<video src="${fileUrl(a)}" muted preload="metadata"></video>`;
+  return a.thumbUrl ? `<img src="${a.thumbUrl}" alt="" loading="lazy">` : `<span class="ext">${esc(a.ext || "?")}</span>`;
 }
+function tagHtml(a, n = 99) { return a.tags.slice(0, n).map((t) => `<span class="tag ${(a.tagOrigin || {})[t] && a.tagOrigin[t] !== "user" ? "auto" : ""}" title="${(a.tagOrigin || {})[t] && a.tagOrigin[t] !== "user" ? "suggested by " + a.tagOrigin[t] + ", not yet reviewed" : "yours"}">#${esc(t)}</span>`).join(" "); }
+
+// ---------- master status and pause
+async function loadIngest() {
+  try { state.ingest = await api("/api/ingest"); } catch { return; }
+  const s = state.ingest.status, el = $("#dot");
+  el.className = "dot " + (s.paused ? "off" : s.scanning ? "busy" : "");
+  $("#sync-text").textContent = s.paused ? "Paused" : s.scanning ? `Indexing${s.pending ? ` · ${s.pending} left` : ""}` : "Idle";
+  $("#pause").textContent = s.paused ? "Resume" : "Pause";
+}
+$("#pause").addEventListener("click", async () => {
+  const paused = !state.ingest?.status.paused;
+  try { await post("/api/ingest/pause", { paused }); toast(paused ? "Paused: watched folders are not being read" : "Resumed"); await loadIngest(); } catch (e) { toast(e.message); }
+});
+setInterval(loadIngest, 2500);
 
 // ---------- library
 async function loadLibrary() {
   const tags = [...state.tagFilter].join(",");
-  const [a, t] = await Promise.all([api(`/api/assets?tags=${encodeURIComponent(tags)}&q=${encodeURIComponent(state.q)}`), api("/api/tags")]);
-  state.assets = a.assets; state.tags = t.tags;
+  const [a, t] = await Promise.all([api(`/api/assets?tags=${encodeURIComponent(tags)}&q=${encodeURIComponent(state.q)}&type=${state.type}`), api("/api/tags")]);
+  state.assets = a.assets; state.counts = a.counts; state.tags = t.tags;
+}
+function dropZone() {
+  return `<div class="drop" id="drop" role="group" aria-label="Upload assets">
+    Drop files or whole folders here. They are checked, previewed and tagged on arrival, and wait in <a href="#review">Review</a> until you approve them.
+    <div class="row">
+      <button id="pick-files">Choose files</button><button id="pick-folder">Choose a folder</button>
+      <label class="inline">Treat as <select id="drop-kind"><option value="generic" ${state.dropKind === "generic" ? "selected" : ""}>generic</option><option value="identity" ${state.dropKind === "identity" ? "selected" : ""}>identity (real brand marks or product screens)</option></select></label>
+      <label class="inline"><input type="checkbox" id="drop-private" ${state.dropPrivate ? "checked" : ""}> Private (never shown to Claude)</label>
+    </div>
+    <input type="file" id="in-files" multiple hidden><input type="file" id="in-folder" webkitdirectory hidden>
+  </div>
+  <div class="uploads" id="uploads"></div>`;
 }
 function renderLibrary() {
-  const tagEntries = Object.entries(state.tags).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  const tagEntries = Object.entries(state.tags).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 40);
   const sel = state.assets.find((a) => a.id === state.selected);
   $("#main").innerHTML = `
+    ${dropZone()}
     <div class="bar">
-      <input type="search" id="q" placeholder="Search name, tag or source…" value="${esc(state.q)}">
-      ${tagEntries.map(([t, n]) => `<span class="chip ${state.tagFilter.has(t) ? "on" : ""}" data-tag="${esc(t)}">#${esc(t)} <span class="n">${n}</span></span>`).join("")}
+      <input type="search" id="q" placeholder="Search name, tag, description or source…" aria-label="Search" value="${esc(state.q)}">
+      ${TYPES.map(([v, l]) => `<span class="chip ${state.type === v ? "on" : ""}" data-type="${v}" role="button" tabindex="0">${l}${v === "audio" ? ` <span class="n">${state.counts.audio}</span>` : ""}</span>`).join("")}
     </div>
+    <div class="bar">${tagEntries.map(([t, n]) => `<span class="chip ${state.tagFilter.has(t) ? "on" : ""}" data-tag="${esc(t)}" role="button" tabindex="0">#${esc(t)} <span class="n">${n}</span></span>`).join("")}</div>
     <div class="${sel ? "split" : ""}">
       <div>${state.assets.length === 0 ? emptyLibrary() : `<div class="grid">${state.assets.map(assetCard).join("")}</div>`}</div>
       ${sel ? assetPanel(sel) : ""}
     </div>`;
-  $("#q").addEventListener("input", debounce(async (e) => { state.q = e.target.value; await loadLibrary(); renderLibrary(); $("#q").focus(); $("#q").setSelectionRange(state.q.length, state.q.length); }, 200));
-  document.querySelectorAll("[data-tag]").forEach((el) => el.addEventListener("click", async () => {
-    const t = el.dataset.tag; state.tagFilter.has(t) ? state.tagFilter.delete(t) : state.tagFilter.add(t);
-    await loadLibrary(); renderLibrary();
-  }));
-  document.querySelectorAll("[data-asset]").forEach((el) => el.addEventListener("click", () => { state.selected = state.selected === el.dataset.asset ? null : el.dataset.asset; renderLibrary(); }));
+  bindDrop(); renderUploads();
+  $("#q").addEventListener("input", debounce(async (e) => { state.q = e.target.value; await loadLibrary(); renderLibrary(); const q = $("#q"); q.focus(); q.setSelectionRange(state.q.length, state.q.length); }, 200));
+  $$("[data-type]").forEach((el) => el.addEventListener("click", async () => { state.type = el.dataset.type; await loadLibrary(); renderLibrary(); }));
+  $$("[data-tag]").forEach((el) => el.addEventListener("click", async () => { const t = el.dataset.tag; state.tagFilter.has(t) ? state.tagFilter.delete(t) : state.tagFilter.add(t); await loadLibrary(); renderLibrary(); }));
+  $$("[data-asset]").forEach((el) => el.addEventListener("click", () => { state.selected = state.selected === el.dataset.asset ? null : el.dataset.asset; renderLibrary(); }));
   if (sel) bindPanel(sel);
 }
 function emptyLibrary() {
-  if (state.tagFilter.size || state.q) return `<p class="empty">Nothing matches that filter.</p>`;
-  return `<p class="empty">The library is empty. Add an asset with<br><br><code>npm run library -- add assets/in/claude-logo.svg --kind identity --tags claude,anthropic,logo --url https://anthropic.com/brand</code></p>`;
+  if (state.tagFilter.size || state.q || state.type) return `<p class="empty">Nothing matches that filter.</p>`;
+  return `<p class="empty">The library is empty. Drop files above, add a watched folder in <a href="#folders">Folders</a>, or run<br><br><code>npm run library -- add assets/in/claude-logo.svg --kind identity --tags claude,logo --url https://anthropic.com/brand</code></p>`;
 }
 function assetCard(a) {
   return `<div class="card ${a.id === state.selected ? "sel" : ""}" data-asset="${a.id}">
-    <div class="thumb">${media(`/files/asset/${a.id}`, a.ext)}</div>
+    <div class="thumb ${a.mediaType === "audio" ? "wave" : ""}">${preview(a)}</div>
     <div class="meta">
       <div class="name" title="${esc(a.name)}">${esc(a.name)}</div>
-      <div class="sub"><span class="badge ${a.assetKind}">${a.assetKind}</span>${a.status !== "active" ? `<span class="badge ${a.status}">${a.status}</span>` : ""}${a.tags.slice(0, 4).map((t) => `<span>#${esc(t)}</span>`).join("")}</div>
+      <div class="sub"><span class="badge ${a.assetKind}">${a.assetKind}</span>${a.review.state !== "approved" ? `<span class="badge ${a.review.state}">${a.review.state}</span>` : ""}${a.queued ? `<span class="badge queued">needs Claude</span>` : ""}${a.status !== "active" ? `<span class="badge ${a.status}">${a.status}</span>` : ""}${tagHtml(a, 4)}</div>
     </div>
   </div>`;
 }
+function analysisRows(a) {
+  const x = a.analysis || {}, rows = [];
+  if (x.width) rows.push(["Size", `${x.width} × ${x.height}`]);
+  if (x.durationSeconds != null) rows.push(["Length", dur(x.durationSeconds)]);
+  if (x.peakDb != null) rows.push(["Level", `peak ${x.peakDb} dB · loudness ${x.lufs} · gain ${x.gainDb > 0 ? "+" : ""}${x.gainDb} dB when mixed`]);
+  if (x.descriptors?.length) rows.push(["Shape", x.descriptors.join(", ")]);
+  if (x.dominantColors?.length) rows.push(["Colours", `<span class="swatches">${x.dominantColors.map((c) => `<i style="background:${esc(c)}" title="${esc(c)}"></i>`).join("")}</span>`]);
+  if (x.text) rows.push(["Text in file", esc(x.text)]);
+  if (x.description) rows.push(["Claude says", esc(x.description)]);
+  return rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
+}
 function assetPanel(a) {
-  const p = a.provenance;
-  const ref = `assets/library/${a.file.split("/").pop()}`;
-  return `<aside class="panel">
-    <div class="preview thumb">${media(`/files/asset/${a.id}`, a.ext, VID.has(a.ext) ? "controls" : "")}</div>
+  const p = a.provenance, ref = `assets/library/${a.file.split("/").pop()}`;
+  return `<aside class="panel" aria-label="Asset details">
+    <div class="preview thumb ${a.mediaType === "audio" ? "wave" : ""}">${preview(a, true)}</div>
+    ${a.mediaType === "audio" ? `<audio controls preload="none" src="${fileUrl(a)}"></audio>` : ""}
     <h2>${esc(a.name)}</h2>
     <div class="ref"><code title="${ref}">${ref}</code><button id="copy">Copy</button></div>
     <dl>
-      <dt>Kind</dt><dd>${a.assetKind}</dd>
+      <dt>Kind</dt><dd>${a.assetKind}${a.mediaType !== "other" ? ` · ${a.mediaType}` : ""}</dd>
+      <dt>Review</dt><dd><span class="badge ${a.review.state}">${a.review.state}</span>${a.review.by ? ` by ${esc(a.review.by)}` : ""}${a.private ? ` · private` : ""}</dd>
       <dt>Status</dt><dd>${a.status}${a.supersededBy ? ` → <a href="#" data-goto="${a.supersededBy}">${a.supersededBy}</a>` : ""}</dd>
       <dt>Source</dt><dd>${esc(p.source)}${p.url ? ` · <a href="${esc(p.url)}" target="_blank" rel="noopener noreferrer">${esc(p.url)}</a>` : ""}</dd>
-      ${p.licence ? `<dt>Licence</dt><dd>${esc(p.licence)}</dd>` : ""}
-      ${p.capturedAt ? `<dt>Captured</dt><dd>${when(p.capturedAt)}</dd>` : ""}
-      ${p.note ? `<dt>Note</dt><dd>${esc(p.note)}</dd>` : ""}
-      <dt>Added</dt><dd>${when(a.addedAt)}</dd>
-      <dt>Last used</dt><dd>${when(a.lastUsedAt)}</dd>
+      ${p.licence ? `<dt>Licence</dt><dd>${esc(p.licence)}</dd>` : ""}${p.capturedAt ? `<dt>Captured</dt><dd>${when(p.capturedAt)}</dd>` : ""}${p.note ? `<dt>Note</dt><dd>${esc(p.note)}</dd>` : ""}
+      ${analysisRows(a)}
+      <dt>Tags</dt><dd>${tagHtml(a) || "—"}</dd>
+      <dt>Added</dt><dd>${when(a.addedAt)}</dd><dt>Last used</dt><dd>${when(a.lastUsedAt)}</dd>
       <dt>Used in</dt><dd>${a.usedIn.length ? a.usedIn.map((r) => `<a href="#reels/${r}">${r}</a>`).join(", ") : "—"}</dd>
-      <dt>Size</dt><dd>${(a.bytes / 1024).toFixed(0)} kB · ${a.ext}</dd>
+      <dt>File</dt><dd>${(a.bytes / 1024).toFixed(0)} kB · ${a.ext}</dd>
     </dl>
+    ${a.review.state !== "approved" ? `<div class="row" style="margin-top:0"><button class="primary" data-review="approved">Approve</button><button class="danger" data-review="rejected">Reject</button></div>` : `<div class="row" style="margin-top:0"><button data-review="pending">Move back to review</button></div>`}
     <label for="f-name">Name</label><input id="f-name" value="${esc(a.name)}">
-    <label for="f-tags">Tags, comma separated</label><input id="f-tags" value="${esc(a.tags.join(", "))}">
+    <label for="f-tags">Tags, comma separated${a.mediaType === "audio" ? " (cue words: click, whoosh, pop, type, riser, hit…)" : ""}</label><input id="f-tags" value="${esc(a.tags.join(", "))}">
+    <label for="f-kind">Kind (only you decide that something is a real brand mark or product screen)</label>
+    <select id="f-kind">${["generic", "identity"].map((s) => `<option ${s === a.assetKind ? "selected" : ""}>${s}</option>`).join("")}</select>
     <label for="f-status">Status</label>
     <select id="f-status">${["active", "superseded", "retired"].map((s) => `<option ${s === a.status ? "selected" : ""}>${s}</option>`).join("")}</select>
     <label for="f-sup">Superseded by (asset id)</label><input id="f-sup" class="mono" value="${esc(a.supersededBy || "")}" placeholder="the newer asset's id">
@@ -185,20 +265,253 @@ function assetPanel(a) {
   </aside>`;
 }
 function bindPanel(a) {
-  $("#copy").addEventListener("click", () => { navigator.clipboard.writeText($(".ref code").textContent); toast("Reference copied"); });
+  $("#copy").addEventListener("click", () => { navigator.clipboard?.writeText($(".ref code").textContent); toast("Reference copied"); });
   $("#close").addEventListener("click", () => { state.selected = null; renderLibrary(); });
-  document.querySelectorAll("[data-goto]").forEach((el) => el.addEventListener("click", (e) => { e.preventDefault(); state.selected = el.dataset.goto; renderLibrary(); }));
+  $$("[data-goto]").forEach((el) => el.addEventListener("click", (e) => { e.preventDefault(); state.selected = el.dataset.goto; renderLibrary(); }));
+  $$("[data-review]").forEach((el) => el.addEventListener("click", async () => {
+    try { await post("/api/assets/review", { ids: [a.id], state: el.dataset.review, kind: $("#f-kind").value }); toast(`Marked ${el.dataset.review}`); await loadLibrary(); renderLibrary(); } catch (e) { toast(e.message); }
+  }));
   $("#save").addEventListener("click", async () => {
-    const patch = {
-      name: $("#f-name").value,
-      tags: $("#f-tags").value.split(",").map((t) => t.trim()).filter(Boolean),
-      status: $("#f-status").value,
-      note: $("#f-note").value,
+    const body = { name: $("#f-name").value, tags: $("#f-tags").value.split(",").map((t) => t.trim()).filter(Boolean), status: $("#f-status").value, note: $("#f-note").value, assetKind: $("#f-kind").value };
+    const sup = $("#f-sup").value.trim(); if (sup && sup !== a.supersededBy) body.supersededBy = sup;
+    try { await patch(`/api/assets/${a.id}`, body); toast("Saved"); await loadLibrary(); renderLibrary(); } catch (e) { toast(e.message); }
+  });
+}
+
+// ---------- upload
+const MAX_PARALLEL = 3;
+function bindDrop() {
+  const drop = $("#drop"); if (!drop) return;
+  const addAll = (items) => { state.dropKind = $("#drop-kind").value; state.dropPrivate = $("#drop-private").checked; enqueue(items); };
+  $("#pick-files").addEventListener("click", () => $("#in-files").click());
+  $("#pick-folder").addEventListener("click", () => $("#in-folder").click());
+  $("#in-files").addEventListener("change", (e) => { addAll([...e.target.files].map((file) => ({ file, rel: "" }))); e.target.value = ""; });
+  $("#in-folder").addEventListener("change", (e) => { addAll([...e.target.files].map((file) => ({ file, rel: (file.webkitRelativePath || "").split("/").slice(0, -1).join("/") }))); e.target.value = ""; });
+  ["dragenter", "dragover"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave", "drop"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
+  drop.addEventListener("drop", async (e) => addAll(await filesFromDrop(e.dataTransfer)));
+}
+async function filesFromDrop(dt) {
+  const out = [];
+  const walk = async (entry, dir) => {
+    if (entry.isFile) { out.push({ file: await new Promise((res, rej) => entry.file(res, rej)), rel: dir }); return; }
+    if (!entry.isDirectory) return;
+    const reader = entry.createReader(); let batch;
+    do { batch = await new Promise((res, rej) => reader.readEntries(res, rej)); for (const child of batch) await walk(child, dir ? `${dir}/${entry.name}` : entry.name); } while (batch.length);
+  };
+  const entries = [...dt.items].map((i) => i.webkitGetAsEntry?.()).filter(Boolean);
+  if (entries.length) for (const e of entries) await walk(e, "");
+  else [...dt.files].forEach((file) => out.push({ file, rel: "" }));
+  return out;
+}
+function enqueue(items) {
+  const batch = items.filter((i) => !i.file.name.startsWith(".")).map((i) => ({ ...i, id: Math.random().toString(36).slice(2), progress: 0, status: "queued", note: "", kind: state.dropKind, private: state.dropPrivate }));
+  if (!batch.length) return;
+  state.uploads.push(...batch); renderUploads(); pump();
+}
+let running = 0;
+function pump() {
+  while (running < MAX_PARALLEL) {
+    const next = state.uploads.find((u) => u.status === "queued"); if (!next) break;
+    next.status = "sending"; running++; send(next).finally(() => { running--; renderUploads(); pump(); });
+  }
+  if (running === 0 && state.uploads.length && state.uploads.every((u) => u.status !== "queued" && u.status !== "sending")) finishUploads();
+}
+function send(u) {
+  return new Promise((resolve) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/upload");
+    xhr.setRequestHeader("x-reelcut-name", encodeURIComponent(u.file.name));
+    if (u.rel) xhr.setRequestHeader("x-reelcut-path", encodeURIComponent(u.rel));
+    xhr.setRequestHeader("x-reelcut-kind", u.kind);
+    if (u.private) xhr.setRequestHeader("x-reelcut-private", "1");
+    xhr.upload.onprogress = (e) => { if (e.lengthComputable) { u.progress = e.loaded / e.total; renderUploads(); } };
+    xhr.onload = () => {
+      let body = {}; try { body = JSON.parse(xhr.responseText); } catch {}
+      u.progress = 1;
+      if (xhr.status === 201) { u.status = "done"; u.note = "added, waiting for review"; }
+      else if (xhr.status === 200) { u.status = "done"; u.note = "already in the library"; }
+      else { u.status = "failed"; u.note = body.outcome?.reason || body.error || `error ${xhr.status}`; }
+      resolve();
     };
-    const sup = $("#f-sup").value.trim();
-    if (sup && sup !== a.supersededBy) patch.supersededBy = sup;
-    try { await api(`/api/assets/${a.id}`, { method: "PATCH", body: JSON.stringify(patch) }); toast("Saved"); await loadLibrary(); renderLibrary(); }
-    catch (e) { toast(e.message); }
+    xhr.onerror = () => { u.status = "failed"; u.note = "the studio could not be reached"; resolve(); };
+    xhr.send(u.file);
+  });
+}
+function renderUploads() {
+  const el = $("#uploads"); if (!el) return;
+  const list = state.uploads.slice(-40);
+  el.innerHTML = list.map((u) => `<div class="u"><span title="${esc(u.rel ? u.rel + "/" : "")}${esc(u.file.name)}">${esc(u.file.name)}</span><progress max="1" value="${u.progress}"></progress><span class="${u.status === "failed" ? "badge failed" : "note"}">${esc(u.status === "sending" ? "uploading…" : u.note || u.status)}</span></div>`).join("");
+}
+async function finishUploads() {
+  const done = state.uploads.filter((u) => u.status === "done").length, failed = state.uploads.filter((u) => u.status === "failed").length;
+  toast(`${done} added${failed ? `, ${failed} failed` : ""}`);
+  state.uploads = state.uploads.filter((u) => u.status === "failed");
+  await loadLibrary(); if (location.hash.slice(1).split("/")[0] === "library" || !location.hash) renderLibrary();
+  updateBadges();
+}
+
+// ---------- review
+async function renderReview() {
+  const [a, q] = await Promise.all([api("/api/assets?review=pending"), api("/api/queue")]);
+  const list = a.assets; state.counts = a.counts;
+  const folders = state.folders;
+  $("#main").innerHTML = `
+    <p class="note">What was dropped in waits here. Nothing below can be used by a reel on its own until you approve it, and Claude's and the machine's tags show in <em>italics</em> until you have. ${q.assets.length ? `<strong>${q.assets.length}</strong> still need Claude to look at them: run <code>${esc(q.command)}</code> in Claude Code <button id="copy-cmd">Copy command</button>` : ""}</p>
+    <div class="bar">
+      <button id="sel-all">Select all</button><button id="sel-none">Select none</button>
+      <button class="primary" id="approve" disabled>Approve</button><button id="approve-id" disabled title="Only for real brand marks and product screens">Approve as identity</button><button class="danger" id="reject" disabled>Reject</button>
+      <span class="note" id="picked"></span>
+    </div>
+    ${list.length === 0 ? `<p class="empty">Nothing is waiting for review.</p>` : `<div class="grid">${list.map((x) => `<div class="card ${state.picked.has(x.id) ? "sel" : ""}" data-asset="${x.id}"><input class="pick" type="checkbox" aria-label="Select ${esc(x.name)}" ${state.picked.has(x.id) ? "checked" : ""} data-pick="${x.id}"><div class="thumb ${x.mediaType === "audio" ? "wave" : ""}">${preview(x)}</div><div class="meta"><div class="name" title="${esc(x.name)}">${esc(x.name)}</div><div class="sub"><span class="badge ${x.assetKind}">${x.assetKind}</span>${x.queued ? `<span class="badge queued">needs Claude</span>` : ""}${x.folderId ? `<span class="badge">${esc((folders.find((f) => f.id === x.folderId) || {}).label || "folder")}</span>` : ""}${tagHtml(x, 6)}</div></div></div>`).join("")}</div>`}`;
+  const sync = () => { const n = state.picked.size; ["approve", "approve-id", "reject"].forEach((id) => { $("#" + id).disabled = n === 0; }); $("#picked").textContent = n ? `${n} selected` : ""; };
+  sync();
+  $$("[data-pick]").forEach((el) => el.addEventListener("click", (e) => { e.stopPropagation(); el.checked ? state.picked.add(el.dataset.pick) : state.picked.delete(el.dataset.pick); el.closest(".card").classList.toggle("sel", el.checked); sync(); }));
+  $$(".card[data-asset]").forEach((el) => el.addEventListener("click", (e) => { if (e.target.closest("input")) return; state.selected = el.dataset.asset; location.hash = "#library"; }));
+  $("#sel-all")?.addEventListener("click", () => { list.forEach((x) => state.picked.add(x.id)); renderReview(); });
+  $("#sel-none")?.addEventListener("click", () => { state.picked.clear(); renderReview(); });
+  $("#copy-cmd")?.addEventListener("click", () => { navigator.clipboard?.writeText(q.command); toast("Command copied"); });
+  const act = (id, st, kind) => $("#" + id).addEventListener("click", async () => {
+    try { await post("/api/assets/review", { ids: [...state.picked], state: st, ...(kind ? { kind } : {}) }); toast(`${state.picked.size} ${st}`); state.picked.clear(); await updateBadges(); renderReview(); } catch (e) { toast(e.message); }
+  });
+  act("approve", "approved"); act("approve-id", "approved", "identity"); act("reject", "rejected");
+}
+
+// ---------- folders
+async function loadFolders() { state.folders = (await api("/api/folders")).folders; }
+function folderCard(f) {
+  const c = f.summary || {};
+  return `<div class="folder" data-folder="${f.id}">
+    <div class="top"><strong>${esc(f.label || f.path.split(/[\\/]/).pop())}</strong><code class="grow" title="${esc(f.path)}">${esc(f.path)}</code>${f.paused ? `<span class="badge failed">paused</span>` : `<span class="badge ok">watching</span>`}${f.lastError ? `<span class="badge failed" title="${esc(f.lastError)}">${esc(f.lastError)}</span>` : ""}</div>
+    <div class="row">
+      <span class="note">${c.ingested || 0} added · ${c.duplicate || 0} duplicates · ${c.skipped || 0} skipped · ${c.failed || 0} failed · last scan ${when(f.lastScanAt)}</span>
+    </div>
+    <div class="row">
+      <label class="inline">Kind <select data-f="kind"><option ${f.kind === "generic" ? "selected" : ""}>generic</option><option ${f.kind === "identity" ? "selected" : ""}>identity</option></select></label>
+      <label class="inline"><input type="checkbox" data-f="trusted" ${f.trusted ? "checked" : ""}> Trusted (skip review)</label>
+      <label class="inline"><input type="checkbox" data-f="private" ${f.private ? "checked" : ""}> Private (never shown to Claude)</label>
+      <span class="grow"></span>
+      <button data-f="pause">${f.paused ? "Resume this folder" : "Pause this folder"}</button><button data-f="rescan" ${f.paused ? "disabled" : ""}>Rescan now</button><button class="danger" data-f="remove">Stop watching</button>
+    </div>
+  </div>`;
+}
+async function renderFolders() {
+  await Promise.all([loadFolders(), loadIngest()]);
+  const s = state.ingest?.status;
+  $("#main").innerHTML = `
+    <p class="note">reelcut reads these folders and never writes to them — a Google Drive, Dropbox or OneDrive folder works, since it is just a place on this computer. New files are checked, previewed and tagged, then wait in <a href="#review">Review</a> unless the folder is trusted. Removing a folder keeps everything already added. ${s?.paused ? `<strong>Everything is paused</strong> (top right).` : ""}</p>
+    <h2 class="sec">Add a folder</h2>
+    <div class="bar">
+      <input id="nf-path" class="grow" placeholder="Full path, e.g. C:\\Users\\you\\Google Drive\\Brand kit" aria-label="Folder path">
+      <input id="nf-label" placeholder="Name (optional)" aria-label="Name">
+      <label class="inline">Kind <select id="nf-kind"><option>generic</option><option>identity</option></select></label>
+      <label class="inline"><input type="checkbox" id="nf-trusted"> Trusted</label>
+      <label class="inline"><input type="checkbox" id="nf-private"> Private</label>
+      <button class="primary" id="nf-add">Watch folder</button>
+    </div>
+    <h2 class="sec">Watched folders</h2>
+    ${state.folders.length ? state.folders.map(folderCard).join("") : `<p class="empty">No folders yet.</p>`}
+    ${state.ingest?.summary.attention.length ? `<details><summary>Skipped and failed files (${state.ingest.summary.attention.length})</summary><pre>${esc(state.ingest.summary.attention.map((e) => `${e.state}  ${e.path}\n    ${e.reason || ""}`).join("\n"))}</pre></details>` : ""}`;
+  $("#nf-add").addEventListener("click", async () => {
+    try {
+      await post("/api/folders", { path: $("#nf-path").value, label: $("#nf-label").value, kind: $("#nf-kind").value, trusted: $("#nf-trusted").checked, private: $("#nf-private").checked });
+      toast("Watching; the first scan has started"); await updateBadges(); renderFolders();
+    } catch (e) { toast(e.message); }
+  });
+  $$("[data-folder]").forEach((card) => {
+    const id = card.dataset.folder, f = state.folders.find((x) => x.id === id);
+    $$("[data-f]", card).forEach((el) => {
+      const key = el.dataset.f;
+      if (el.tagName === "BUTTON") el.addEventListener("click", async () => {
+        try {
+          if (key === "pause") await patch(`/api/folders/${id}`, { paused: !f.paused });
+          if (key === "rescan") { await post(`/api/folders/${id}/rescan`); toast("Scanning…"); }
+          if (key === "remove") { if (!confirm("Stop watching this folder? Assets already added stay.")) return; await api(`/api/folders/${id}`, { method: "DELETE" }); }
+          await updateBadges(); renderFolders();
+        } catch (e) { toast(e.message); }
+      });
+      else el.addEventListener("change", async () => { try { await patch(`/api/folders/${id}`, { [key]: el.type === "checkbox" ? el.checked : el.value }); toast("Saved"); } catch (e) { toast(e.message); } });
+    });
+  });
+}
+
+// ---------- learnings
+async function loadLearn() { state.learn = await api("/api/learnings"); }
+const SUBJECTS = { look: ["paper", "ink", "flood", "sky", "cinema", "poster", "cool"], motion: ["restrained", "default", "energetic"], text: ["full", "key-lines", "minimal", "none"], format: ["1:1", "9:16", "16:9", "4:5"], sound: ["effects", "silent"], pattern: [], accent: [] };
+function ruleCard(r) {
+  const conflict = r.conflictWith.length > 0;
+  return `<div class="rule ${conflict ? "conflict" : ""}" data-rule="${r.id}">
+    <div class="top">
+      <span class="badge ${r.status}">${r.status}</span>${conflict ? `<span class="badge failed" title="the opposite rule exists in this scope: neither is applied until you resolve it">conflict</span>` : ""}
+      <input class="text" data-r="text" value="${esc(r.text)}" aria-label="Rule text">
+      <select data-r="scope" aria-label="Scope"><option value="global" ${r.scope === "global" ? "selected" : ""}>everywhere</option>${r.scope !== "global" ? `<option value="${esc(r.scope)}" selected>${esc(r.scope.replace("brand:", "for "))}</option>` : ""}</select>
+      <span class="bar2" title="confidence ${r.confidence}"><i style="width:${Math.round(r.confidence * 100)}%"></i></span>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <span class="note">${r.origin === "user" ? "written or edited by you" : `inferred from ${r.evidence.length} signal${r.evidence.length === 1 ? "" : "s"}`} · last seen ${when(r.lastSeenAt)}</span><span class="grow"></span>
+      ${r.status !== "active" ? `<button class="primary" data-r="accept">${r.status === "proposed" ? "Accept" : "Turn on"}</button>` : `<button data-r="disable">Turn off</button>`}
+      <button data-r="pin" class="${r.pinned ? "on" : ""}" title="A pinned rule never expires">${r.pinned ? "Pinned" : "Pin"}</button>
+      <button data-r="why">Why?</button><button class="danger" data-r="delete">Delete</button>
+    </div>
+    <div class="why" hidden></div>
+  </div>`;
+}
+async function renderLearnings() {
+  await loadLearn();
+  const { rules, notes } = state.learn;
+  const group = (title, list) => list.length ? `<h2 class="sec">${title} (${list.length})</h2>${list.map(ruleCard).join("")}` : "";
+  $("#main").innerHTML = `
+    <p class="note">What the studio has noticed about your taste. Claude reads only the rules that are <strong>on</strong>, at the start of each reel, and lists the ones it applied in the plan. Proposed rules do nothing until you accept them. Edit a sentence and the rule becomes yours.</p>
+    <div class="bar"><button id="export">Export</button><label class="inline">Import <input type="file" id="import" accept="application/json" aria-label="Import learnings"></label><span class="note">${state.learn.signals} signals recorded</span></div>
+    ${group("On", rules.filter((r) => r.status === "active" && !r.conflictWith.length))}
+    ${group("In conflict", rules.filter((r) => r.conflictWith.length && (r.status === "active" || r.status === "proposed")))}
+    ${group("Proposed", rules.filter((r) => r.status === "proposed" && !r.conflictWith.length))}
+    ${group("Off or expired", rules.filter((r) => r.status === "disabled" || r.status === "expired"))}
+    ${rules.length ? "" : `<p class="empty">Nothing learned yet. Render a few reels and leave a thumb on the beats you like or don't, and proposals will appear here.</p>`}
+    <h2 class="sec">Write a rule</h2>
+    <div class="bar">
+      <select id="nr-kind"><option value="note">Note (any guidance)</option><option value="prefer">Prefer</option><option value="avoid">Avoid</option></select>
+      <select id="nr-type" aria-label="Subject"><option value="">—</option>${Object.keys(SUBJECTS).map((k) => `<option>${k}</option>`).join("")}</select>
+      <input id="nr-value" placeholder="value, e.g. cool or #2f5bff" aria-label="Subject value">
+      <input id="nr-text" class="grow" placeholder="In your words (for a note), e.g. never more than two accent colours" aria-label="Rule text">
+      <input id="nr-brand" placeholder="Brand (optional)" aria-label="Brand">
+      <button class="primary" id="nr-add">Add</button>
+    </div>
+    ${notes.length ? `<h2 class="sec">Notes you left on beats</h2>${notes.map((n) => `<div class="rule"><div class="top"><span class="grow">${esc(n.note)}</span><span class="note">${esc(n.reel || "")} ${esc(n.beat || "")} · ${when(n.at)}</span><button data-promote="${n.id}">Make it a rule</button></div></div>`).join("")}` : ""}`;
+  $("#export").addEventListener("click", async () => {
+    const data = await api("/api/learnings/export"); const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })); a.download = "reelcut-learnings.json"; a.click(); URL.revokeObjectURL(a.href);
+  });
+  $("#import").addEventListener("change", async (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    try { const r = await api("/api/learnings/import", { method: "POST", body: await file.text() }); toast(`Imported ${r.added} new, ${r.replaced} replaced, ${r.skipped} skipped. Inferred rules arrive as proposals.`); renderLearnings(); } catch (err) { toast(err.message); }
+  });
+  $("#nr-add").addEventListener("click", async () => {
+    const type = $("#nr-type").value, value = $("#nr-value").value.trim();
+    try {
+      await post("/api/learnings/rules", { kind: $("#nr-kind").value, ...(type && value ? { subject: { type, value } } : {}), text: $("#nr-text").value || undefined, brand: $("#nr-brand").value || undefined });
+      toast("Added and on"); await updateBadges(); renderLearnings();
+    } catch (err) { toast(err.message); }
+  });
+  $$("[data-promote]").forEach((el) => el.addEventListener("click", async () => {
+    const text = prompt("Rule, in your words:", state.learn.notes.find((n) => n.id === el.dataset.promote)?.note || ""); if (!text) return;
+    try { await post("/api/learnings/promote", { signal: el.dataset.promote, text }); toast("Added and on"); renderLearnings(); } catch (err) { toast(err.message); }
+  }));
+  $$("[data-rule]").forEach((card) => {
+    const id = card.dataset.rule, r = rules.find((x) => x.id === id);
+    const save = async (body, msg) => { try { await patch(`/api/learnings/rules/${id}`, body); toast(msg); await updateBadges(); renderLearnings(); } catch (err) { toast(err.message); } };
+    $("[data-r=text]", card).addEventListener("change", (e) => save({ text: e.target.value }, "Saved: this rule is now yours"));
+    $("[data-r=scope]", card).addEventListener("change", (e) => save({ scope: e.target.value }, "Saved"));
+    $("[data-r=accept]", card)?.addEventListener("click", () => save({ status: "active" }, "On: Claude will apply it"));
+    $("[data-r=disable]", card)?.addEventListener("click", () => save({ status: "disabled" }, "Off"));
+    $("[data-r=pin]", card).addEventListener("click", () => save({ pinned: !r.pinned }, r.pinned ? "Unpinned" : "Pinned"));
+    $("[data-r=delete]", card).addEventListener("click", async () => { try { await api(`/api/learnings/rules/${id}`, { method: "DELETE" }); toast("Deleted"); await updateBadges(); renderLearnings(); } catch (err) { toast(err.message); } });
+    $("[data-r=why]", card).addEventListener("click", async () => {
+      const box = $(".why", card); if (!box.hidden) { box.hidden = true; return; }
+      const { evidence } = await api(`/api/learnings/why/${id}`);
+      box.innerHTML = evidence.length ? `<pre>${esc(evidence.map((s) => `${s.type.padEnd(8)} ${s.subject ? s.subject.type + " " + s.subject.value : ""}${s.rating ? " " + s.rating : ""}  reel ${s.reel || "—"} ${s.beat || ""}  ${when(s.at)}${s.note ? "\n         “" + s.note + "”" : ""}`).join("\n"))}</pre>` : `<p class="note">No evidence on file: you wrote this one, or its signals have aged out.</p>`;
+      box.hidden = false;
+    });
   });
 }
 
@@ -207,10 +520,7 @@ async function loadRuns() { state.runs = (await api("/api/runs")).runs; }
 function runFile(run, rel) { return `/files/run/${run.id}/${rel.split("/").map(encodeURIComponent).join("/")}`; }
 function runTitle(run) { const parts = run.outDir.split(/[\\/]/).filter(Boolean); return parts.slice(-2).join("/"); }
 function renderReels() {
-  if (state.runs.length === 0) {
-    $("#main").innerHTML = `<p class="empty">No reels yet. Every <code>npm run render -- reel.json</code> shows up here.</p>`;
-    return;
-  }
+  if (state.runs.length === 0) { $("#main").innerHTML = `<p class="empty">No reels yet. Every <code>npm run render -- reel.json</code> shows up here.</p>`; return; }
   $("#main").innerHTML = `<div class="grid">${state.runs.map((r) => `
     <a class="card" href="#reels/${r.id}" style="text-decoration:none">
       <div class="thumb">${r.missing ? `<span class="ext">gone</span>` : r.poster ? `<img src="${runFile(r, r.poster)}" alt="">` : r.clips[0] ? `<video src="${runFile(r, r.clips[0])}#t=0.5" muted preload="metadata"></video>` : `<span class="ext">—</span>`}</div>
@@ -221,25 +531,37 @@ function renderReels() {
 async function renderReel(id) {
   let data;
   try { data = await api(`/api/runs/${id}`); } catch (e) { $("#main").innerHTML = `<p class="empty">${esc(e.message)}</p>`; return; }
-  const { run, plan, report } = data;
+  const { run, plan, report, feedback = [], applied = [] } = data;
   const running = state.jobs.find((j) => j.status === "running");
+  const fb = (b) => feedback.find((f) => f.beat === b) || {};
   $("#main").innerHTML = `
-    <div class="reel-head"><a href="#reels">← Reels</a><h2>${esc(runTitle(run))}</h2><span class="mono" style="color:var(--muted)">${esc(run.outDir)}</span>${run.missing ? `<span class="badge missing">folder missing</span>` : ""}</div>
+    <div class="reel-head"><a href="#reels">← Reels</a><h2>${esc(runTitle(run))}</h2><span class="mono" style="color:var(--muted)">${esc(run.outDir)}</span>${run.brand ? `<span class="badge">${esc(run.brand)}</span>` : ""}${run.missing ? `<span class="badge missing">folder missing</span>` : ""}</div>
     ${run.master && !run.missing ? `<div class="master"><video src="${runFile(run, run.master)}" controls preload="metadata" ${run.poster ? `poster="${runFile(run, run.poster)}"` : ""}></video></div>` : ""}
+    <p class="note">Tell the studio what works. A thumb on a beat is the clearest signal it gets; a note stays on the beat and can become a rule in <a href="#learnings">Learnings</a>.</p>
     <div class="clips">${run.beats.map((b) => {
-      const clip = run.clips.find((c) => c === `clips/${b}.mp4`);
-      return `<div class="clip">
+      const clip = run.clips.find((c) => c === `clips/${b}.mp4`), f = fb(b);
+      return `<div class="clip" data-beat="${esc(b)}">
         ${clip && !run.missing ? `<video src="${runFile(run, clip)}?v=${encodeURIComponent(run.renderedAt)}" controls preload="metadata"></video>` : `<div class="thumb"><span class="ext">no clip</span></div>`}
-        <div class="meta"><span class="mono">${esc(b)}</span><button data-render="${esc(b)}" ${run.missing || running ? "disabled" : ""}>Re-render</button></div>
+        <div class="meta"><div class="top"><span class="mono">${esc(b)}</span><button data-render="${esc(b)}" ${run.missing || running ? "disabled" : ""}>Re-render</button></div>
+          <div class="fb"><button data-rate="up" class="${f.rating === "up" ? "on" : ""}" aria-pressed="${f.rating === "up"}">Works</button><button data-rate="down" class="${f.rating === "down" ? "on" : ""}" aria-pressed="${f.rating === "down"}">Not quite</button><input data-note placeholder="Note…" value="${esc(f.note || "")}" aria-label="Note for ${esc(b)}"><button data-save-note>Save</button></div></div>
       </div>`; }).join("")}</div>
+    ${applied.length ? `<details open><summary>Learnings applied to this reel (${applied.length})</summary><ul>${applied.map((r) => `<li>${esc(r.text)} <span class="note">${r.status === "active" ? "" : "(" + r.status + ")"}</span></li>`).join("")}</ul></details>` : ""}
     ${run.libraryAssets.length ? `<details open><summary>Library assets used (${run.libraryAssets.length})</summary><p>${run.libraryAssets.map((a) => `<a href="#library" data-lib="${a}" class="mono">${a}</a>`).join(" · ")}</p></details>` : ""}
     ${report ? `<details><summary>report.md</summary><pre>${esc(report)}</pre></details>` : ""}
     ${plan ? `<details><summary>plan.md</summary><pre>${esc(plan)}</pre></details>` : ""}`;
-  document.querySelectorAll("[data-lib]").forEach((el) => el.addEventListener("click", () => { state.selected = el.dataset.lib; }));
-  document.querySelectorAll("[data-render]").forEach((el) => el.addEventListener("click", async () => {
-    try { await api(`/api/runs/${run.id}/render`, { method: "POST", body: JSON.stringify({ beat: el.dataset.render }) }); toast(`Rendering ${el.dataset.render}…`); location.hash = "#jobs"; }
-    catch (e) { toast(e.message); }
+  $$("[data-lib]").forEach((el) => el.addEventListener("click", () => { state.selected = el.dataset.lib; }));
+  $$("[data-render]").forEach((el) => el.addEventListener("click", async () => {
+    try { await post(`/api/runs/${run.id}/render`, { beat: el.dataset.render }); toast(`Rendering ${el.dataset.render}…`); location.hash = "#jobs"; } catch (e) { toast(e.message); }
   }));
+  $$(".clip").forEach((card) => {
+    const beat = card.dataset.beat;
+    const send = async (body, msg) => { try { await post(`/api/runs/${run.id}/feedback`, { beat, ...body }); toast(msg); } catch (e) { toast(e.message); } };
+    $$("[data-rate]", card).forEach((b) => b.addEventListener("click", async () => {
+      await send({ rating: b.dataset.rate, note: $("[data-note]", card).value }, b.dataset.rate === "up" ? "Noted: this works" : "Noted: not quite");
+      $$("[data-rate]", card).forEach((x) => { x.classList.toggle("on", x === b); x.setAttribute("aria-pressed", String(x === b)); });
+    }));
+    $("[data-save-note]", card).addEventListener("click", () => { const note = $("[data-note]", card).value.trim(); if (note) send({ note }, "Note saved"); });
+  });
 }
 
 // ---------- jobs
@@ -253,21 +575,34 @@ function renderJobs() {
 }
 
 // ---------- shell
-function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
 let poll;
+async function updateBadges() {
+  try {
+    const [lib, folders, learn] = await Promise.all([api("/api/assets?limit=0"), api("/api/folders"), api("/api/learnings")]);
+    state.counts = lib.counts; state.folders = folders.folders; state.learn = learn;
+  } catch { return; }
+  $("#n-library").textContent = state.counts.all || "";
+  $("#n-review").textContent = state.counts.pending || "";
+  $("#n-folders").textContent = state.folders.length || "";
+  const waiting = (state.learn?.rules || []).filter((r) => r.status === "proposed" && !r.conflictWith.length).length;
+  $("#n-learnings").textContent = waiting || "";
+  $("#n-reels").textContent = state.runs.length || "";
+  $("#n-jobs").textContent = state.jobs.filter((j) => j.status === "running").length ? "●" : "";
+}
 async function route() {
   const [tab, id] = (location.hash.slice(1) || "library").split("/");
-  document.querySelectorAll("nav a").forEach((a) => a.classList.toggle("on", a.dataset.tab === tab));
+  $$("nav a").forEach((a) => a.classList.toggle("on", a.dataset.tab === tab));
   clearTimeout(poll);
   try {
-    await Promise.all([loadLibrary(), loadRuns(), loadJobs()]);
-    $("#n-library").textContent = state.assets.length || "";
-    $("#n-reels").textContent = state.runs.length || "";
-    $("#n-jobs").textContent = state.jobs.filter((j) => j.status === "running").length ? "●" : "";
+    await Promise.all([loadRuns(), loadJobs(), loadIngest()]);
+    await updateBadges();
     if (tab === "reels" && id) await renderReel(id);
     else if (tab === "reels") renderReels();
     else if (tab === "jobs") renderJobs();
-    else renderLibrary();
+    else if (tab === "review") await renderReview();
+    else if (tab === "folders") await renderFolders();
+    else if (tab === "learnings") await renderLearnings();
+    else { await loadLibrary(); renderLibrary(); }
   } catch (e) { $("#main").innerHTML = `<p class="empty">${esc(e.message)}</p>`; }
   if (tab === "jobs" && state.jobs.some((j) => j.status === "running")) poll = setTimeout(route, 2000);
 }

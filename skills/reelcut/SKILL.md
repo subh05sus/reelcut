@@ -73,11 +73,17 @@ skill". Don't guess it — a plugin install, a `~/.claude/skills/` copy and this
 
 **Read:** [references/step-0-ask.md](references/step-0-ask.md)
 
-Run `npm run beats` on the script first, then ask the user — with the AskUserQuestion tool, at most
+Run `npm run beats` on the script first, then read what the studio has learned
+(`npm run learnings -- brief --script <script>`, see [references/learnings.md](references/learnings.md)),
+then ask the user — with the AskUserQuestion tool, at most
 two rounds — about everything the invocation left open: how much text goes on screen, the length,
 the look and palette, motion, format, sound, and whether to open the studio. Options are tailored
 to *this* script, the recommended one first. Never ask about what a flag or the freeform direction
 already answered, and skip the questions when the run is unattended.
+
+Learned rules shape the questions: the option a rule prefers goes first, marked `(Recommended)`, and
+a question a rule already answers (a pinned look, a motion tempo) is not asked again but confirmed in
+one line. An answer given now always beats a learned rule.
 
 **Gate:** every open axis has an answer or a recorded default, and the studio question has been
 answered, before any brief is written.
@@ -113,6 +119,10 @@ provided, then a capture of the real product screen, then the brand's own source
 Report everything still open with its ways out. Never stall silently. Once an identity asset is
 accepted, add it to the library with its source so the next reel does not acquire it again.
 
+Assets the user has dropped into the studio (or a watched folder) are in the library too. The ones
+they have approved match like any other. The ones still `pending` are shown as proposals and never
+applied by themselves: say so, and tell the user they can approve them in the studio's Review tab.
+
 **Gate:** no `identity` requirement is satisfied by a drawn asset. Ever.
 
 ---
@@ -145,6 +155,10 @@ the `data-*` timing attributes; `hyperframes-animation` for motion rules, bluepr
 and the named text effects. This skill owns the story, the beats, the assets and the creative laws;
 HyperFrames owns the composition mechanics and the render.
 
+Apply the learned rules you read in Step 0 where they fit the beat, record their ids in `reel.json`
+as `appliedLearnings`, list them under **Applied learnings** in `plan.md`, and put the pattern a beat
+was adapted from in its `pattern` field, so the studio can learn which patterns are kept.
+
 **Gate:** `npx hyperframes check --samples 24` passes **with a non-zero sample count**. See the
 hard rules below — a clean-looking report with zero samples means nothing ran.
 Then measure it: `npm run measure -- <beat.html> <times> --guides --scan` puts the beat on the grid
@@ -160,11 +174,40 @@ the headline's ink flush with the margin) and flags anything outside the safe ar
 
 Write `reel.json`, then `npm run render -- reel.json`. It renders each beat as its own clip and a
 master that mounts them all, checks every file, and bakes the hook's strongest settled frame in as
-the thumbnail. Add `--sfx` for sound effects. Write the report. The run is recorded; open the studio
+the thumbnail. Add `--sfx` for sound effects: `npm run sfx -- suggest reel.json --apply` proposes cues
+from the user's own approved sounds (see [references/step-5-render.md](references/step-5-render.md)).
+Write the report. The run is recorded; open the studio
 (http://localhost:5198) or not, as the user chose in Step 0.
 
 **Gate:** every clip passes `checkVideo.ts` with zero findings, and `report.md` has a provenance
 line for every asset and every number.
+
+---
+
+## Mode — `/reelcut tag-assets`
+
+The studio's Review tab shows a count of assets "waiting for Claude". Those are images, vectors and
+videos that were dropped in, previewed and given machine-written tags, but that nobody has looked at.
+This mode is how Claude looks.
+
+```bash
+npm run library -- queue --json          # id, name, view (a preview file), tags, where it came from
+```
+
+For each item, **view the `view` path** (with the Read tool: it is a small image) and write what it
+actually shows:
+
+```bash
+npm run library -- annotate <id> --tags claude,logo,orange --describe "an orange starburst mark on white"
+```
+
+Tags are lowercase words a script or a requirement would use: the brand or product, what it is (logo,
+screenshot, icon, photo, chart, texture), the dominant colour. The description is one plain sentence.
+
+**Never** approve anything, and never set an asset's kind: `annotate` cannot, on purpose. Whether a
+file is a real brand mark or a real product screen is the user's decision, made in the Review tab. A
+mis-tagged file must never become somebody's logo. Skip anything in a private folder (it is not in the
+queue). When done, tell the user how many were annotated and that they are waiting for approval.
 
 ---
 
