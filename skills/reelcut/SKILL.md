@@ -147,6 +147,10 @@ HyperFrames owns the composition mechanics and the render.
 
 **Gate:** `npx hyperframes check --samples 24` passes **with a non-zero sample count**. See the
 hard rules below — a clean-looking report with zero samples means nothing ran.
+Then measure it: `npm run measure -- <beat.html> <times> --guides --scan` puts the beat on the grid
+([references/kit.md](references/kit.md#layout-discipline): 84px margins, a 336–996 content region,
+the headline's ink flush with the margin) and flags anything outside the safe area or under 16px.
+`check` says a beat is not broken; `measure` says it is exact.
 
 ---
 

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* DASHBOARD TILES. A dashboard settles out of a tilt with its numbers already on it, sparklines and
+     a donut and a row of bars drawing in under them; then the range control — glass — slides from
+     30 days to 90 and every figure counts to its new value where it stands, the deltas rolling to
+     match. The control is the cause and the whole board is the consequence. Four tiles, three
+     colours (cobalt, ink, a cool grey), nothing that is not data.
+     Grid: four tiles 444 by 318 on the 84px margins with 24 gutters (84 to 996, 336 to 996); 32
+     inside; the range control sits top right on the margin. The camera push carries the headline. */
+  #root { --accent: #2f5bff; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 540px 540px; }
+  #root .rng { position: absolute; right: 84px; top: 110px; padding: 6px; border-radius: 34px; font-size: 24px; }
+  #root .rng > span { width: 92px; padding: 10px 0; line-height: 36px; text-align: center; }
+  #root .rng > .rc-thumb { width: 92px; }
+  #root .rng > span.on { color: var(--ink); }
+  #root .dash { position: absolute; left: 0; top: 0; width: 1080px; height: 1080px; transform-origin: 50% 66%; }
+  #root .t { width: 444px; height: 318px; border-radius: 32px; }
+  #root .t1 { left: 84px; top: 336px; } #root .t2 { left: 552px; top: 336px; } #root .t3 { left: 84px; top: 678px; } #root .t4 { left: 552px; top: 678px; }
+  #root .t .lb { position: absolute; left: 32px; top: 28px; font: 500 20px/24px var(--font-mono); letter-spacing: .14em; color: var(--card-muted); }
+  #root .t .kv { position: absolute; left: 32px; top: 58px; height: 76px; display: flex; align-items: center; gap: 16px; }
+  #root .t .num { font-size: 72px; line-height: 76px; font-weight: 700; letter-spacing: -0.045em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  #root .t .dl { height: 40px; padding: 0 16px; border-radius: 20px; display: flex; align-items: center; font-size: 22px; font-weight: 700; letter-spacing: -0.01em; color: var(--accent); background: color-mix(in oklab, var(--accent) 13%, transparent); white-space: nowrap; }
+  #root .t svg.sp { position: absolute; left: 32px; top: 198px; width: 380px; height: 92px; overflow: visible; }
+  #root .t svg.sp.clip { clip-path: inset(0 64% 0 0); }
+  #root .t3 svg.dn { position: absolute; left: 32px; top: 84px; width: 200px; height: 200px; transform: rotate(-90deg); }
+  #root .t3 .lg { position: absolute; left: 264px; top: 98px; width: 150px; }
+  #root .t3 .lg div { display: flex; align-items: center; gap: 10px; height: 56px; font-size: 24px; font-weight: 650; letter-spacing: -0.015em; white-space: nowrap; }
+  #root .t3 .lg i { width: 14px; height: 14px; border-radius: 50%; flex: none; }
+  #root .t3 .lg small { font: 500 19px var(--font-mono); color: var(--card-muted); margin-left: auto; font-weight: 500; }
+  #root .t3 .mid { position: absolute; left: 32px; top: 84px; width: 200px; height: 200px; display: grid; place-items: center; text-align: center; font-size: 40px; line-height: 40px; font-weight: 700; letter-spacing: -0.04em; }
+  #root .t3 .mid small { display: block; font: 500 17px/20px var(--font-mono); letter-spacing: .1em; color: var(--card-muted); margin-top: 6px; font-weight: 500; }
+  #root .t4 .bars { position: absolute; left: 32px; top: 198px; width: 380px; height: 92px; }
+  #root .t4 .bars b { position: absolute; bottom: 0; width: 38px; border-radius: 9px 9px 4px 4px; background: color-mix(in oklab, var(--ink) 14%, transparent); transform-origin: 50% 100%; }
+  #root .t4 .bars b.on { background: var(--accent); }
+</style>
+<div id="root" data-look="cool" data-composition-id="dashboard-tiles" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(47,91,255,.2); --mesh-2: rgba(125,153,255,.22)"></div>
+  <div class="rc-dots" style="opacity:.5"></div>
+  <div class="cam">
+    <div class="rc-head"><span class="ln" style="--ox:-4.3px">Everything,</span><span class="ln" style="--ox:0px"><em class="rc">at a glance.</em></span></div>
+    <div class="rc-seg rng"><div class="rc-glass rc-clear rc-thumb"></div><span>7D</span><span class="on">30D</span><span>90D</span></div>
+    <div class="dash">
+      <div class="rc-card t t1"><div class="lb">REVENUE</div><div class="kv"><div class="num">€48.2k</div><div class="dl">+12.4%</div></div>
+        <svg class="sp clip" viewBox="0 0 380 92"><defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f5bff" stop-opacity=".22"/><stop offset="1" stop-color="#2f5bff" stop-opacity="0"/></linearGradient></defs>
+          <path d="M0 70 C 40 66, 60 52, 96 54 S 150 66, 190 44 S 250 36, 290 26 S 350 14, 380 8 L 380 92 L 0 92 Z" fill="url(#g1)"/></svg>
+        <svg class="sp l1" viewBox="0 0 380 92"><path d="M0 70 C 40 66, 60 52, 96 54 S 150 66, 190 44 S 250 36, 290 26 S 350 14, 380 8" fill="none" stroke="#2f5bff" stroke-width="5" stroke-linecap="round"/></svg></div>
+      <div class="rc-card t t2"><div class="lb">ACTIVE USERS</div><div class="kv"><div class="num">12,480</div><div class="dl">+8.1%</div></div>
+        <svg class="sp clip" viewBox="0 0 380 92"><defs><linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0f1420" stop-opacity=".14"/><stop offset="1" stop-color="#0f1420" stop-opacity="0"/></linearGradient></defs>
+          <path d="M0 52 C 40 58, 70 40, 110 42 S 160 62, 200 46 S 260 30, 300 36 S 350 20, 380 14 L 380 92 L 0 92 Z" fill="url(#g2)"/></svg>
+        <svg class="sp l2" viewBox="0 0 380 92"><path d="M0 52 C 40 58, 70 40, 110 42 S 160 62, 200 46 S 260 30, 300 36 S 350 20, 380 14" fill="none" stroke="#0f1420" stroke-opacity=".85" stroke-width="5" stroke-linecap="round"/></svg></div>
+      <div class="rc-card t t3"><div class="lb">PLAN MIX</div>
+        <svg class="dn" viewBox="0 0 200 200"><circle class="s0" cx="100" cy="100" r="78" fill="none" stroke="#2f5bff" stroke-width="34"/><circle class="s1" cx="100" cy="100" r="78" fill="none" stroke="#0f1420" stroke-width="34"/><circle class="s2" cx="100" cy="100" r="78" fill="none" stroke="#aab2c5" stroke-width="34"/></svg>
+        <div class="mid"><div>3<small>PLANS</small></div></div>
+        <div class="lg"><div><i style="background:#2f5bff"></i>Team<small>52%</small></div><div><i style="background:#0f1420"></i>Pro<small>30%</small></div><div><i style="background:#aab2c5"></i>Starter<small>18%</small></div></div></div>
+      <div class="rc-card t t4"><div class="lb">CONVERSION</div><div class="kv"><div class="num">4.8%</div><div class="dl">+0.6</div></div>
+        <div class="bars"><b style="left:0;height:30px"></b><b style="left:57px;height:38px"></b><b style="left:114px;height:34px"></b><b style="left:171px;height:46px"></b><b style="left:228px;height:42px"></b><b style="left:285px;height:56px"></b><b class="on" style="left:342px;height:70px"></b></div></div>
+    </div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  RC.glass();
+  RC.words(tl, "#root .rc-head", 0, { lead: true, stagger: 0.09, blur: 14, y: 20 });
+  // The board settles out of a tilt with its figures already on it, so frame 0 is a dashboard.
+  tl.fromTo("#root .dash", { rotationX: 14, y: 60, scale: 0.95, opacity: 0.7, transformPerspective: 1500 }, { rotationX: 0, y: 0, scale: 1, opacity: 1, duration: 1.25, ease: "expo.out" }, 0.05);
+  tl.fromTo("#root .rng", { opacity: 0.7, y: 12 }, { opacity: 1, y: 0, duration: 0.7, ease: "expo.out" }, 0.15);
+  // Sparklines draw and their areas follow; the donut sweeps segment by segment; the bars grow.
+  // Each has a head start, so no tile is an empty box at frame 0: a third of every line is already drawn, the
+  // donut already has a segment, the bars are already up and only grow.
+  const HEAD = 0.36;
+  ["l1", "l2"].forEach((c, i) => {
+    const pth = document.querySelector("#root ." + c + " path"), len = pth.getTotalLength();
+    pth.style.strokeDasharray = len; pth.style.strokeDashoffset = len * (1 - HEAD);
+    tl.to(pth, { strokeDashoffset: 0, duration: 1.3, ease: "power2.inOut" }, 0.5 + i * 0.12);
+    tl.fromTo("#root .t" + (i + 1) + " svg.clip", { clipPath: "inset(0 " + (100 - HEAD * 100) + "% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 1.3, ease: "power2.inOut" }, 0.5 + i * 0.12);
+  });
+  const C = 2 * Math.PI * 78, seg = [0.52, 0.30, 0.18], start = [0, 0.52, 0.82];
+  const arcs = seg.map((_, i) => document.querySelector("#root .t3 .s" + i));
+  const sweep = { f: 0 };
+  const paint = () => arcs.forEach((a, i) => {
+    const vis = Math.max(0, Math.min(sweep.f - start[i], seg[i])) * C, gap = vis > 4 ? 3 : 0;
+    a.style.strokeDasharray = Math.max(0, vis - gap).toFixed(2) + " " + C.toFixed(2);
+    a.style.strokeDashoffset = (-start[i] * C).toFixed(2);
+  });
+  paint();
+  sweep.f = 0.3; paint();
+  tl.fromTo(sweep, { f: 0.3 }, { f: 1, duration: 1.4, ease: "power2.inOut", onUpdate: paint, immediateRender: false }, 0.5);
+  document.querySelectorAll("#root .t4 .bars b").forEach((b, i) => {
+    tl.fromTo(b, { scaleY: 0.5 }, { scaleY: 1, duration: 0.8, ease: "expo.out" }, 0.8 + i * 0.07);
+  });
+  // The cause: the glass control slides from 30 days to 90. Every figure counts to its new value.
+  gsap.set("#root .rng .rc-thumb", { x: 92 });
+  const FLIP = 2.5;
+  tl.to("#root .rng .rc-thumb", { x: 184, duration: 0.6, ease: "expo.inOut" }, FLIP);
+  tl.to("#root .rng span:nth-of-type(2)", { color: "#586175", duration: 0.3 }, FLIP + 0.1);
+  tl.to("#root .rng span:nth-of-type(3)", { color: "#0f1420", duration: 0.3 }, FLIP + 0.1);
+  RC.count(tl, "#root .t1 .num", FLIP + 0.3, { from: 48.2, to: 142.6, decimals: 1, prefix: "€", suffix: "k", duration: 1.3, ease: "expo.out" });
+  RC.count(tl, "#root .t2 .num", FLIP + 0.4, { from: 12480, to: 31904, duration: 1.3, ease: "expo.out" });
+  RC.count(tl, "#root .t4 .num", FLIP + 0.5, { from: 4.8, to: 5.1, decimals: 1, suffix: "%", duration: 1.1, ease: "expo.out" });
+  [[".t1 .dl", "+12.4%", "+18.9%"], [".t2 .dl", "+8.1%", "+14.2%"], [".t4 .dl", "+0.6", "+0.9"]].forEach(([sel, a, b], i) => {
+    RC.roll(tl, "#root " + sel, FLIP + 0.75 + i * 0.1, { values: [a, b], each: 0.5, duration: 0.4 });
+  });
+  RC.camera(tl, "#root .cam", 0, { duration: 5.4, to: { scale: 1.03 } });
+  RC.drift(tl, "#root .rc-mesh", 0, { duration: 5.4, x: 50, y: -30, scale: 1.08 });
+  RC.hold(tl, 5.35);
+  window.__timelines["dashboard-tiles"] = tl;
+})();
+</script>
+</template>
+</body></html>

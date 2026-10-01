@@ -127,6 +127,86 @@
       "id": "line-waves",
       "durationSeconds": 4.6,
       "composition": "../../skills/reelcut/assets/patterns/line-waves.html"
+    },
+    {
+      "id": "notification-stack",
+      "durationSeconds": 4.8,
+      "composition": "../../skills/reelcut/assets/patterns/notification-stack.html"
+    },
+    {
+      "id": "pricing-toggle",
+      "durationSeconds": 4.4,
+      "composition": "../../skills/reelcut/assets/patterns/pricing-toggle.html"
+    },
+    {
+      "id": "calendar-booking",
+      "durationSeconds": 5.2,
+      "composition": "../../skills/reelcut/assets/patterns/calendar-booking.html"
+    },
+    {
+      "id": "settings-switches",
+      "durationSeconds": 4.8,
+      "composition": "../../skills/reelcut/assets/patterns/settings-switches.html"
+    },
+    {
+      "id": "kanban-drag",
+      "durationSeconds": 5.4,
+      "composition": "../../skills/reelcut/assets/patterns/kanban-drag.html"
+    },
+    {
+      "id": "chat-thread",
+      "durationSeconds": 6.3,
+      "composition": "../../skills/reelcut/assets/patterns/chat-thread.html"
+    },
+    {
+      "id": "upload-done",
+      "durationSeconds": 6.3,
+      "composition": "../../skills/reelcut/assets/patterns/upload-done.html"
+    },
+    {
+      "id": "line-chart-scrub",
+      "durationSeconds": 6.0,
+      "composition": "../../skills/reelcut/assets/patterns/line-chart-scrub.html"
+    },
+    {
+      "id": "dashboard-tiles",
+      "durationSeconds": 5.4,
+      "composition": "../../skills/reelcut/assets/patterns/dashboard-tiles.html"
+    },
+    {
+      "id": "ranking-race",
+      "durationSeconds": 5.6,
+      "composition": "../../skills/reelcut/assets/patterns/ranking-race.html"
+    },
+    {
+      "id": "command-palette",
+      "durationSeconds": 6.1,
+      "composition": "../../skills/reelcut/assets/patterns/command-palette.html"
+    },
+    {
+      "id": "flow-diagram",
+      "durationSeconds": 5.6,
+      "composition": "../../skills/reelcut/assets/patterns/flow-diagram.html"
+    },
+    {
+      "id": "terminal-type-in",
+      "durationSeconds": 6.2,
+      "composition": "../../skills/reelcut/assets/patterns/terminal-type-in.html"
+    },
+    {
+      "id": "text-effect-wall",
+      "durationSeconds": 5.0,
+      "composition": "../../skills/reelcut/assets/patterns/text-effect-wall.html"
+    },
+    {
+      "id": "testimonial",
+      "durationSeconds": 5.0,
+      "composition": "../../skills/reelcut/assets/patterns/testimonial.html"
+    },
+    {
+      "id": "wordmark-handles",
+      "durationSeconds": 5.4,
+      "composition": "../../skills/reelcut/assets/patterns/wordmark-handles.html"
     }
   ]
 }

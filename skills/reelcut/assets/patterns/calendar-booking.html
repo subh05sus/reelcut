@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* CALENDAR BOOKING. A three-day view fills with events, one by one; then a new booking comes down
+     from above onto a slot that is already taken, lands beside it, the old event makes room, and a
+     glass receipt straddles the card's lower edge to confirm: Booked. Colour by restraint: stone for
+     what was there, the accent for the one thing that just happened. The clash resolves on screen,
+     which is the whole point of the product. The receipt sits half over the card and half over the
+     ground, because glass only reads as glass where there is something behind it to bend.
+     Grid: the card is on the 84px margins (84 to 996), 580 tall from the content top (336). Hour
+     rows are 92; events sit 4 inside their rows; the three columns are 264 wide (events 252, halves
+     123 with a 6 gap). The camera push carries the headline with the card. */
+  #root { --accent: #c2410c; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 540px 540px; }
+  #root .cal { left: 84px; top: 336px; width: 912px; height: 580px; border-radius: 36px; }
+  #root .dh { position: absolute; top: 18px; width: 264px; text-align: center; }
+  #root .dh b { display: block; font: 500 20px/24px var(--font-mono); letter-spacing: .14em; color: var(--card-muted); }
+  #root .dh span { display: block; margin-top: 0; font-size: 36px; line-height: 44px; font-weight: 650; letter-spacing: -0.03em; }
+  #root .dh.today span { color: var(--accent); }
+  #root .hrs { position: absolute; left: 28px; width: 52px; text-align: right; font: 500 18px/22px var(--font-mono); color: var(--card-muted); }
+  #root .grid { position: absolute; left: 96px; top: 100px; width: 792px; height: 460px; clip-path: inset(0 2px 0 0);
+    background: repeating-linear-gradient(to bottom, var(--line) 0 1.5px, transparent 1.5px 92px),
+                repeating-linear-gradient(to right, transparent 0 262.5px, var(--line) 262.5px 264px); }
+  #root .evs { position: absolute; left: 96px; top: 100px; width: 792px; height: 460px; }
+  #root .ev { position: absolute; width: 252px; border-radius: 14px; }
+  #root .ev .bg { position: absolute; inset: 0; border-radius: inherit; background: color-mix(in oklab, var(--ink) 9%, transparent); transform-origin: 0 50%; }
+  #root .ev.s2 .bg { background: color-mix(in oklab, var(--ink) 15%, transparent); }
+  #root .ev .tx { position: absolute; left: 16px; top: 10px; right: 8px; font-size: 22px; font-weight: 650; letter-spacing: -0.015em; line-height: 26px; white-space: nowrap; }
+  #root .ev .tx small { display: block; margin-top: 2px; font: 500 17px/20px var(--font-mono); color: #57544d; letter-spacing: 0; }
+  #root .new { position: absolute; left: 399px; top: 142px; width: 123px; height: 84px; border-radius: 14px; background: var(--accent); color: #fff; box-shadow: 0 18px 30px -10px rgba(194,65,12,.45); }
+  #root .new .tx { position: absolute; left: 16px; top: 10px; font-size: 22px; font-weight: 650; line-height: 26px; }
+  #root .new .tx small { display: block; margin-top: 2px; font: 500 17px/20px var(--font-mono); color: rgba(255,255,255,.94); }
+  #root .ghost { position: absolute; left: 399px; top: 142px; width: 123px; height: 84px; border-radius: 14px; border: 2.5px dashed var(--accent); opacity: 0; }
+  #root .toast { left: 290px; top: 872px; width: 500px; height: 92px; border-radius: 46px; display: flex; align-items: center; gap: 18px; padding: 0 0 0 20px; font-size: 30px; font-weight: 600; letter-spacing: -0.015em; white-space: nowrap; }
+  #root .toast .ck { width: 52px; height: 52px; border-radius: 50%; background: var(--accent); flex: none; position: relative; }
+  #root .toast .ck svg { position: absolute; inset: 0; }
+  #root .toast .ck path { fill: none; stroke: #fff; stroke-width: 5.5; stroke-linecap: round; stroke-linejoin: round; }
+  #root .toast small { font: 500 22px var(--font-mono); color: var(--muted); margin-left: 6px; }
+</style>
+<div id="root" data-look="paper" data-composition-id="calendar-booking" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(226,86,42,.16); --mesh-2: rgba(18,18,18,.06)"></div>
+  <div class="rc-dots" style="opacity:.5"></div>
+  <div class="cam">
+    <div class="rc-head"><span class="ln" style="--ox:-4.3px">No more</span><span class="ln" style="--ox:0px"><em class="rc">double-booking.</em></span></div>
+    <div class="rc-card cal">
+      <div class="dh" style="left:96px"><b>MON</b><span>12</span></div>
+      <div class="dh today" style="left:360px"><b>TUE</b><span>13</span></div>
+      <div class="dh" style="left:624px"><b>WED</b><span>14</span></div>
+      <div class="hrs" style="top:89px">9:00</div><div class="hrs" style="top:181px">10:00</div><div class="hrs" style="top:273px">11:00</div>
+      <div class="hrs" style="top:365px">12:00</div><div class="hrs" style="top:457px">13:00</div>
+      <div class="grid"></div>
+      <div class="evs">
+        <div class="ev e1" style="left:6px; top:4px; height:38px"><div class="bg"></div><div class="tx">Standup</div></div>
+        <div class="ev e2 s2" style="left:6px; top:280px; height:84px"><div class="bg"></div><div class="tx">Lunch<small>12:00</small></div></div>
+        <div class="ev e3" style="left:270px; top:96px; height:84px"><div class="bg"></div><div class="tx">Review<small>10:00</small></div></div>
+        <div class="ev e4 s2" style="left:534px; top:188px; height:84px"><div class="bg"></div><div class="tx">1:1 Maya<small>11:00</small></div></div>
+        <div class="ev e5" style="left:534px; top:50px; height:130px"><div class="bg"></div><div class="tx">Planning<small>9:30</small></div></div>
+        <div class="ghost"></div>
+        <div class="new"><div class="tx">Demo<small>10:30</small></div></div>
+      </div>
+    </div>
+    <div class="rc-card rc-glass toast"><span class="ck"><svg viewBox="0 0 52 52"><path d="M 15 27 L 23 35 L 38 18"/></svg></span>Booked<small>Tue 10:30</small></div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  RC.glass();
+  RC.words(tl, "#root .rc-head", 0, { lead: true, stagger: 0.09, blur: 14, y: 20 });
+  // The week arrives whole, at frame 0 already readable; its events then drop into place.
+  tl.fromTo("#root .cal", { y: 50, opacity: 0.75 }, { y: 0, opacity: 1, duration: 0.9, ease: "expo.out" }, 0.05);
+  ["e1", "e2", "e3", "e4", "e5"].forEach((id, i) => {
+    RC.blurIn(tl, "#root ." + id, 0.6 + i * 0.17, { blur: 6, y: -26, duration: 0.6 });
+  });
+  // The slot is marked, the new booking comes down and lands on it, and the old event steps aside.
+  tl.to("#root .ghost", { opacity: 0.75, duration: 0.4, ease: "power2.out" }, 1.95);
+  tl.fromTo("#root .new", { y: -72, scale: 1.1, opacity: 0 }, { y: 0, scale: 1, opacity: 1, duration: 0.7, ease: "expo.out" }, 2.25);
+  tl.fromTo("#root .new", { filter: "blur(8px)" }, { filter: "blur(0px)", duration: 0.6, ease: "expo.out" }, 2.25);
+  tl.to("#root .ghost", { opacity: 0, duration: 0.25 }, 2.85);
+  tl.to("#root .e3 .bg", { scaleX: 0.488, duration: 0.6, ease: "expo.out" }, 2.85);
+  tl.to("#root .new", { boxShadow: "0 6px 10px -6px rgba(194,65,12,.3)", duration: 0.6, ease: "power2.out" }, 2.85);
+  // The receipt floats over the lower edge: glass, because it is a control-layer message over content.
+  tl.fromTo("#root .toast", { y: 26, opacity: 0, scale: 0.94 }, { y: 0, opacity: 1, scale: 1, duration: 0.8, ease: "expo.out" }, 3.3);
+  tl.fromTo("#root .toast", { filter: "blur(10px)" }, { filter: "blur(0px)", duration: 0.7, ease: "expo.out" }, 3.3);
+  RC.draw(tl, "#root .toast .ck path", 3.65, { duration: 0.35 });
+  RC.camera(tl, "#root .cam", 0, { duration: 5.2, to: { scale: 1.035 } });
+  RC.drift(tl, "#root .rc-mesh", 0, { duration: 5.2, x: 50, y: -30, scale: 1.08 });
+  RC.hold(tl, 5.15);
+  window.__timelines["calendar-booking"] = tl;
+})();
+</script>
+</template>
+</body></html>

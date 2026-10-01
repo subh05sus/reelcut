@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* FLOW DIAGRAM. A pipeline on a faint grid: a webhook fires, a pulse runs down a right-angled
+     trace to a filter, the trace behind it lights as it goes, the filter passes it on, the line
+     forks, two pulses run to two destinations, both light and tick — and a glass receipt says it
+     landed in 120 ms. Nodes are flat dark cards (content); the receipt is the one piece of glass,
+     floating over the grid it refracts. Every pulse is placed from its path's own geometry, so the
+     whole thing is a pure function of one clock.
+     Grid: three columns of 232-wide nodes on the 84px margins (84, 424, 764; 108 gutters), 104 tall,
+     with the two destinations 146 above and below; traces turn on a 24 radius. The whole group, receipt
+     included, is centred in the content region (336 to 996): 408 to 924. */
+  #root { --accent: #8b7bff; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 540px 540px; }
+  #root svg.tr { position: absolute; left: 0; top: 0; width: 1080px; height: 1080px; overflow: visible; }
+  #root svg.tr path.b { fill: none; stroke: rgba(255,255,255,.17); stroke-width: 3; stroke-linecap: round; }
+  #root svg.tr path.o { fill: none; stroke: var(--accent); stroke-width: 4; stroke-linecap: round; filter: drop-shadow(0 0 8px rgba(139,123,255,.7)); }
+  #root .nd { width: 232px; height: 104px; border-radius: 28px; overflow: visible; }
+  #root .nd .g { position: absolute; left: 20px; top: 30px; width: 44px; height: 44px; border-radius: 14px; background: rgba(139,123,255,.18); }
+  #root .nd .g::before, #root .nd .g::after { content: ""; position: absolute; }
+  #root .g-hook::before { left: 12px; top: 12px; width: 20px; height: 20px; border-radius: 50%; border: 4px solid var(--accent); } #root .g-hook::after { left: 22px; top: 8px; width: 4px; height: 28px; background: var(--accent); transform: rotate(40deg); border-radius: 2px; }
+  #root .g-filt::before { left: 11px; top: 12px; width: 22px; height: 20px; background: var(--accent); clip-path: polygon(0 0, 100% 0, 62% 48%, 62% 100%, 38% 84%, 38% 48%); }
+  #root .g-mail::before { left: 10px; top: 13px; width: 24px; height: 18px; border-radius: 4px; border: 3.5px solid var(--accent); } #root .g-mail::after { left: 14px; top: 16px; width: 16px; height: 8px; border: solid var(--accent); border-width: 0 0 3.5px 3.5px; transform: rotate(-45deg) scale(.7); transform-origin: 50% 0; }
+  #root .g-chat::before { left: 10px; top: 11px; width: 24px; height: 18px; border-radius: 7px; background: var(--accent); } #root .g-chat::after { left: 15px; top: 27px; width: 9px; height: 8px; background: var(--accent); clip-path: polygon(0 0, 100% 0, 0 100%); }
+  #root .nd .t { position: absolute; left: 78px; top: 22px; font-size: 27px; line-height: 32px; font-weight: 650; letter-spacing: -0.02em; }
+  #root .nd .s { position: absolute; left: 78px; top: 58px; font: 500 17px/22px var(--font-mono); color: var(--muted); white-space: nowrap; }
+  #root .nd .ring { position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 2px var(--accent), 0 0 44px rgba(139,123,255,.4); opacity: 0; pointer-events: none; }
+  #root .nd .ok { position: absolute; right: -12px; top: -12px; width: 40px; height: 40px; border-radius: 50%; background: var(--accent); opacity: 0; }
+  #root .nd .ok svg { position: absolute; inset: 0; } #root .nd .ok path { fill: none; stroke: #0b0b10; stroke-width: 4.5; stroke-linecap: round; stroke-linejoin: round; }
+  #root .nA { left: 84px; top: 554px; } #root .nB { left: 424px; top: 554px; } #root .nC1 { left: 764px; top: 408px; } #root .nC2 { left: 764px; top: 700px; }
+  #root .pulse { position: absolute; left: 0; top: 0; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 5px rgba(139,123,255,.35), 0 0 22px 6px rgba(139,123,255,.8); opacity: 0; }
+  #root .rcpt { left: 350px; top: 840px; width: 380px; height: 84px; border-radius: 42px; display: flex; align-items: center; justify-content: center; gap: 14px; font-size: 28px; font-weight: 650; letter-spacing: -0.015em; white-space: nowrap; }
+  #root .rcpt i { width: 14px; height: 14px; border-radius: 50%; background: #4be08c; box-shadow: 0 0 0 5px rgba(75,224,140,.18); flex: none; }
+  #root .rcpt small { font: 500 21px var(--font-mono); color: var(--muted); font-weight: 500; }
+</style>
+<div id="root" data-look="ink" data-composition-id="flow-diagram" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(139,123,255,.45); --mesh-2: rgba(61,220,151,.12)"></div>
+  <div class="rc-grid" style="opacity:.55"></div>
+  <div class="cam">
+    <div class="rc-head"><span class="ln" style="--ox:-4.3px">From event</span><span class="ln" style="--ox:0px">to <em class="rc">outcome.</em></span></div>
+    <svg class="tr" viewBox="0 0 1080 1080">
+      <path class="b ab" d="M 316 606 H 424"/><path class="b bc1" d="M 656 606 H 686 Q 710 606 710 582 V 484 Q 710 460 734 460 H 764"/><path class="b bc2" d="M 656 606 H 686 Q 710 606 710 630 V 728 Q 710 752 734 752 H 764"/>
+      <path class="o oab" d="M 316 606 H 424"/><path class="o obc1" d="M 656 606 H 686 Q 710 606 710 582 V 484 Q 710 460 734 460 H 764"/><path class="o obc2" d="M 656 606 H 686 Q 710 606 710 630 V 728 Q 710 752 734 752 H 764"/>
+    </svg>
+    <div class="rc-card nd nA"><span class="g g-hook"></span><div class="t">Webhook</div><div class="s">POST /events</div><div class="ring"></div></div>
+    <div class="rc-card nd nB"><span class="g g-filt"></span><div class="t">Filter</div><div class="s">plan = team</div><div class="ring"></div></div>
+    <div class="rc-card nd nC1"><span class="g g-mail"></span><div class="t">Email</div><div class="s">ops@acme.co</div><div class="ring"></div><span class="ok"><svg viewBox="0 0 40 40"><path d="M 11 21 L 17 27 L 29 13"/></svg></span></div>
+    <div class="rc-card nd nC2"><span class="g g-chat"></span><div class="t">Slack</div><div class="s">#launches</div><div class="ring"></div><span class="ok"><svg viewBox="0 0 40 40"><path d="M 11 21 L 17 27 L 29 13"/></svg></span></div>
+    <span class="pulse p1"></span><span class="pulse p2"></span><span class="pulse p3"></span>
+    <div class="rc-card rc-glass rcpt"><i></i>Delivered<small>120 ms</small></div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  RC.glass();
+  RC.words(tl, "#root .rc-head", 0, { lead: true, stagger: 0.09, blur: 14, y: 20 });
+  // The nodes are there at frame 0, dim; they resolve in order of the flow.
+  [".nA", ".nB", ".nC1", ".nC2"].forEach((n, i) => {
+    tl.fromTo("#root " + n, { opacity: 0.7, y: 24, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: "expo.out" }, 0.05 + i * 0.12);
+    tl.fromTo("#root " + n, { filter: "blur(6px)" }, { filter: "blur(0px)", duration: 0.6, ease: "expo.out" }, 0.05 + i * 0.12);
+  });
+  // The traces start faint at frame 0 and are drawn over by light as the pulses go.
+  const route = (cls) => { const base = document.querySelector("#root path." + cls), over = document.querySelector("#root path.o" + cls); return { base, over, len: over.getTotalLength() }; };
+  const ab = route("ab"), c1 = route("bc1"), c2 = route("bc2");
+  [ab, c1, c2].forEach((r) => { r.over.style.strokeDasharray = r.len; r.over.style.strokeDashoffset = r.len; });
+  const P = [document.querySelector("#root .p1"), document.querySelector("#root .p2"), document.querySelector("#root .p3")];
+  // one runner: place a pulse and its trail from a route and a progress
+  const run = (route, pulse, st) => {
+    const pt = route.over.getPointAtLength(route.len * st.p);
+    pulse.style.transform = "translate(" + pt.x.toFixed(1) + "px," + pt.y.toFixed(1) + "px)";
+    pulse.style.opacity = st.p > 0.001 && st.p < 0.999 ? 1 : 0;
+    route.over.style.strokeDashoffset = (route.len * (1 - st.p)).toFixed(1);
+  };
+  const s1 = { p: 0 }, s2 = { p: 0 }, s3 = { p: 0 };
+  tl.fromTo(s1, { p: 0 }, { p: 1, duration: 0.8, ease: "power2.inOut", onUpdate: () => run(ab, P[0], s1), immediateRender: false }, 1.7);
+  tl.fromTo(s2, { p: 0 }, { p: 1, duration: 0.9, ease: "power2.inOut", onUpdate: () => run(c1, P[1], s2), immediateRender: false }, 2.85);
+  tl.fromTo(s3, { p: 0 }, { p: 1, duration: 0.9, ease: "power2.inOut", onUpdate: () => run(c2, P[2], s3), immediateRender: false }, 2.85);
+  // Each node lights when the light reaches it.
+  const light = (sel, at) => tl.to("#root " + sel + " .ring", { opacity: 1, duration: 0.35, ease: "power2.out" }, at);
+  light(".nA", 1.6); light(".nB", 2.5); light(".nC1", 3.75); light(".nC2", 3.75);
+  tl.to("#root .nB .ring", { opacity: 0.55, duration: 0.5 }, 3.0);
+  ["nC1", "nC2"].forEach((n) => {
+    tl.fromTo("#root ." + n + " .ok", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.4, ease: "expo.out" }, 3.85);
+    RC.draw(tl, "#root ." + n + " .ok path", 3.9, { duration: 0.3 });
+  });
+  // The receipt.
+  tl.fromTo("#root .rcpt", { opacity: 0, y: 26, scale: 0.94 }, { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: "expo.out" }, 4.2);
+  tl.fromTo("#root .rcpt", { filter: "blur(10px)" }, { filter: "blur(0px)", duration: 0.7, ease: "expo.out" }, 4.2);
+  RC.camera(tl, "#root .cam", 0, { duration: 5.6, to: { scale: 1.03 } });
+  RC.drift(tl, "#root .rc-mesh", 0, { duration: 5.6, x: 50, y: -30, scale: 1.08 });
+  RC.hold(tl, 5.55);
+  window.__timelines["flow-diagram"] = tl;
+})();
+</script>
+</template>
+</body></html>

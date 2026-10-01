@@ -19,6 +19,7 @@
   if (window.RC) return;
   var gsap = window.gsap;
   var uid = 0;
+  var NS = "http://www.w3.org/2000/svg";
 
   function q(t) {
     if (!t) return [];
@@ -414,11 +415,157 @@
     return c;
   }
 
+
+  /**
+   * The lens. Builds the two images a glass element needs from its own size and corner radius:
+   * a displacement map (R and G carry the horizontal and vertical push, 128 is "leave it alone")
+   * and a specular rim. The push comes from a real surface: a convex squircle bezel, a ray falling
+   * straight down, Snell's law at the top face (glass, index 1.5), and the lateral shift that ray
+   * has made by the time it reaches the background. Nothing in here is random, so a frame depends
+   * only on the element, never on when it was rendered.
+   */
+  function lensMaps(w, h, r, bezel, depth, ior, theta, rim) {
+    var N = 160, prof = new Float32Array(N + 1), maxD = 1e-6, i;
+    var Hf = function (t) { return Math.pow(1 - Math.pow(1 - t, 4), 0.25); };
+    for (i = 0; i <= N; i++) {
+      var t = i / N, e = 1 / N / 2, t1 = Math.max(0, t - e), t2 = Math.min(1, t + e);
+      var slope = (depth / bezel) * (Hf(t2) - Hf(t1)) / (t2 - t1);
+      var a1 = Math.atan(slope), a2 = Math.asin(Math.sin(a1) / ior);
+      var d = depth * Hf(t) * Math.tan(a1 - a2);
+      prof[i] = d; if (d > maxD) maxD = d;
+    }
+    var mc = document.createElement("canvas"), sc = document.createElement("canvas");
+    mc.width = sc.width = w; mc.height = sc.height = h;
+    var mi = mc.getContext("2d").createImageData(w, h), si = sc.getContext("2d").createImageData(w, h), md = mi.data, sd = si.data;
+    var cx = w / 2, cy = h / 2, ix = w / 2 - r, iy = h / 2 - r;
+    var lx = -Math.cos(theta), ly = -Math.sin(theta);      // toward the light
+    for (var y = 0; y < h; y++) {
+      for (var x = 0; x < w; x++) {
+        var k = (y * w + x) * 4;
+        var px = x + 0.5 - cx, py = y + 0.5 - cy, sx = px < 0 ? -1 : 1, sy = py < 0 ? -1 : 1;
+        var qx = Math.abs(px) - ix, qy = Math.abs(py) - iy;
+        var mx = qx > 0 ? qx : 0, my = qy > 0 ? qy : 0, len = Math.sqrt(mx * mx + my * my);
+        var dist, nx, ny;                                   // distance in from the edge; outward normal
+        if (len > 0) { dist = r - len; nx = sx * mx / len; ny = sy * my / len; }
+        else if (qx > qy) { dist = r - qx; nx = sx; ny = 0; }
+        else { dist = r - qy; nx = 0; ny = sy; }
+        md[k] = 128; md[k + 1] = 128; md[k + 2] = 128; md[k + 3] = 255;
+        if (dist < 0) continue;
+        if (dist < bezel) {
+          var f = dist / bezel * N, j = Math.floor(f), u = f - j;
+          var mag = prof[j] * (1 - u) + prof[Math.min(N, j + 1)] * u, sgn = mag / maxD * 127.5;
+          md[k] = 128 - nx * sgn; md[k + 1] = 128 - ny * sgn;   // sample from further in: the rim gathers the middle
+        }
+        var lit = nx * lx + ny * ly;
+        var line = Math.exp(-dist * dist / (rim * rim));        // a thin bright line on the very edge
+        var spec = line * (Math.pow(Math.max(0, lit), 1.6) + 0.42 * Math.pow(Math.max(0, -lit), 1.6));
+        var glow = dist < bezel ? Math.pow(1 - dist / bezel, 2) * (0.1 + 0.16 * Math.max(0, lit)) : 0;
+        sd[k] = sd[k + 1] = sd[k + 2] = 255; sd[k + 3] = Math.round(Math.min(1, spec * 0.95 + glow) * 255);
+      }
+    }
+    mc.getContext("2d").putImageData(mi, 0, 0); sc.getContext("2d").putImageData(si, 0, 0);
+    return { map: mc.toDataURL("image/png"), spec: sc.toDataURL("image/png"), max: maxD };
+  }
+
+  /**
+   * Glass: Apple's Liquid Glass, after Aave's way of building it for the web. A lens, not a frosted
+   * pane: what is behind is blurred a little, then pushed through the displacement map so it bends
+   * along the rim like light through curved glass, with a faint chromatic fringe on the bend and a
+   * specular rim and soft inner glow on top. Runs as an SVG filter used as a backdrop-filter, which
+   * is what the Chromium that renders the film supports. Without this call `.rc-glass` is still a
+   * good frosted pane (CSS only); with it, a lens.
+   *
+   *   RC.glass();                                   // every .rc-glass in the beat
+   *   RC.glass("#root .thumb", { bezel: 14 });      // one element, tuned
+   *
+   * Options: bezel (px of curved rim), strength (how hard it bends; .45 for a small control up to .85 for a panel), blur, chroma (.035), light
+   * (degrees, 45 = from the top left), ior (1.5). Tokens on the element: --glass-blur, --glass-sat,
+   * --glass-bright. Call once, after layout; size and radius are read from the element.
+   *
+   * Apple's rules, which this follows: glass is the functional layer — a palette, a control, a
+   * tooltip, a pill — floating over content; it is not the content; and glass never sits on glass.
+   * Regular (default) for anything with words; `.rc-clear` for small controls over rich backgrounds.
+   */
+  function glass(target, o) {
+    o = o || {};
+    var els = target == null ? q(".rc-glass") : q(target);
+    els.forEach(function (el) {
+      if (el.__rcGlass) return;
+      var w = Math.round(el.offsetWidth), h = Math.round(el.offsetHeight);
+      if (w < 8 || h < 8) return;
+      el.__rcGlass = true;
+      var cs = getComputedStyle(el), tok = function (n, d) { var v = parseFloat(cs.getPropertyValue(n)); return isNaN(v) ? d : v; };
+      if (cs.position === "static") el.style.position = "relative";
+      var r = Math.min(parseFloat(cs.borderTopLeftRadius) || 0, w / 2, h / 2), clear = el.classList.contains("rc-clear");
+      var bezel = o.bezel || Math.max(6, Math.min(30, Math.min(w, h) * 0.3));
+      // Small controls bend gently, big panels more: the fill under a thumb has to stay readable.
+      var small = Math.min(1, Math.max(0, (Math.min(w, h) - 60) / 200));
+      var depth = bezel * 2 * (o.strength == null ? 0.45 + 0.4 * small : o.strength);
+      var blur = Math.max(0.01, o.blur == null ? tok("--glass-blur", clear ? 0 : 10) : o.blur);
+      var sat = tok("--glass-sat", clear ? 1.25 : 1.5), bright = tok("--glass-bright", 1.04);
+      var chroma = o.chroma == null ? 0.035 : o.chroma;
+      var rim = o.rim || Math.max(1.6, Math.min(3, Math.min(w, h) / 40));
+      var m = lensMaps(w, h, r, bezel, depth, o.ior || 1.5, (o.light == null ? 45 : o.light) * Math.PI / 180, rim);
+      var S = 2 * m.max, id = "rc-lg-" + (++uid);
+      var only = function (c) {   // keep one colour channel, drop the others
+        var z = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0]; z[c * 5 + c] = 1; return z.join(" ");
+      };
+      var svg = document.createElementNS(NS, "svg");
+      svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute"; svg.style.pointerEvents = "none";
+      svg.innerHTML =
+        '<filter id="' + id + '" filterUnits="userSpaceOnUse" x="0" y="0" width="' + w + '" height="' + h + '" color-interpolation-filters="sRGB">' +
+        '<feGaussianBlur in="SourceGraphic" stdDeviation="' + blur + '" result="b"/>' +
+        '<feImage href="' + m.map + '" x="0" y="0" width="' + w + '" height="' + h + '" preserveAspectRatio="none" result="m"/>' +
+        '<feDisplacementMap in="b" in2="m" scale="' + (S * (1 + chroma)).toFixed(2) + '" xChannelSelector="R" yChannelSelector="G" result="dr"/>' +
+        '<feDisplacementMap in="b" in2="m" scale="' + S.toFixed(2) + '" xChannelSelector="R" yChannelSelector="G" result="dg"/>' +
+        '<feDisplacementMap in="b" in2="m" scale="' + (S * (1 - chroma)).toFixed(2) + '" xChannelSelector="R" yChannelSelector="G" result="db"/>' +
+        '<feColorMatrix in="dr" type="matrix" values="' + only(0) + '" result="cr"/>' +
+        '<feColorMatrix in="dg" type="matrix" values="' + only(1) + '" result="cg"/>' +
+        '<feColorMatrix in="db" type="matrix" values="' + only(2) + '" result="cb"/>' +
+        '<feBlend in="cr" in2="cg" mode="screen" result="rg"/><feBlend in="rg" in2="cb" mode="screen" result="rgb"/>' +
+        '<feColorMatrix in="rgb" type="saturate" values="' + sat + '" result="sat"/>' +
+        '<feComponentTransfer in="sat"><feFuncR type="linear" slope="' + bright + '"/><feFuncG type="linear" slope="' + bright + '"/><feFuncB type="linear" slope="' + bright + '"/></feComponentTransfer>' +
+        '</filter>';
+      lookRoot(el).appendChild(svg);
+      el.style.webkitBackdropFilter = el.style.backdropFilter = "url(#" + id + ")";
+      el.style.setProperty("--lg-spec", "url(" + m.spec + ")");
+    });
+    return null;
+  }
+
+  /**
+   * Scramble: text resolves from noise, left to right, like a decode. The noise is precomputed from
+   * a seed, frame by frame, so any seek shows the same characters. Best in a mono face, where the
+   * width never changes; `glyphs` is the noise alphabet, `tail` how far ahead of the resolved text
+   * the noise runs, `hide: false` to show noise on the whole line instead of nothing past the tail.
+   */
+  function scramble(tl, target, at, o) {
+    o = o || {};
+    var el = one(target); if (!el) return tl;
+    var text = o.text != null ? o.text : el.textContent, n = text.length;
+    var dur = o.duration || Math.max(0.6, n * 0.045), tail = o.tail == null ? 4 : o.tail;
+    var glyphs = o.glyphs || "#%&*+=?/<>01~", rnd = rand(o.seed || 11), frames = Math.max(2, Math.round(dur * 30)), table = [], f, i;
+    for (f = 0; f < frames; f++) { var row = []; for (i = 0; i < n; i++) row.push(glyphs.charAt(Math.floor(rnd() * glyphs.length))); table.push(row); }
+    el.style.whiteSpace = "pre";
+    var st = { p: 0 };
+    var paint = function () {
+      var fr = Math.min(frames - 1, Math.floor(st.p * frames)), front = st.p * (n + tail), out = "";
+      for (var k = 0; k < n; k++) {
+        var c = text.charAt(k);
+        out += /\s/.test(c) ? c : k < front ? c : (o.hide === false || k < front + tail) ? table[fr][k] : " ";
+      }
+      el.textContent = out;
+    };
+    paint();
+    tl.fromTo(st, { p: 0 }, { p: 1, duration: dur, ease: o.ease || "none", onUpdate: paint, immediateRender: false }, at);
+    return tl;
+  }
+
   window.RC = {
     q: q, one: one, rand: rand, split: split, hold: hold,
     blurIn: blurIn, blurOut: blurOut, words: words, chars: chars, lines: lines, rise: rise, flyIn: flyIn, pop: pop,
     type: type, count: count, roll: roll, wheel: wheel, mark: mark,
     cursor: cursor, click: click, cursorEl: cursorEl,
-    camera: camera, iris: iris, wipe: wipe, smear: smear, draw: draw, drift: drift, hud: hud,
+    camera: camera, iris: iris, wipe: wipe, smear: smear, draw: draw, drift: drift, hud: hud, glass: glass, scramble: scramble,
   };
 })();

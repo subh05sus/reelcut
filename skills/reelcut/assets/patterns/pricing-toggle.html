@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* PRICING TOGGLE. One control changes three prices at once: Monthly flips to Yearly, the
+     selection glides across on a milky glass lens, the numbers count down where they stand, a
+     "Save 20%" badge lands, and the middle plan lifts. A small beat with a clear cause and three
+     effects. Only the lens is glass (Apple's rule: glass is for the control); the plans are soft
+     paper. The lens is milky on purpose: a frosted white pill under crisp labels, so the selected
+     word is always the clearest thing in the control.
+     Grid: everything starts on the 84px margin. Control row 336 to 420, 32 gap, plans 452 to 996.
+     Three plans 288 wide with 24 gaps fill 84 to 996; inner padding 36; 24 between their blocks.
+     The camera push carries the headline with the objects, so their left edges stay flush. */
+  #root { --accent: #c2410c; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 540px 540px; }
+  #root .row { position: absolute; left: 84px; top: 336px; height: 84px; display: flex; align-items: center; gap: 24px; }
+  #root .tg { position: relative; width: 392px; height: 84px; border-radius: 42px; background: color-mix(in oklab, var(--ink) 9%, transparent); }
+  #root .lb { position: absolute; top: 0; width: 190px; height: 84px; display: grid; place-items: center; font-size: 28px; font-weight: 600; letter-spacing: -0.01em; color: var(--muted); }
+  #root .lb.l1 { left: 6px; color: var(--ink); } #root .lb.l2 { left: 196px; }
+  #root .thumb { position: absolute; left: 6px; top: 6px; width: 190px; height: 72px; border-radius: 36px;
+    --glass-tint: rgba(255,255,255,.66); --glass-blur: 4; --glass-sat: 1.15; --glass-bright: 1.06;
+    --glass-shadow: 0 8px 18px -8px rgba(20,30,60,.28), 0 0 0 1px rgba(15,20,32,.05); }
+  #root .save { padding: 9px 18px; border-radius: 999px; font-size: 24px; font-weight: 700; letter-spacing: -0.01em; line-height: 29px;
+    color: var(--accent); background: color-mix(in oklab, var(--accent) 15%, transparent); white-space: nowrap; }
+  #root .plan { top: 452px; width: 288px; height: 544px; border-radius: 32px; }
+  #root .p1 { left: 84px; } #root .p2 { left: 396px; } #root .p3 { left: 708px; }
+  #root .plan .nm { position: absolute; left: 36px; top: 36px; font-size: 32px; line-height: 38px; font-weight: 650; letter-spacing: -0.025em; }
+  #root .plan .tl { position: absolute; left: 36px; top: 82px; font-size: 22px; line-height: 26px; color: var(--card-muted); white-space: nowrap; }
+  #root .plan .price { position: absolute; left: 36px; top: 128px; height: 88px; display: flex; align-items: baseline; gap: 8px; }
+  #root .plan .pr { font-size: 88px; font-weight: 700; letter-spacing: -0.045em; line-height: 88px; }
+  #root .plan .per { font-size: 26px; color: var(--card-muted); }
+  #root .plan .bl { position: absolute; left: 36px; top: 228px; font: 500 20px/24px var(--font-mono); color: var(--card-muted); letter-spacing: .02em; white-space: nowrap; }
+  #root .plan .hr { position: absolute; left: 36px; right: 36px; top: 280px; height: 1.5px; background: var(--line); }
+  #root .plan .ft { position: absolute; left: 36px; top: 304px; display: flex; flex-direction: column; gap: 18px; font-size: 22px; line-height: 26px; }
+  #root .plan .ft div { position: relative; padding-left: 36px; white-space: nowrap; }
+  #root .plan .ft div::before { content: ""; position: absolute; left: 6px; top: 3px; width: 8px; height: 16px; border: solid var(--accent); border-width: 0 3.5px 3.5px 0; transform: rotate(45deg); }
+  #root .plan .cta { position: absolute; left: 36px; right: 36px; bottom: 36px; height: 66px; border-radius: 20px; display: grid; place-items: center; font-size: 24px; font-weight: 650;
+    background: color-mix(in oklab, var(--ink) 8%, transparent); color: var(--ink); }
+  #root .p2 .cta { background: var(--accent); color: #fff; }
+  #root .plan .ring { position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 3px var(--accent); opacity: 0; pointer-events: none; }
+</style>
+<div id="root" data-look="paper" data-composition-id="pricing-toggle" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(226,86,42,.16); --mesh-2: rgba(18,18,18,.06)"></div>
+  <div class="rc-dots" style="opacity:.5"></div>
+  <div class="cam">
+    <div class="rc-head"><span class="ln" style="--ox:-2.9px">One price.</span><span class="ln" style="--ox:4.7px"><em class="rc">No surprises.</em></span></div>
+    <div class="row">
+      <div class="tg"><div class="rc-glass rc-clear thumb"></div><span class="lb l1">Monthly</span><span class="lb l2">Yearly</span></div>
+      <span class="save">Save 20%</span>
+    </div>
+    <div class="rc-card plan p1"><div class="nm">Starter</div><div class="tl">For side projects</div>
+      <div class="price"><span class="pr">€12</span><span class="per">/mo</span></div><div class="bl">billed monthly</div><div class="hr"></div>
+      <div class="ft"><div>1 project</div><div>Basic stats</div><div>Email support</div></div><div class="cta">Get started</div></div>
+    <div class="rc-card plan p2"><div class="nm">Pro</div><div class="tl">For growing teams</div>
+      <div class="price"><span class="pr">€29</span><span class="per">/mo</span></div><div class="bl">billed monthly</div><div class="hr"></div>
+      <div class="ft"><div>Unlimited projects</div><div>Full analytics</div><div>Priority support</div></div><div class="cta">Start free trial</div><div class="ring"></div></div>
+    <div class="rc-card plan p3"><div class="nm">Team</div><div class="tl">For the whole company</div>
+      <div class="price"><span class="pr">€79</span><span class="per">/mo</span></div><div class="bl">billed monthly</div><div class="hr"></div>
+      <div class="ft"><div>Everything in Pro</div><div>SSO + audit log</div><div>Named manager</div></div><div class="cta">Talk to us</div></div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  RC.glass();
+  RC.words(tl, "#root .rc-head", 0, { lead: true, stagger: 0.09, blur: 14, y: 20 });
+  // The control and the three plans arrive from depth; the first plan is legible at frame 0.
+  tl.fromTo("#root .row", { opacity: 0.7, y: 16 }, { opacity: 1, y: 0, duration: 0.7, ease: "expo.out" }, 0.05);
+  RC.flyIn(tl, "#root .plan", 0.1, { from: 0.94, blur: 12, y: 40, stagger: 0.09, duration: 0.9 });
+  // The flip. The lens glides to Yearly and the labels trade places; everything below answers it.
+  const FLIP = 1.75;
+  tl.to("#root .thumb", { x: 190, duration: 0.6, ease: "expo.inOut" }, FLIP);
+  tl.to("#root .l1", { color: "#6b675f", duration: 0.3 }, FLIP + 0.1);
+  tl.to("#root .l2", { color: "#121212", duration: 0.3 }, FLIP + 0.1);
+  [["p1", 12, 10], ["p2", 29, 24], ["p3", 79, 63]].forEach(([p, from, to], i) => {
+    RC.count(tl, "#root ." + p + " .pr", FLIP + 0.3 + i * 0.08, { from, to, prefix: "€", duration: 0.75, ease: "expo.out" });
+    RC.roll(tl, "#root ." + p + " .bl", FLIP + 0.3 + i * 0.08, { values: ["billed monthly", "billed yearly"], each: 0.5, duration: 0.4 });
+  });
+  tl.fromTo("#root .save", { opacity: 0, y: 12, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: "expo.out" }, FLIP + 0.45);
+  tl.fromTo("#root .save", { filter: "blur(8px)" }, { filter: "blur(0px)", duration: 0.5, ease: "expo.out" }, FLIP + 0.45);
+  // The middle plan lifts and takes the accent ring.
+  tl.to("#root .p2", { y: -16, scale: 1.035, duration: 0.8, ease: "expo.out" }, FLIP + 0.9);
+  tl.to("#root .p2 .ring", { opacity: 1, duration: 0.6, ease: "power2.out" }, FLIP + 0.9);
+  RC.camera(tl, "#root .cam", 0, { duration: 4.4, to: { scale: 1.03 } });
+  RC.drift(tl, "#root .rc-mesh", 0, { duration: 4.4, x: 50, y: -30, scale: 1.08 });
+  RC.hold(tl, 4.35);
+  window.__timelines["pricing-toggle"] = tl;
+})();
+</script>
+</template>
+</body></html>

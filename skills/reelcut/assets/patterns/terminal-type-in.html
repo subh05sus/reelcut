@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* TERMINAL TYPE-IN. A terminal with a little history in it; a command is typed, a typo is caught and
+     backspaced, the command finishes and runs; three result lines decode out of noise, left to right,
+     each with its tick; then the window lets go and the last line is all there is — "Ready." — huge,
+     in the same mono, with the caret still blinking after it. Typing is the whole film, and the end
+     is the biggest thing in it. Everything typed is computed from one clock (so any seek shows the
+     right characters and the right caret), and the decode noise is seeded.
+     Grid: the window is on the 84px margins (84 to 996) and fills the content region (336 to 996);
+     bar 44, then eight lines of 36px mono on a 60 pitch with a 40 inset. The headline here is the
+     last word, centred on the frame. The camera push carries the window. */
+  #root { --accent: #8b7bff; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 540px 540px; }
+  #root .win { left: 84px; top: 336px; width: 912px; height: 660px; border-radius: 28px; }
+  #root .win .bar { position: absolute; left: 0; right: 0; top: 0; height: 56px; border-bottom: 1px solid var(--line); }
+  #root .win .bar::before { content: ""; position: absolute; left: 24px; top: 21px; width: 14px; height: 14px; border-radius: 50%; background: #ff5f57; box-shadow: 26px 0 0 #febc2e, 52px 0 0 #28c840; }
+  #root .win .bar span { position: absolute; left: 0; right: 0; top: 0; height: 56px; display: grid; place-items: center; font: 500 20px var(--font-mono); color: var(--muted); }
+  #root .ln1 { position: absolute; left: 40px; right: 40px; height: 60px; display: flex; align-items: center; font: 500 36px var(--font-mono); letter-spacing: -0.02em; white-space: pre; }
+  #root .dim { color: #8d8b99; } #root .pr { color: var(--accent); margin-right: 20px; }
+  #root .ok { color: var(--accent); margin-right: 20px; }
+  #root .tp { position: relative; }
+  #root .cr { display: inline-block; width: 20px; height: 40px; margin-left: 2px; background: var(--accent); vertical-align: middle; }
+  #root .big { position: absolute; left: 0; right: 0; top: 360px; text-align: center; font: 700 232px/240px var(--font-mono); letter-spacing: -0.07em; opacity: 0; white-space: nowrap; }
+  #root .big .cr2 { display: inline-block; width: 100px; height: 172px; margin-left: 18px; background: var(--accent); }
+  #root .cap { position: absolute; left: 0; right: 0; top: 650px; text-align: center; font: 500 40px var(--font-mono); color: var(--muted); opacity: 0; }
+</style>
+<div id="root" data-look="ink" data-composition-id="terminal-type-in" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(139,123,255,.42); --mesh-2: rgba(61,220,151,.12)"></div>
+  <div class="rc-grid" style="opacity:.4"></div>
+  <div class="cam">
+    <div class="rc-card win">
+      <div class="bar"><span>lumen — zsh</span></div>
+      <div class="ln1 dim" style="top:84px"><span class="pr">$</span>node -v</div>
+      <div class="ln1 dim" style="top:144px">v22.4.0</div>
+      <div class="ln1 dim" style="top:204px"><span class="pr">$</span>git status</div>
+      <div class="ln1 dim" style="top:264px">nothing to commit, working tree clean</div>
+      <div class="ln1" style="top:324px"><span class="pr">$</span><span class="tp"></span><span class="cr"></span></div>
+      <div class="ln1 o1" style="top:408px"><span class="ok">✔</span><span class="tx">Project created</span></div>
+      <div class="ln1 o2" style="top:468px"><span class="ok">✔</span><span class="tx">Dependencies installed</span></div>
+      <div class="ln1 o3" style="top:528px"><span class="ok">✔</span><span class="tx">Ready.</span></div>
+    </div>
+    <div class="big">Ready.<span class="cr2"></span></div>
+    <div class="cap">in 1.2 s · 0 errors</div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  // ---- one clock for everything typed ------------------------------------------------------
+  const tp = document.querySelector("#root .tp"), cr = document.querySelector("#root .cr"), cr2 = document.querySelector("#root .cr2");
+  const T0 = 0.9, ops = [[0, ""]];
+  let t = T0, s = "";
+  const typeStr = (str, cps) => { for (const ch of str) { t += 1 / cps; s += ch; ops.push([t, s]); } };
+  const back = (n, cps) => { for (let i = 0; i < n; i++) { t += 1 / cps; s = s.slice(0, -1); ops.push([t, s]); } };
+  typeStr("npm crate", 16); t += 0.18; back(3, 20); t += 0.06; typeStr("eate lumen@latest", 18);
+  const DONE = t;                                           // when the last key is struck
+  const textAt = (T) => { let v = ""; for (const o of ops) if (o[0] <= T) v = o[1]; else break; return v; };
+  const lastKey = (T) => { let k = 0; for (const o of ops) if (o[0] <= T) k = o[0]; else break; return k; };
+  const clock = { T: 0 };
+  const paint = () => {
+    const T = clock.T, str = textAt(T), idle = T - lastKey(T);
+    tp.textContent = str;
+    // solid while keys are landing, then a one-second blink; it blinks before the first key too
+    cr.style.opacity = idle < 0.45 && T > T0 ? 1 : (Math.floor(T * 2) % 2 === 0 ? 1 : 0);
+  };
+  paint();
+  tl.fromTo(clock, { T: 0 }, { T: 6.2, duration: 6.2, ease: "none", onUpdate: paint, immediateRender: false }, 0);
+  // ---- the window arrives, already full of history ------------------------------------------
+  tl.fromTo("#root .win", { y: 50, opacity: 0.8, scale: 0.98 }, { y: 0, opacity: 1, scale: 1, duration: 0.9, ease: "expo.out" }, 0.05);
+  // ---- the command runs; three results decode out of noise ----------------------------------
+  const R = DONE + 0.3;
+  [["o1", 0], ["o2", 0.38], ["o3", 0.76]].forEach(([o, d], i) => {
+    const sel = "#root ." + o;
+    gsap.set(sel + " .ok", { opacity: 0 }); gsap.set(sel + " .tx", { opacity: 0 });
+    tl.to(sel + " .ok", { opacity: 1, duration: 0.2 }, R + d);
+    tl.to(sel + " .tx", { opacity: 1, duration: 0.01 }, R + d);
+    RC.scramble(tl, sel + " .tx", R + d, { duration: 0.5, seed: 21 + i, glyphs: "#%&*+=?/<>01~" });
+  });
+  // ---- the window lets go; the last word is all there is -------------------------------------
+  const E = R + 0.76 + 0.6;
+  tl.to("#root .win", { opacity: 0, scale: 0.985, filter: "blur(8px)", duration: 0.5, ease: "power2.in" }, E);
+  tl.fromTo("#root .big", { opacity: 0, scale: 1.1, filter: "blur(18px)" }, { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.9, ease: "expo.out" }, E + 0.4);
+  tl.fromTo("#root .cap", { opacity: 0, y: 14, filter: "blur(6px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.6, ease: "expo.out" }, E + 1.0);
+  // the caret after the big word blinks on the same clock
+  tl.to({}, { duration: 6.2, ease: "none", onUpdate: function () { cr2.style.opacity = Math.floor(clock.T * 2) % 2 === 0 ? 1 : 0; } }, 0);
+  RC.camera(tl, "#root .cam", 0, { duration: 6.2, to: { scale: 1.03 } });
+  RC.drift(tl, "#root .rc-mesh", 0, { duration: 6.2, x: 50, y: -30, scale: 1.08 });
+  RC.hold(tl, 6.15);
+  window.__timelines["terminal-type-in"] = tl;
+})();
+</script>
+</template>
+</body></html>

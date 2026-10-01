@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* WORDMARK HANDLES. A logo reveal told in the language of the tool that made it: the wordmark
+     resolves out of blur, a cursor drifts onto it and clicks, and the selection box snaps round it
+     — eight handles, a size chip — held for a beat, and then it lets go, handles and chip dissolving,
+     and the line that goes with the mark arrives under it. The click causes the box; the box
+     is the proof the thing is real. Cobalt on cool paper: the selection colour of every design tool.
+     The mark and the wordmark are placeholders: a real reel uses the brand's own.
+     Grid: measured from the pixels, not the boxes. The ink of mark and wordmark together is 768 by
+     172 (x 156 to 924, y 365 to 537), centred on the frame's axis; the selection box is that ink grown
+     by 28 on every side, handles 20px; the chip hangs under the box's bottom-left; the line is centred
+     under it at y 706 (68px type). Mark, box, chip and line are balanced on y 559. The cursor lives in the camera
+     layer. */
+  #root { --accent: #2f5bff; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 540px 540px; }
+  #root .grp { position: absolute; left: 147px; top: 330px; width: 800px; height: 240px; }
+  #root .mk { position: absolute; left: 0; top: 54px; width: 132px; height: 132px; }
+  #root .wm { position: absolute; left: 160px; top: 0; width: 640px; height: 240px; font-size: 236px; line-height: 240px; font-weight: 750; letter-spacing: -0.06em; white-space: nowrap; }
+  #root .sel { position: absolute; left: 128px; top: 337px; width: 824px; height: 228px; opacity: 0; }
+  #root .sel .bx { position: absolute; inset: 0; border: 3px solid var(--accent); }
+  #root .sel .h { position: absolute; width: 20px; height: 20px; margin: -10px 0 0 -10px; background: #fff; border: 3px solid var(--accent); border-radius: 4px; box-shadow: 0 2px 6px rgba(20,40,90,.25); }
+  #root .chip { position: absolute; left: 128px; top: 581px; height: 44px; padding: 0 16px; border-radius: 8px; display: flex; align-items: center; background: var(--accent); color: #fff; font: 500 22px var(--font-mono); letter-spacing: .02em; white-space: nowrap; opacity: 0; }
+  #root .tag { position: absolute; left: 0; right: 0; top: 706px; text-align: center; font-size: 68px; line-height: 76px; font-weight: 650; letter-spacing: -0.035em; }
+  #root .tag em { color: var(--accent); font-size: 1.1em; }
+</style>
+<div id="root" data-look="cool" data-composition-id="wordmark-handles" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(47,91,255,.22); --mesh-2: rgba(125,153,255,.22)"></div>
+  <div class="rc-dots" style="opacity:.55"></div>
+  <div class="cam">
+    <div class="grp">
+      <svg class="mk" viewBox="0 0 132 132"><path d="M66 4 C 70 38, 94 62, 128 66 C 94 70, 70 94, 66 128 C 62 94, 38 70, 4 66 C 38 62, 62 38, 66 4 Z" fill="#2f5bff"/></svg>
+      <div class="wm">lumen</div>
+    </div>
+    <div class="sel">
+      <div class="bx"></div>
+      <span class="h" style="left:0;top:0"></span><span class="h" style="left:50%;top:0"></span><span class="h" style="left:100%;top:0"></span>
+      <span class="h" style="left:0;top:50%"></span><span class="h" style="left:100%;top:50%"></span>
+      <span class="h" style="left:0;top:100%"></span><span class="h" style="left:50%;top:100%"></span><span class="h" style="left:100%;top:100%"></span>
+    </div>
+    <div class="chip">Wordmark · 824 × 228</div>
+    <div class="tag">Light, <em class="rc">on demand.</em></div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  const cam = document.querySelector("#root .cam"), cur = RC.cursorEl(cam);
+  // The mark and the wordmark are on screen at frame 0, a little soft; they resolve.
+  tl.fromTo("#root .grp", { opacity: 0.6, scale: 1.04 }, { opacity: 1, scale: 1, duration: 1.1, ease: "expo.out" }, 0);
+  tl.fromTo("#root .grp", { filter: "blur(8px)" }, { filter: "blur(0px)", duration: 0.9, ease: "expo.out" }, 0);
+  tl.fromTo("#root .mk", { rotation: -40 }, { rotation: 0, duration: 1.4, ease: "expo.out", transformOrigin: "50% 50%" }, 0);
+  // The cursor drifts in from the lower right and settles on the wordmark's edge.
+  tl.fromTo(cur, { opacity: 0 }, { opacity: 1, duration: 0.3 }, 0.9);
+  RC.cursor(tl, cur, 0.9, [[1040, 1050, 0], [700, 510, 1.1]]);
+  // The click: the box snaps around it — 0.12s after the press — and its handles come in corner by corner.
+  RC.click(tl, cur, 2.1, {});
+  const B = 2.22;
+  tl.fromTo("#root .sel", { opacity: 0, scale: 1.06 }, { opacity: 1, scale: 1, duration: 0.55, ease: "expo.out" }, B);
+  tl.fromTo("#root .sel .h", { scale: 0.4, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: "expo.out", stagger: 0.04 }, B + 0.08);
+  tl.fromTo("#root .chip", { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.5, ease: "expo.out" }, B + 0.35);
+  tl.fromTo("#root .chip", { filter: "blur(6px)" }, { filter: "blur(0px)", duration: 0.4, ease: "expo.out" }, B + 0.35);
+  tl.to(cur, { x: 1000, y: 690, opacity: 0, duration: 0.8, ease: "power2.in" }, B + 0.9);
+  // Let go: the box, handles and chip dissolve, and the line that belongs with the mark arrives.
+  tl.to("#root .sel, #root .chip", { opacity: 0, filter: "blur(6px)", duration: 0.45, ease: "power2.in" }, 3.55);
+  RC.words(tl, "#root .tag", 3.7, { stagger: 0.09, blur: 12, y: 16, duration: 0.7 });
+  RC.camera(tl, "#root .cam", 0, { duration: 5.4, to: { scale: 1.03 } });
+  RC.drift(tl, "#root .rc-mesh", 0, { duration: 5.4, x: 50, y: -30, scale: 1.08 });
+  RC.hold(tl, 5.35);
+  window.__timelines["wordmark-handles"] = tl;
+})();
+</script>
+</template>
+</body></html>

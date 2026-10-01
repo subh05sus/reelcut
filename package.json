@@ -15,6 +15,7 @@
     "capture": "tsx skills/reelcut/scripts/capture.ts",
     "check-video": "tsx skills/reelcut/scripts/checkVideo.ts",
     "render": "tsx skills/reelcut/scripts/render.ts",
+    "measure": "tsx skills/reelcut/scripts/measure.ts",
     "library": "tsx skills/reelcut/scripts/library.ts",
     "studio": "tsx skills/reelcut/scripts/library.ts serve"
   },

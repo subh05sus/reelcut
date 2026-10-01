@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* KANBAN DRAG. A board settles out of a tilt, a cursor picks one card up — it lifts, tilts toward
+     its motion, its shadow deepens — carries it across into the next column and lets it go. The
+     column it leaves closes the gap, the column it joins opens one, both counts roll, and the sprint
+     figure up in the corner ticks from 64% to 71%. One drag, four consequences.
+     Grid: the board is on the 84px margins (84 to 996) and fills the content region (336 to 996).
+     Three columns 272 wide, 20 apart, 28 in from the board edge; cards 248 by 164 on a 176 pitch.
+     The cursor lives in the camera layer, so it stays on its card while the camera pushes in. */
+  #root { --accent: #2f5bff; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 540px 540px; }
+  #root .sprint { position: absolute; right: 84px; top: 104px; width: 300px; }
+  #root .sprint .sk { font: 500 20px/24px var(--font-mono); letter-spacing: .14em; color: var(--muted); }
+  #root .sprint .pct { margin-top: 6px; font-size: 76px; line-height: 80px; font-weight: 700; letter-spacing: -0.045em; }
+  #root .sprint .rc-progress { margin-top: 14px; height: 12px; }
+  #root .board { left: 84px; top: 336px; width: 912px; height: 660px; border-radius: 36px; transform-origin: 50% 0%; }
+  #root .col { position: absolute; top: 28px; width: 272px; height: 604px; border-radius: 26px; background: color-mix(in oklab, var(--ink) 5%, transparent); }
+  #root .c1 { left: 28px; } #root .c2 { left: 320px; } #root .c3 { left: 612px; }
+  #root .col .cn { position: absolute; left: 20px; top: 18px; font-size: 26px; line-height: 32px; font-weight: 650; letter-spacing: -0.02em; }
+  #root .col .cc { position: absolute; right: 20px; top: 16px; width: 36px; height: 36px; border-radius: 18px; display: grid; place-items: center; font-size: 20px; font-weight: 650;
+    background: color-mix(in oklab, var(--ink) 9%, transparent); color: var(--ink); }
+  #root .col .hi { position: absolute; inset: 0; border-radius: inherit; background: color-mix(in oklab, var(--accent) 9%, transparent); opacity: 0; }
+  #root .k { position: absolute; left: 12px; width: 248px; height: 164px; border-radius: 22px; background: #fff;
+    box-shadow: 0 1px 0 rgba(0,0,0,.04), 0 10px 20px -10px rgba(20,30,60,.3); }
+  #root .k .rc-label { position: absolute; left: 18px; top: 18px; }
+  #root .k .t { position: absolute; left: 18px; top: 62px; font-size: 27px; line-height: 32px; font-weight: 650; letter-spacing: -0.02em; white-space: nowrap; }
+  #root .k .av { position: absolute; left: 18px; top: 114px; width: 36px; height: 36px; border-radius: 50%; }
+  #root .k .due { position: absolute; right: 18px; top: 120px; font: 500 18px/24px var(--font-mono); color: var(--card-muted); }
+  #root .ph { position: absolute; left: 12px; top: 242px; width: 248px; height: 164px; border-radius: 22px; border: 2.5px dashed var(--accent); opacity: 0; }
+</style>
+<div id="root" data-look="paper" data-composition-id="kanban-drag" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(47,91,255,.15); --mesh-2: rgba(18,18,18,.06)"></div>
+  <div class="rc-dots" style="opacity:.5"></div>
+  <div class="cam">
+    <div class="rc-head"><span class="ln" style="--ox:0px">Work moves</span><span class="ln" style="--ox:-1.6px"><em class="rc">forward.</em></span></div>
+    <div class="sprint"><div class="sk">SPRINT 5</div><div class="pct">64%</div><div class="rc-progress"><i></i></div></div>
+    <div class="rc-card board">
+      <div class="col c1"><div class="cn">To do</div><div class="cc">3</div>
+        <div class="k ka" style="top:66px"><span class="rc-label">Design</span><div class="t">Onboarding flow</div><span class="av" style="background:linear-gradient(135deg,#7d99ff,#2f5bff)"></span><span class="due">Mon</span></div>
+        <div class="k kb" style="top:242px"><span class="rc-label" style="--c:#0f1420">API</span><div class="t">Invoice export</div><span class="av" style="background:linear-gradient(135deg,#8a8377,#2a2825)"></span><span class="due">Wed</span></div>
+        <div class="k kc" style="top:418px"><span class="rc-label" style="--c:#0f1420">Bug</span><div class="t">Fix login bug</div><span class="av" style="background:linear-gradient(135deg,#7d99ff,#2f5bff)"></span><span class="due">Thu</span></div></div>
+      <div class="col c2"><div class="hi"></div><div class="cn">In progress</div><div class="cc">1</div>
+        <div class="ph"></div>
+        <div class="k kd" style="top:66px"><span class="rc-label">Design</span><div class="t">Design tokens</div><span class="av" style="background:linear-gradient(135deg,#8a8377,#2a2825)"></span><span class="due">Fri</span></div></div>
+      <div class="col c3"><div class="cn">Done</div><div class="cc">3</div>
+        <div class="k ke" style="top:66px"><span class="rc-label" style="--c:#0f1420">Docs</span><div class="t">Weekly report</div><span class="av" style="background:linear-gradient(135deg,#7d99ff,#2f5bff)"></span><span class="due">Tue</span></div>
+        <div class="k kf" style="top:242px"><span class="rc-label" style="--c:#0f1420">API</span><div class="t">API rate limits</div><span class="av" style="background:linear-gradient(135deg,#8a8377,#2a2825)"></span><span class="due">Mon</span></div>
+        <div class="k kg" style="top:418px"><span class="rc-label">Design</span><div class="t">Dark mode</div><span class="av" style="background:linear-gradient(135deg,#7d99ff,#2f5bff)"></span><span class="due">Sun</span></div></div>
+    </div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  const cam = document.querySelector("#root .cam");
+  const cur = RC.cursorEl(cam);
+  RC.words(tl, "#root .rc-head", 0, { lead: true, stagger: 0.09, blur: 14, y: 20 });
+  // The board settles out of a tilt; it is readable from the first frame.
+  tl.fromTo("#root .board", { rotationX: 20, y: 70, scale: 0.94, opacity: 0.7, transformPerspective: 1400 }, { rotationX: 0, y: 0, scale: 1, opacity: 1, duration: 1.25, ease: "expo.out" }, 0.05);
+  RC.blurIn(tl, "#root .sprint", 0.3, { blur: 8, y: 12, duration: 0.7 });
+  gsap.set("#root .sprint .rc-progress > i", { scaleX: 0.64, transformOrigin: "0 50%" });
+  // The cursor arrives and takes the second card.
+  tl.fromTo(cur, { opacity: 0 }, { opacity: 1, duration: 0.3 }, 1.35);
+  RC.cursor(tl, cur, 1.4, [[1040, 1050, 0], [264, 660, 1.0]]);
+  const D = 0.95, GRAB = 2.5;                                     // the drag: when it starts, how long it takes
+  // Pick up: the card lifts, tilts, its shadow deepens; the cursor closes its hand.
+  tl.to(cur, { scale: 0.85, duration: 0.14, ease: "power2.in", transformOrigin: "0 0" }, GRAB - 0.1);
+  tl.set("#root .kb", { zIndex: 6 }, GRAB);
+  tl.to("#root .kb", { scale: 1.05, rotation: 2.5, boxShadow: "0 1px 0 rgba(0,0,0,.04), 0 34px 40px -14px rgba(20,30,60,.4)", duration: 0.3, ease: "expo.out" }, GRAB);
+  // Carry: the card and the cursor take the same path (same eases), so the hand never slips.
+  RC.cursor(tl, cur, GRAB + 0.12, [[264, 660, 0], [556, 646, D]]);
+  tl.to("#root .kb", { x: 292, duration: D, ease: "power3.inOut" }, GRAB + 0.12);
+  tl.to("#root .kb", { y: -14, duration: D, ease: "sine.inOut" }, GRAB + 0.12);
+  tl.to("#root .kb", { rotation: -1.5, duration: D, ease: "sine.inOut" }, GRAB + 0.3);
+  // The column it leaves closes the gap; the one it joins lights and marks the slot.
+  tl.to("#root .kc", { y: -176, duration: 0.7, ease: "expo.out" }, GRAB + 0.3);
+  tl.to("#root .c2 .hi", { opacity: 1, duration: 0.4, ease: "power2.out" }, GRAB + 0.6);
+  tl.to("#root .ph", { opacity: 0.85, duration: 0.35, ease: "power2.out" }, GRAB + 0.6);
+  // Let go: it settles into the slot.
+  const DROP = GRAB + 0.12 + D;
+  tl.to(cur, { scale: 1, duration: 0.22, ease: "back.out(3)" }, DROP);
+  tl.to("#root .kb", { y: 0, scale: 1, rotation: 0, boxShadow: "0 1px 0 rgba(0,0,0,.04), 0 10px 20px -10px rgba(20,30,60,.3)", duration: 0.5, ease: "expo.out" }, DROP);
+  tl.to("#root .ph", { opacity: 0, duration: 0.3 }, DROP + 0.1);
+  tl.to("#root .c2 .hi", { opacity: 0, duration: 0.6 }, DROP + 0.3);
+  tl.to(cur, { x: 650, y: 760, opacity: 0, duration: 0.8, ease: "power2.in" }, DROP + 0.45);
+  // The consequences, a beat after the drop: two counts roll and the sprint ticks up.
+  RC.roll(tl, "#root .c1 .cc", DROP + 0.2, { values: ["3", "2"], each: 0.5, duration: 0.4 });
+  RC.roll(tl, "#root .c2 .cc", DROP + 0.2, { values: ["1", "2"], each: 0.5, duration: 0.4 });
+  RC.count(tl, "#root .sprint .pct", DROP + 0.3, { from: 64, to: 71, suffix: "%", duration: 0.9, ease: "expo.out" });
+  tl.to("#root .sprint .rc-progress > i", { scaleX: 0.71, duration: 0.9, ease: "expo.out" }, DROP + 0.3);
+  RC.camera(tl, "#root .cam", 0, { duration: 5.4, to: { scale: 1.03 } });
+  RC.drift(tl, "#root .rc-mesh", 0, { duration: 5.4, x: 50, y: -30, scale: 1.08 });
+  RC.hold(tl, 5.35);
+  window.__timelines["kanban-drag"] = tl;
+})();
+</script>
+</template>
+</body></html>

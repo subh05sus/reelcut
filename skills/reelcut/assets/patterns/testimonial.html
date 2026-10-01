@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* TESTIMONIAL. One sentence from one person, large, and nothing that competes with it: the quote
+     resolves word by word, the phrase that carries it is set in the italic serif and in the accent,
+     and only when the sentence has been read does the byline arrive — a face, a name, a role — and
+     five stars fill in, one after another. Social proof without the clichés: no carousel, no logos,
+     no star-rating widget. A slow push under all of it. The quote mark is drawn big and soft behind
+     the first line, as a texture, not an icon.
+     Grid: everything on the 84px margins. The quote is 84px type on a 100px line, five lines in a
+     912 measure from y 288 (the mark sits in the headroom above); a hairline at 840; the byline
+     row 868 to 964 (96px face, name and role, stars on the right margin). */
+  #root { --accent: #c2410c; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 540px 540px; }
+  #root .qm { position: absolute; left: 106px; top: 112px; font-family: var(--font-serif); font-size: 420px; line-height: 420px; color: var(--accent); opacity: .16; }
+  #root .q { position: absolute; left: 84px; top: 288px; width: 912px; font-size: 84px; line-height: 100px; font-weight: 650; letter-spacing: -0.04em; }
+  #root .q em { color: var(--accent); font-size: 1.1em; line-height: 0; white-space: nowrap; }
+  #root .rule { position: absolute; left: 84px; top: 840px; width: 912px; height: 1.5px; background: rgba(18,18,18,.18); transform-origin: 0 50%; }
+  #root .by { position: absolute; left: 84px; top: 868px; width: 912px; height: 96px; }
+  #root .by .av { position: absolute; left: 0; top: 0; width: 96px; height: 96px; border-radius: 50%; background: linear-gradient(135deg, #8a8377, #2a2825); color: #fff; display: grid; place-items: center; font-size: 36px; font-weight: 650; letter-spacing: -0.02em; box-shadow: 0 14px 28px -12px rgba(40,30,20,.5); }
+  #root .by .nm { position: absolute; left: 124px; top: 12px; font-size: 38px; line-height: 44px; font-weight: 650; letter-spacing: -0.025em; }
+  #root .by .rl { position: absolute; left: 124px; top: 58px; font: 500 21px/26px var(--font-mono); letter-spacing: .1em; color: #5a564e; white-space: nowrap; }
+  #root .stars { position: absolute; right: 0; top: 30px; width: 244px; height: 40px; }
+  #root .stars svg { position: absolute; top: 0; width: 40px; height: 40px; }
+  #root .stars path { fill: var(--accent); }
+</style>
+<div id="root" data-look="paper" data-composition-id="testimonial" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(226,86,42,.18); --mesh-2: rgba(18,18,18,.06)"></div>
+  <div class="rc-dots" style="opacity:.5"></div>
+  <div class="cam">
+    <div class="qm">“</div>
+    <div class="q">We replaced three tools with one, and within a week the whole team stopped asking <em class="rc">where things live.</em></div>
+    <div class="rule"></div>
+    <div class="by">
+      <div class="av">PR</div>
+      <div class="nm">Priya Raman</div>
+      <div class="rl">HEAD OF OPERATIONS · LUMEN</div>
+      <div class="stars">
+        <svg viewBox="0 0 40 40" style="left:0"><path d="M20 3 L25.2 14.4 L37.6 15.8 L28.4 24.2 L30.9 36.5 L20 30.3 L9.1 36.5 L11.6 24.2 L2.4 15.8 L14.8 14.4 Z"/></svg>
+        <svg viewBox="0 0 40 40" style="left:51px"><path d="M20 3 L25.2 14.4 L37.6 15.8 L28.4 24.2 L30.9 36.5 L20 30.3 L9.1 36.5 L11.6 24.2 L2.4 15.8 L14.8 14.4 Z"/></svg>
+        <svg viewBox="0 0 40 40" style="left:102px"><path d="M20 3 L25.2 14.4 L37.6 15.8 L28.4 24.2 L30.9 36.5 L20 30.3 L9.1 36.5 L11.6 24.2 L2.4 15.8 L14.8 14.4 Z"/></svg>
+        <svg viewBox="0 0 40 40" style="left:153px"><path d="M20 3 L25.2 14.4 L37.6 15.8 L28.4 24.2 L30.9 36.5 L20 30.3 L9.1 36.5 L11.6 24.2 L2.4 15.8 L14.8 14.4 Z"/></svg>
+        <svg viewBox="0 0 40 40" style="left:204px"><path d="M20 3 L25.2 14.4 L37.6 15.8 L28.4 24.2 L30.9 36.5 L20 30.3 L9.1 36.5 L11.6 24.2 L2.4 15.8 L14.8 14.4 Z"/></svg>
+      </div>
+    </div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  // The quote reads first: word by word out of blur, the first word already there at frame 0.
+  tl.fromTo("#root .qm", { opacity: 0.08, y: 14 }, { opacity: 0.16, y: 0, duration: 1.4, ease: "expo.out" }, 0);
+  RC.words(tl, "#root .q", 0, { lead: true, stagger: 0.07, blur: 12, y: 20, duration: 0.7 });
+  // Then the byline: the rule draws, the face and name resolve, and the stars fill in one by one.
+  const B = 2.45;
+  tl.fromTo("#root .rule", { scaleX: 0 }, { scaleX: 1, duration: 0.9, ease: "expo.inOut" }, B);
+  RC.blurIn(tl, "#root .av", B + 0.2, { blur: 10, y: 14, scale: 0.9, duration: 0.7 });
+  RC.blurIn(tl, "#root .nm, #root .rl", B + 0.35, { blur: 8, y: 10, stagger: 0.08, duration: 0.6 });
+  document.querySelectorAll("#root .stars svg").forEach((st, i) => {
+    tl.fromTo(st, { opacity: 0, scale: 0.6, transformOrigin: "50% 50%" }, { opacity: 1, scale: 1, duration: 0.5, ease: "expo.out" }, B + 0.7 + i * 0.1);
+    tl.fromTo(st, { filter: "blur(6px)" }, { filter: "blur(0px)", duration: 0.4, ease: "expo.out" }, B + 0.7 + i * 0.1);
+  });
+  RC.camera(tl, "#root .cam", 0, { duration: 5, to: { scale: 1.035 } });
+  RC.drift(tl, "#root .rc-mesh", 0, { duration: 5, x: 50, y: -30, scale: 1.08 });
+  RC.hold(tl, 4.95);
+  window.__timelines["testimonial"] = tl;
+})();
+</script>
+</template>
+</body></html>

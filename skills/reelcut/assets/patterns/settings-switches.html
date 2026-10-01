@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* SETTINGS SWITCHES. A preferences card, three switches turning on one after another, then a slider
+     scrubbed from five minutes to fifteen with its value rolling to match, and a "Saved" pill that
+     confirms the lot. Every control is a glass lens over a flat track — the thumbs of the switches and
+     the handle of the slider are Liquid Glass (Apple's rule: glass is for the controls), bending the
+     track colour as they travel. The card itself is soft paper.
+     Grid: the card is on the 84px margins (84 to 996) and fills the content region (336 to 996).
+     Header 96, three rows of 108, slider block 240. Everything inside sits on a 40px inset. */
+  #root { --accent: #c2410c; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 540px 540px; }
+  #root .set { left: 84px; top: 336px; width: 912px; height: 660px; border-radius: 36px; }
+  #root .set .ttl { position: absolute; left: 40px; top: 28px; font-size: 34px; line-height: 40px; font-weight: 650; letter-spacing: -0.025em; }
+  #root .saved { position: absolute; right: 40px; top: 26px; height: 44px; padding: 0 20px 0 16px; border-radius: 22px; display: flex; align-items: center; gap: 10px;
+    font-size: 24px; font-weight: 700; letter-spacing: -0.01em; color: var(--accent); background: color-mix(in oklab, var(--accent) 15%, transparent); }
+  #root .saved i { width: 9px; height: 17px; border: solid var(--accent); border-width: 0 3.5px 3.5px 0; transform: rotate(45deg) translate(-2px, -2px); }
+  #root .hl { position: absolute; left: 40px; right: 40px; height: 1.5px; background: var(--line); }
+  #root .row { position: absolute; left: 0; right: 0; height: 108px; }
+  #root .row .ico { position: absolute; left: 40px; top: 26px; width: 56px; height: 56px; border-radius: 16px; background: #2a2825; }
+  #root .row .ico::before, #root .row .ico::after { content: ""; position: absolute; }
+  #root .ico.moon::before { left: 15px; top: 15px; width: 26px; height: 26px; border-radius: 50%; background: #fff; }
+  #root .ico.moon::after { left: 23px; top: 10px; width: 24px; height: 24px; border-radius: 50%; background: #2a2825; }
+  #root .ico.bell::before { left: 16px; top: 14px; width: 24px; height: 24px; border-radius: 12px 12px 4px 4px; background: #fff; }
+  #root .ico.bell::after { left: 23px; top: 40px; width: 10px; height: 5px; border-radius: 0 0 5px 5px; background: #fff; }
+  #root .ico.sync::before { left: 14px; top: 14px; width: 20px; height: 20px; border-radius: 50%; border: 4.5px solid #fff; border-top-color: transparent; transform: rotate(35deg); }
+  #root .ico.sync::after { left: 31px; top: 13px; width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 8px solid #fff; transform: rotate(35deg); }
+  #root .row .nm { position: absolute; left: 120px; top: 23px; font-size: 30px; line-height: 36px; font-weight: 650; letter-spacing: -0.02em; }
+  #root .row .sb { position: absolute; left: 120px; top: 59px; font-size: 22px; line-height: 26px; color: var(--card-muted); }
+  #root .row .rc-switch { position: absolute; right: 40px; top: 24px; }
+  #root .sl { position: absolute; left: 0; right: 0; top: 420px; height: 240px; }
+  #root .sl .nm { position: absolute; left: 40px; top: 32px; font-size: 30px; line-height: 36px; font-weight: 650; letter-spacing: -0.02em; }
+  #root .sl .val { position: absolute; right: 40px; top: 32px; font-size: 30px; line-height: 36px; font-weight: 650; letter-spacing: -0.02em; color: var(--accent); text-align: right; }
+  #root .sl .trk { position: absolute; left: 40px; top: 126px; width: 832px; height: 12px; border-radius: 6px; background: color-mix(in oklab, var(--ink) 12%, transparent); }
+  #root .sl .fill { position: absolute; left: 40px; top: 126px; width: 832px; height: 12px; border-radius: 6px; background: var(--accent); transform-origin: 0 50%; }
+  #root .sl .hd { position: absolute; top: 104px; left: 40px; width: 76px; height: 56px; border-radius: 28px;
+    --glass-tint: rgba(255,255,255,.72); --glass-blur: 2; --glass-sat: 1.1; --glass-bright: 1.05;
+    --glass-shadow: 0 6px 14px -5px rgba(20,30,60,.35), 0 0 0 1px rgba(15,20,32,.05); }
+  #root .sl .tk { position: absolute; top: 172px; font: 500 18px/22px var(--font-mono); color: var(--card-muted); }
+</style>
+<div id="root" data-look="paper" data-composition-id="settings-switches" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(226,86,42,.16); --mesh-2: rgba(18,18,18,.06)"></div>
+  <div class="rc-dots" style="opacity:.5"></div>
+  <div class="cam">
+    <div class="rc-head"><span class="ln" style="--ox:-1.4px">Set it once.</span><span class="ln" style="--ox:4.7px"><em class="rc">Forget it.</em></span></div>
+    <div class="rc-card set">
+      <div class="ttl">Preferences</div>
+      <div class="saved"><i></i>Saved</div>
+      <div class="hl" style="top:96px"></div>
+      <div class="row r1" style="top:96px"><span class="ico moon"></span><div class="nm">Dark mode</div><div class="sb">Follows your system</div>
+        <div class="rc-switch"><span class="rc-fill"></span><span class="rc-glass rc-clear rc-thumb"></span></div></div>
+      <div class="hl" style="top:204px"></div>
+      <div class="row r2" style="top:204px"><span class="ico bell"></span><div class="nm">Notifications</div><div class="sb">Only what matters</div>
+        <div class="rc-switch"><span class="rc-fill"></span><span class="rc-glass rc-clear rc-thumb"></span></div></div>
+      <div class="hl" style="top:312px"></div>
+      <div class="row r3" style="top:312px"><span class="ico sync"></span><div class="nm">Auto-sync</div><div class="sb">Keeps every device current</div>
+        <div class="rc-switch"><span class="rc-fill"></span><span class="rc-glass rc-clear rc-thumb"></span></div></div>
+      <div class="hl" style="top:420px"></div>
+      <div class="sl">
+        <div class="nm">Sync frequency</div><div class="val">5 min</div>
+        <div class="trk"></div><div class="fill"></div>
+        <div class="rc-glass rc-clear hd"></div>
+        <div class="tk" style="left:40px">1m</div>
+        <div class="tk" style="left:317px; transform:translateX(-50%)">5m</div>
+        <div class="tk" style="left:595px; transform:translateX(-50%)">15m</div>
+        <div class="tk" style="right:40px">30m</div>
+      </div>
+    </div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  RC.glass();
+  RC.words(tl, "#root .rc-head", 0, { lead: true, stagger: 0.09, blur: 14, y: 20 });
+  // The card is whole at frame 0, every switch off; it settles, its rows resolve.
+  tl.fromTo("#root .set", { y: 50, opacity: 0.75 }, { y: 0, opacity: 1, duration: 0.9, ease: "expo.out" }, 0.05);
+  RC.blurIn(tl, "#root .row .nm, #root .row .sb", 0.3, { blur: 6, y: 10, stagger: 0.03, duration: 0.6 });
+  // Three switches: the glass thumb travels thirty pixels and the accent comes up under it.
+  ["r1", "r2", "r3"].forEach((r, i) => {
+    const t = 1.1 + i * 0.42;
+    tl.to("#root ." + r + " .rc-thumb", { x: 30, duration: 0.5, ease: "expo.inOut" }, t);
+    tl.to("#root ." + r + " .rc-fill", { opacity: 1, duration: 0.4, ease: "power2.out" }, t + 0.06);
+  });
+  // The slider: the handle travels from five minutes to fifteen, the fill follows it, the value rolls.
+  const X0 = 317 - 38, X1 = 595 - 38;                     // handle left edge at 5m and at 15m (card coordinates)
+  gsap.set("#root .hd", { x: X0 - 40 });                  // .hd starts at left 40
+  gsap.set("#root .fill", { scaleX: 277 / 832 });
+  tl.to("#root .hd", { x: X1 - 40, duration: 0.95, ease: "expo.inOut" }, 2.55);
+  tl.to("#root .fill", { scaleX: 555 / 832, duration: 0.95, ease: "expo.inOut" }, 2.55);
+  RC.roll(tl, "#root .sl .val", 2.85, { values: ["5 min", "15 min"], each: 0.5, duration: 0.4 });
+  // The consequence: the card says it saved.
+  tl.fromTo("#root .saved", { opacity: 0, y: 10, scale: 0.92 }, { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: "expo.out" }, 3.75);
+  tl.fromTo("#root .saved", { filter: "blur(8px)" }, { filter: "blur(0px)", duration: 0.5, ease: "expo.out" }, 3.75);
+  RC.camera(tl, "#root .cam", 0, { duration: 4.8, to: { scale: 1.035 } });
+  RC.drift(tl, "#root .rc-mesh", 0, { duration: 4.8, x: 50, y: -30, scale: 1.08 });
+  RC.hold(tl, 4.75);
+  window.__timelines["settings-switches"] = tl;
+})();
+</script>
+</template>
+</body></html>

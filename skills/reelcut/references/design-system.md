@@ -34,16 +34,16 @@ Share of the 431 designed films that use each move at least once.
 
 | move | films | kit / pattern | pattern exists? |
 |---|---|---|---|
-| A brand mark or logo (usually the ending) | 88% | `end-card`, `brand-flood` | yes |
-| Real-looking product UI on screen | 76% | `.rc-card`, `.rc-window` | yes |
+| A brand mark or logo (usually the ending) | 88% | `end-card`, `brand-flood`, `wordmark-handles` | yes |
+| Real-looking product UI on screen | 76% | `.rc-card`, `.rc-window`, `.rc-glass`, and eight UI components (`notification-stack`, `command-palette`, `kanban-drag`, `pricing-toggle`, `chat-thread`, `calendar-booking`, `upload-done`, `settings-switches`) | yes |
 | Text that builds word by word | 62% | `RC.words`, `word-build` | yes |
 | Huge type owning the frame | 42% | `one-word`, `statement-roll`, `collage-poster` | yes |
 | Things arriving from depth, collage-style | 25% | `RC.flyIn`, `constellation` | yes |
 | A 3D or photographed product object | 24% | — | **no** — needs real assets or a 3D scene |
-| Kinetic type (type that moves as a graphic) | 23% | `RC.chars`, `collage-poster`, `type-slam` | yes |
+| Kinetic type (type that moves as a graphic) | 23% | `RC.chars`, `RC.scramble`, `collage-poster`, `type-slam`, `text-effect-wall`, `terminal-type-in` | yes |
 | A cursor moving and clicking | 22% | `RC.cursor/click`, `cursor-demo` | yes |
 | Illustration or hand-drawn art | 20% | `hand-doodle`, `isometric-stack`, `flat-scene`, `glyph-swarm`, `mascot-hop`, `shape-morph`, `paper-plane`, `line-waves` | **partly** — drawn in SVG/CSS; a brand's own mark or mascot has to be sourced |
-| A big number or stat | 18% | `RC.count`, `stat-count` | yes |
+| A big number or stat | 18% | `RC.count`, `stat-count`, `dashboard-tiles`, `line-chart-scrub`, `ranking-race` | yes |
 | An italic serif accent word | 17% | `em.rc` | yes |
 | A soft gradient mesh ground | 15% | `.rc-mesh` | yes |
 | A chat or prompt with steps | 15% | `.rc-prompt`, `agent-run` | yes |
@@ -82,6 +82,8 @@ off-white with margins.
 - **sky** blue-lavender mesh, frosted glass UI. AI products that want to feel light — Koast, Helium.
 - **cinema** black, grain, vignette, light leak, serif. The emotional turn — AchX, trailers.
 - **poster** cream paper, condensed caps, two loud inks, halftone. Energy, manifesto — Higgsfield.
+- **cool** `#e8ecf3` grey-blue paper, near-black ink, one cobalt accent. Paper's colder sibling, for
+  dashboards, data and anything that should read as product rather than film — Linear, Vercel, Stripe.
 
 Set the accent per reel with `#root { --accent: … }`, taken from the product. One accent. A second
 colour appears only as a mesh tint or a status colour (green for done, never decoration).
@@ -174,7 +176,8 @@ order, so it over-represents the categories listed first.
 
 Read from the clips that render cleanest (`inline-ui`, `strike-replace`, `device-flank`, `bars-compare`,
 `agent-run`, `cursor-demo`, `stat-count`, `constellation`, `statement-roll`). A new pattern is not
-done until it meets every line; most "off" drafts failed on the first four.
+done until it meets every line; most "off" drafts failed on the first four, and the polished ones
+are the ones that also pass 10 and 11.
 
 1. **Three colours, not six.** One ground, one ink, one accent, used the same way in every frame.
    A second hue appears only as a status (green for done). Primary-colour sets, rainbow stickers and
@@ -198,3 +201,13 @@ done until it meets every line; most "off" drafts failed on the first four.
    deliberately off-centre, with clear margins and no half-drawn clutter.
 9. **Few elements.** Under about eight visible things at once. If a frame needs a legend, it is two
    beats.
+10. **Everything sits on the grid.** 84px margins, the headline top-left at 96, the content region
+    336 to 996, 24px gutters, 36–40px inner padding, one radius family. The first glyph's *ink*, not
+    its box, is on the margin (`--ox`). Cards that should be level are level to the pixel; an object
+    a pen or cursor lands on is on fixed coordinates. `npm run measure` proves it — see
+    [kit.md](kit.md#layout-discipline). A beat that is 3px off looks cheaper than one that is simply
+    plain.
+11. **Glass is the control layer, and only that.** Liquid Glass (Apple) is for the thing that floats
+    over content and is operated or read in passing: a palette, a switch thumb, a receipt, a count.
+    Never the content card, never glass on glass, one or two pieces per beat, always over something it
+    can bend. See [kit.md](kit.md#glass).

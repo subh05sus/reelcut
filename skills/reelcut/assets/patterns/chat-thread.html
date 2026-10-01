@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* CHAT THREAD. A message goes out, three dots pulse, and the reply opens out of them and streams in
+     word by word; a reaction lands on it; then a line is typed into the composer, sent, and appears as
+     the thread's last bubble. Every step is the consequence of the one before. The composer is the one
+     piece of glass — a floating control straddling the card's lower edge, where there is something
+     behind it to bend — and the bubbles are flat: one accent for what I said, stone for what I heard.
+     Grid: the thread card is on the 84px margins (84 to 996), 600 tall from the content top (336).
+     Header 96; bubbles 30px type, 20 by 26 padding, 24 apart; the composer is 864 by 84, 24 in from
+     the card's sides and centred on its bottom edge. The camera push carries the headline with it. */
+  #root { --accent: #2f5bff; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 540px 540px; }
+  #root .chat { left: 84px; top: 336px; width: 912px; height: 600px; border-radius: 36px; }
+  #root .hd { position: absolute; left: 0; right: 0; top: 0; height: 96px; }
+  #root .hd .av { position: absolute; left: 36px; top: 22px; width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, #8a8377, #2a2825); }
+  #root .hd .nm { position: absolute; left: 106px; top: 18px; font-size: 30px; line-height: 36px; font-weight: 650; letter-spacing: -0.02em; }
+  #root .hd .st { position: absolute; left: 106px; top: 54px; font: 500 20px/24px var(--font-mono); color: var(--card-muted); }
+  #root .hd .st i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #1f9d4c; margin-right: 10px; vertical-align: 1px; }
+  #root .hl { position: absolute; left: 36px; right: 36px; top: 96px; height: 1.5px; background: var(--line); }
+  #root .b { position: absolute; padding: 20px 26px; font-size: 30px; line-height: 39px; letter-spacing: -0.012em; white-space: nowrap; }
+  #root .me { right: 36px; background: var(--accent); color: #fff; border-radius: 30px 30px 8px 30px; }
+  #root .ai { left: 102px; background: color-mix(in oklab, var(--ink) 7%, transparent); color: var(--ink); border-radius: 30px 30px 30px 8px; }
+  #root .m1 { top: 128px; } #root .m2 { top: 231px; } #root .m3 { top: 401px; }
+  #root .avs { position: absolute; left: 36px; width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(135deg, #8a8377, #2a2825); }
+  #root .typing { left: 102px; top: 231px; width: 112px; height: 79px; padding: 0; background: color-mix(in oklab, var(--ink) 7%, transparent); border-radius: 30px 30px 30px 8px; }
+  #root .typing i { position: absolute; top: 34px; width: 12px; height: 12px; border-radius: 50%; background: #6b675f; }
+  #root .typing i:nth-child(1) { left: 30px; } #root .typing i:nth-child(2) { left: 50px; } #root .typing i:nth-child(3) { left: 70px; }
+  #root .m2 { width: 576px; height: 118px; white-space: normal; opacity: 0; }
+  #root .m2 .w { position: absolute; left: 26px; top: 20px; right: 26px; }
+  #root .react { position: absolute; left: 590px; top: 327px; height: 44px; padding: 0 16px 0 12px; border-radius: 22px; display: flex; align-items: center; gap: 8px; background: #fff;
+    font-size: 22px; font-weight: 650; box-shadow: 0 1px 0 rgba(0,0,0,.04), 0 8px 16px -6px rgba(20,30,60,.3); }
+  #root .react svg { width: 24px; height: 24px; }
+  #root .dlv { position: absolute; right: 36px; top: 488px; font: 500 18px/22px var(--font-mono); color: var(--card-muted); }
+  #root .comp { left: 108px; top: 892px; width: 864px; height: 84px; border-radius: 42px; }
+  #root .comp .tx { position: absolute; left: 36px; top: 0; height: 84px; display: flex; align-items: center; font-size: 29px; letter-spacing: -0.012em; }
+  #root .comp .tx .ph { position: absolute; left: 12px; color: var(--muted); white-space: nowrap; }
+  #root .comp .tx .ty { white-space: pre; }
+  #root .comp .send { position: absolute; right: 12px; top: 12px; width: 60px; height: 60px; border-radius: 30px; background: var(--accent); }
+  #root .comp .send::before { content: ""; position: absolute; left: 19px; top: 28px; width: 22px; height: 4px; border-radius: 2px; background: #fff; }
+  #root .comp .send::after { content: ""; position: absolute; left: 28px; top: 20px; width: 14px; height: 14px; border: solid #fff; border-width: 4px 4px 0 0; border-radius: 2px; transform: rotate(45deg) translate(-1px, 1px); transform-origin: 50% 50%; }
+</style>
+<div id="root" data-look="paper" data-composition-id="chat-thread" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(47,91,255,.15); --mesh-2: rgba(47,91,255,.26); --m2y: 92%"></div>
+  <div class="rc-dots" style="opacity:.5"></div>
+  <div class="cam">
+    <div class="rc-head"><span class="ln" style="--ox:0px">Answers live</span><span class="ln" style="--ox:-1.6px"><em class="rc">in the thread.</em></span></div>
+    <div class="rc-card chat">
+      <div class="hd"><span class="av"></span><div class="nm">Atlas</div><div class="st"><i></i>Online</div></div>
+      <div class="hl"></div>
+      <div class="b me m1">Summarise the launch thread for Dana</div>
+      <span class="avs" style="top:231px"></span>
+      <div class="b typing"><i></i><i></i><i></i></div>
+      <div class="b ai m2"><div class="w">Launch is on track. Two blockers left: legal sign-off and pricing copy.</div></div>
+      <div class="react"><svg viewBox="0 0 24 24"><path d="M12 20.5 C 4 14.5 2.5 10.5 4.5 7.5 C 6.3 5 9.8 5.3 12 8.3 C 14.2 5.3 17.7 5 19.5 7.5 C 21.5 10.5 20 14.5 12 20.5 Z" fill="#2f5bff"/></svg>2</div>
+      <div class="b me m3">Ship it.</div>
+      <div class="dlv">Delivered</div>
+    </div>
+    <div class="rc-card rc-glass comp"><div class="tx"><span class="ty"></span><span class="rc-caret" style="height:34px;margin-left:2px"></span><span class="ph">Message Atlas</span></div><span class="send"></span></div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  RC.glass();
+  RC.words(tl, "#root .rc-head", 0, { lead: true, stagger: 0.09, blur: 14, y: 20 });
+  // The thread is on screen at frame 0 (header and composer); the first message is already going out.
+  tl.fromTo("#root .chat", { y: 50, opacity: 0.75 }, { y: 0, opacity: 1, duration: 0.9, ease: "expo.out" }, 0.05);
+  tl.fromTo("#root .comp", { y: 30, opacity: 0.7 }, { y: 0, opacity: 1, duration: 0.9, ease: "expo.out" }, 0.15);
+  RC.blurIn(tl, "#root .m1", 0.45, { blur: 8, x: 28, y: 0, duration: 0.7 });
+  // Three dots, pulsing in turn, then the reply opens out of the corner they were sitting in.
+  tl.fromTo("#root .avs", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.5, ease: "expo.out" }, 1.25);
+  RC.blurIn(tl, "#root .typing", 1.25, { blur: 6, x: -16, y: 0, duration: 0.5 });
+  for (let k = 0; k < 2; k++) {
+    tl.to("#root .typing i", { opacity: 0.25, scale: 0.75, duration: 0.2, ease: "sine.inOut", stagger: 0.12 }, 1.7 + k * 0.42);
+    tl.to("#root .typing i", { opacity: 1, scale: 1, duration: 0.2, ease: "sine.inOut", stagger: 0.12 }, 1.9 + k * 0.42);
+  }
+  tl.to("#root .typing", { opacity: 0, duration: 0.01 }, 2.55);
+  gsap.set("#root .m2", { clipPath: "inset(0px 464px 39px 0px round 30px 30px 30px 8px)" });
+  tl.to("#root .m2", { opacity: 1, duration: 0.01 }, 2.55);
+  tl.to("#root .m2", { clipPath: "inset(0px 0px 0px 0px round 30px 30px 30px 8px)", duration: 0.55, ease: "expo.out" }, 2.55);
+  RC.words(tl, "#root .m2 .w", 2.65, { stagger: 0.085, blur: 8, y: 6, duration: 0.45 });
+  // A reaction lands on the reply.
+  tl.fromTo("#root .react", { opacity: 0, y: 10, scale: 0.85 }, { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: "expo.out" }, 4.05);
+  tl.fromTo("#root .react", { filter: "blur(6px)" }, { filter: "blur(0px)", duration: 0.45, ease: "expo.out" }, 4.05);
+  // The answer: a line is typed into the composer, sent, and becomes the thread's last bubble.
+  tl.to("#root .comp .ph", { opacity: 0, duration: 0.12 }, 4.4);
+  RC.type(tl, "#root .comp .ty", 4.45, { text: "Ship it.", cps: 10 });
+  tl.to("#root .comp .send", { scale: 0.88, duration: 0.1, ease: "power2.in" }, 5.4);
+  tl.to("#root .comp .send", { scale: 1, duration: 0.3, ease: "back.out(3)" }, 5.5);
+  tl.to("#root .comp .tx", { opacity: 0, duration: 0.15 }, 5.55);
+  // The line leaves the composer: it rises from beneath the glass into its place in the thread.
+  tl.fromTo("#root .m3", { y: 150, opacity: 0 }, { y: 0, opacity: 1, duration: 0.75, ease: "expo.out" }, 5.55);
+  tl.fromTo("#root .m3", { filter: "blur(8px)" }, { filter: "blur(0px)", duration: 0.6, ease: "expo.out" }, 5.55);
+  RC.blurIn(tl, "#root .dlv", 6.05, { blur: 4, y: 6, duration: 0.4 });
+  RC.camera(tl, "#root .cam", 0, { duration: 6.6, to: { scale: 1.03 } });
+  RC.drift(tl, "#root .rc-mesh", 0, { duration: 6.6, x: 50, y: -30, scale: 1.08 });
+  RC.hold(tl, 6.55);
+  window.__timelines["chat-thread"] = tl;
+})();
+</script>
+</template>
+</body></html>

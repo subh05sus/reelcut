@@ -8,7 +8,10 @@
   #root .h { position: absolute; left: 0; right: 0; top: 118px; text-align: center; font-size: 76px; font-weight: 650; letter-spacing: -0.045em; }
   #root .h em { color: var(--accent); font-size: 1.08em; }
   #root .cam { position: absolute; inset: 0; transform-origin: 780px 560px; }
-  #root .win { left: 110px; top: 290px; width: 860px; height: 470px; transform-origin: 50% 0%; }
+  #root .win { left: 110px; top: 290px; width: 860px; height: 470px; transform-origin: 50% 0%;
+    /* the pane as it was drawn before the kit's glass became a lens: a heavier blur, a hairline, no sheen */
+    --glass-blur: 22; --glass-sat: 1.4; --glass-bright: 1; border: 1px solid rgba(255,255,255,.55); }
+  #root .win::after { display: none; }
   #root .win .rc-body { padding: 26px 30px; }
   #root .th { display: flex; justify-content: space-between; font-size: 20px; color: var(--card-muted); letter-spacing: .06em; font-family: var(--font-mono); padding: 0 20px 14px; }
   #root .row { display: flex; align-items: center; gap: 18px; height: 88px; padding: 0 20px; border-top: 1px solid var(--line); font-size: 27px; }

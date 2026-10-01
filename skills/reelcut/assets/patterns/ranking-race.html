@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* RANKING RACE. Six bars race over twelve weeks and swap places as they overtake: each row slides to
+     its new rank, the bars lengthen, the figures count, the rank numbers change as rows cross, and
+     the accent follows whoever is in front. A week counter in the corner says how far in we are.
+     A row's place is its rank low-pass filtered over a short window of the race, so rows sit exactly
+     one pitch apart except while two are swapping, when they glide through each other; every frame is
+     a pure function of one clock.
+     Grid: the card is on the 84px margins (84 to 996), 660 tall from the content top (336). Header
+     80; six rows 78 tall on a 92 pitch starting at 88; track 510 wide from x 280; 36 side insets.
+     The camera push carries the headline with the card. */
+  #root { --accent: #2f5bff; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 540px 540px; }
+  #root .card { left: 84px; top: 336px; width: 912px; height: 660px; border-radius: 36px; }
+  #root .hd { position: absolute; left: 36px; right: 36px; top: 30px; height: 28px; }
+  #root .hd .l { position: absolute; left: 0; top: 0; font: 500 20px/28px var(--font-mono); letter-spacing: .14em; color: var(--card-muted); }
+  #root .hd .w { position: absolute; right: 0; top: 0; font: 500 20px/28px var(--font-mono); letter-spacing: .14em; color: var(--ink); }
+  #root .row { position: absolute; left: 0; right: 0; top: 88px; height: 78px; background: var(--card); }   /* opaque: the row in front hides the one it passes */
+  #root .row .rk { position: absolute; left: 36px; top: 0; width: 36px; height: 78px; display: flex; align-items: center; font: 500 22px var(--font-mono); color: var(--card-muted); }
+  #root .row .nm { position: absolute; left: 84px; top: 0; height: 78px; display: flex; align-items: center; font-size: 31px; font-weight: 650; letter-spacing: -0.025em; }
+  #root .row .tr { position: absolute; left: 280px; top: 17px; width: 510px; height: 44px; border-radius: 14px; background: color-mix(in oklab, var(--ink) 5%, transparent); }
+  #root .row .bar { position: absolute; left: 280px; top: 17px; width: 510px; height: 44px; border-radius: 14px; transform-origin: 0 50%; }
+  #root .row .v { position: absolute; right: 36px; top: 0; width: 80px; height: 78px; display: flex; align-items: center; justify-content: flex-end; font: 600 30px var(--font-mono); font-variant-numeric: tabular-nums; }
+</style>
+<div id="root" data-look="cool" data-composition-id="ranking-race" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(47,91,255,.2); --mesh-2: rgba(125,153,255,.22)"></div>
+  <div class="rc-dots" style="opacity:.5"></div>
+  <div class="cam">
+    <div class="rc-head"><span class="ln" style="--ox:-1.4px">The lead</span><span class="ln" style="--ox:-1.6px"><em class="rc">changes hands.</em></span></div>
+    <div class="rc-card card">
+      <div class="hd"><span class="l">WEEKLY ACTIVE TEAMS · K</span><span class="w">WEEK 01</span></div>
+    </div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  RC.words(tl, "#root .rc-head", 0, { lead: true, stagger: 0.09, blur: 14, y: 20 });
+  tl.fromTo("#root .card", { y: 50, opacity: 0.75 }, { y: 0, opacity: 1, duration: 0.9, ease: "expo.out" }, 0.05);
+  // ---- the race ----------------------------------------------------------------------------
+  const names = ["Atlas", "Beacon", "Cobalt", "Delta", "Ember", "Fjord"];
+  const K = [[30, 52, 83, 96], [58, 74, 78, 80], [20, 34, 60, 88], [46, 50, 48, 52], [36, 38, 42, 45], [26, 29, 31, 33]];
+  const KT = [0, 0.34, 0.67, 1], PITCH = 92, TRACK = 510;
+  const card = document.querySelector("#root .card");
+  const rows = names.map((n, i) => {
+    const r = document.createElement("div"); r.className = "row";
+    r.innerHTML = '<span class="rk">' + (i + 1) + '</span><span class="nm">' + n + '</span><span class="tr"></span><span class="bar"></span><span class="v">0</span>';
+    card.appendChild(r);
+    return { r, rk: r.querySelector(".rk"), bar: r.querySelector(".bar"), v: r.querySelector(".v") };
+  });
+  const wk = document.querySelector("#root .hd .w");
+  const smooth = (t) => t * t * (3 - 2 * t);
+  const val = (i, u) => { let s = 0; while (s < 2 && u > KT[s + 1]) s++; const f = smooth(Math.min(1, Math.max(0, (u - KT[s]) / (KT[s + 1] - KT[s])))); return K[i][s] + (K[i][s + 1] - K[i][s]) * f; };
+  // A row's place is its hard rank, low-pass filtered over a short window of the race: rows keep exactly one
+  // pitch between them except while two are swapping, when they glide through each other.
+  const W = 0.06, N = 15;
+  const hardRank = (i, u) => { const v = val(i, Math.min(1, Math.max(0, u))); let r = 0; for (let j = 0; j < names.length; j++) if (j !== i && val(j, Math.min(1, Math.max(0, u))) > v) r++; return r; };
+  const place = (i, u) => { let sum = 0, wsum = 0; for (let k = 0; k < N; k++) { const f = k / (N - 1) * 2 - 1, w = 1 - Math.abs(f) * 0.8; sum += w * hardRank(i, u + f * W); wsum += w; } return sum / wsum; };
+  const scene = (u) => {
+    const vals = names.map((_, i) => val(i, u));
+    rows.forEach((o, i) => {
+      const at = place(i, u), lead = Math.max(0, Math.min(1, 1 - at));
+      o.r.style.transform = "translateY(" + (at * PITCH).toFixed(2) + "px)";
+      o.r.style.zIndex = Math.round(vals[i] * 10);
+      o.bar.style.transform = "scaleX(" + (vals[i] / 100).toFixed(4) + ")";
+      o.bar.style.background = "color-mix(in oklab, var(--accent) " + (lead * 100).toFixed(1) + "%, rgba(15,20,32,.16))";
+      o.v.textContent = Math.round(vals[i]);
+      o.v.style.color = lead > 0.5 ? "#2f5bff" : "";
+      o.rk.textContent = Math.round(at) + 1;
+    });
+    wk.textContent = "WEEK " + String(1 + Math.round(u * 11)).padStart(2, "0");
+  };
+  const st = { u: 0 };
+  scene(0);
+  // the rows are on the card at frame 0, already ranked; the race starts a beat later
+  tl.fromTo(st, { u: 0 }, { u: 1, duration: 4.4, ease: "sine.inOut", onUpdate: () => scene(st.u), immediateRender: false }, 0.7);
+  RC.camera(tl, "#root .cam", 0, { duration: 5.6, to: { scale: 1.03 } });
+  RC.drift(tl, "#root .rc-mesh", 0, { duration: 5.6, x: 50, y: -30, scale: 1.08 });
+  RC.hold(tl, 5.55);
+  window.__timelines["ranking-race"] = tl;
+})();
+</script>
+</template>
+</body></html>

@@ -224,13 +224,16 @@ One HyperFrames sub-composition per beat — HTML, scoped CSS, one paused GSAP t
 what that beat says rather than picked from a layout menu.
 
 It composes on a design system built from a review of 809 launch films on
-[whatships.com](https://whatships.com): six looks, one sans + one italic serif + mono, real-looking
-UI pieces (prompts, agent steps, windows, phones, code, toasts, cursors), and motion helpers that do
-what those films do — words resolving out of blur, values rolling in place, a cursor that curves and
-clicks and causes something, a slow camera push under everything. A beat opts in with
-`data-look="paper"` on its root. Sixteen reference patterns in `skills/reelcut/assets/patterns/`
-show each recurring move done properly; `npm run render -- examples/patterns/reel.json` renders
-them all.
+[whatships.com](https://whatships.com): seven looks, one sans + one italic serif + mono, real-looking
+UI pieces (prompts, agent steps, windows, phones, code, toasts, cursors, switches, rings, key caps),
+Apple-style Liquid Glass for the control layer, and motion helpers that do what those films do —
+words resolving out of blur, values rolling in place, text decoding out of noise, a cursor that curves
+and clicks and causes something, a slow camera push under everything. A beat opts in with
+`data-look="paper"` on its root. Forty-one reference patterns in `skills/reelcut/assets/patterns/`
+show each recurring move done properly — illustration, kinetic type, eight product-UI components,
+four data components, four type and brand moments — on one grid; `npm run render --
+examples/patterns/reel.json` renders them all, and `npm run measure` checks any beat's layout to the
+pixel.
 
 The registers available: type, a real product surface, a simulated interaction, a number that
 resolves, a diagram that builds, footage, a logo moment. Plus the structural half — depth, masking,
@@ -441,6 +444,17 @@ Three things it checks that would otherwise fail silently:
 `--sfx` adds sound effects placed in the manifest, mixed under the voice at 0.35 by default. Off
 unless asked for.
 
+### `npm run measure` — a beat's layout, to the pixel
+
+```bash
+npm run measure -- skills/reelcut/assets/patterns/pricing-toggle.html 4.3 --guides --scan \n  --select ".rc-head||.plan" --bearings ".rc-head .ln"
+```
+
+Loads a composition in Chrome with the kit injected, seeks it to each time, and prints layout
+rectangles with the camera push off, text baselines, first-glyph side bearings (for optical
+alignment to the 84px margin), and — with `--scan` — anything outside the safe area, overflowing, or
+under 16px. `--guides` draws the grid over a screenshot. It reports and never fixes.
+
 ### `npm run check-video` — the frame checker
 
 ```bash
@@ -453,7 +467,7 @@ hold on a payoff is the reading floor working, not a defect.
 ### `npm test`
 
 ```bash
-npm test          # 168 tests
+npm test          # 456 tests
 npm run typecheck
 ```
 
@@ -491,7 +505,7 @@ npm run typecheck
 | Render → clips, master, thumbnail | ✅ **produced a real 18s reel**, every frame count exact |
 | Frame checker | ✅ tested, catches a real blank panel in a third-party video |
 | Asset library and studio | ✅ tested; a library asset rendered into a real clip and re-rendered from the studio |
-| Design kit and patterns | ✅ twenty-five patterns and the example reel render and pass every gate |
+| Design kit and patterns | ✅ forty-one patterns and the example reel render and pass every gate; layout measured to the pixel |
 | Sound effects (`--sfx`) | ⚠️ placement and mixing tested; no sound library ships |
 | Data sourcing and charts | ⚠️ specified, not built |
 
@@ -504,15 +518,15 @@ skills/reelcut/
   SKILL.md              the router: the steps and the hard rules
   references/           steps 0–5, design system, kit, patterns, direction, sourcing
   assets/kit/           shared looks, UI pieces and motion helpers, injected via data-look
-  assets/patterns/      twenty-five reference compositions, one per recurring move
-  scripts/              beats, intake, capture, render, check-video, library (+ studio)
+  assets/patterns/      forty-one reference compositions, one per recurring move
+  scripts/              beats, intake, capture, render, measure, check-video, library (+ studio)
 src/
   core/                 reading floor, frame sizes, the Beat schema
   planner/              parse, segment, merge, density, short cut
   brief/                BeatBrief + validators, asset gaps, asset intake
   capture/              legibility gate, secrets scan, Puppeteer capture
   direction/            creative direction and its enforcement
-  verify/               the frame checker
+  verify/               the frame checker, and the layout measurer
   render/               project builder, poster choice, the HyperFrames render route
   library/              the asset library, its reuse policy, and the record of every run
   studio/               the local server and its one page

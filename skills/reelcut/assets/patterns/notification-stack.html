@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* NOTIFICATION STACK. Four notifications arrive one at a time; each new one takes the front and
+     pushes the rest back into a depth stack — smaller, softer, dimmer, tucked under — until the last,
+     the one that matters, sits on top in the accent. Then the stack closes up and a glass pill says
+     how many are behind it. Depth does the work: no card slides off, every push is the same move.
+     Cards are soft paper on a warm ground; the pill is the one piece of glass, because a count is a
+     control floating over content.
+     Grid: cards span the 84px margins (84 to 996), 192 tall, 40 inner padding; the block of front
+     card + stack + pill is centred in the content region (336 to 996). The camera push carries the
+     headline with the objects, so their left edges stay flush the whole way. */
+  #root { --accent: #c2410c; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 540px 540px; }
+  #root .nt { left: 84px; top: 520px; width: 912px; height: 192px; border-radius: 40px; transform-origin: 50% 100%; }
+  #root .ct { position: absolute; inset: 0; }
+  #root .ic { position: absolute; left: 40px; top: 48px; width: 96px; height: 96px; border-radius: 28px; }
+  #root .ic::before, #root .ic::after { content: ""; position: absolute; }
+  #root .ic.cal { background: #2a2825; }
+  #root .ic.cal::before { left: 25px; top: 27px; width: 46px; height: 43px; border-radius: 8px; background: linear-gradient(var(--accent) 0 12px, #fff 12px); }
+  #root .ic.doc { background: #8a8377; }
+  #root .ic.doc::before { left: 30px; top: 23px; width: 36px; height: 50px; border-radius: 7px; background: #fff; }
+  #root .ic.doc::after { left: 37px; top: 35px; width: 22px; height: 26px; background: repeating-linear-gradient(to bottom, #8a8377 0 3px, transparent 3px 9px); }
+  #root .ic.msg { background: #2a2825; }
+  #root .ic.msg::before { left: 23px; top: 26px; width: 50px; height: 37px; border-radius: 13px; background: #fff; }
+  #root .ic.msg::after { left: 32px; top: 57px; width: 16px; height: 16px; background: #fff; clip-path: polygon(0 0, 100% 0, 0 100%); }
+  #root .ic.pay { background: var(--accent); display: grid; place-items: center; color: #fff; font: 700 52px var(--font-sans); }
+  #root .tt { position: absolute; left: 168px; top: 50px; font-size: 38px; line-height: 46px; font-weight: 650; letter-spacing: -0.02em; white-space: nowrap; }
+  #root .bd { position: absolute; left: 168px; top: 104px; font-size: 30px; line-height: 36px; color: var(--card-muted); white-space: nowrap; }
+  #root .tm { position: absolute; right: 40px; top: 64px; font: 500 24px/30px var(--font-mono); color: var(--card-muted); }
+  #root .n4 .tm { color: var(--accent); }
+  #root .more { left: 396px; top: 722px; width: 288px; height: 84px; border-radius: 42px; display: flex; align-items: center; justify-content: center; gap: 14px;
+                font-size: 30px; font-weight: 600; letter-spacing: -0.01em; }
+  #root .more i { width: 11px; height: 11px; border-radius: 50%; background: var(--accent); }
+</style>
+<div id="root" data-look="paper" data-composition-id="notification-stack" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(226,86,42,.17); --mesh-2: rgba(18,18,18,.06)"></div>
+  <div class="rc-dots" style="opacity:.5"></div>
+  <div class="cam">
+    <div class="rc-head"><span class="ln" style="--ox:-2.9px">Quiet, until</span><span class="ln" style="--ox:-1.6px"><em class="rc">it counts.</em></span></div>
+    <div class="rc-card nt n1"><div class="ct"><span class="ic cal"></span><div class="tt">Design review moved</div><div class="bd">Maya · now 3:00 pm</div><div class="tm">12m</div></div></div>
+    <div class="rc-card nt n2"><div class="ct"><span class="ic doc"></span><div class="tt">Standup notes posted</div><div class="bd">Ravi added 4 action items</div><div class="tm">9m</div></div></div>
+    <div class="rc-card nt n3"><div class="ct"><span class="ic msg"></span><div class="tt">New comment on Pricing v3</div><div class="bd">“Can we make yearly the default?”</div><div class="tm">3m</div></div></div>
+    <div class="rc-card nt n4"><div class="ct"><span class="ic pay">€</span><div class="tt">Payment received</div><div class="bd">Team plan · €4,180</div><div class="tm">now</div></div></div>
+    <div class="rc-card rc-glass more"><i></i>3 earlier</div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  RC.glass();
+  RC.words(tl, "#root .rc-head", 0, { lead: true, stagger: 0.09, blur: 14, y: 20 });
+  const T = [0.05, 1.1, 2.0, 2.9];                       // when each card arrives
+  // How far back the card k steps behind the front sits: lower, smaller, dimmer, softer.
+  const back = [null,
+    { y: 36, scale: 0.95, opacity: 0.96, blur: 0 },
+    { y: 72, scale: 0.9, opacity: 0.8, blur: 1 },
+    { y: 108, scale: 0.85, opacity: 0.55, blur: 2 }];
+  ["n1", "n2", "n3", "n4"].forEach((id, i) => {
+    const sel = "#root ." + id;
+    // Each card resolves from above and out of soft focus; the first is already there at frame 0.
+    tl.fromTo(sel, { y: -80, scale: 1.03 }, { y: 0, scale: 1, duration: 0.85, ease: "expo.out" }, T[i]);
+    tl.fromTo(sel, { opacity: i === 0 ? 0.7 : 0 }, { opacity: 1, duration: 0.3, ease: "power2.out" }, T[i]);
+    tl.fromTo(sel, { filter: "blur(" + (i === 0 ? 5 : 14) + "px)" }, { filter: "blur(0px)", duration: 0.7, ease: "expo.out" }, T[i]);
+    // Every later arrival pushes this card one step deeper. Its words go just before, so no two lines
+    // of text ever share a card: a stack shows edges.
+    for (let j = i + 1; j < 4; j++) {
+      const b = back[j - i];
+      tl.to(sel, { y: b.y, scale: b.scale, opacity: b.opacity, filter: "blur(" + b.blur + "px)", duration: 0.75, ease: "expo.out" }, T[j]);
+    }
+    if (i < 3) tl.to(sel + " .ct", { opacity: 0, duration: 0.2, ease: "power2.out" }, T[i + 1] - 0.03);
+  });
+  // The close: the stack tightens, and a glass count comes to rest across its lower edge.
+  [["n3", 18, 0.96], ["n2", 34, 0.92], ["n1", 48, 0.88]].forEach(([id, y, s], k) => {
+    tl.to("#root ." + id, { y, scale: s, duration: 0.8, ease: "expo.inOut" }, 3.75 + k * 0.05);
+  });
+  tl.fromTo("#root .more", { y: 22, opacity: 0, scale: 0.92 }, { y: 0, opacity: 1, scale: 1, duration: 0.8, ease: "expo.out" }, 3.95);
+  tl.fromTo("#root .more", { filter: "blur(10px)" }, { filter: "blur(0px)", duration: 0.7, ease: "expo.out" }, 3.95);
+  RC.camera(tl, "#root .cam", 0, { duration: 4.8, to: { scale: 1.04 } });
+  RC.drift(tl, "#root .rc-mesh", 0, { duration: 4.8, x: 50, y: -30, scale: 1.08 });
+  RC.hold(tl, 4.75);
+  window.__timelines["notification-stack"] = tl;
+})();
+</script>
+</template>
+</body></html>

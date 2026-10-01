@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* COMMAND PALETTE. A ⌘K palette floats over a dimmed app: a query is typed, the results re-rank
+     live around it (two rows keep their place, three give way to better matches), the highlight
+     glides down two rows on the arrow key, Return fires, the palette lets go — and the thing it
+     asked for is there: invoice 1042, open, paid. Typing, listing and selecting are the whole film.
+     The palette is regular Liquid Glass (Apple's popover: lots of text over content that must stay
+     legible); the app behind it is deliberately a little too busy to read, so the glass has
+     something to bend. The selection is a flat tint on the glass, never a second piece of glass.
+     Grid: the palette is on the 84px margins (84 to 996) and fills the content region (336 to 996):
+     search 96, label 40, five rows of 88, footer 84. The camera push carries the headline with it. */
+  #root { --accent: #8b7bff; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 540px 540px; }
+  #root .app { position: absolute; left: 0; top: 0; width: 1080px; height: 1080px; opacity: .55; filter: blur(2.5px); }
+  #root .app .c { position: absolute; border-radius: 28px; background: #131316; box-shadow: 0 0 0 1px rgba(255,255,255,.06); }
+  #root .app .sk { position: absolute; height: 16px; border-radius: 8px; background: rgba(255,255,255,.13); }
+  #root .app .bar { position: absolute; bottom: 36px; width: 46px; border-radius: 10px 10px 4px 4px; background: rgba(139,123,255,.55); }
+  #root .pal { left: 84px; top: 336px; width: 912px; height: 660px; border-radius: 40px; }
+  #root .sr { position: absolute; left: 0; right: 0; top: 0; height: 96px; }
+  #root .sr .mag { position: absolute; left: 38px; top: 32px; width: 24px; height: 24px; border-radius: 50%; border: 4px solid var(--muted); }
+  #root .sr .mag::after { content: ""; position: absolute; left: 20px; top: 21px; width: 12px; height: 4.5px; border-radius: 3px; background: var(--muted); transform: rotate(45deg); transform-origin: 0 50%; }
+  #root .sr .tx { position: absolute; left: 92px; top: 0; height: 96px; display: flex; align-items: center; font-size: 36px; letter-spacing: -0.02em; font-weight: 500; }
+  #root .sr .tx .ph { position: absolute; left: 0; color: var(--muted); white-space: nowrap; }
+  #root .sr .tx .q { white-space: pre; }
+  #root .sr .tx .rc-caret { height: 40px; margin-left: 3px; vertical-align: 0; }
+  #root .sr .rc-kbd { position: absolute; right: 36px; top: 28px; }
+  #root .hl { position: absolute; left: 36px; right: 36px; height: 1.5px; background: var(--line); }
+  #root .lab { position: absolute; left: 36px; top: 104px; font: 500 18px/24px var(--font-mono); letter-spacing: .14em; color: var(--muted); }
+  #root .sel { position: absolute; left: 24px; top: 142px; width: 864px; height: 76px; border-radius: 22px; background: rgba(139,123,255,.2); box-shadow: inset 0 0 0 1.5px rgba(139,123,255,.45); }
+  #root .it { position: absolute; left: 0; right: 0; height: 88px; }
+  #root .it .g { position: absolute; left: 36px; top: 18px; width: 52px; height: 52px; border-radius: 16px; background: rgba(139,123,255,.18); }
+  #root .it .g::before, #root .it .g::after { content: ""; position: absolute; }
+  #root .g-plus::before { left: 14px; top: 24px; width: 24px; height: 4px; border-radius: 2px; background: var(--accent); } #root .g-plus::after { left: 24px; top: 14px; width: 4px; height: 24px; border-radius: 2px; background: var(--accent); }
+  #root .g-user::before { left: 19px; top: 11px; width: 14px; height: 14px; border-radius: 50%; background: var(--accent); } #root .g-user::after { left: 13px; top: 28px; width: 26px; height: 13px; border-radius: 13px 13px 3px 3px; background: var(--accent); }
+  #root .g-grid::before { left: 13px; top: 13px; width: 11px; height: 11px; border-radius: 3px; background: var(--accent); box-shadow: 15px 0 0 var(--accent), 0 15px 0 var(--accent), 15px 15px 0 var(--accent); }
+  #root .g-search::before { left: 13px; top: 12px; width: 16px; height: 16px; border-radius: 50%; border: 4px solid var(--accent); } #root .g-search::after { left: 31px; top: 31px; width: 11px; height: 4px; border-radius: 2px; background: var(--accent); transform: rotate(45deg); transform-origin: 0 50%; }
+  #root .g-gear::before { left: 12px; top: 12px; width: 28px; height: 28px; border-radius: 50%; border: 5px solid var(--accent); } #root .g-gear::after { left: 22px; top: 22px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+  #root .g-doc::before { left: 15px; top: 11px; width: 22px; height: 30px; border-radius: 5px; background: var(--accent); } #root .g-doc::after { left: 20px; top: 19px; width: 12px; height: 14px; background: repeating-linear-gradient(to bottom, #131316 0 2.5px, transparent 2.5px 6px); }
+  #root .it .t { position: absolute; left: 108px; top: 0; height: 88px; display: flex; align-items: center; font-size: 31px; font-weight: 600; letter-spacing: -0.02em; white-space: nowrap; }
+  #root .it .t b { font-weight: 700; }
+  #root .it .t small { font: 500 21px var(--font-mono); color: var(--muted); margin-left: 16px; font-weight: 500; }
+  #root .it .k { position: absolute; right: 36px; top: 24px; display: flex; gap: 8px; }
+  #root .hk1, #root .hk2 { background: rgba(244,242,238,.08); }
+  #root .pal .rc-kbd { color: #d9d7e1; }
+  #root .foot { position: absolute; left: 0; right: 0; top: 576px; height: 84px; }
+  #root .foot .h { position: absolute; top: 0; height: 84px; display: flex; align-items: center; gap: 12px; font-size: 22px; color: var(--muted); }
+  #root .inv { left: 220px; top: 456px; width: 640px; height: 420px; border-radius: 34px; }
+  #root .inv .tt { position: absolute; left: 40px; top: 36px; font-size: 38px; line-height: 46px; font-weight: 650; letter-spacing: -0.025em; }
+  #root .inv .cl { position: absolute; left: 40px; top: 88px; font-size: 24px; line-height: 30px; color: var(--card-muted); }
+  #root .inv .pd { position: absolute; right: 40px; top: 38px; height: 44px; padding: 0 20px; border-radius: 22px; display: flex; align-items: center; font-size: 24px; font-weight: 700; color: #4be08c; background: rgba(75,224,140,.14); }
+  #root .inv .hl { left: 40px; right: 40px; }
+  #root .inv .lb { position: absolute; left: 40px; top: 182px; font: 500 18px/22px var(--font-mono); letter-spacing: .14em; color: var(--card-muted); }
+  #root .inv .am { position: absolute; left: 40px; top: 210px; font-size: 80px; line-height: 88px; font-weight: 700; letter-spacing: -0.045em; font-variant-numeric: tabular-nums; }
+  #root .inv .ln { position: absolute; left: 40px; height: 14px; border-radius: 7px; background: rgba(255,255,255,.1); }
+</style>
+<div id="root" data-look="ink" data-composition-id="command-palette" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(139,123,255,.5); --mesh-2: rgba(61,220,151,.14)"></div>
+  <div class="rc-dots" style="opacity:.5"></div>
+  <div class="cam">
+    <div class="app">
+      <div class="c" style="left:60px;top:312px;width:540px;height:340px"><div class="sk" style="left:36px;top:40px;width:260px"></div><div class="sk" style="left:36px;top:84px;width:400px"></div><div class="sk" style="left:36px;top:128px;width:330px"></div><div class="sk" style="left:36px;top:172px;width:420px"></div></div>
+      <div class="c" style="left:630px;top:312px;width:390px;height:340px"><div class="bar" style="left:40px;height:120px"></div><div class="bar" style="left:104px;height:170px"></div><div class="bar" style="left:168px;height:90px"></div><div class="bar" style="left:232px;height:210px"></div><div class="bar" style="left:296px;height:150px"></div></div>
+      <div class="c" style="left:60px;top:680px;width:960px;height:340px"><div class="sk" style="left:36px;top:40px;width:340px"></div><div class="sk" style="left:36px;top:84px;width:760px"></div><div class="sk" style="left:36px;top:128px;width:560px"></div><div class="sk" style="left:36px;top:172px;width:700px"></div><div class="sk" style="left:36px;top:216px;width:420px"></div></div>
+    </div>
+    <div class="rc-head"><span class="ln" style="--ox:0px">Jump to</span><span class="ln" style="--ox:0px"><em class="rc">anything.</em></span></div>
+    <div class="rc-card rc-glass pal">
+      <div class="sr"><span class="mag"></span><div class="tx"><span class="ph">Search or jump to…</span><span class="q"></span><span class="rc-caret"></span></div><span class="rc-kbd">esc</span></div>
+      <div class="hl" style="top:96px"></div>
+      <div class="lab">SUGGESTED</div>
+      <div class="sel"></div>
+      <div class="it i1" style="top:136px"><span class="g g-plus"></span><div class="t"><span>New <b class="m">invoice</b></span></div><div class="k"><span class="rc-kbd">⌘</span><span class="rc-kbd">N</span></div></div>
+      <div class="it i2" style="top:224px"><span class="g g-user"></span><div class="t"><span><b class="m">Invite</b> teammate</span></div><div class="k"><span class="rc-kbd">⌘</span><span class="rc-kbd">I</span></div></div>
+      <div class="it i3" style="top:312px"><span class="g g-grid"></span><div class="t"><span>Open dashboard</span></div><div class="k"><span class="rc-kbd">G</span><span class="rc-kbd">D</span></div></div>
+      <div class="it i4" style="top:400px"><span class="g g-search"></span><div class="t"><span>Search customers</span></div><div class="k"><span class="rc-kbd">⌘</span><span class="rc-kbd">F</span></div></div>
+      <div class="it i5" style="top:488px"><span class="g g-gear"></span><div class="t"><span>Settings</span></div><div class="k"><span class="rc-kbd">⌘</span><span class="rc-kbd">,</span></div></div>
+      <div class="it n3" style="top:312px"><span class="g g-doc"></span><div class="t"><span><b class="m">Inv</b>oice #1042</span><small>Acme Studio</small></div></div>
+      <div class="it n4" style="top:400px"><span class="g g-doc"></span><div class="t"><span><b class="m">Inv</b>oice #1039</span><small>Northwind</small></div></div>
+      <div class="it n5" style="top:488px"><span class="g g-grid"></span><div class="t"><span>Open <b class="m">inv</b>oices</span></div><div class="k"><span class="rc-kbd">G</span><span class="rc-kbd">I</span></div></div>
+      <div class="hl" style="top:576px"></div>
+      <div class="foot">
+        <div class="h" style="left:36px"><span class="rc-kbd hk1">↑↓</span>Navigate</div>
+        <div class="h" style="left:262px"><span class="rc-kbd hk2">↵</span>Open</div>
+        <div class="h" style="right:36px"><span class="rc-kbd">esc</span>Close</div>
+      </div>
+    </div>
+    <div class="rc-card inv">
+      <div class="tt">Invoice #1042</div><div class="cl">Acme Studio · due Jun 30</div><div class="pd">Paid</div>
+      <div class="hl" style="top:150px"></div>
+      <div class="lb">TOTAL</div><div class="am">€0.00</div>
+      <div class="hl" style="top:318px"></div>
+      <div class="ln" style="top:352px;width:360px"></div><div class="ln" style="top:380px;width:240px"></div>
+    </div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  RC.glass();
+  RC.words(tl, "#root .rc-head", 0, { lead: true, stagger: 0.09, blur: 14, y: 20 });
+  // The palette is open at frame 0 (all five suggestions, caret blinking); it settles and resolves.
+  tl.fromTo("#root .pal", { y: 40, opacity: 0.8 }, { y: 0, opacity: 1, duration: 0.9, ease: "expo.out" }, 0.05);
+  tl.fromTo("#root .pal", { filter: "blur(6px)" }, { filter: "blur(0px)", duration: 0.7, ease: "expo.out" }, 0.05);
+  // New rows wait where they will land; the rows they replace are about to give way.
+  gsap.set("#root .n3, #root .n4, #root .n5", { opacity: 0 });
+  // ---- type the query ----------------------------------------------------------------------
+  tl.to("#root .ph", { opacity: 0, duration: 0.12 }, 1.15);
+  RC.type(tl, "#root .q", 1.2, { text: "inv", cps: 7, caret: "#root .rc-caret" });
+  // ---- the results re-rank around it --------------------------------------------------------
+  const R = 1.78;
+  tl.to("#root .m", { color: "#8b7bff", duration: 0.3, ease: "power2.out" }, R);
+  RC.roll(tl, "#root .lab", R, { values: ["SUGGESTED", "BEST MATCHES"], each: 0.5, duration: 0.35 });
+  ["i3", "i4", "i5"].forEach((r, k) => {
+    tl.to("#root ." + r, { opacity: 0, y: -10, filter: "blur(6px)", duration: 0.22, ease: "power2.in" }, R + k * 0.05);
+    tl.fromTo("#root .n" + (k + 3), { opacity: 0, y: 14, filter: "blur(6px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "expo.out" }, R + 0.22 + k * 0.07);
+  });
+  // ---- arrow, arrow, return -----------------------------------------------------------------
+  const press = (sel, at) => { tl.to(sel, { scale: 0.88, backgroundColor: "rgba(139,123,255,.45)", duration: 0.08, ease: "power2.in" }, at); tl.to(sel, { scale: 1, backgroundColor: "rgba(244,242,238,.08)", duration: 0.28, ease: "expo.out" }, at + 0.08); };
+  press("#root .hk1", 2.55); tl.to("#root .sel", { y: 88, duration: 0.4, ease: "expo.inOut" }, 2.58);
+  press("#root .hk1", 3.0); tl.to("#root .sel", { y: 176, duration: 0.4, ease: "expo.inOut" }, 3.03);
+  press("#root .hk2", 3.55);
+  tl.to("#root .sel", { backgroundColor: "rgba(139,123,255,.55)", duration: 0.12 }, 3.58);
+  // ---- it opens: the palette lets go, the invoice is there -----------------------------------
+  tl.to("#root .pal", { opacity: 0, scale: 0.985, filter: "blur(8px)", duration: 0.4, ease: "power2.in" }, 3.78);
+  tl.fromTo("#root .inv", { opacity: 0, y: 28, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: "expo.out" }, 4.1);
+  tl.fromTo("#root .inv", { filter: "blur(10px)" }, { filter: "blur(0px)", duration: 0.7, ease: "expo.out" }, 4.1);
+  RC.count(tl, "#root .inv .am", 4.5, { from: 0, to: 2400, decimals: 2, prefix: "€", duration: 1.0, ease: "expo.out" });
+  tl.fromTo("#root .inv .pd", { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.5, ease: "expo.out" }, 5.05);
+  RC.camera(tl, "#root .cam", 0, { duration: 6.1, to: { scale: 1.03 } });
+  RC.drift(tl, "#root .rc-mesh", 0, { duration: 6.1, x: 50, y: -30, scale: 1.08 });
+  RC.hold(tl, 6.05);
+  window.__timelines["command-palette"] = tl;
+})();
+</script>
+</template>
+</body></html>

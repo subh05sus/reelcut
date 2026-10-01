@@ -122,6 +122,18 @@ off and the report then reads clean because nothing ran. Confirm the sample coun
 `check` also fails a 3s+ composition whose geometry never changes (`sweep_static`), and flags
 transient overlaps as info — read those, they are usually a crossfade you meant to be a cut.
 
+Then **measure it**. `check` finds what is broken; it cannot find what is 3px off, and that is what
+separates a polished beat from a plausible one:
+
+```bash
+npm run measure -- compositions/beat-03.html 0.4,2.6,4.3 --guides --scan --bearings ".rc-head .ln"
+```
+
+It prints layout rectangles with the camera push off, flags anything outside the 84px safe area or
+under 16px, and draws the grid over a screenshot in `out/measure/`. Read the screenshot with the
+guides on: margins, the content region, the headline's ink flush with the left margin. See
+[kit.md](kit.md#layout-discipline).
+
 Then look at stills, mid-transition as well as settled. Every numeric gate here has been wrong at
 least once; the rendered frame has not.
 
