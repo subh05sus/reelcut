@@ -46,7 +46,7 @@ describe("the design kit", () => {
 
   it("exports the helpers the components are built from", () => {
     const helpers = kitHelpers();
-    for (const name of ["words", "chars", "blurIn", "rise", "flyIn", "type", "count", "roll", "cursorEl", "cursor", "click", "camera", "drift", "draw", "glass", "scramble", "hold", "split", "rand"]) {
+    for (const name of ["words", "chars", "blurIn", "rise", "flyIn", "type", "count", "roll", "cursorEl", "cursor", "click", "camera", "drift", "draw", "glass", "scramble", "zoomTo", "spot", "hold", "split", "rand"]) {
       expect(helpers.has(name), name).toBe(true);
     }
   });
@@ -60,6 +60,33 @@ describe("the design kit", () => {
 
   it("is deterministic: no clock, no random numbers, no infinite repeats", () => {
     expect(code(kit.js)).not.toMatch(/Math\.random|Date\.now|new Date|performance\.now|repeat:\s*-1|setInterval|setTimeout/);
+  });
+});
+
+describe("the footage pattern", () => {
+  const html = readFileSync(path.join(patternsDir, "footage", "footage-window.html"), "utf8");
+
+  it("agrees with itself about its id, its timeline and its frame", () => {
+    expect(inspectComposition(html)).toMatchObject({ hasTemplate: true, compositionId: "footage-window", timelineKey: "footage-window", width: 1080, height: 1080 });
+  });
+
+  it("asks for a look the kit has, and for helpers the kit exports", () => {
+    expect(kit.css).toContain(`[data-look="${/data-look="([a-z]+)"/.exec(html)![1]}"]`);
+    const helpers = kitHelpers();
+    for (const m of html.matchAll(/RC\.([a-zA-Z]+)\(/g)) expect(helpers.has(m[1]!), m[1]).toBe(true);
+  });
+
+  it("places the recording with a placeholder and draws nothing in it", () => {
+    expect(html).toMatch(/class="rc-footage" data-footage="[0-9a-f]{16}:m_[0-9a-f]{8}"/);
+    expect(html).not.toMatch(/<video|<img/);
+  });
+
+  it("keeps the recording sharp: it is never blurred in", () => {
+    expect(html).not.toMatch(/blurIn\(tl, "#root \.rc-footage"/);
+  });
+
+  it("is deterministic", () => {
+    expect(code(html)).not.toMatch(/Math\.random|Date\.now|new Date|performance\.now|repeat:\s*-1/);
   });
 });
 

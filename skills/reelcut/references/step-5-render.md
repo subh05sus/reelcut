@@ -67,6 +67,16 @@ Optional fields that let the studio learn from the reel (see [learnings.md](lear
 The render reads each beat's `data-look` and `--accent` itself; `pattern`, `brand`, `direction` and
 `appliedLearnings` are yours to write. All of them are optional, and none changes the render.
 
+### Recorded footage
+
+A composition places a recording with `data-footage="<asset>:<moment>"` (see [footage.md](footage.md)). The
+render expands each placeholder into the trimmed, retimed `<video>` and refuses the beat, with the reason, if
+the recording is not approved, was never checked for private information, the moment is only a proposal, or
+the moment cannot fit its slot at 2x. It pulls frames as PNG, hardlinks big recordings instead of copying
+them, relaxes the frame checker's `blank_panel` for beats with footage, and records each moment as used so
+the next match is not asked about again. It prints `footage: "download Claude" at 0.0s (1.48x)` for what it
+placed; copy that, with the recording's date, into `report.md`.
+
 ### Sound effects from the library
 
 A cue's `source` may be a file path, or `library:<id>` for a sound in the user's library. The render

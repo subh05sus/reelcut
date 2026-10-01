@@ -211,6 +211,9 @@ of the real product screen → the brand's own source for a mark → drawn, but 
 `assetKind` decides what is allowed. **identity** is a specific real thing — a named company's
 logo, a real UI — and can never be drawn. **generic** is conceptual and never stalls the reel.
 
+Where a beat shows a real step being done ("download Claude", "add the MCP", "upload this skill"), the
+requirement is **footage**: a moment of a screen recording, used exactly as recorded. See *Footage* below.
+
 ### 3 · Data and charts
 
 Only when the script states a figure. Finds a source, quotes it verbatim, re-fetches to confirm the
@@ -301,6 +304,8 @@ files from the library or from a recorded reel's folder.
   source, preview, measurements and editable name, tags, kind and status. **Drop files or whole folders
   on the page** and each one is checked (by its bytes, never its extension), previewed, measured and
   tagged on arrival.
+- **Footage** — screen recordings: scrub one, mark the steps in it as named moments, zoom regions per reel
+  format (drawn on the video), tick that you checked it for private information, and see what is ready to be used. See *Footage* below.
 - **Review** — what was dropped in waits here. Nothing in it can be used by a reel on its own until you
   approve it, singly or in batches; the machine's and Claude's tags show in *italics* until you have.
   Nothing is ever inferred to be a real brand mark: only you set that.
@@ -334,6 +339,31 @@ npm run library -- queue | annotate | review          # the Claude queue, and a 
 npm run sfx -- list | find --event click | suggest reel.json [--apply]
 npm run learnings -- brief | list | accept <id> | export | import
 ```
+
+### Footage — real recordings, used as recorded
+
+Where the honest picture is a recording of something happening, reelcut places the recording instead of
+animating a copy of it. Drop a screen recording on the studio's Library page; it is measured, previewed and
+given a **filmstrip** of eight frames across it. In the **Footage** tab you scrub it, mark the steps in it as
+named **moments** ("download Claude", 0:02 to 0:08.5), and tick that you watched all of it for private
+information. A script line is then matched to a moment, not a file.
+
+```bash
+npm run footage -- list
+npm run footage -- find "download Claude" --platform mac
+npm run footage -- fit <asset>:<moment> --seconds 4.4        # does it fit the beat, will its text be readable
+npm run intake -- --requirements out/requirements.json      # a requirement with "form": "footage" finds moments
+```
+
+What may be done to a recording: trim it to a moment, frame it in a rounded window, zoom into a region of
+it, play a long step faster (one even rate, at most 2x), hold its last frame, and annotate over it with a
+ring or a glass step pill. Never redraw it, edit inside it, slow it down or loop it. The beat's length is the
+voiceover's: the recording adapts, and a moment that would need more than 2x is refused with its ways out
+rather than quietly cut. A recording is used by itself only when it is approved, checked for private
+information **by a person** (nothing can be masked in a recording, so this is the whole protection), dated
+within 90 days, and the moment is confirmed and has been said yes to once. Claude can propose moments from
+the filmstrip (`/reelcut tag-footage`); it can never confirm one. Details, and the three ways it can go
+wrong, in [footage.md](skills/reelcut/references/footage.md).
 
 ### When something is missing
 
@@ -503,7 +533,7 @@ hold on a payoff is the reading floor working, not a defect.
 ### `npm test`
 
 ```bash
-npm test          # 550 tests
+npm test          # 613 tests
 npm run typecheck
 ```
 
@@ -542,6 +572,7 @@ npm run typecheck
 | Frame checker | ✅ tested, catches a real blank panel in a third-party video |
 | Asset library and studio | ✅ tested; a library asset rendered into a real clip and re-rendered from the studio |
 | Design kit and patterns | ✅ forty-one patterns and the example reel render and pass every gate; layout measured to the pixel |
+| Footage (recorded steps, as recorded) | ✅ tested; a recorded moment rendered into a real clip, trimmed, retimed and zoomed, and its frames viewed |
 | Sound effects (`--sfx`) | ⚠️ placement and mixing tested; no sound library ships |
 | Data sourcing and charts | ⚠️ specified, not built |
 
@@ -555,7 +586,7 @@ skills/reelcut/
   references/           steps 0–5, design system, kit, patterns, direction, sourcing
   assets/kit/           shared looks, UI pieces and motion helpers, injected via data-look
   assets/patterns/      forty-one reference compositions, one per recurring move
-  scripts/              beats, intake, capture, render, measure, check-video, library (+ studio), sfx, learnings
+  scripts/              beats, intake, capture, render, measure, check-video, library (+ studio), sfx, footage, learnings
 src/
   core/                 reading floor, frame sizes, the Beat schema
   planner/              parse, segment, merge, density, short cut

@@ -3,7 +3,7 @@ import path from "node:path";
 import { intakeDrops, formatIntake, type DroppedFile } from "../../../src/brief/assetIntake.js";
 import { formatGapReport, reportAssetGaps } from "../../../src/brief/assetGaps.js";
 import { AssetRequirementSchema, type AssetRequirement } from "../../../src/brief/assetRequirementTypes.js";
-import { formatLibraryMatches, LibraryError, loadIndex, matchLibrary, type LibraryMatchResult } from "../../../src/library/index.js";
+import { findMoments, formatLibraryMatches, LibraryError, loadIndex, matchLibrary, momentSeconds, type FootageMatch, type LibraryMatchResult } from "../../../src/library/index.js";
 
 /**
  * Match what has been handed over against what the script needs, and report the rest.
@@ -16,6 +16,10 @@ import { formatLibraryMatches, LibraryError, loadIndex, matchLibrary, type Libra
  * The library (`~/.reelcut/library`) is searched first: an asset reelcut already acquired and
  * verified does not need acquiring again. Only an `auto` library match closes a requirement; a
  * proposal is shown, and the requirement stays open for the folder to answer too.
+ *
+ * A requirement with `"form": "footage"` is a moment of a real recording ("Download Claude"). It is looked
+ * for in the library's recordings only, by what happens in the moment, and never matched to a dropped file by
+ * name. See references/footage.md.
  *
  * Reports, never moves or renames anything. A script that rearranges the files it is describing
  * is a script whose output you cannot check.
@@ -119,18 +123,34 @@ function main(): void {
       console.error(`library skipped: ${error.message}`);
     }
   }
-  const closed = new Set(fromLibrary.matches.filter((m) => m.decision === "auto").map((m) => m.requirement.name));
-  const result = intakeDrops(requirements.filter((r) => !closed.has(r.name)), drops);
-  const gaps = reportAssetGaps(result.stillOpen.map((requirement) => ({ requirement, status: "not_provided" as const })));
+  // Footage: the moment that answers each requirement, best first.
+  const footage = requirements
+    .filter((r) => r.form === "footage")
+    .map((requirement) => ({ requirement, matches: findMoments(loadIndex().assets, requirement.name) }));
+  const best = (f: { matches: FootageMatch[] }): FootageMatch | undefined => f.matches[0];
+  const closedFootage = new Set(footage.filter((f) => best(f)?.decision === "auto").map((f) => f.requirement.name));
+  const closed = new Set([...fromLibrary.matches.filter((m) => m.decision === "auto").map((m) => m.requirement.name), ...closedFootage]);
+  const result = intakeDrops(requirements.filter((r) => r.form !== "footage" && !closed.has(r.name)), drops);
+  const openFootage = footage.filter((f) => !closedFootage.has(f.requirement.name)).map((f) => f.requirement);
+  const gaps = reportAssetGaps([...result.stillOpen, ...openFootage].map((requirement) => ({ requirement, status: "not_provided" as const })));
 
   if (args.json) {
-    console.log(JSON.stringify({ library: fromLibrary.matches, matches: result.matches, unmatched: result.unmatched, gaps }, null, 2));
+    console.log(JSON.stringify({ library: fromLibrary.matches, footage: footage.map((f) => ({ requirement: f.requirement.name, matches: f.matches.map((m) => ({ ref: `${m.asset.id}:${m.moment.id}`, label: m.moment.label, seconds: momentSeconds(m.moment), confidence: m.confidence, decision: m.decision, why: m.why })) })), matches: result.matches, unmatched: result.unmatched, gaps }, null, 2));
   } else {
     console.log(`${drops.length} file(s) in ${args.dir}, ${requirements.length} requirement(s)`);
-    if (args.library) {
+    if (args.library && requirements.some((r) => r.form !== "footage")) {
       console.log("");
       console.log(formatLibraryMatches(fromLibrary));
       if (closed.size > 0) console.log("Refer to a library asset in a composition by the path shown; the render copies it in.");
+    }
+    if (footage.length > 0) {
+      console.log("");
+      for (const f of footage) {
+        const top = f.matches.slice(0, 3);
+        if (top.length === 0) console.log(`      footage: nothing in the library answers "${f.requirement.name}"`);
+        for (const m of top) console.log(`${m.decision === "auto" ? "ok  " : "?   "}footage: ${m.asset.id}:${m.moment.id}  "${m.moment.label}" (${momentSeconds(m.moment).toFixed(1)}s) -> ${f.requirement.name}\n      ${m.why}`);
+      }
+      console.log("Place a moment as <div class=\"rc-footage\" data-footage=\"<asset>:<moment>\">; show a proposal to the user and ask once before using it.");
     }
     console.log("");
     console.log(formatIntake(result).replace(/^(ok {2}|\? {3}|\?\? {2})/gm, "$1drop:"));

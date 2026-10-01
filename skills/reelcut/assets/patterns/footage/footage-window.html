@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* FOOTAGE WINDOW. A real screen recording, shown as it was recorded, under the sentence that says
+     what the viewer is watching: "Download / Claude". Nothing in the window is drawn. The recording is
+     a moment from the library (see `npm run footage -- find`), trimmed and retimed by the render: it
+     plays from frame 0, so the first frame of the hard cut is already the product.
+     What this beat adds is only framing. The box is on the 84px margins (84 to 996, 912 wide) and takes
+     the recording's own shape, so a 16:10 recording is 570 tall and sits centred in the content region
+     (336 to 996: top 381). A glass pill — the step, a control-layer label — sits 24 in from the box's
+     lower left. At 0.6s a ring finds the thing to look at; at 1.3s the recording moves inside its box to
+     frame it. The box itself never moves except for one slow push on the whole frame. The recording is never blurred in:
+     it rises, because it is the product and has to be sharp from the first frame.
+     To use it: replace data-footage with a moment's `<asset>:<moment>` and the words with your own. */
+  #root { --accent: #d4532b; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 540px 540px; }
+  #root .rc-footage { left: 84px; top: 381px; width: 912px; }
+  #root .rc-fstep { left: 108px; top: 871px; }
+</style>
+<div id="root" data-look="paper" data-composition-id="footage-window" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(212,83,43,.12); --mesh-2: rgba(47,91,255,.08)"></div>
+  <div class="cam">
+    <div class="rc-head"><span class="ln" style="--ox:-4.3px">Download</span><span class="ln" style="--ox:2.1px"><em class="rc">Claude.</em></span></div>
+    <div class="rc-footage" data-footage="0000000000000000:m_00000000" data-frame="window">
+      <div class="rc-fv">
+        <i class="rc-spot" style="--x:.083; --y:.45; --w:.219; --h:.092"></i>
+      </div>
+    </div>
+    <div class="rc-fstep rc-glass"><b>1</b>Download</div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  RC.words(tl, "#root .rc-head .ln:first-child", 0.05, { lead: true });
+  RC.blurIn(tl, "#root .rc-head em", 0.25, { blur: 12, y: 18 });
+  RC.rise(tl, "#root .rc-footage", 0.1, { lead: true, y: 40, duration: 0.8 });
+  RC.blurIn(tl, "#root .rc-fstep", 0.9, { y: 14, blur: 10, duration: 0.6 });
+  RC.glass();
+  RC.spot(tl, "#root .rc-spot", 0.7, { out: 2.4 });
+  RC.zoomTo(tl, "#root .rc-footage", 1.3, { region: [0.04, 0.34, 0.6, 0.6], duration: 1.2 });
+  RC.camera(tl, "#root .cam", 0, { duration: 4.4, to: { scale: 1.02 } });
+  RC.hold(tl, 4.3);
+  window.__timelines["footage-window"] = tl;
+})();
+</script>
+</template>
+</body></html>

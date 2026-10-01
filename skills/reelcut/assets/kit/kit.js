@@ -580,11 +580,48 @@
     return tl;
   }
 
+  /**
+   * Zoom a recorded-footage box into a region of the recording, e.g. the Download button. `region` is
+   * [x, y, w, h] as fractions of the recording, or "focus" (the default) for the region saved on the
+   * moment for this reel's format, which the render writes to the box as data-focus.
+   *
+   * The recording moves inside its box; the box does not. The region is fitted, never stretched, centred,
+   * and the window is kept inside the recording. Give it a region with the recording's own proportions
+   * (width and height as the same fraction) and the window is the region exactly; a different shape shows
+   * more of what is around it. Done in percentages of the layer's own size, so it needs no layout and is the same on every load.
+   */
+  function zoomTo(tl, target, at, o) {
+    o = o || {};
+    q(target).forEach(function (box) {
+      var inner = box.querySelector(".rc-fv");
+      var r = o.region;
+      if (r === undefined || r === "focus") { var f = (box.getAttribute("data-focus") || "").split(","); r = f.length === 4 ? f.map(Number) : null; }
+      if (!inner || !r || r.some(isNaN)) return;
+      var s = Math.min(1 / r[2], 1 / r[3]);
+      // The window is 1/s of the recording each way, centred on the region and kept inside the recording.
+      var clamp = function (v, lo, hi) { return Math.max(lo, Math.min(hi, v)); };
+      var wx = clamp(r[0] + r[2] / 2 - 0.5 / s, 0, 1 - 1 / s), wy = clamp(r[1] + r[3] / 2 - 0.5 / s, 0, 1 - 1 / s);
+      tl.fromTo(inner, { scale: 1, xPercent: 0, yPercent: 0 },
+        { scale: s, xPercent: -wx * s * 100, yPercent: -wy * s * 100, duration: o.duration || 1.1, ease: o.ease || "expo.inOut", immediateRender: false }, at);
+    });
+    return tl;
+  }
+
+  /** Bring a ring (.rc-spot, inside the recording's .rc-fv) onto the part it points at; `out` takes it away. */
+  function spot(tl, target, at, o) {
+    o = o || {};
+    q(target).forEach(function (el) {
+      tl.fromTo(el, { opacity: 0, scale: 1.08 }, { opacity: 1, scale: 1, duration: o.duration || 0.55, ease: o.ease || "expo.out", immediateRender: false }, at);
+      if (o.out != null) tl.to(el, { opacity: 0, duration: 0.35, ease: "power2.in" }, o.out);
+    });
+    return tl;
+  }
+
   window.RC = {
     q: q, one: one, rand: rand, split: split, hold: hold,
     blurIn: blurIn, blurOut: blurOut, words: words, chars: chars, lines: lines, rise: rise, flyIn: flyIn, pop: pop,
     type: type, count: count, roll: roll, wheel: wheel, mark: mark,
     cursor: cursor, click: click, cursorEl: cursorEl,
-    camera: camera, iris: iris, wipe: wipe, smear: smear, draw: draw, drift: drift, hud: hud, glass: glass, scramble: scramble,
+    camera: camera, iris: iris, wipe: wipe, smear: smear, draw: draw, drift: drift, hud: hud, glass: glass, scramble: scramble, zoomTo: zoomTo, spot: spot,
   };
 })();

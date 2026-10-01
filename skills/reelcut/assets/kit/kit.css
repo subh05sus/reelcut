@@ -333,3 +333,24 @@
 /* Chart text and rules, for svg charts. */
 [data-look] .rc-axis { font: 500 20px var(--font-mono); fill: var(--muted); }
 [data-look] .rc-rule-line { stroke: var(--line); stroke-width: 1.5; }
+
+/* ---------------------------------------------------------------- recorded footage
+   A real screen recording, shown exactly as recorded. Write
+     <div class="rc-footage" data-footage="<asset>:<moment>" data-frame="window" style="left:..; top:..; width:..">
+       <div class="rc-fv"> ...overlays that should zoom with the recording... </div>
+     </div>
+   and the render turns it into the trimmed, retimed <video>. The box takes the recording's own shape, so
+   nothing is cropped or stretched; a zoom moves the recording inside the box, never the box.
+   data-frame: "window" (rounded, lifted, hairline) or "plain" (square, flat: for a full-bleed use). */
+[data-look] .rc-footage { position: absolute; aspect-ratio: var(--fw, 16) / var(--fh, 9); overflow: hidden; background: #0c0c0e; isolation: isolate; border-radius: 18px;
+  box-shadow: var(--shadow), 0 0 0 1px var(--line); }
+[data-look] .rc-footage[data-frame="plain"] { border-radius: 0; box-shadow: none; }
+[data-look] .rc-footage .rc-fv { position: absolute; inset: 0; transform-origin: 0 0; }
+[data-look] .rc-footage .rc-fv > video, [data-look] .rc-footage .rc-fv > img.rc-fh { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
+/* A ring over a part of the recording: --x --y --w --h are fractions of the recording, so it stays on the
+   thing it points at however far the recording is zoomed. */
+[data-look] .rc-footage .rc-spot { position: absolute; left: calc(var(--x) * 100%); top: calc(var(--y) * 100%); width: calc(var(--w) * 100%); height: calc(var(--h) * 100%);
+  border-radius: 14px; border: 3px solid var(--accent); box-shadow: 0 0 0 7px color-mix(in oklab, var(--accent) 20%, transparent); pointer-events: none; opacity: 0; }
+/* The step label: a control-layer pill, so it is glass. Number in an accent disc, then the words. */
+[data-look] .rc-fstep { position: absolute; display: inline-flex; align-items: center; gap: 12px; padding: 9px 22px 9px 9px; border-radius: 999px; font-size: 26px; font-weight: 600; letter-spacing: -0.015em; white-space: nowrap; }
+[data-look] .rc-fstep > b { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font: 700 20px var(--font-mono); letter-spacing: 0; }

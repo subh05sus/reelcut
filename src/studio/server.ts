@@ -27,6 +27,8 @@ import { IngestError, ingestBatch, maxFileBytes, streamToTemp, type IngestSource
 import { summarise } from "../library/journal.js";
 import { claudeQueue, needsClaude } from "../library/queue.js";
 import { blobPath, findAsset, LibraryError, libraryRoot, loadIndex, setReview, thumbBlobPath, updateAsset, type AssetPatch } from "../library/store.js";
+import { addMoment, findMoments, patchFootage, refreshFootageAnalysis, removeMoment, updateMoment, type FootagePatch, type MomentInput, type MomentPatch } from "../library/footage.js";
+import { PLATFORMS } from "../library/schema.js";
 import type { LibraryAsset } from "../library/schema.js";
 import { filterByTags } from "../library/match.js";
 import { findRun, listRuns } from "../library/runs.js";
@@ -221,8 +223,70 @@ export function cleanRelPath(raw: string): string | undefined {
 }
 
 /** An asset as the page sees it: the index entry plus whether it is waiting for Claude and where its preview is. */
-export function publicAsset(a: LibraryAsset): LibraryAsset & { queued: boolean; thumbUrl?: string } {
-  return { ...a, queued: needsClaude(a), ...(a.thumb ? { thumbUrl: `/files/thumb/${a.id}` } : {}) };
+export function publicAsset(a: LibraryAsset): LibraryAsset & { queued: boolean; thumbUrl?: string; stripUrl?: string } {
+  return { ...a, queued: needsClaude(a), ...(a.thumb ? { thumbUrl: `/files/thumb/${a.id}` } : {}), ...(a.analysis.filmstrip ? { stripUrl: `/files/strip/${a.id}` } : {}) };
+}
+
+function numberField(b: Record<string, unknown>, name: string): number | undefined {
+  if (b[name] === undefined) return undefined;
+  if (typeof b[name] !== "number" || !Number.isFinite(b[name])) throw new HttpError(400, `${name} must be a number`);
+  return b[name] as number;
+}
+
+function focusField(b: Record<string, unknown>): Record<string, { x: number; y: number; w: number; h: number }> | undefined {
+  if (b.focus === undefined) return undefined;
+  if (typeof b.focus !== "object" || b.focus === null || Array.isArray(b.focus)) throw new HttpError(400, "focus must be an object keyed by format, like {\"1:1\": {x, y, w, h}}");
+  return b.focus as Record<string, { x: number; y: number; w: number; h: number }>;
+}
+
+/** What the Footage tab sends for a moment. Only a person's edit: `origin` and `state` are not accepted here. */
+function toMomentPatch(body: unknown): MomentPatch {
+  if (typeof body !== "object" || body === null) throw new HttpError(400, "expected an object");
+  const b = body as Record<string, unknown>;
+  if (b.label !== undefined && typeof b.label !== "string") throw new HttpError(400, "label must be a string");
+  if (b.note !== undefined && typeof b.note !== "string") throw new HttpError(400, "note must be a string");
+  if (b.tags !== undefined && (!Array.isArray(b.tags) || !b.tags.every((t) => typeof t === "string"))) throw new HttpError(400, "tags must be a list of strings");
+  const focus = focusField(b);
+  const i = numberField(b, "in");
+  const o = numberField(b, "out");
+  return {
+    ...(b.label !== undefined ? { label: b.label as string } : {}),
+    ...(i !== undefined ? { in: i } : {}),
+    ...(o !== undefined ? { out: o } : {}),
+    ...(b.tags !== undefined ? { tags: b.tags as string[] } : {}),
+    ...(focus ? { focus } : {}),
+    ...(b.note !== undefined ? { note: b.note as string } : {}),
+    ...(b.confirm === true ? { confirm: true } : {}),
+  };
+}
+
+function toFootagePatch(body: unknown): FootagePatch {
+  if (typeof body !== "object" || body === null) throw new HttpError(400, "expected an object");
+  const b = body as Record<string, unknown>;
+  const patch: FootagePatch = {};
+  if (b.app !== undefined) {
+    if (typeof b.app !== "string") throw new HttpError(400, "app must be a string");
+    patch.app = b.app;
+  }
+  if (b.platform !== undefined) {
+    if (typeof b.platform !== "string" || !(PLATFORMS as readonly string[]).includes(b.platform)) throw new HttpError(400, `platform must be one of ${PLATFORMS.join(", ")}`);
+    patch.platform = b.platform as (typeof PLATFORMS)[number];
+  }
+  if (b.recordedAt !== undefined) {
+    if (typeof b.recordedAt !== "string") throw new HttpError(400, "recordedAt must be a date");
+    patch.recordedAt = b.recordedAt;
+  }
+  if (b.muted !== undefined) {
+    if (typeof b.muted !== "boolean") throw new HttpError(400, "muted must be true or false");
+    patch.muted = b.muted;
+  }
+  const textPx = numberField(b, "textPx");
+  if (textPx !== undefined) patch.textPx = textPx;
+  if (b.privateChecked !== undefined) {
+    if (typeof b.privateChecked !== "boolean") throw new HttpError(400, "privateChecked must be true or false");
+    patch.privateChecked = b.privateChecked;
+  }
+  return patch;
 }
 
 function toPatch(body: unknown): AssetPatch {
@@ -355,6 +419,7 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
           pending: all.filter((a) => a.review.state === "pending").length,
           queue: claudeQueue(all).length,
           audio: all.filter((a) => a.mediaType === "audio").length,
+          footage: all.filter((a) => a.mediaType === "video" && a.review.state !== "rejected").length,
         };
         // `limit=0` is how the page asks for the badge counts without the assets.
         const limit = url.searchParams.has("limit") ? Math.max(0, Number(url.searchParams.get("limit")) || 0) : undefined;
@@ -370,6 +435,37 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
           if (signals.length) recordSignals(signals);
         });
         return sendJson(res, 200, { asset: publicAsset(asset) });
+      }
+    }
+    // ---- footage: recordings, the moments marked on them, and a person's yes to using one
+    if (parts[0] === "api" && parts[1] === "footage" && parts[2] === "find" && read && parts.length === 3) {
+      const phrase = url.searchParams.get("q") ?? "";
+      const matches = findMoments(loadIndex().assets, phrase).slice(0, 20);
+      return sendJson(res, 200, { matches: matches.map((m) => ({ ref: `${m.asset.id}:${m.moment.id}`, label: m.moment.label, confidence: m.confidence, decision: m.decision, why: m.why, asset: m.asset.name })) });
+    }
+    if (parts[0] === "api" && parts[1] === "assets" && parts.length >= 4 && parts[3] === "footage" && method === "PATCH" && parts.length === 4) {
+      const asset = patchFootage(parts[2]!, toFootagePatch(await readBody(req)));
+      return sendJson(res, 200, { asset: publicAsset(asset) });
+    }
+    if (parts[0] === "api" && parts[1] === "assets" && parts.length === 4 && parts[3] === "analyze" && method === "POST") {
+      const found = findAsset(parts[2]!);
+      if (!found) throw new HttpError(404, "no such asset");
+      return sendJson(res, 200, { asset: publicAsset(await refreshFootageAnalysis(parts[2]!)) });
+    }
+    if (parts[0] === "api" && parts[1] === "assets" && parts[3] === "moments") {
+      if (method === "POST" && parts.length === 4) {
+        const patch = toMomentPatch(await readBody(req));
+        if (typeof patch.label !== "string" || patch.in === undefined || patch.out === undefined) throw new HttpError(400, "a moment needs a label, an in time and an out time");
+        const input: MomentInput = { label: patch.label, in: patch.in, out: patch.out, ...(patch.tags ? { tags: patch.tags } : {}), ...(patch.focus ? { focus: patch.focus } : {}), ...(patch.note ? { note: patch.note } : {}) };
+        const { asset, moment } = addMoment(parts[2]!, input, "user");
+        return sendJson(res, 201, { asset: publicAsset(asset), moment });
+      }
+      if (method === "PATCH" && parts.length === 5) {
+        const { asset, moment } = updateMoment(parts[2]!, parts[4]!, toMomentPatch(await readBody(req)));
+        return sendJson(res, 200, { asset: publicAsset(asset), moment });
+      }
+      if (method === "DELETE" && parts.length === 5) {
+        return sendJson(res, 200, { asset: publicAsset(removeMoment(parts[2]!, parts[4]!)) });
       }
     }
     if (read && parts[0] === "api" && parts[1] === "tags" && parts.length === 2) {
@@ -613,6 +709,12 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
         const asset = findAsset(parts[2]!.replace(/\.[a-z0-9]+$/i, ""));
         if (!asset) throw new HttpError(404, "no such asset");
         return sendFile(req, res, blobPath(asset));
+      }
+      if (parts[1] === "strip" && parts.length === 3) {
+        const asset = findAsset(parts[2]!.replace(/\.[a-z0-9]+$/i, ""));
+        const strip = asset?.analysis.filmstrip ? path.join(libraryRoot(), asset.analysis.filmstrip) : undefined;
+        if (!strip) throw new HttpError(404, "no filmstrip");
+        return sendFile(req, res, strip);
       }
       if (parts[1] === "thumb" && parts.length === 3) {
         const asset = findAsset(parts[2]!.replace(/\.[a-z0-9]+$/i, ""));

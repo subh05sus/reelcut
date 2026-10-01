@@ -63,6 +63,17 @@ palette and timings is the fallback. It beats no clip. It does not beat a compos
 | `terminal-type-in` | ink | is about a CLI or an install | a command is typed, a typo is backspaced, three results decode out of noise; the window lets go and "Ready." is all that is left |
 | `wordmark-handles` | cool | reveals a mark | the wordmark resolves; a cursor clicks; a selection box with eight handles and a size chip snaps round it, then lets go; the line arrives |
 
+## Footage
+
+One more pattern lives apart, in `assets/patterns/footage/`, because it needs a real recording in the library
+to render and so is not part of the example reel:
+
+| pattern | look | for a beat that | the move |
+|---|---|---|---|
+| `footage-window` | paper | shows a real step being done | a recording sits in a framed box under the sentence; a ring finds the thing to look at, the recording moves in to frame it, a glass pill names the step. Nothing in the window is drawn. |
+
+Replace its placeholder reference with a moment from `npm run footage -- find`. See [footage.md](footage.md).
+
 ## How the components are built
 
 The sixteen product, data and type components share one grid, one set of surfaces and one way of

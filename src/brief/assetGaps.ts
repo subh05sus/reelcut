@@ -33,6 +33,8 @@ export type ResolutionKind =
   | "provide"
   /** Capture it from a live product surface with a browser. */
   | "capture"
+  /** Record the step on a real screen. The recording is used as it is. */
+  | "record"
   /** Fetch the official mark from the brand's own source, with its licence recorded. */
   | "brand_source"
   /** Use a different asset already in the library that fills the same visual role. */
@@ -120,6 +122,34 @@ function looksLikeMark(req: AssetRequirement): boolean {
  */
 export function resolutionsFor(req: AssetRequirement): GapResolution[] {
   const out: GapResolution[] = [];
+
+  if (req.form === "footage") {
+    out.push({
+      kind: "record",
+      label: `Record "${req.name}" on a real screen`,
+      needs: "a screen recording of just that step (on a Mac: Shift-Cmd-5), then marked as a moment in the studio",
+      note: "It is used as recorded — trimmed, framed and sped up at most 2x, never redrawn. Record the whole step and leave a beat of the result at the end.",
+    });
+    out.push({
+      kind: "provide",
+      label: "Mark a moment in a recording you already have",
+      needs: "the recording in the studio's Footage tab, and the step named on it",
+    });
+    out.push({
+      kind: "substitute",
+      label: "Use another moment in the library",
+      needs: "a choice from the library",
+      note: `The role is "${req.visualRole}". Only honest if it really shows the same step.`,
+    });
+    if (req.priority === "optional") out.push({ kind: "omit", label: "Leave it out", note: "It is marked optional, so the beat works without it." });
+    out.push({
+      kind: "recompose",
+      label: "Compose the beat as an animation or as type instead",
+      needs: "a re-direction of this beat",
+      note: `That is a stand-in for the real step, not the recording. The beat currently wants it for: ${req.sceneUsage}`,
+    });
+    return out;
+  }
 
   if (req.assetKind === "identity") {
     if (looksCapturable(req)) {
@@ -229,7 +259,7 @@ export function formatGapReport(gaps: readonly AssetGap[]): string {
     lines.push("");
     lines.push(`${gap.blocking ? "BLOCKS" : "open  "}  ${req.name} — ${STATUS_TEXT[gap.status]}${gap.detail ? ` (${gap.detail})` : ""}`);
     lines.push(`        needed for: ${req.sceneUsage}`);
-    lines.push(`        ${req.assetKind === "identity" ? "A specific real thing — it cannot be drawn." : "Conceptual — it can be drawn."}`);
+    lines.push(`        ${req.form === "footage" ? "A real recording of a real step — it cannot be drawn." : req.assetKind === "identity" ? "A specific real thing — it cannot be drawn." : "Conceptual — it can be drawn."}`);
     for (const [i, r] of gap.resolutions.entries()) {
       lines.push(`        ${i + 1}. ${r.label}${r.needs ? ` — needs ${r.needs}` : ""}`);
       if (r.note) lines.push(`           ${r.note}`);

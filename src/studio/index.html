@@ -103,6 +103,27 @@
   .rule.conflict { border-color: var(--warn); }
   .bar2 { height: 6px; background: var(--chip); border-radius: 3px; width: 70px; overflow: hidden; } .bar2 i { display: block; height: 100%; background: var(--accent); }
   .grow { flex: 1; }
+  .fv-wrap { position: relative; background: #000; border-radius: 10px; overflow: hidden; margin-bottom: 8px; }
+  .fv-wrap video { width: 100%; display: block; max-height: 46vh; background: #000; }
+  .draw { position: absolute; inset: 0; cursor: crosshair; background: rgba(0,0,0,.35); touch-action: none; }
+  .draw .hint { position: absolute; left: 0; right: 0; top: 8px; text-align: center; color: #fff; font-size: 12px; pointer-events: none; text-shadow: 0 1px 2px #000; }
+  .draw .box { position: absolute; border: 2px solid var(--accent); background: rgba(255,255,255,.12); box-shadow: 0 0 0 9999px rgba(0,0,0,.35); pointer-events: none; }
+  .strip { position: relative; margin-bottom: 6px; cursor: crosshair; border-radius: 6px; overflow: hidden; background: var(--chip); }
+  .strip img { width: 100%; display: block; }
+  .strip .head { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--accent); pointer-events: none; }
+  .tl { position: relative; height: 12px; background: var(--chip); border-radius: 6px; margin-bottom: 12px; overflow: hidden; }
+  .tl i { position: absolute; top: 0; bottom: 0; background: var(--ok); opacity: .75; border-right: 1px solid var(--bg); }
+  .tl i.proposed { background: var(--warn); }
+  .checks { margin: 0 0 12px; padding: 0; list-style: none; font-size: 13px; }
+  .checks li { display: flex; gap: 8px; align-items: center; padding: 2px 0; }
+  .checks .mk { width: 16px; text-align: center; font-weight: 700; color: var(--muted); } .checks .done .mk { color: var(--ok); }
+  .mom { border: 1px solid var(--line); border-radius: 10px; padding: 10px; margin-bottom: 8px; }
+  .mom.proposed { border-color: var(--warn); }
+  .mom .r { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 6px; }
+  .mom input.lab { flex: 1; min-width: 150px; } .mom label.inline input.num, label.inline input.num { width: 76px; }
+  .checks li { align-items: flex-start; } .checks .mk { padding-top: 1px; } .checks label.inline { margin-top: 4px; }
+  .mom details { border: 0; padding: 0; margin: 6px 0 0; background: transparent; } .mom details summary { font-weight: 500; font-size: 12px; color: var(--muted); }
+  .badge.warn { color: var(--warn); }
   .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 8px 16px; border-radius: 8px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 20; }
   .toast.on { opacity: 1; }
   a { color: inherit; }
@@ -115,6 +136,7 @@
   <h1>reelcut <span>studio</span></h1>
   <nav aria-label="Sections">
     <a href="#library" data-tab="library">Library<span class="n" id="n-library"></span></a>
+    <a href="#footage" data-tab="footage">Footage<span class="n" id="n-footage"></span></a>
     <a href="#review" data-tab="review">Review<span class="n" id="n-review"></span></a>
     <a href="#folders" data-tab="folders">Folders<span class="n" id="n-folders"></span></a>
     <a href="#learnings" data-tab="learnings">Learnings<span class="n" id="n-learnings"></span></a>
@@ -133,7 +155,7 @@ const IMG = new Set(["png", "jpg", "jpeg", "gif", "webp", "avif", "svg"]);
 const VID = new Set(["mp4", "webm", "mov"]);
 const AUD = new Set(["mp3", "wav", "ogg", "m4a", "flac", "aiff"]);
 const TYPES = [["", "All"], ["image", "Images"], ["vector", "Vectors"], ["video", "Video"], ["audio", "Sounds (SFX)"], ["document", "Documents"]];
-const state = { tagFilter: new Set(), q: "", type: "", selected: null, assets: [], counts: { all: 0, pending: 0, queue: 0, audio: 0 }, tags: {}, runs: [], jobs: [], folders: [], ingest: null, picked: new Set(), uploads: [], dropKind: "generic", dropPrivate: false, learn: null };
+const state = { tagFilter: new Set(), q: "", type: "", selected: null, assets: [], counts: { all: 0, pending: 0, queue: 0, audio: 0 }, tags: {}, runs: [], jobs: [], folders: [], ingest: null, picked: new Set(), uploads: [], dropKind: "generic", dropPrivate: false, learn: null, videos: [], fsel: null, ffmt: "1:1" };
 
 async function api(path, init) {
   const res = await fetch(path, { headers: { "Content-Type": "application/json" }, ...init });
@@ -574,6 +596,161 @@ function renderJobs() {
       <pre>${esc(j.log.slice(-40).join("\n")) || "…"}</pre></div>`).join("");
 }
 
+// ---------- footage: recordings, marked into moments a script line can use
+const PLATFORMS = ["", "mac", "windows", "web", "ios", "android", "other"];
+const FORMATS = ["1:1", "9:16", "16:9", "4:5"];
+const clock = (t) => { const m = Math.floor(t / 60); return `${m}:${(t - m * 60).toFixed(1).padStart(4, "0")}`; };
+const ageDays = (a) => { const at = Date.parse((a.footage && a.footage.recordedAt) || (a.analysis && a.analysis.createdAt) || ""); return Number.isNaN(at) ? null : Math.max(0, (Date.now() - at) / 86400000); };
+async function loadFootage() { const r = await api("/api/assets?type=video"); state.videos = r.assets.filter((a) => a.review.state !== "rejected"); state.counts = r.counts; }
+function footageOf(a) { return Object.assign({ muted: true, moments: [] }, a.footage || {}); }
+function footageCard(a) {
+  const f = footageOf(a), age = ageDays(a), confirmed = f.moments.filter((m) => m.state === "confirmed").length, proposed = f.moments.length - confirmed;
+  const ready = a.review.state === "approved" && f.privateChecked && age != null && confirmed > 0;
+  return `<div class="card ${a.id === state.fsel ? "sel" : ""}" data-fa="${a.id}">
+    <div class="thumb" style="aspect-ratio:16/10">${preview(a)}</div>
+    <div class="meta"><div class="name" title="${esc(a.name)}">${esc(f.app ? f.app + ": " : "")}${esc(a.name)}</div>
+      <div class="sub"><span class="badge ${a.review.state}">${a.review.state}</span>${f.privateChecked ? `<span class="badge ok">checked</span>` : `<span class="badge warn">not checked</span>`}<span class="badge">${confirmed} moment${confirmed === 1 ? "" : "s"}</span>${proposed ? `<span class="badge proposed">${proposed} proposed</span>` : ""}${ready ? `<span class="badge ok">ready</span>` : ""}</div></div></div>`;
+}
+function footagePanel(a) {
+  const f = footageOf(a), x = a.analysis || {}, age = ageDays(a), len = x.durationSeconds || 0;
+  const confirmed = f.moments.filter((m) => m.state === "confirmed").length;
+  const check = (done, text) => `<li class="${done ? "done" : ""}"><span class="mk">${done ? "✓" : "○"}</span><div>${text}</div></li>`;
+  const recorded = (f.recordedAt || x.createdAt || "").slice(0, 10);
+  const seg = (m) => len ? `<i class="${m.state}" style="left:${(m.in / len) * 100}%;width:${((m.out - m.in) / len) * 100}%" title="${esc(m.label)}"></i>` : "";
+  return `<aside class="panel" aria-label="Recording details">
+    <div class="fv-wrap"><video id="fv" controls preload="metadata" src="${fileUrl(a)}"></video></div>
+    <div class="row" style="margin:0 0 8px"><span class="mono" id="now">0:00.0</span><span class="note">of ${len ? clock(len) : "?"}</span><span class="grow"></span><button id="mark-in" title="Start a moment here">Mark in</button><button id="mark-out" title="End the moment here">Mark out</button></div>
+    ${a.stripUrl ? `<div class="strip" id="strip" title="Click to jump"><img src="${a.stripUrl}" alt="Frames across the recording"><span class="head" id="head" style="left:0"></span></div>` : ""}
+    <div class="tl" aria-hidden="true">${f.moments.map(seg).join("")}</div>
+    <h2>${esc(a.name)}</h2>
+    <ul class="checks">
+      ${check(a.review.state === "approved", `Approved to use${a.review.state !== "approved" ? ` <button data-fr="approved">Approve</button> <button class="danger" data-fr="rejected">Reject</button>` : ""}`)}
+      ${check(!!f.privateChecked, `I watched all of it and nothing private is in it (emails, notifications, other windows, the menu bar)<br><label class="inline"><input type="checkbox" id="fp" ${f.privateChecked ? "checked" : ""}> Yes, I checked the whole recording</label>`)}
+      ${check(age != null, age != null ? `Recorded ${Math.floor(age)} day${Math.floor(age) === 1 ? "" : "s"} ago${age > 90 ? " — over 90 days: it will be offered, not used by itself" : ""}` : "Recording date unknown: set it so staleness can be judged")}
+      ${check(confirmed > 0, confirmed > 0 ? `${confirmed} confirmed moment${confirmed === 1 ? "" : "s"}` : "Mark at least one moment: a step, with its start and end")}
+    </ul>
+    <dl>
+      <dt>Size</dt><dd>${x.width ? `${x.width} × ${x.height}` : "not measured"}${x.fps ? ` · ${x.fps} fps${x.vfr ? " (variable: rendered through a proxy)" : ""}` : ""}${x.hasAudio ? " · has sound" : ""}</dd>
+      ${x.description ? `<dt>Claude says</dt><dd>${esc(x.description)}</dd>` : ""}
+    </dl>
+    <div class="row" style="margin-top:0"><label class="inline">App <input id="fa-app" value="${esc(f.app || "")}" placeholder="Claude"></label>
+      <label class="inline">Platform <select id="fa-plat">${PLATFORMS.map((v) => `<option value="${v}" ${v === (f.platform || "") ? "selected" : ""}>${v || "—"}</option>`).join("")}</select></label>
+      <label class="inline">Recorded <input type="date" id="fa-date" value="${esc(recorded)}"></label>
+      <label class="inline"><input type="checkbox" id="fa-mute" ${f.muted ? "checked" : ""}> Muted (the voiceover owns the sound)</label>
+      <label class="inline" title="Body text as recorded, in pixels. Left empty, it is estimated from the size.">Text size <input class="num" id="fa-text" type="number" min="6" max="200" step="1" style="width:70px" value="${f.textPx || ""}" placeholder="auto"></label>
+      <button id="fa-save">Save details</button></div>
+    <h2 class="sec">Moments</h2>
+    <p class="note">A script line is matched to a moment, not the file. Scrub to the start, press <em>Mark in</em>, scrub to the end, press <em>Mark out</em>, name what the viewer sees happen. Nothing here changes the recording.</p>
+    ${f.moments.map((m) => momentRow(a, m)).join("") || `<p class="note">None yet.</p>`}
+    <div class="mom"><strong>Add a moment</strong>
+      <div class="r"><input class="lab" id="nm-label" placeholder="download Claude" aria-label="What happens"><label class="inline">in <input class="num" id="nm-in" type="number" min="0" step="0.1"></label><label class="inline">out <input class="num" id="nm-out" type="number" min="0" step="0.1"></label></div>
+      <div class="r"><input class="lab" id="nm-tags" placeholder="tags: claude, download, mac" aria-label="Tags"><button class="primary" id="nm-add">Add moment</button></div></div>
+    <div class="row"><button id="fa-analyze" title="Measure size, frame rate and make the filmstrip">Re-measure</button><button id="f-close">Close</button></div>
+  </aside>`;
+}
+function momentRow(a, m) {
+  const fmt = state.ffmt || "1:1", fo = (m.focus || {})[fmt] || {};
+  const pct = (v) => (v == null ? "" : Math.round(v * 1000) / 10);
+  return `<div class="mom ${m.state}" data-m="${m.id}">
+    <div class="r"><input class="lab" data-f="label" value="${esc(m.label)}" aria-label="Label">${m.state === "proposed" ? `<span class="badge proposed">proposed by Claude</span><button class="primary" data-act="confirm">Confirm</button>` : ""}${m.acceptedAt ? `<span class="badge ok" title="You said yes to using it">used before</span>` : ""}</div>
+    <div class="r"><label class="inline">in <input class="num" data-f="in" type="number" min="0" step="0.1" value="${m.in}"></label><label class="inline">out <input class="num" data-f="out" type="number" min="0" step="0.1" value="${m.out}"></label>
+      <span class="note">${(m.out - m.in).toFixed(1)} s</span><button data-act="in" title="Set in to the video's time">in = now</button><button data-act="out" title="Set out to the video's time">out = now</button><button data-act="play">Play</button></div>
+    <div class="r"><input class="lab" data-f="tags" value="${esc(m.tags.join(", "))}" aria-label="Tags" placeholder="tags"><button data-act="save">Save</button><button class="danger" data-act="del">Delete</button></div>
+    <details><summary>Zoom to a region, for the ${fmt} reel${Object.keys(m.focus || {}).length ? ` (saved for ${Object.keys(m.focus).join(", ")})` : ""}</summary>
+      <div class="r"><label class="inline">Format <select data-act="fmt">${FORMATS.map((v) => `<option ${v === fmt ? "selected" : ""}>${v}</option>`).join("")}</select></label>
+      <label class="inline">x % <input class="num" data-fo="x" type="number" min="0" max="100" step="1" value="${pct(fo.x)}"></label><label class="inline">y % <input class="num" data-fo="y" type="number" min="0" max="100" step="1" value="${pct(fo.y)}"></label>
+      <label class="inline">w % <input class="num" data-fo="w" type="number" min="5" max="100" step="1" value="${pct(fo.w)}"></label><label class="inline">h % <input class="num" data-fo="h" type="number" min="5" max="100" step="1" value="${pct(fo.h)}"></label>
+      <button data-act="draw" title="Drag a box on the video">Draw on the video</button><button data-act="focus">Save region</button><button data-act="unfocus">Clear</button></div>
+      <p class="note">A part of the recording to move in on: draw it on the video, or type percentages of its width and height. Give it the recording's own proportions (width % and height % equal) and the view is exactly that region. Zooming only frames the recording; it is never changed.</p></details>
+  </div>`;
+}
+async function renderFootage() {
+  await loadFootage();
+  const sel = state.videos.find((a) => a.id === state.fsel);
+  $("#main").innerHTML = `
+    <p class="note">Screen recordings and other footage, used exactly as recorded. Drop one on <a href="#library">Library</a>, then mark the steps in it as <em>moments</em>. reelcut trims, frames and at most speeds up a moment; it never redraws it. ${state.videos.length ? "" : ""}</p>
+    <div class="${sel ? "split" : ""}">
+      <div>${state.videos.length === 0 ? `<p class="empty">No recordings yet. Drop a screen recording on the <a href="#library">Library</a> page, or run<br><br><code>npm run library -- ingest recording.mov</code></p>` : `<div class="grid">${state.videos.map(footageCard).join("")}</div>`}</div>
+      ${sel ? footagePanel(sel) : ""}
+    </div>`;
+  $$("[data-fa]").forEach((el) => el.addEventListener("click", () => { state.fsel = state.fsel === el.dataset.fa ? null : el.dataset.fa; renderFootage(); }));
+  if (sel) bindFootage(sel);
+}
+// Drag a region on the video. The region keeps the recording's own proportions (the same fraction of its width and height), so what
+// is drawn is exactly what the zoom will show. It fills the boxes; nothing is saved until "Save region".
+function drawRegion(v, row) {
+  const wrap = v.closest(".fv-wrap");
+  if (!v.videoWidth) { toast("The video has not loaded yet"); return; }
+  v.pause();
+  const o = document.createElement("div"); o.className = "draw"; o.innerHTML = '<div class="hint">Drag a box on the part to zoom into. Esc cancels.</div>';
+  wrap.appendChild(o);
+  const stop = () => { o.remove(); document.removeEventListener("keydown", onKey); };
+  const onKey = (e) => { if (e.key === "Escape") stop(); };
+  document.addEventListener("keydown", onKey);
+  // Where the picture really is inside the element: the video is letterboxed to keep its shape.
+  const content = () => { const r = o.getBoundingClientRect(), k = Math.min(r.width / v.videoWidth, r.height / v.videoHeight), w = v.videoWidth * k, h = v.videoHeight * k; return { left: r.left + (r.width - w) / 2, top: r.top + (r.height - h) / 2, w, h, r }; };
+  const frac = (e, c) => ({ x: Math.min(1, Math.max(0, (e.clientX - c.left) / c.w)), y: Math.min(1, Math.max(0, (e.clientY - c.top) / c.h)) });
+  let start = null, box = null;
+  const region = (a, b) => {
+    const s = Math.min(1, Math.max(0.1, Math.max(Math.abs(b.x - a.x), Math.abs(b.y - a.y))));
+    return { s, x: Math.min(1 - s, Math.max(0, b.x >= a.x ? a.x : a.x - s)), y: Math.min(1 - s, Math.max(0, b.y >= a.y ? a.y : a.y - s)) };
+  };
+  o.addEventListener("pointerdown", (e) => { o.setPointerCapture(e.pointerId); const c = content(); start = frac(e, c); box = document.createElement("div"); box.className = "box"; o.appendChild(box); });
+  o.addEventListener("pointermove", (e) => {
+    if (!start) return;
+    const c = content(), g = region(start, frac(e, c));
+    Object.assign(box.style, { left: c.left - c.r.left + g.x * c.w + "px", top: c.top - c.r.top + g.y * c.h + "px", width: g.s * c.w + "px", height: g.s * c.h + "px" });
+  });
+  o.addEventListener("pointerup", (e) => {
+    if (!start) return;
+    const g = region(start, frac(e, content()));
+    const set = (n, val) => { $(`[data-fo="${n}"]`, row).value = Math.round(val * 1000) / 10; };
+    set("x", g.x); set("y", g.y); set("w", g.s); set("h", g.s);
+    stop(); toast("Region set — press Save region");
+  });
+}
+function bindFootage(a) {
+  const v = $("#fv"), f = footageOf(a), len = (a.analysis || {}).durationSeconds || 0;
+  const again = async (msg) => { if (msg) toast(msg); const t = v.currentTime; await updateBadges(); await renderFootage(); const nv = $("#fv"); if (nv && t) nv.addEventListener("loadedmetadata", () => { nv.currentTime = t; }, { once: true }); };
+  const run = (fn, msg) => async (...args) => { try { await fn(...args); await again(msg); } catch (e) { toast(e.message); } };
+  const t = () => Math.round(v.currentTime * 10) / 10;
+  v.addEventListener("timeupdate", () => { $("#now").textContent = clock(v.currentTime); const h = $("#head"); if (h && len) h.style.left = Math.min(100, (v.currentTime / len) * 100) + "%"; if (v.__stopAt != null && v.currentTime >= v.__stopAt) { v.pause(); v.__stopAt = null; } });
+  $("#strip")?.addEventListener("click", (e) => { const r = e.currentTarget.getBoundingClientRect(); v.currentTime = ((e.clientX - r.left) / r.width) * len; });
+  $("#mark-in").addEventListener("click", () => { $("#nm-in").value = t(); });
+  $("#mark-out").addEventListener("click", () => { $("#nm-out").value = t(); });
+  $("#f-close").addEventListener("click", () => { state.fsel = null; renderFootage(); });
+  $$("[data-fr]").forEach((el) => el.addEventListener("click", run(() => post("/api/assets/review", { ids: [a.id], state: el.dataset.fr }), `Marked ${el.dataset.fr}`)));
+  $("#fp").addEventListener("change", run(() => patch(`/api/assets/${a.id}/footage`, { privateChecked: $("#fp").checked }), "Saved"));
+  $("#fa-save").addEventListener("click", run(() => patch(`/api/assets/${a.id}/footage`, { app: $("#fa-app").value, ...($("#fa-plat").value ? { platform: $("#fa-plat").value } : {}), ...($("#fa-date").value ? { recordedAt: $("#fa-date").value } : {}), muted: $("#fa-mute").checked, ...($("#fa-text").value ? { textPx: Number($("#fa-text").value) } : {}) }), "Saved"));
+  $("#fa-analyze").addEventListener("click", run(() => post(`/api/assets/${a.id}/analyze`), "Measured"));
+  $("#nm-add").addEventListener("click", run(() => {
+    const label = $("#nm-label").value.trim(), i = parseFloat($("#nm-in").value), o = parseFloat($("#nm-out").value);
+    if (!label || Number.isNaN(i) || Number.isNaN(o)) throw new Error("Give it a label, an in time and an out time");
+    return post(`/api/assets/${a.id}/moments`, { label, in: i, out: o, tags: $("#nm-tags").value.split(",").map((x) => x.trim()).filter(Boolean) });
+  }, "Moment added"));
+  $$(".mom[data-m]").forEach((row) => {
+    const id = row.dataset.m, m = f.moments.find((x) => x.id === id), field = (n) => $(`[data-f="${n}"]`, row);
+    const body = () => ({ label: field("label").value, in: parseFloat(field("in").value), out: parseFloat(field("out").value), tags: field("tags").value.split(",").map((x) => x.trim()).filter(Boolean) });
+    const act = (name, fn, msg) => $(`[data-act="${name}"]`, row)?.addEventListener("click", run(fn, msg));
+    act("save", () => patch(`/api/assets/${a.id}/moments/${id}`, body()), "Saved");
+    act("confirm", () => patch(`/api/assets/${a.id}/moments/${id}`, { ...body(), confirm: true }), "Confirmed");
+    act("del", () => api(`/api/assets/${a.id}/moments/${id}`, { method: "DELETE" }), "Deleted");
+    $(`[data-act="in"]`, row).addEventListener("click", () => { field("in").value = t(); });
+    $(`[data-act="out"]`, row).addEventListener("click", () => { field("out").value = t(); });
+    $(`[data-act="play"]`, row).addEventListener("click", () => { v.currentTime = m.in; v.__stopAt = m.out; v.play(); });
+    $(`[data-act="fmt"]`, row).addEventListener("change", (e) => { state.ffmt = e.target.value; renderFootage(); });
+    const fmt = state.ffmt || "1:1";
+    $(`[data-act="draw"]`, row).addEventListener("click", () => drawRegion(v, row));
+    act("focus", () => {
+      const g = (n) => parseFloat($(`[data-fo="${n}"]`, row).value) / 100;
+      const r = { x: g("x"), y: g("y"), w: g("w"), h: g("h") };
+      if (Object.values(r).some(Number.isNaN)) throw new Error("Fill in x, y, w and h");
+      return patch(`/api/assets/${a.id}/moments/${id}`, { focus: { ...(m.focus || {}), [fmt]: r } });
+    }, "Region saved");
+    act("unfocus", () => { const next = { ...(m.focus || {}) }; delete next[fmt]; return patch(`/api/assets/${a.id}/moments/${id}`, { focus: next }); }, "Region cleared");
+  });
+}
+
 // ---------- shell
 let poll;
 async function updateBadges() {
@@ -583,6 +760,7 @@ async function updateBadges() {
   } catch { return; }
   $("#n-library").textContent = state.counts.all || "";
   $("#n-review").textContent = state.counts.pending || "";
+  $("#n-footage").textContent = state.counts.footage || "";
   $("#n-folders").textContent = state.folders.length || "";
   const waiting = (state.learn?.rules || []).filter((r) => r.status === "proposed" && !r.conflictWith.length).length;
   $("#n-learnings").textContent = waiting || "";
@@ -599,6 +777,7 @@ async function route() {
     if (tab === "reels" && id) await renderReel(id);
     else if (tab === "reels") renderReels();
     else if (tab === "jobs") renderJobs();
+    else if (tab === "footage") await renderFootage();
     else if (tab === "review") await renderReview();
     else if (tab === "folders") await renderFolders();
     else if (tab === "learnings") await renderLearnings();

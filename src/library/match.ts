@@ -104,6 +104,11 @@ export function matchLibrary(open: readonly AssetRequirement[], assets: readonly
   const stillOpen: AssetRequirement[] = [];
 
   for (const requirement of open) {
+    // A moment of a recording is found by `findMoments`; a still is never offered for it by name.
+    if (requirement.form === "footage") {
+      stillOpen.push(requirement);
+      continue;
+    }
     let best: LibraryMatch | undefined;
     for (const asset of pool) {
       const score = scoreMatch(requirement, { path: asset.file, name: matchName(asset) });

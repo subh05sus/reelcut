@@ -68,8 +68,68 @@ export const AnalysisSchema = z.object({
   text: z.string().optional(),
   description: z.string().optional(),
   note: z.string().optional(),
+  /** Video. Frame rate as recorded, whether it varies, what the audio and the container say. */
+  fps: z.number().optional(),
+  vfr: z.boolean().optional(),
+  hasAudio: z.boolean().optional(),
+  codec: z.string().optional(),
+  /** When the container says the recording was made (QuickTime and most screen recorders write it). */
+  createdAt: z.string().optional(),
+  /** Blob-relative path of a strip of frames across the recording, e.g. `thumbs/3f2a…-strip.png`. */
+  filmstrip: z.string().optional(),
 });
 export type Analysis = z.infer<typeof AnalysisSchema>;
+
+// ---------------------------------------------------------------- recordings
+
+/** The reel formats a focus region is saved for: the same recording is framed differently in each. */
+export const FOOTAGE_FORMATS = ["1:1", "9:16", "16:9", "4:5"] as const;
+
+/** A region of the recording, as fractions of its width and height. */
+export const FocusSchema = z
+  .object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1), w: z.number().min(0.05).max(1), h: z.number().min(0.05).max(1) })
+  .refine((f) => f.x + f.w <= 1.0001 && f.y + f.h <= 1.0001, "the region runs past the edge of the recording");
+export type Focus = z.infer<typeof FocusSchema>;
+
+/**
+ * A named stretch of a recording: "download Claude", 0:12 to 0:19.
+ *
+ * It points into the file and never changes it. Claude may *propose* one from the filmstrip; only a
+ * person confirms it, because a moment is what a script line gets matched to.
+ */
+export const MomentSchema = z.object({
+  id: z.string().regex(/^m_[0-9a-f]{8}$/),
+  label: z.string().min(1).max(120),
+  in: z.number().min(0),
+  out: z.number().positive(),
+  tags: z.array(z.string()).default([]),
+  state: z.enum(["proposed", "confirmed"]).default("confirmed"),
+  origin: z.enum(["user", "claude"]).default("user"),
+  /** Where to look, per reel format. A zoom is only ever a framing: the recording itself is untouched. */
+  focus: z.record(z.string(), FocusSchema).default({}),
+  /** Set the first time a person says yes to using it; after that a fresh, exact match is used by itself. */
+  acceptedAt: z.string().optional(),
+  note: z.string().max(300).optional(),
+});
+export type Moment = z.infer<typeof MomentSchema>;
+
+export const PLATFORMS = ["mac", "windows", "web", "ios", "android", "other"] as const;
+
+export const FootageSchema = z.object({
+  /** The product on screen. Matching reads it like a tag. */
+  app: z.string().max(80).optional(),
+  platform: z.enum(PLATFORMS).optional(),
+  /** When it was recorded, if the file does not say. Recordings go stale like captures do. */
+  recordedAt: z.string().optional(),
+  /** A person watched all of it for private information: emails, notifications, other windows, the menu bar. */
+  privateChecked: z.object({ by: z.literal("user"), at: z.string() }).optional(),
+  /** The voiceover owns the sound. Turn this off to let a recording's own audio play. */
+  muted: z.boolean().default(true),
+  /** Body UI text as recorded, in pixels, when the estimate from the size is wrong. */
+  textPx: z.number().positive().max(200).optional(),
+  moments: z.array(MomentSchema).default([]),
+});
+export type Footage = z.infer<typeof FootageSchema>;
 
 export const LibraryAssetSchema = z.object({
   /** First 16 hex chars of the sha256. Also the blob's basename. */
@@ -101,6 +161,8 @@ export const LibraryAssetSchema = z.object({
   thumb: z.string().optional(),
   /** From a private folder: analysed on this machine and never put in the queue for Claude to look at. */
   private: z.boolean().default(false),
+  /** Screen recordings and other footage: what is in it, and which stretches of it are usable. */
+  footage: FootageSchema.optional(),
 });
 export type LibraryAsset = z.infer<typeof LibraryAssetSchema>;
 

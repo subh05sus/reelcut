@@ -28,6 +28,11 @@ export const AssetRequirementSchema = z.object({
   animationHint: z.string().max(160).optional(),
   priority: z.enum(["required", "optional"]),
   assetKind: AssetKindSchema,
+  /**
+   * What kind of thing it is. `footage` is a moment of a real recording — "download Claude", a screen
+   * recording of the steps — used exactly as it was recorded. Left out, it is a still: an image or a mark.
+   */
+  form: z.enum(["still", "footage"]).optional(),
 });
 export type AssetRequirement = z.infer<typeof AssetRequirementSchema>;
 

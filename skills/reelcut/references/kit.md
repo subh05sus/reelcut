@@ -85,6 +85,8 @@ absolute seconds in the beat.
 | `RC.hud(root, {tl,tr,bl,br})` | viewfinder corners with mono labels | |
 | `RC.glass(sel?, o)` | turn `.rc-glass` into Liquid Glass: a lens that bends what is behind it (see Glass). Call once, after layout | `bezel`, `strength`, `blur`, `chroma`, `light`, `ior` |
 | `RC.scramble(tl, el, at, o)` | text resolves out of seeded noise, left to right; best in mono | `text`, `duration`, `tail`, `glyphs`, `seed` |
+| `RC.zoomTo(tl, box, at, o)` | move a recording inside its `.rc-footage` box to frame a region, never stretching it; the view stays inside the recording | `region` [x,y,w,h] fractions, or the moment's saved focus; `duration` 1.1 |
+| `RC.spot(tl, ring, at, o)` | bring a `.rc-spot` ring onto the part of a recording it points at | `out` |
 | `RC.hold(tl, seconds)` | make the timeline this long — every beat ends with it | |
 | `RC.rand(seed)` | seeded PRNG — the only randomness allowed | |
 
@@ -161,6 +163,14 @@ bearings, and — with `--scan` — everything outside the 84px safe area, overf
 under 16px. `--guides` draws the margins (magenta) and the content region (cyan) over the screenshot,
 written to `out/measure/`. It reports and never fixes; it complements `hyperframes check`, which says
 whether a beat is broken, where this says whether it is exact.
+
+## Footage
+
+`.rc-footage` is the box a recorded screen sits in (`data-frame="window"` or `"plain"`), taking the recording's
+own shape from `--fw` and `--fh`, which the render writes. Inside it, `.rc-fv` is the layer that zooms, and
+`.rc-spot` (with `--x --y --w --h` as fractions of the recording) is a ring that stays on what it points at.
+`.rc-fstep` is the step pill — a number in an accent disc and a word — a control-layer label, so it is glass.
+How to place a recording, and what may be done to one, is [footage.md](footage.md).
 
 ## What the helpers record
 

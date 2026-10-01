@@ -83,6 +83,10 @@ same rounds when there is room; never add a third round for them.
   the beat, or drop the line to `key-lines`. Never speed it up.
 - **Direction and script disagree** — a script full of quotable lines under `--text none`, say.
   Name the two ways out, as [direction.md](direction.md#when-direction-and-script-disagree) says.
+- **A beat shows a real step being done** ("now download Claude", "add the MCP", "upload the skill") —
+  run `npm run footage -- list` first. Say which steps already have a recording; for the ones that do not,
+  ask whether the user has one (or will record it) rather than assuming an animation. A recording is used
+  exactly as recorded; an animation is a stand-in for the real step. See [footage.md](footage.md).
 - **The script names a product whose assets are not in the library** — ask whether the user has
   them (a folder, a login to capture from) before step 2 goes looking.
 

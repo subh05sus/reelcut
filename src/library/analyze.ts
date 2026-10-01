@@ -299,19 +299,54 @@ interface Probe {
   durationSeconds?: number;
   hasVideo: boolean;
   hasAudio: boolean;
+  fps?: number;
+  /** The frame rate varies: a screen recorder that only writes a frame when something changes. */
+  vfr?: boolean;
+  codec?: string;
+  createdAt?: string;
+}
+
+function fraction(text: string | undefined): number | undefined {
+  const m = /^(\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)$/.exec(text ?? "");
+  if (!m || Number(m[2]) === 0) return undefined;
+  return Number(m[1]) / Number(m[2]);
 }
 
 export async function probeMedia(file: string): Promise<Probe> {
-  const { stdout } = await run("ffprobe", ["-v", "error", "-show_entries", "stream=codec_type,width,height:format=duration", "-of", "json", file], 30_000);
-  const data = JSON.parse(String(stdout)) as { streams?: { codec_type?: string; width?: number; height?: number }[]; format?: { duration?: string } };
+  const { stdout } = await run("ffprobe", ["-v", "error", "-show_entries", "stream=codec_type,codec_name,width,height,r_frame_rate,avg_frame_rate:format=duration:format_tags=creation_time", "-of", "json", file], 30_000);
+  const data = JSON.parse(String(stdout)) as {
+    streams?: { codec_type?: string; codec_name?: string; width?: number; height?: number; r_frame_rate?: string; avg_frame_rate?: string }[];
+    format?: { duration?: string; tags?: { creation_time?: string } };
+  };
   const video = data.streams?.find((s) => s.codec_type === "video");
   const duration = Number(data.format?.duration);
+  const nominal = fraction(video?.r_frame_rate);
+  const average = fraction(video?.avg_frame_rate);
+  const created = data.format?.tags?.creation_time;
   return {
     hasVideo: Boolean(video),
     hasAudio: Boolean(data.streams?.some((s) => s.codec_type === "audio")),
     ...(video?.width ? { width: video.width, height: video.height } : {}),
     ...(Number.isFinite(duration) && duration > 0 ? { durationSeconds: duration } : {}),
+    ...(video && (average || nominal) ? { fps: Math.round((average || nominal)! * 100) / 100 } : {}),
+    // A constant-rate file reports the same number twice; a few percent apart is a recorder that skips still frames.
+    ...(video && nominal && average ? { vfr: Math.abs(nominal - average) / nominal > 0.03 } : {}),
+    ...(video?.codec_name ? { codec: video.codec_name } : {}),
+    ...(created && !Number.isNaN(Date.parse(created)) ? { createdAt: new Date(created).toISOString() } : {}),
   };
+}
+
+/** A strip of frames across a recording, so a person can see all of it without playing it. */
+export async function writeFilmstrip(file: string, out: string, durationSeconds: number | undefined): Promise<boolean> {
+  if (!durationSeconds || durationSeconds < 0.5) return false;
+  mkdirSync(path.dirname(out), { recursive: true });
+  try {
+    const frames = 8;
+    await run("ffmpeg", ["-v", "error", "-y", "-i", file, "-vf", `fps=${frames}/${durationSeconds.toFixed(3)},scale=-2:150,tile=${frames}x1`, "-frames:v", "1", out], 120_000);
+    return statSync(out).size > 0;
+  } catch {
+    return false;
+  }
 }
 
 async function writeThumb(file: string, mediaType: MediaType, out: string, durationSeconds: number | undefined): Promise<boolean> {
@@ -379,6 +414,8 @@ export interface AnalyzeOptions {
   suppress?: ReadonlySet<string>;
   /** A name to use instead of the file's. Uploads carry the browser's file name. */
   name?: string;
+  /** Where to write a strip of frames, for a video. Without it no strip is made. */
+  filmstripOut?: string;
 }
 
 export interface AnalysisResult {
@@ -391,6 +428,8 @@ export interface AnalysisResult {
   autoTags: string[];
   /** `thumbOut`, when a preview was written. */
   thumb?: string;
+  /** `filmstripOut`, when a strip of frames was written. */
+  filmstrip?: string;
   notes: string[];
 }
 
@@ -417,6 +456,13 @@ export async function analyzeFile(file: string, options: AnalyzeOptions = {}): P
       if (mediaType === "video" && !probe.hasVideo && probe.hasAudio) mediaType = "audio";
       if (probe.width) { analysis.width = probe.width; analysis.height = probe.height ?? probe.width; }
       if (probe.durationSeconds) analysis.durationSeconds = probe.durationSeconds;
+      if (mediaType === "video") {
+        if (probe.fps) analysis.fps = probe.fps;
+        if (probe.vfr !== undefined) analysis.vfr = probe.vfr;
+        if (probe.codec) analysis.codec = probe.codec;
+        if (probe.createdAt) analysis.createdAt = probe.createdAt;
+        analysis.hasAudio = probe.hasAudio;
+      }
     } catch {
       notes.push("ffprobe could not read the file");
     }
@@ -432,6 +478,9 @@ export async function analyzeFile(file: string, options: AnalyzeOptions = {}): P
     analysis.dominantColors = colours.colors;
     tags.push(...colours.names.slice(0, 2));
   }
+
+  let filmstrip: string | undefined;
+  if (mediaType === "video" && options.filmstripOut && ffmpeg && (await writeFilmstrip(file, options.filmstripOut, analysis.durationSeconds))) filmstrip = options.filmstripOut;
 
   if (mediaType === "audio" && ffmpeg) {
     const samples = await decodeMono(file);
@@ -453,5 +502,5 @@ export async function analyzeFile(file: string, options: AnalyzeOptions = {}): P
   const suppress = options.suppress ?? new Set<string>();
   const autoTags = normaliseTags(tags).filter((t) => !suppress.has(t)).slice(0, 14);
 
-  return { mediaType, ext: sniffed.ext, mime: sniffed.mime, name, analysis, autoTags, ...(thumb ? { thumb } : {}), notes };
+  return { mediaType, ext: sniffed.ext, mime: sniffed.mime, name, analysis, autoTags, ...(thumb ? { thumb } : {}), ...(filmstrip ? { filmstrip } : {}), notes };
 }

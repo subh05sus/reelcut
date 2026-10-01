@@ -72,6 +72,28 @@ candidate is pending and generic, show it and ask the user to confirm in the stu
 `npm run library -- queue` lists what is waiting for Claude to look at, and `/reelcut tag-assets`
 works through it (see SKILL.md). `npm run library -- status` says how much is pending.
 
+### 0b. Footage — a real step, recorded
+
+A `mustShow` that is a real thing being done ("download Claude", "add the Higgsfield MCP", "upload this
+skill") is a requirement with `"form": "footage"` and the step as its name. It is answered by a **moment**
+of a recording in the library, never by a drawing and never by a still matched on its filename:
+
+```bash
+npm run intake -- --requirements out/requirements.json   # footage requirements are matched to moments
+npm run footage -- find "download Claude" --platform mac
+npm run footage -- fit <asset>:<moment> --seconds 4.4    # does it fit the beat, and is its text readable
+```
+
+A moment is used by itself only when its recording is approved, checked for private information by a
+person, dated within 90 days, and the moment is confirmed and has been said yes to once. **Everything else is
+a proposal: show the user the moment (its label, length, recording and date) and ask once in this step.** A
+render that uses it records the yes; after that a fresh, exact match is used without asking.
+
+Nothing matching is a blocking gap for a required real step. Its ways out are to record it, to mark a
+moment in a recording the user already has (the studio's Footage tab), to use another moment, or to
+compose an animation — which is a stand-in for the real step, and should be said to be. Full rules:
+[footage.md](footage.md).
+
 ### 1. What was already provided
 
 ```bash

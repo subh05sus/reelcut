@@ -11,3 +11,4 @@ export * from "./ingestManager.js";
 export * from "./queue.js";
 export * from "./settings.js";
 export * from "./sfx.js";
+export * from "./footage.js";

@@ -302,7 +302,7 @@ export async function ingestBatch(items: readonly IngestItem[], options: IngestO
           return finish(item, { ...base, state: "duplicate", sha, assetId: id });
         }
 
-        const analysed = await analyzeFile(temp, { relPath: item.relPath, name: item.name, thumbOut: path.join(libraryRoot(), "thumbs", `${id}.png`), suppress });
+        const analysed = await analyzeFile(temp, { relPath: item.relPath, name: item.name, thumbOut: path.join(libraryRoot(), "thumbs", `${id}.png`), filmstripOut: path.join(libraryRoot(), "thumbs", `${id}-strip.png`), suppress });
         if ("skipped" in analysed) {
           rmSync(temp, { force: true });
           return finish(item, { ...base, state: "skipped", reason: analysed.skipped, sha });
@@ -329,7 +329,7 @@ export async function ingestBatch(items: readonly IngestItem[], options: IngestO
             tagOrigin,
             provenance: { source: "user", note: `dropped in ${where}${analysed.notes.length ? ` (${analysed.notes.join("; ")})` : ""}`.slice(0, 300) },
             mediaType: analysed.mediaType,
-            analysis: analysed.analysis,
+            analysis: analysed.filmstrip ? { ...analysed.analysis, filmstrip: `thumbs/${id}-strip.png` } : analysed.analysis,
             review: item.source.trusted ? { state: "approved", by: "folder-trust", at: now } : { state: "pending" },
             ...(item.source.folderId ? { folderId: item.source.folderId } : {}),
             ...(analysed.thumb ? { thumb: `thumbs/${id}.png` } : {}),

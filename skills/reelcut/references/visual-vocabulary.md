@@ -43,6 +43,11 @@ and the eye is led to one detail that highlights. Use when the beat says what th
 Capture rules are in [step-2-acquire.md](step-2-acquire.md) — crop to the detail, never show a full
 browser window shrunk into the frame.
 
+**A recorded interaction.** A real recording of the step, placed as it was recorded: the strongest version
+of "showing the product working", and the one to use whenever the library has the moment. It is framed and
+zoomed, never redrawn — see [footage.md](footage.md). A simulated interaction (below) is its stand-in when
+no recording exists, and should be said to be.
+
 **A simulated interaction.** A cursor that travels a curved path, presses with a real press phase,
 ripples, and causes something — a row selects, a toast confirms, a field fills. This is the single
 most convincing register available, because it shows the product working rather than describing it.

@@ -9,7 +9,8 @@ import { resolveCue } from "../../../src/library/sfx.js";
 import { renderHyperframesProject } from "../../../src/render/hyperframes.js";
 import { checkVideo, type VideoReport } from "../../../src/verify/checkVideo.js";
 import { choosePosterTime } from "../../../src/render/poster.js";
-import { LIBRARY_ASSET_DIR, blobPath, libraryRefsIn, loadIndex, recordRun, recordUse, type LibraryAsset } from "../../../src/library/index.js";
+import { LIBRARY_ASSET_DIR, acceptMoments, blobPath, libraryRefsIn, loadIndex, recordRun, recordUse, type LibraryAsset } from "../../../src/library/index.js";
+import { expandFootage, linkOrCopy, type FootageUse, type HoldFrame } from "../../../src/render/footage.js";
 
 /**
  * Turn a reel manifest into rendered clips and a master.
@@ -34,7 +35,9 @@ import { LIBRARY_ASSET_DIR, blobPath, libraryRefsIn, loadIndex, recordRun, recor
  * rendered AND passed, because a file existing is not the same as a file being right.
  *
  * A composition uses a library asset by referring to `assets/library/<id>.<ext>`; those blobs are
- * copied into the project and the use is recorded. Every render is recorded in `~/.reelcut/runs.json`
+ * copied into the project and the use is recorded. Recorded footage is placed with a
+ * `data-footage="<asset>:<moment>"` placeholder, which is expanded here into the trimmed, retimed
+ * `<video>` (see `src/render/footage.ts`); a big video blob is hardlinked rather than copied when it can be. Every render is recorded in `~/.reelcut/runs.json`
  * so the studio can list it.
  */
 
@@ -127,8 +130,30 @@ function copyAssets(dir: string, assets: readonly { source: string; target: stri
 function copyLibraryAssets(dir: string, assets: readonly LibraryAsset[]): void {
   for (const asset of assets) {
     const target = path.join(dir, LIBRARY_ASSET_DIR, path.basename(asset.file));
+    if (asset.mediaType === "video") linkOrCopy(blobPath(asset), target, asset.bytes);
+    else {
+      mkdirSync(path.dirname(target), { recursive: true });
+      copyFileSync(blobPath(asset), target);
+    }
+  }
+}
+
+/** The last frame of each moment that ends before its beat does, made once from the library blob. */
+function makeHoldFrames(cacheDir: string, holds: readonly HoldFrame[], libraryById: ReadonlyMap<string, LibraryAsset>): void {
+  mkdirSync(cacheDir, { recursive: true });
+  for (const hold of holds) {
+    const out = path.join(cacheDir, path.basename(hold.target));
+    if (existsSync(out)) continue;
+    const asset = libraryById.get(hold.assetId)!;
+    execFileSync("ffmpeg", ["-v", "error", "-y", "-ss", hold.at.toFixed(3), "-i", blobPath(asset), "-frames:v", "1", out]);
+  }
+}
+
+function copyHoldFrames(dir: string, cacheDir: string, holds: readonly HoldFrame[]): void {
+  for (const hold of holds) {
+    const target = path.join(dir, hold.target);
     mkdirSync(path.dirname(target), { recursive: true });
-    copyFileSync(blobPath(asset), target);
+    copyFileSync(path.join(cacheDir, path.basename(hold.target)), target);
   }
 }
 
@@ -177,12 +202,13 @@ interface Outcome {
   report?: VideoReport;
 }
 
-async function renderOne(id: string, projectDir: string, outFile: string, quality: Args["quality"]): Promise<Outcome> {
-  const result = await renderHyperframesProject({ projectDir, outputPath: outFile, quality, samples: 12 });
+async function renderOne(id: string, projectDir: string, outFile: string, quality: Args["quality"], footage = false): Promise<Outcome> {
+  // Recorded footage is pulled out as PNG: JPEG smears the thin text of a recorded interface.
+  const result = await renderHyperframesProject({ projectDir, outputPath: outFile, quality, samples: 12, ...(footage ? { videoFrameFormat: "png" as const } : {}) });
   if (result.status !== "rendered" || !result.outputPath) {
     return { id, status: "render_failed", detail: result.error ?? "render failed" };
   }
-  const report = checkVideo(result.outputPath, { samplesPerSecond: 4 });
+  const report = checkVideo(result.outputPath, { samplesPerSecond: 4, footage });
   if (report.findings.length > 0) {
     return { id, status: "check_failed", file: result.outputPath, detail: report.findings.map((f) => `${f.at.toFixed(1)}s ${f.kind}`).join(", ") };
   }
@@ -243,22 +269,41 @@ async function main(): Promise<void> {
   const fps = manifest.fps ?? 30;
 
   const sfxLibraryIds = new Set<string>();
-  const beats: ProjectBeat[] = manifest.beats.map((b) => {
-    const compositionPath = path.resolve(base, b.composition);
-    if (!existsSync(compositionPath)) throw new Error(`${b.id}: composition not found at ${compositionPath}`);
+  const footageUses: FootageUse[] = [];
+  const footageByBeat = new Map<string, { uses: FootageUse[]; holds: HoldFrame[] }>();
+  let beats: ProjectBeat[];
+  try {
     const index = loadIndex();
-    const sfx: SfxCue[] = (b.sfx ?? []).flatMap((cue): SfxCue[] => {
-      const resolved = resolveCue(cue, b, { assets: index.assets, blobPath, exists: existsSync, resolveFile: (source) => path.resolve(base, source), probe: probeSeconds, defaultVolume: SFX_DEFAULT_VOLUME });
-      if (!resolved) {
-        console.warn(`  warning: ${b.id}: a cue at ${cue.at}s has no room before the beat ends; dropped`);
-        return [];
+    beats = manifest.beats.map((b) => {
+      const compositionPath = path.resolve(base, b.composition);
+      if (!existsSync(compositionPath)) throw new Error(`${b.id}: composition not found at ${compositionPath}`);
+      const sfx: SfxCue[] = (b.sfx ?? []).flatMap((cue): SfxCue[] => {
+        const resolved = resolveCue(cue, b, { assets: index.assets, blobPath, exists: existsSync, resolveFile: (source) => path.resolve(base, source), probe: probeSeconds, defaultVolume: SFX_DEFAULT_VOLUME });
+        if (!resolved) {
+          console.warn(`  warning: ${b.id}: a cue at ${cue.at}s has no room before the beat ends; dropped`);
+          return [];
+        }
+        for (const w of resolved.warnings) console.warn(`  warning: ${w}`);
+        if (resolved.libraryId) sfxLibraryIds.add(resolved.libraryId);
+        return [{ source: resolved.source, at: resolved.at, durationSeconds: resolved.durationSeconds, ...(resolved.volume === undefined ? {} : { volume: resolved.volume }) }];
+      });
+      // Recorded footage: placeholders become the trimmed, retimed <video>, or the beat is refused with the reason.
+      const expanded = expandFootage(readFileSync(compositionPath, "utf8"), { assets: index.assets, format, beat: b });
+      for (const w of expanded.warnings) console.warn(`  warning: ${w}`);
+      if (expanded.uses.length > 0) {
+        footageByBeat.set(b.id, { uses: expanded.uses, holds: expanded.holds });
+        footageUses.push(...expanded.uses);
       }
-      for (const w of resolved.warnings) console.warn(`  warning: ${w}`);
-      if (resolved.libraryId) sfxLibraryIds.add(resolved.libraryId);
-      return [{ source: resolved.source, at: resolved.at, durationSeconds: resolved.durationSeconds, ...(resolved.volume === undefined ? {} : { volume: resolved.volume }) }];
+      return { id: b.id, durationSeconds: b.durationSeconds, compositionHtml: expanded.html, sfx };
     });
-    return { id: b.id, durationSeconds: b.durationSeconds, compositionHtml: readFileSync(compositionPath, "utf8"), sfx };
-  });
+  } catch (error) {
+    if (error instanceof ProjectError) {
+      console.error(`project refused: ${error.message}`);
+      process.exitCode = 1;
+      return;
+    }
+    throw error;
+  }
 
   const unknown = args.only.filter((id) => !beats.some((b) => b.id === id));
   if (unknown.length > 0) {
@@ -301,6 +346,9 @@ async function main(): Promise<void> {
 
   const projectRoot = path.join(base, "project");
   const clipsOut = path.join(base, "clips");
+  const holdCache = path.join(projectRoot, ".holds");
+  const allHolds = [...footageByBeat.values()].flatMap((f) => f.holds);
+  if (allHolds.length > 0) makeHoldFrames(holdCache, allHolds, libraryById);
   const outcomes: Outcome[] = [];
 
   console.log(`${beats.length} beats, ${built.totalSeconds.toFixed(2)}s, ${width}x${height} @ ${fps}fps${args.sfx ? ", with sound effects" : ", silent"}`);
@@ -312,8 +360,9 @@ async function main(): Promise<void> {
       writeFiles(dir, built.clips[beat.id]!);
       copyAssets(dir, built.assets);
       copyLibraryAssets(dir, libraryFor(refsByBeat.get(beat.id) ?? []));
+      copyHoldFrames(dir, holdCache, footageByBeat.get(beat.id)?.holds ?? []);
       process.stdout.write(`  ${beat.id} … `);
-      const outcome = await renderOne(beat.id, dir, path.join(clipsOut, `${beat.id}.mp4`), args.quality);
+      const outcome = await renderOne(beat.id, dir, path.join(clipsOut, `${beat.id}.mp4`), args.quality, footageByBeat.has(beat.id));
       outcomes.push(outcome);
       console.log(outcome.status === "ok" ? "ok" : `${outcome.status}: ${outcome.detail}`);
     }
@@ -324,8 +373,9 @@ async function main(): Promise<void> {
     writeFiles(dir, built.master);
     copyAssets(dir, built.assets);
     copyLibraryAssets(dir, libraryFor(allRefs));
+    copyHoldFrames(dir, holdCache, allHolds);
     process.stdout.write("  master … ");
-    const outcome = await renderOne("master", dir, path.join(base, "master.mp4"), args.quality);
+    const outcome = await renderOne("master", dir, path.join(base, "master.mp4"), args.quality, footageByBeat.size > 0);
     outcomes.push(outcome);
     console.log(outcome.status === "ok" ? "ok" : `${outcome.status}: ${outcome.detail}`);
 
@@ -360,6 +410,21 @@ async function main(): Promise<void> {
       };
     }),
   });
+
+  // A moment that rendered has been used on purpose: from now on a fresh, exact match is used without asking.
+  const rendered = new Set(outcomes.filter((o) => o.status === "ok").map((o) => o.id));
+  const accepted = [...footageByBeat]
+    .filter(([id]) => rendered.has(id) || rendered.has("master"))
+    .flatMap(([, f]) => f.uses.map((u) => ({ assetId: u.assetId, momentId: u.momentId })));
+  try {
+    acceptMoments(accepted);
+  } catch (error) {
+    console.warn(`  (footage not marked as used: ${error instanceof Error ? error.message : String(error)})`);
+  }
+  if (footageUses.length > 0) {
+    console.log("");
+    console.log(`  footage: ${footageUses.map((u) => `"${u.label}" at ${u.at.toFixed(1)}s${u.fit.rate !== 1 ? ` (${u.fit.rate}x)` : ""}${u.fit.holdSeconds > 0 ? ` (last frame held ${u.fit.holdSeconds.toFixed(1)}s)` : ""}`).join("; ")}`);
+  }
 
   const failed = outcomes.filter((o) => o.status !== "ok");
   console.log("");

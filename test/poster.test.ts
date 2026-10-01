@@ -9,6 +9,7 @@ function report(frames: [number, number][], holds: [number, number][] = []): Vid
     samplesPerSecond: 2,
     frames: frames.map(([at, ink]) => ({ at, ink, edgeInk: 0, grid: [] })),
     findings: [],
+    relaxed: [],
     staticRuns: holds.map(([from, to]) => ({ from, to, seconds: to - from })),
     deadCells: [],
   };

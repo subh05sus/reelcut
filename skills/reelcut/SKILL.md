@@ -85,6 +85,11 @@ Learned rules shape the questions: the option a rule prefers goes first, marked 
 a question a rule already answers (a pinned look, a motion tempo) is not asked again but confirmed in
 one line. An answer given now always beats a learned rule.
 
+When the script has beats that show a real thing being done ("now download Claude", "add the MCP"),
+run `npm run footage -- list` and say which steps already have a recording. For a step that has none,
+tell the user a recording of it (Shift-Cmd-5 on a Mac) will be used exactly as recorded, where the
+alternative is an animated stand-in. See [references/footage.md](references/footage.md).
+
 **Gate:** every open axis has an answer or a recorded default, and the studio question has been
 answered, before any brief is written.
 
@@ -123,6 +128,13 @@ Assets the user has dropped into the studio (or a watched folder) are in the lib
 they have approved match like any other. The ones still `pending` are shown as proposals and never
 applied by themselves: say so, and tell the user they can approve them in the studio's Review tab.
 
+**Recorded steps are footage, not drawings.** A `mustShow` that is a real thing being done becomes a
+requirement with `"form": "footage"` and the step as its name ("Download Claude"). It is answered by a
+*moment* of a recording in the library (`npm run intake` and `npm run footage -- find` search them), shown
+to the user as a proposal the first time and used as it was recorded: trimmed, framed, zoomed and at most
+speeded up 2x, never redrawn. A step with no recording is a gap — record it, mark a moment in a recording
+you have, or compose an animation as a stand-in. See [references/footage.md](references/footage.md).
+
 **Gate:** no `identity` requirement is satisfied by a drawn asset. Ever.
 
 ---
@@ -154,6 +166,12 @@ components already exist and searching is free; `hyperframes-core` for the compo
 the `data-*` timing attributes; `hyperframes-animation` for motion rules, blueprints, transitions
 and the named text effects. This skill owns the story, the beats, the assets and the creative laws;
 HyperFrames owns the composition mechanics and the render.
+
+Where a beat shows a recorded step, **place the recording; do not recreate it**: a
+`<div class="rc-footage" data-footage="<asset>:<moment>">` in the composition, framed on the grid, with
+`RC.rise` (never a blur) and, where the text is small, `RC.zoomTo`. Start from
+[`patterns/footage/footage-window.html`](assets/patterns/footage/footage-window.html). Check the box with
+`npm run measure -- <beat.html> <t> --format <fmt>`: an ILLEGIBLE footage line is a failed beat.
 
 Apply the learned rules you read in Step 0 where they fit the beat, record their ids in `reel.json`
 as `appliedLearnings`, list them under **Applied learnings** in `plan.md`, and put the pattern a beat
@@ -211,6 +229,33 @@ queue). When done, tell the user how many were annotated and that they are waiti
 
 ---
 
+## Mode — `/reelcut tag-footage`
+
+Screen recordings that were dropped in but have no moments marked on them are **unmarked**; the Footage tab
+lists them. This mode is how Claude helps.
+
+```bash
+npm run footage -- queue --json      # unmarked recordings: id, length, a filmstrip image, tags
+```
+
+For each, **view the filmstrip** (Read tool: eight frames across the recording) and propose the steps you can
+see:
+
+```bash
+npm run footage -- propose <asset> --label "download Claude" --in 2 --out 8.5 --tags claude,download,mac
+```
+
+A label is what the viewer sees happen, in the words a script would use for it. The boundaries are coarse —
+eight frames — and that is fine: they are proposals.
+
+**Never** confirm a moment, approve a recording, or tick the private-information check
+(`footage check` refuses without `--watched`, which is for when the user says they did). A proposal waits,
+in italics, until a person confirms it in the Footage tab, and a recording nobody checked for private
+information is refused by the render. Tell the user how many moments were proposed and that they need
+confirming.
+
+---
+
 ## Hard rules
 
 These are not style preferences. Each one is here because its absence produced a defect that
@@ -242,6 +287,11 @@ tried. Continuity comes from matching the outgoing exit direction to the incomin
 **Frame 0 of every beat is legible.** Opacity leads position: full opacity within a few frames while
 the move keeps easing. An entrance from `opacity: 0` makes the first frame of a hard cut blank, and
 frame 0 of the first beat is the thumbnail.
+
+**A recording is used as recorded.** Trim, frame, zoom, speed up to 2x, hold its last frame, annotate over
+it. Never re-create it as an animation when a recording exists, never edit what is inside it, never use one
+nobody has checked for private information. Nothing can be masked in a recording, so that check is the whole
+protection.
 
 **Determinism.** No `Date.now()`, no `performance.now()`, no unseeded `Math.random()`, no
 render-time network, no `repeat: -1`. Every frame must be reproducible from its time alone.

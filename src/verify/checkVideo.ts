@@ -57,6 +57,8 @@ export interface VideoReport {
   samplesPerSecond: number;
   frames: FrameReport[];
   findings: Finding[];
+  /** Blank panels seen in a video with footage in it: reported, not gated. */
+  relaxed: Finding[];
   staticRuns: StaticRun[];
   /** Grid cells that stayed below `deadCellInk` for the whole video, as `row,col` pairs. */
   deadCells: { row: number; col: number; peak: number }[];
@@ -69,6 +71,12 @@ export interface CheckOptions {
   gridRows?: number;
   /** A cell whose ink never exceeds this across the whole video is structurally dead. */
   deadCellInk?: number;
+  /**
+   * The video has recorded footage in it. A real interface has empty canvases, blank documents and loading
+   * panels, and they are not a composition that forgot to draw its contents, so `blank_panel` is reported
+   * instead of failing the render.
+   */
+  footage?: boolean;
 }
 
 export function checkVideo(file: string, options: CheckOptions = {}): VideoReport {
@@ -79,6 +87,7 @@ export function checkVideo(file: string, options: CheckOptions = {}): VideoRepor
   if (frames.length === 0) throw new Error(`no frames decoded from ${file}`);
 
   const findings: Finding[] = [];
+  const relaxed: Finding[] = [];
   const reports: FrameReport[] = [];
   const peak = new Array<number>(gridCols * gridRows).fill(0);
 
@@ -89,7 +98,7 @@ export function checkVideo(file: string, options: CheckOptions = {}): VideoRepor
     reports.push({ at: frame.at, ink: inkShare(frame), edgeInk: edgeInk(frame), grid });
 
     for (const region of blankPanels(frame)) {
-      findings.push({
+      (options.footage ? relaxed : findings).push({
         kind: "blank_panel",
         at: frame.at,
         detail: `${(region.area * 100).toFixed(1)}% of frame, ${(region.rectFill * 100).toFixed(0)}% rectangular, at x ${region.x.toFixed(2)}..${(region.x + region.w).toFixed(2)} y ${region.y.toFixed(2)}..${(region.y + region.h).toFixed(2)}`,
@@ -104,6 +113,7 @@ export function checkVideo(file: string, options: CheckOptions = {}): VideoRepor
     samplesPerSecond,
     frames: reports,
     findings,
+    relaxed,
     staticRuns: findStaticRuns(frames, samplesPerSecond),
     deadCells: peak
       .map((p, i) => ({ row: Math.floor(i / gridCols), col: i % gridCols, peak: p }))
@@ -141,6 +151,7 @@ export function formatReport(report: VideoReport): string {
 
   lines.push("");
   lines.push("  reported, not gated:");
+  if (report.relaxed.length > 0) lines.push(`    blank panels over recorded footage (not a composition fault): ${report.relaxed.map((f) => `${f.at.toFixed(1)}s`).join(", ")}`);
   lines.push(`    static holds >= ${STATIC_RUN_SECONDS}s: ${report.staticRuns.length === 0 ? "none" : report.staticRuns.map((r) => `${r.from.toFixed(1)}-${r.to.toFixed(1)}s (${r.seconds.toFixed(1)}s)`).join(", ")}`);
   lines.push(`    always-empty grid cells: ${report.deadCells.length === 0 ? "none" : report.deadCells.map((c) => `r${c.row}c${c.col}`).join(", ")}`);
 

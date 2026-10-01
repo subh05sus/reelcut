@@ -64,6 +64,12 @@ holds. **The payoff gets the most time, not the least.**
 completely, *then* bring the next thing, with a real gap. `hyperframes check` catches the overlap
 if you get it wrong — it reports two text blocks in one zone.
 
+**A recording is placed, not recreated.** When the beat shows a real step and the library has a moment for
+it, the composition holds a `.rc-footage` box with a `data-footage` reference and the render makes the
+`<video>`. Frame it on the grid, enter it with a rise (never a blur: it is the product and is sharp from the
+first frame), zoom into the part the line is about, ring the thing to look at. It is not drawn over, not
+restyled, and not played faster than 2x. See [footage.md](footage.md).
+
 **Every mark carries information.** A divider that divides is structure. A hairline with a label
 next to it is decoration, and decoration reads as filler.
 
