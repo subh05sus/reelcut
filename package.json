@@ -1,6 +1,6 @@
 {
   "name": "reelcut",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "type": "module",
   "description": "Turn a spoken script into motion-graphics clips, one per beat.",
@@ -18,6 +18,8 @@
     "measure": "tsx skills/reelcut/scripts/measure.ts",
     "sfx": "tsx skills/reelcut/scripts/sfx.ts",
     "footage": "tsx skills/reelcut/scripts/footage.ts",
+    "references": "tsx skills/reelcut/scripts/references.ts",
+    "generate": "tsx skills/reelcut/scripts/generate.ts",
     "learnings": "tsx skills/reelcut/scripts/learnings.ts",
     "library": "tsx skills/reelcut/scripts/library.ts",
     "studio": "tsx skills/reelcut/scripts/library.ts serve"

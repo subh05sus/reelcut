@@ -1,7 +1,7 @@
 {
   "name": "reelcut",
   "description": "Turn a spoken script into motion-graphics clips, one per beat.",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "author": {
     "name": "subh05sus"
   },
