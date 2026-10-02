@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* GENERATED BACKDROP. An AI-generated clip (Higgsfield) as atmosphere under real type. The clip is a
+     background plate and nothing more: it carries no product, no mark and no lettering, because a model
+     cannot be trusted with any of those. All the meaning is the headline, set exact by HyperFrames above it.
+     The clip fills the frame (data-fit="cover", data-frame="plain") and a scrim keeps the type legible whatever
+     the clip does behind it. It is placed like footage — the render trims it to the beat (it is never sped up)
+     and holds its last frame if it ends early — and a person approved it before it could be used.
+     Grid: headline at (84, 96); the supporting line on the 84 margin at 336. The scrim darkens the top and
+     bottom thirds so both read at 4.5:1 or better.
+     To use it: register the clip with `npm run generate -- add`, put its `<asset>:<moment>` in data-footage. */
+  #root { --accent: #ff9a6b; }
+  #root .rc-footage { left: 0; top: 0; width: 1080px; height: 1080px; aspect-ratio: auto; }
+  #root .scrim { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8,8,14,.72) 0%, rgba(8,8,14,.3) 38%, rgba(8,8,14,.3) 62%, rgba(8,8,14,.78) 100%); pointer-events: none; }
+  #root .sub { position: absolute; left: 84px; top: 336px; font-size: 40px; line-height: 1.25; font-weight: 500; letter-spacing: -0.02em; color: rgba(244,242,238,.82); max-width: 760px; }
+  #root .tag { position: absolute; left: 84px; bottom: 84px; font: 500 20px var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: rgba(244,242,238,.6); }
+</style>
+<div id="root" data-look="ink" data-composition-id="generated-backdrop" data-width="1080" data-height="1080">
+  <div class="rc-footage" data-footage="0000000000000000:m_00000000" data-frame="plain" data-fit="cover"></div>
+  <div class="scrim"></div>
+  <div class="rc-head"><span class="ln" style="--ox:-4.3px">Before the</span><span class="ln" style="--ox:2.1px"><em class="rc">launch.</em></span></div>
+  <div class="sub">The quiet hour where everything is still possible.</div>
+  <div class="tag">AI-generated background</div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  RC.words(tl, "#root .rc-head .ln:first-child", 0.1, { lead: true });
+  RC.blurIn(tl, "#root .rc-head em", 0.3, { blur: 12, y: 18 });
+  RC.blurIn(tl, "#root .sub", 0.7, { y: 18, blur: 10, duration: 0.7 });
+  RC.blurIn(tl, "#root .tag", 1.0, { y: 8, blur: 6, duration: 0.5 });
+  RC.hold(tl, 4.3);
+  window.__timelines["generated-backdrop"] = tl;
+})();
+</script>
+</template>
+</body></html>

@@ -142,6 +142,11 @@ downstream gate exactly as a fabricated statistic does.
 
 ### 4. Draw it — `generic` only
 
+A generic requirement that is atmosphere (a background, a mood) may be **generated with Higgsfield** instead
+when it is connected and the user agreed in Step 0 — see [generate.md](generate.md). A generated clip is never an
+answer to an `identity` or footage requirement, is registered as pending, and falls back to drawing or
+composing it if anything goes wrong.
+
 ## Report what is still open
 
 ```ts

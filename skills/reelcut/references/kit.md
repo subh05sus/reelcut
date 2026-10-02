@@ -169,7 +169,8 @@ whether a beat is broken, where this says whether it is exact.
 `.rc-footage` is the box a recorded screen sits in (`data-frame="window"` or `"plain"`), taking the recording's
 own shape from `--fw` and `--fh`, which the render writes. Inside it, `.rc-fv` is the layer that zooms, and
 `.rc-spot` (with `--x --y --w --h` as fractions of the recording) is a ring that stays on what it points at.
-`.rc-fstep` is the step pill — a number in an accent disc and a word — a control-layer label, so it is glass.
+`data-fit="cover"` fills the box and crops, for a generated background plate — never for a recording, which is always
+shown whole. `.rc-fstep` is the step pill — a number in an accent disc and a word — a control-layer label, so it is glass.
 How to place a recording, and what may be done to one, is [footage.md](footage.md).
 
 ## What the helpers record

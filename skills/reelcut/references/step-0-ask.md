@@ -60,6 +60,18 @@ would pick first, marked `(Recommended)`, and make every option's description sa
 If round 1 already covered everything that matters and nothing in round 2 is open except the
 studio, ask the studio question on its own — do not pad a round.
 
+### The Higgsfield question
+
+Only when the Higgsfield MCP is connected **and** `npm run generate -- plan` says to ask (the setting is `ask` and
+at least one beat can be generated). One question, listing the beats that can be generated and why the others
+cannot, with a credit estimate from the tool:
+
+> Use Higgsfield (AI video) for the beats that can be generated? It is faster than composing them.
+
+**Yes, this reel (Recommended)** · **No, this reel** · **Always** (remembered: `npm run generate -- setting always`) ·
+**Never** (remembered: `… setting never`). If Higgsfield is not connected, or the setting is `never`, do not ask:
+note it in `plan.md` and compose every beat in HyperFrames. See [generate.md](generate.md).
+
 ### The studio question
 
 Always the last question of the last round:

@@ -349,6 +349,9 @@
 [data-look] .rc-footage .rc-fv > video, [data-look] .rc-footage .rc-fv > img.rc-fh { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
 /* A ring over a part of the recording: --x --y --w --h are fractions of the recording, so it stays on the
    thing it points at however far the recording is zoomed. */
+/* data-fit="cover" fills the box and crops: for a generated background that is a plate, never for a recording
+   (a recording is shown whole, so nothing in it is cut off). */
+[data-look] .rc-footage[data-fit="cover"] .rc-fv > video, [data-look] .rc-footage[data-fit="cover"] .rc-fv > img.rc-fh { object-fit: cover; }
 [data-look] .rc-footage .rc-spot { position: absolute; left: calc(var(--x) * 100%); top: calc(var(--y) * 100%); width: calc(var(--w) * 100%); height: calc(var(--h) * 100%);
   border-radius: 14px; border: 3px solid var(--accent); box-shadow: 0 0 0 7px color-mix(in oklab, var(--accent) 20%, transparent); pointer-events: none; opacity: 0; }
 /* The step label: a control-layer pill, so it is glass. Number in an accent disc, then the words. */

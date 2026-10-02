@@ -1,7 +1,7 @@
 import { copyFileSync, linkSync, mkdirSync, rmSync } from "node:fs";
 import path from "node:path";
 import { LIBRARY_ASSET_DIR } from "../library/refs.js";
-import { fitMoment, footageAgeDays, footageOf, isFootage, momentSeconds, type Fit } from "../library/footage.js";
+import { fitGenerated, fitMoment, footageAgeDays, footageOf, isFootage, isGenerated, momentSeconds, type Fit } from "../library/footage.js";
 import { STALE_CAPTURE_DAYS } from "../library/match.js";
 import type { LibraryAsset, Moment } from "../library/schema.js";
 import { formatSeconds, ProjectError } from "./project.js";
@@ -41,6 +41,8 @@ export interface FootageUse {
   /** Seconds into the beat. */
   at: number;
   fit: Fit;
+  /** Made by a model, not recorded: the report says so. */
+  generated: boolean;
 }
 
 /** A still of a moment's last frame, shown after the recording ends. Made once per render from the library blob. */
@@ -84,6 +86,13 @@ export function footageRenderProblems(asset: LibraryAsset, moment: Moment, now: 
   const errors: string[] = [];
   const warnings: string[] = [];
   const name = `"${moment.label}" (${asset.name})`;
+  if (isGenerated(asset)) {
+    // Nothing real is in it, so there is no private information to check and no date to go stale: the gate is a person approving the clip.
+    if (asset.review.state === "rejected") errors.push(`${name} was rejected`);
+    else if (asset.review.state !== "approved") errors.push(`${name} is an AI-generated clip nobody has approved — approve it in the studio's Review tab, or: npm run library -- review approve ${asset.id}`);
+    if (asset.status !== "active") warnings.push(`${name} is ${asset.status}`);
+    return { errors, warnings };
+  }
   if (asset.review.state === "rejected") errors.push(`${name} was rejected`);
   else if (asset.review.state !== "approved") errors.push(`${name} has not been approved — approve it in the studio's Footage tab, or: npm run library -- review approve ${asset.id}`);
   if (moment.state !== "confirmed") errors.push(`${name} was proposed by Claude and nobody has confirmed it — confirm it in the studio's Footage tab`);
@@ -127,7 +136,8 @@ export function expandFootage(html: string, ctx: FootageContext): Expansion {
     const at = number(attrs, "data-at", 0, where);
     const slot = number(attrs, "data-for", ctx.beat.durationSeconds - at, where);
     if (at + slot > ctx.beat.durationSeconds + 0.02) throw new FootageError(`${where}: the footage is placed at ${at}s for ${slot}s, which runs past the end of the ${ctx.beat.durationSeconds}s beat`);
-    const fit = fitMoment(moment, slot);
+    const generated = isGenerated(asset);
+    const fit = generated ? fitGenerated(moment, slot) : fitMoment(moment, slot);
     if (!fit.ok) {
       throw new FootageError(`${where}: "${moment.label}" is ${momentSeconds(moment).toFixed(1)}s and the slot is ${slot.toFixed(1)}s — more than ${fit.rate}x would be needed, so it was not cut or hurried.\n    Ways out:\n    - ${fit.options.join("\n    - ")}`);
     }
@@ -157,7 +167,7 @@ export function expandFootage(html: string, ctx: FootageContext): Expansion {
       holds.push({ target, assetId: asset.id, at: Math.max(moment.in, moment.out - 0.05) });
       inner += `<img class="rc-fh" alt="" src="${target}" data-start="${formatSeconds(at + fit.playSeconds)}" data-duration="${formatSeconds(fit.holdSeconds)}">`;
     }
-    uses.push({ assetId: asset.id, momentId: moment.id, label: moment.label, at, fit });
+    uses.push({ assetId: asset.id, momentId: moment.id, label: moment.label, at, fit, generated });
 
     // The wrapper keeps what the author wrote, plus what only the library knows: the recording's shape.
     const focus = moment.focus[ctx.format];

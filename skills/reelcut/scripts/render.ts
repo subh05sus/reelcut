@@ -68,6 +68,8 @@ interface Manifest {
   direction?: { text?: string; motion?: string; look?: string };
   /** Ids of the learned rules Claude applied (from `npm run learnings -- brief`). */
   appliedLearnings?: string[];
+  /** What happened to each beat that could have been generated with Higgsfield. Written by `npm run generate -- record`; the render leaves it as it is. */
+  generation?: { beat: string; outcome: string; reason?: string; assetId?: string }[];
   beats: ManifestBeat[];
 }
 
@@ -423,7 +425,7 @@ async function main(): Promise<void> {
   }
   if (footageUses.length > 0) {
     console.log("");
-    console.log(`  footage: ${footageUses.map((u) => `"${u.label}" at ${u.at.toFixed(1)}s${u.fit.rate !== 1 ? ` (${u.fit.rate}x)` : ""}${u.fit.holdSeconds > 0 ? ` (last frame held ${u.fit.holdSeconds.toFixed(1)}s)` : ""}`).join("; ")}`);
+    console.log(`  footage: ${footageUses.map((u) => `"${u.label}" at ${u.at.toFixed(1)}s${u.fit.rate !== 1 ? ` (${u.fit.rate}x)` : ""}${u.fit.holdSeconds > 0 ? ` (last frame held ${u.fit.holdSeconds.toFixed(1)}s)` : ""}${u.generated ? " [AI-generated]" : ""}`).join("; ")}`);
   }
 
   const failed = outcomes.filter((o) => o.status !== "ok");

@@ -15,6 +15,7 @@ Typed facts, called **signals**, never free text turned into instructions:
 | `thumb` | "Works" or "Not quite" on a beat in the studio's Reels tab, with an optional note |
 | `rerender` | a beat sent back for another render from the studio: a weak "not quite" |
 | `asset` | what you did with machine-written tags: kept (by approving) or removed |
+| `reference` | facts from the reference films you kept: how they cut, their ground, and — once you accept them — the moves and text style Claude tagged. Rebuilt whenever a reference changes. See [reference-videos.md](reference-videos.md) |
 
 A note you write is stored against the beat for you to read. It never becomes a rule by itself.
 

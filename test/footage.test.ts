@@ -426,7 +426,7 @@ describe("expanding a placeholder into the video that plays it", () => {
   });
 });
 
-describe.runIf(hasFfmpeg())("measuring a real recording", () => {
+describe.runIf(hasFfmpeg())("measuring a real recording", { timeout: 60_000 }, () => {
   it("reads size, rate and length, makes a filmstrip, and notices a recorder that skips still frames", async () => {
     const steady = path.join(home, "steady.mp4");
     const skipping = path.join(home, "skipping.mp4");

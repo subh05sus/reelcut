@@ -72,7 +72,9 @@ to render and so is not part of the example reel:
 |---|---|---|---|
 | `footage-window` | paper | shows a real step being done | a recording sits in a framed box under the sentence; a ring finds the thing to look at, the recording moves in to frame it, a glass pill names the step. Nothing in the window is drawn. |
 
-Replace its placeholder reference with a moment from `npm run footage -- find`. See [footage.md](footage.md).
+| `generated-backdrop` | ink | needs atmosphere under a line | an AI-generated background (Higgsfield) fills the frame behind a scrim, with the headline and a supporting line in real type above it; labelled AI-generated |
+
+Replace the placeholder reference with a moment from `npm run footage -- find` (footage), or the one `npm run generate -- add` prints (generated). See [footage.md](footage.md) and [generate.md](generate.md).
 
 ## How the components are built
 

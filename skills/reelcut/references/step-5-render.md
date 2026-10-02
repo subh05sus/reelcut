@@ -67,6 +67,15 @@ Optional fields that let the studio learn from the reel (see [learnings.md](lear
 The render reads each beat's `data-look` and `--accent` itself; `pattern`, `brand`, `direction` and
 `appliedLearnings` are yours to write. All of them are optional, and none changes the render.
 
+### Generated clips and the generation log
+
+A generated clip is placed with the same `data-footage` placeholder as a recording, but the render only
+**trims** it (never speeds it up), requires that a person approved it (no private-information check: nothing real
+is in it), and prints `[AI-generated]`. `reel.json` may carry `"generation": [{ "beat", "outcome":
+"generated|fallback|skipped", "reason", "assetId" }]`, written by `npm run generate -- record`; the render leaves
+it alone and the studio shows it on the reel. Put each generated clip in `report.md` with its model, job id,
+credits and the line "AI-generated". A re-render uses the saved file and never calls Higgsfield.
+
 ### Recorded footage
 
 A composition places a recording with `data-footage="<asset>:<moment>"` (see [footage.md](footage.md)). The

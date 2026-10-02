@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { GROUNDS, MOVES, PACING, TEXT_STYLES } from "../references/vocab.js";
 
 /**
  * What the studio remembers about your taste.
@@ -18,7 +19,7 @@ import { z } from "zod";
  * because a person wrote it.
  */
 
-export const SubjectTypeSchema = z.enum(["look", "accent", "motion", "pattern", "text", "format", "sound"]);
+export const SubjectTypeSchema = z.enum(["look", "accent", "motion", "pattern", "text", "format", "sound", "pacing", "ground", "move", "typestyle"]);
 export type SubjectType = z.infer<typeof SubjectTypeSchema>;
 
 /** Values are plain tokens — no spaces, nothing that can carry a sentence. */
@@ -33,6 +34,11 @@ const ALLOWED: Record<SubjectType, (v: string) => boolean> = {
   format: (v) => ["1:1", "9:16", "16:9", "4:5"].includes(v),
   sound: (v) => ["effects", "silent"].includes(v),
   pattern: (v) => /^[a-z][a-z0-9-]{1,40}$/.test(v),
+  // What references teach. Each is one of a short fixed list, so a word found in somebody's film cannot become one.
+  pacing: (v) => (PACING as readonly string[]).includes(v),
+  ground: (v) => (GROUNDS as readonly string[]).includes(v),
+  move: (v) => (MOVES as readonly string[]).includes(v),
+  typestyle: (v) => (TEXT_STYLES as readonly string[]).includes(v),
 };
 
 export const SubjectSchema = z
@@ -51,6 +57,8 @@ export const SignalTypeSchema = z.enum([
   "rerender",
   /** What a person did with a machine-written tag: accepted it by approving the asset, or removed it. */
   "asset",
+  /** A fact measured from, or reviewed on, a reference video. Recomputed from the references, never typed. */
+  "reference",
 ]);
 export type SignalType = z.infer<typeof SignalTypeSchema>;
 
@@ -62,6 +70,8 @@ export const SignalSchema = z.object({
   brand: z.string().max(60).optional(),
   reel: z.string().optional(),
   beat: z.string().optional(),
+  /** For `reference` signals: the reference it came from. */
+  reference: z.string().max(40).optional(),
   rating: z.enum(["up", "down"]).optional(),
   /** What a person wrote about a beat. Shown in the dashboard, never turned into a rule by itself. */
   note: z.string().max(500).optional(),

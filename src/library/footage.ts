@@ -46,6 +46,11 @@ export function isFootage(asset: LibraryAsset): boolean {
   return asset.mediaType === "video";
 }
 
+/** A clip a model made. Placed like footage, but it is not a recording of anything real. */
+export function isGenerated(asset: LibraryAsset): boolean {
+  return asset.provenance.source === "generated";
+}
+
 export function momentSeconds(m: Pick<Moment, "in" | "out">): number {
   return Math.round((m.out - m.in) * 1000) / 1000;
 }
@@ -136,10 +141,10 @@ function cleanFocus(focus: Record<string, Focus> | undefined): Record<string, Fo
 }
 
 /**
- * Add a moment. A person's moment is confirmed; Claude's is only ever a proposal, so what a script line
+ * Add a moment. A person's moment is confirmed; Claude's is only ever a proposal (a generated clip's own whole-length moment is the one exception), so what a script line
  * gets matched to has always been looked at by someone.
  */
-export function addMoment(id: string, input: MomentInput, by: "user" | "claude" = "user"): { asset: LibraryAsset; moment: Moment } {
+export function addMoment(id: string, input: MomentInput, by: "user" | "claude" | "generated" = "user"): { asset: LibraryAsset; moment: Moment } {
   return mutateIndex((index) => {
     const asset = requireVideo(index.assets.find((a) => a.id === id), id);
     checkRange(asset, input);
@@ -153,8 +158,10 @@ export function addMoment(id: string, input: MomentInput, by: "user" | "claude" 
       in: Math.round(input.in * 1000) / 1000,
       out: Math.round(input.out * 1000) / 1000,
       tags: normaliseTags(input.tags ?? []),
+      // A generated clip's one moment is its whole length, made by the registration itself: the gate on a
+      // generated clip is a person approving the clip, not confirming a label Claude wrote.
       state: by === "claude" ? "proposed" : "confirmed",
-      origin: by,
+      origin: by === "user" ? "user" : "claude",
       focus: by === "claude" ? {} : cleanFocus(input.focus),
       ...(input.note ? { note: input.note.slice(0, 300) } : {}),
     };
@@ -340,7 +347,8 @@ export function findMoments(assets: readonly LibraryAsset[], phrase: string, opt
   const out: FootageMatch[] = [];
 
   for (const asset of assets) {
-    if (!isFootage(asset) || asset.status !== "active" || asset.review.state === "rejected") continue;
+    // A generated clip is never the answer to "download Claude": it shows nothing that happened.
+    if (!isFootage(asset) || isGenerated(asset) || asset.status !== "active" || asset.review.state === "rejected") continue;
     const footage = footageOf(asset);
     if (options.platform && footage.platform && footage.platform !== options.platform) continue;
     if (need.length && !need.every((t) => asset.tags.includes(t))) continue;
@@ -449,6 +457,22 @@ export function fitMoment(moment: Pick<Moment, "in" | "out">, slotSeconds: numbe
       "compose the beat as an animation or as type instead — a stand-in, not the real recording",
     ],
   };
+}
+
+/**
+ * How a generated clip fits a beat. It has no steps to keep in order, so it is never sped up: longer than
+ * the slot it is cut at the tail; shorter, its last frame is held. Its length is chosen when it is made, to
+ * match the beat, so this is the edge case.
+ */
+export function fitGenerated(moment: Pick<Moment, "in" | "out">, slotSeconds: number): Fit {
+  const length = momentSeconds(moment);
+  if (!(slotSeconds > 0)) return { ok: false, rate: 1, playSeconds: 0, holdSeconds: 0, notes: [], options: ["give the clip a slot longer than zero"] };
+  if (length <= slotSeconds + 0.05) {
+    const hold = Math.max(0, Math.round((slotSeconds - length) * 1000) / 1000);
+    return { ok: true, rate: 1, playSeconds: Math.min(length, slotSeconds), holdSeconds: hold > 0.05 ? hold : 0, notes: hold > 0.8 ? [`the generated clip is ${length.toFixed(1)}s and the beat is ${slotSeconds.toFixed(1)}s: its last frame is held for ${hold.toFixed(1)}s`] : [], options: [] };
+  }
+  const cut = Math.round((length - slotSeconds) * 1000) / 1000;
+  return { ok: true, rate: 1, playSeconds: slotSeconds, holdSeconds: 0, notes: [`the generated clip is cut ${cut.toFixed(1)}s short at the end (it is never sped up)`], options: [] };
 }
 
 // ---------------------------------------------------------------- will it be readable

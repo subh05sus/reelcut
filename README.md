@@ -304,6 +304,8 @@ files from the library or from a recorded reel's folder.
   source, preview, measurements and editable name, tags, kind and status. **Drop files or whole folders
   on the page** and each one is checked (by its bytes, never its extension), previewed, measured and
   tagged on arrival.
+- **References** — films you admire, measured for how they cut and look; Claude tags the moves, you accept,
+  and a rule is proposed when three or more agree. Never used in a reel.
 - **Footage** — screen recordings: scrub one, mark the steps in it as named moments, zoom regions per reel
   format (drawn on the video), tick that you checked it for private information, and see what is ready to be used. See *Footage* below.
 - **Review** — what was dropped in waits here. Nothing in it can be used by a reel on its own until you
@@ -339,6 +341,43 @@ npm run library -- queue | annotate | review          # the Claude queue, and a 
 npm run sfx -- list | find --event click | suggest reel.json [--apply]
 npm run learnings -- brief | list | accept <id> | export | import
 ```
+
+### Higgsfield — optional, fast, with an automatic fallback
+
+If the Higgsfield MCP is connected, Step 0 can offer to generate the beats that are honestly *atmosphere* — a
+background of moving light, an abstract idea, a gentle move on a still — with AI video, which is faster than
+composing them. A beat that needs a real product, mark, screen or recorded step is **never** generated. If it is
+not connected, or it is set to *never* (a select in the studio's header: ask each reel / always / never),
+nothing is asked and every beat is composed in HyperFrames; if a generation fails, times out or runs out of
+credits, that beat falls back to HyperFrames and the reel logs it.
+
+```bash
+npm run generate -- plan --beats beats.json --connected yes     # which beats, why, and whether to ask
+npm run generate -- prompt --mode atmosphere --subject "the quiet hour before a launch" --seconds 4.4
+npm run generate -- add clip.mp4 --model "Veo 3" --prompt "…" --beat beat-01 --job <id> --credits 12
+npm run generate -- record beat-01 --manifest out/reel.json --outcome generated|fallback|skipped
+```
+
+A generated clip is generic (never identity), starts pending until you approve it, is placed under real
+HyperFrames type, is labelled AI-generated, and is saved so re-rendering never calls Higgsfield again. At most 6
+clips a reel. See [generate.md](skills/reelcut/references/generate.md). The Higgsfield tools were not
+connected where this was built, so the live call is Claude's, untried here; everything around it is tested.
+
+### References — learning motion taste from films you admire
+
+Drop motion-graphics films you like on the studio's **References** tab. Each is measured (how it cuts: median
+shot, cuts a minute; whether its ground is light, dark or a brand colour; colours; how much moves), and
+`/reelcut study-references` has Claude tag the moves it sees from the fixed whatships vocabulary. When at
+least three references agree, a rule such as *"Your references mostly cut fast (median shot under 1.6s)"* is
+**proposed** in Learnings; nothing changes a reel until you switch it on. References are third-party films:
+they have their own index, apart from the library, are never placed in a reel and never leave this computer.
+
+```bash
+npm run references -- add film.mp4 other-films/
+npm run references -- queue | annotate | brief
+```
+
+See [reference-videos.md](skills/reelcut/references/reference-videos.md).
 
 ### Footage — real recordings, used as recorded
 
@@ -533,7 +572,7 @@ hold on a payoff is the reading floor working, not a defect.
 ### `npm test`
 
 ```bash
-npm test          # 613 tests
+npm test          # 675 tests
 npm run typecheck
 ```
 
@@ -572,6 +611,8 @@ npm run typecheck
 | Frame checker | ✅ tested, catches a real blank panel in a third-party video |
 | Asset library and studio | ✅ tested; a library asset rendered into a real clip and re-rendered from the studio |
 | Design kit and patterns | ✅ forty-one patterns and the example reel render and pass every gate; layout measured to the pixel |
+| References (learn motion taste from films) | ✅ tested; real clips measured, three agreeing references proposed rules, driven in the studio |
+| Higgsfield (optional AI backgrounds) | ⚠️ plan, gates, registering, placement and fallback tested and rendered with a stand-in clip; the live MCP call is untried |
 | Footage (recorded steps, as recorded) | ✅ tested; a recorded moment rendered into a real clip, trimmed, retimed and zoomed, and its frames viewed |
 | Sound effects (`--sfx`) | ⚠️ placement and mixing tested; no sound library ships |
 | Data sourcing and charts | ⚠️ specified, not built |
@@ -586,7 +627,7 @@ skills/reelcut/
   references/           steps 0–5, design system, kit, patterns, direction, sourcing
   assets/kit/           shared looks, UI pieces and motion helpers, injected via data-look
   assets/patterns/      forty-one reference compositions, one per recurring move
-  scripts/              beats, intake, capture, render, measure, check-video, library (+ studio), sfx, footage, learnings
+  scripts/              beats, intake, capture, render, measure, check-video, library (+ studio), sfx, footage, references, generate, learnings
 src/
   core/                 reading floor, frame sizes, the Beat schema
   planner/              parse, segment, merge, density, short cut
@@ -595,6 +636,8 @@ src/
   direction/            creative direction and its enforcement
   verify/               the frame checker, and the layout measurer
   render/               project builder, poster choice, the HyperFrames render route
+  generate/             Higgsfield: which beats may be generated, the prompt, the plan, registering a clip, the log
+  references/           reference films: measurements, tags, and the signals they give the learnings
   library/              the asset library, its reuse and review policy, ingest, watched folders, sound search, and the record of every run
   learnings/            signals, proposed rules, and the brief Claude reads
   studio/               the local server and its one page

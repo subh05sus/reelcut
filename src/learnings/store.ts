@@ -65,6 +65,22 @@ export function recordSignals(signals: readonly Signal[], now = new Date()): Lea
   });
 }
 
+/**
+ * Replace every reference signal with a fresh set, then recompute the rules.
+ *
+ * Reference signals are never typed or accumulated: they are a pure function of the references on file
+ * (which are included, what was measured, what a person accepted). So when a reference is added, edited,
+ * excluded or deleted, the whole set is rebuilt, and a reference that is gone leaves no evidence behind.
+ */
+export function syncReferenceSignals(signals: readonly Signal[], now = new Date()): LearningsFile {
+  const clean = signals.map((s) => SignalSchema.parse(s));
+  return mutateLearnings((file) => {
+    file.signals = [...file.signals.filter((s) => s.type !== "reference"), ...clean].sort((a, b) => a.at.localeCompare(b.at)).slice(-MAX_SIGNALS);
+    file.rules = inferRules(file.signals, file.rules, now).rules;
+    return file;
+  });
+}
+
 /** Recompute the rules from what is already recorded (decay moves with the clock, not with signals). */
 export function reinfer(now = new Date()): LearningsFile {
   return mutateLearnings((file) => {

@@ -103,6 +103,12 @@
   .rule.conflict { border-color: var(--warn); }
   .bar2 { height: 6px; background: var(--chip); border-radius: 3px; width: 70px; overflow: hidden; } .bar2 i { display: block; height: 100%; background: var(--accent); }
   .grow { flex: 1; }
+  .mvchips { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 10px; }
+  .mvchips .chip { font-size: 12px; padding: 2px 9px; }
+  .sheet img { width: 100%; display: block; border-radius: 8px; border: 1px solid var(--line); cursor: zoom-in; }
+  .tag.unrev { font-style: italic; color: var(--muted); }
+  .taught { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 16px; }
+  .taught .r { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 3px 0; font-size: 13px; }
   .fv-wrap { position: relative; background: #000; border-radius: 10px; overflow: hidden; margin-bottom: 8px; }
   .fv-wrap video { width: 100%; display: block; max-height: 46vh; background: #000; }
   .draw { position: absolute; inset: 0; cursor: crosshair; background: rgba(0,0,0,.35); touch-action: none; }
@@ -139,11 +145,12 @@
     <a href="#footage" data-tab="footage">Footage<span class="n" id="n-footage"></span></a>
     <a href="#review" data-tab="review">Review<span class="n" id="n-review"></span></a>
     <a href="#folders" data-tab="folders">Folders<span class="n" id="n-folders"></span></a>
+    <a href="#references" data-tab="references">References<span class="n" id="n-references"></span></a>
     <a href="#learnings" data-tab="learnings">Learnings<span class="n" id="n-learnings"></span></a>
     <a href="#reels" data-tab="reels">Reels<span class="n" id="n-reels"></span></a>
     <a href="#jobs" data-tab="jobs">Jobs<span class="n" id="n-jobs"></span></a>
   </nav>
-  <div class="sync" aria-live="polite"><span class="dot" id="dot"></span><span id="sync-text">Indexing</span><button id="pause" title="Pause or resume reading watched folders">Pause</button></div>
+  <div class="sync" aria-live="polite"><label class="inline" style="font-size:13px;color:var(--muted)" title="Whether a reel may use Higgsfield (AI video) for beats that can be generated. Only asked when the Higgsfield MCP is connected; anything that fails falls back to HyperFrames.">Higgsfield <select id="hf" style="padding:3px 6px"><option value="ask">ask each reel</option><option value="always">always (when connected)</option><option value="never">never</option></select></label><span class="dot" id="dot"></span><span id="sync-text">Indexing</span><button id="pause" title="Pause or resume reading watched folders">Pause</button></div>
 </header>
 <main id="main"></main>
 <div class="toast" id="toast" role="status"></div>
@@ -155,7 +162,7 @@ const IMG = new Set(["png", "jpg", "jpeg", "gif", "webp", "avif", "svg"]);
 const VID = new Set(["mp4", "webm", "mov"]);
 const AUD = new Set(["mp3", "wav", "ogg", "m4a", "flac", "aiff"]);
 const TYPES = [["", "All"], ["image", "Images"], ["vector", "Vectors"], ["video", "Video"], ["audio", "Sounds (SFX)"], ["document", "Documents"]];
-const state = { tagFilter: new Set(), q: "", type: "", selected: null, assets: [], counts: { all: 0, pending: 0, queue: 0, audio: 0 }, tags: {}, runs: [], jobs: [], folders: [], ingest: null, picked: new Set(), uploads: [], dropKind: "generic", dropPrivate: false, learn: null, videos: [], fsel: null, ffmt: "1:1" };
+const state = { tagFilter: new Set(), q: "", type: "", selected: null, assets: [], counts: { all: 0, pending: 0, queue: 0, audio: 0 }, tags: {}, runs: [], jobs: [], folders: [], ingest: null, picked: new Set(), uploads: [], dropKind: "generic", dropPrivate: false, learn: null, videos: [], fsel: null, ffmt: "1:1", refs: [], rbrief: null, rcounts: { all: 0, included: 0, queue: 0 }, rcommand: "/reelcut study-references", rsel: null, ruploads: [] };
 
 async function api(path, init) {
   const res = await fetch(path, { headers: { "Content-Type": "application/json" }, ...init });
@@ -191,6 +198,9 @@ $("#pause").addEventListener("click", async () => {
   try { await post("/api/ingest/pause", { paused }); toast(paused ? "Paused: watched folders are not being read" : "Resumed"); await loadIngest(); } catch (e) { toast(e.message); }
 });
 setInterval(loadIngest, 2500);
+async function loadHf() { try { $("#hf").value = (await api("/api/settings")).higgsfield; } catch { /* the page still works */ } }
+$("#hf").addEventListener("change", async (e) => { try { await post("/api/settings/higgsfield", { value: e.target.value }); toast(e.target.value === "ask" ? "Step 0 will ask about Higgsfield when it is connected" : e.target.value === "always" ? "Higgsfield will be used when connected, without asking" : "Higgsfield will not be used"); } catch (err) { toast(err.message); loadHf(); } });
+loadHf();
 
 // ---------- library
 async function loadLibrary() {
@@ -240,7 +250,7 @@ function assetCard(a) {
     <div class="thumb ${a.mediaType === "audio" ? "wave" : ""}">${preview(a)}</div>
     <div class="meta">
       <div class="name" title="${esc(a.name)}">${esc(a.name)}</div>
-      <div class="sub"><span class="badge ${a.assetKind}">${a.assetKind}</span>${a.review.state !== "approved" ? `<span class="badge ${a.review.state}">${a.review.state}</span>` : ""}${a.queued ? `<span class="badge queued">needs Claude</span>` : ""}${a.status !== "active" ? `<span class="badge ${a.status}">${a.status}</span>` : ""}${tagHtml(a, 4)}</div>
+      <div class="sub"><span class="badge ${a.assetKind}">${a.assetKind}</span>${a.review.state !== "approved" ? `<span class="badge ${a.review.state}">${a.review.state}</span>` : ""}${a.queued ? `<span class="badge queued">needs Claude</span>` : ""}${a.provenance && a.provenance.source === "generated" ? `<span class="badge warn" title="Made by a model, not recorded">AI-generated</span>` : ""}${a.status !== "active" ? `<span class="badge ${a.status}">${a.status}</span>` : ""}${tagHtml(a, 4)}</div>
     </div>
   </div>`;
 }
@@ -267,6 +277,7 @@ function assetPanel(a) {
       <dt>Review</dt><dd><span class="badge ${a.review.state}">${a.review.state}</span>${a.review.by ? ` by ${esc(a.review.by)}` : ""}${a.private ? ` · private` : ""}</dd>
       <dt>Status</dt><dd>${a.status}${a.supersededBy ? ` → <a href="#" data-goto="${a.supersededBy}">${a.supersededBy}</a>` : ""}</dd>
       <dt>Source</dt><dd>${esc(p.source)}${p.url ? ` · <a href="${esc(p.url)}" target="_blank" rel="noopener noreferrer">${esc(p.url)}</a>` : ""}</dd>
+      ${p.generation ? `<dt>Generated</dt><dd><span class="badge warn">AI-generated</span> ${esc(p.generation.model)} on ${esc(p.generation.provider)} · ${esc(p.generation.mode)}${p.generation.jobId ? ` · job ${esc(p.generation.jobId)}` : ""}${p.generation.credits != null ? ` · ${p.generation.credits} credits` : ""}<br><span class="note">${esc(p.generation.prompt)}</span></dd>` : ""}
       ${p.licence ? `<dt>Licence</dt><dd>${esc(p.licence)}</dd>` : ""}${p.capturedAt ? `<dt>Captured</dt><dd>${when(p.capturedAt)}</dd>` : ""}${p.note ? `<dt>Note</dt><dd>${esc(p.note)}</dd>` : ""}
       ${analysisRows(a)}
       <dt>Tags</dt><dd>${tagHtml(a) || "—"}</dd>
@@ -553,7 +564,7 @@ function renderReels() {
 async function renderReel(id) {
   let data;
   try { data = await api(`/api/runs/${id}`); } catch (e) { $("#main").innerHTML = `<p class="empty">${esc(e.message)}</p>`; return; }
-  const { run, plan, report, feedback = [], applied = [] } = data;
+  const { run, plan, report, feedback = [], applied = [], generation = [] } = data;
   const running = state.jobs.find((j) => j.status === "running");
   const fb = (b) => feedback.find((f) => f.beat === b) || {};
   $("#main").innerHTML = `
@@ -567,6 +578,7 @@ async function renderReel(id) {
         <div class="meta"><div class="top"><span class="mono">${esc(b)}</span><button data-render="${esc(b)}" ${run.missing || running ? "disabled" : ""}>Re-render</button></div>
           <div class="fb"><button data-rate="up" class="${f.rating === "up" ? "on" : ""}" aria-pressed="${f.rating === "up"}">Works</button><button data-rate="down" class="${f.rating === "down" ? "on" : ""}" aria-pressed="${f.rating === "down"}">Not quite</button><input data-note placeholder="Note…" value="${esc(f.note || "")}" aria-label="Note for ${esc(b)}"><button data-save-note>Save</button></div></div>
       </div>`; }).join("")}</div>
+    ${generation.length ? `<details open><summary>Higgsfield (${generation.filter((g) => g.outcome === "generated").length} generated, ${generation.filter((g) => g.outcome === "fallback").length} fell back)</summary><ul>${generation.map((g) => `<li><span class="mono">${esc(g.beat)}</span> <span class="badge ${g.outcome === "generated" ? "ok" : g.outcome === "fallback" ? "warn" : ""}">${esc(g.outcome)}</span> ${esc(g.reason || "")}${g.assetId ? ` <a href="#library" data-lib="${g.assetId}" class="mono">${g.assetId}</a>` : ""}</li>`).join("")}</ul><p class="note">Every beat that was not generated was composed in HyperFrames.</p></details>` : ""}
     ${applied.length ? `<details open><summary>Learnings applied to this reel (${applied.length})</summary><ul>${applied.map((r) => `<li>${esc(r.text)} <span class="note">${r.status === "active" ? "" : "(" + r.status + ")"}</span></li>`).join("")}</ul></details>` : ""}
     ${run.libraryAssets.length ? `<details open><summary>Library assets used (${run.libraryAssets.length})</summary><p>${run.libraryAssets.map((a) => `<a href="#library" data-lib="${a}" class="mono">${a}</a>`).join(" · ")}</p></details>` : ""}
     ${report ? `<details><summary>report.md</summary><pre>${esc(report)}</pre></details>` : ""}
@@ -751,6 +763,101 @@ function bindFootage(a) {
   });
 }
 
+// ---------- references: other people's films, kept to learn from
+const MOVE_WORDS = { wb: "text builds word by word", big: "huge type", kin: "kinetic type", ser: "italic serif accent", hl: "highlighter or box", strike: "strike-through", roll: "values rolling", wheel: "wheel of values", ui: "real product UI", cur: "cursor", chat: "prompt or chat", code: "code", dev: "device frame", tilt: "3D-tilted card", fly: "arrival from depth", num: "big number", mesh: "gradient ground", hud: "viewfinder corners", obj: "3D object", ill: "illustration", icon: "icon set", bub: "bubbles", logo: "logo moment", foot: "footage", sr: "screen recording", cap: "captions" };
+const TEXT_STYLES = ["", "kinetic", "key-lines", "minimal", "none"];
+async function loadRefs() { const r = await api("/api/references"); state.refs = r.references; state.rbrief = r.brief; state.rcounts = r.counts; state.rcommand = r.command; }
+function refCard(r) {
+  const x = r.analysis, a = r.annotation, tags = a ? [...a.moves, a.textStyle].filter(Boolean) : [];
+  return `<div class="card ${r.id === state.rsel ? "sel" : ""}" data-ref="${r.id}" style="${r.include ? "" : "opacity:.55"}">
+    <div class="thumb" style="aspect-ratio:16/9">${r.thumbUrl ? `<img src="${r.thumbUrl}" alt="" loading="lazy">` : `<span class="ext">${esc(r.ext)}</span>`}</div>
+    <div class="meta"><div class="name" title="${esc(r.name)}">${esc(r.name)}</div>
+      <div class="sub"><span class="badge">${x.pacing}</span><span class="badge">${x.ground}</span><span class="badge">~${x.medianShotSeconds}s shot</span>${r.include ? "" : `<span class="badge">off</span>`}${r.queued ? `<span class="badge queued">needs Claude</span>` : ""}</div>
+      <div class="sub">${tags.map((t) => `<span class="tag ${a.reviewed ? "" : "unrev"}" title="${a.reviewed ? "accepted" : "suggested by " + a.by + ", not yet accepted"}">#${esc(t)}</span>`).join(" ")}</div></div></div>`;
+}
+function refPanel(r) {
+  const x = r.analysis, a = r.annotation || { moves: [], reviewed: false };
+  const has = new Set(a.moves);
+  return `<aside class="panel" aria-label="Reference details">
+    <div class="fv-wrap"><video id="rv" controls preload="metadata" src="${r.videoUrl}"></video></div>
+    ${r.sheetUrl ? `<div class="sheet"><a href="${r.sheetUrl}" target="_blank" rel="noopener"><img src="${r.sheetUrl}" alt="24 frames across the film" loading="lazy"></a></div>` : ""}
+    <h2>${esc(r.name)}</h2>
+    <label class="inline" style="margin-bottom:8px"><input type="checkbox" id="r-inc" ${r.include ? "checked" : ""}> Teach from this reference</label>
+    <dl>
+      <dt>Length</dt><dd>${dur(x.durationSeconds)}${x.measuredSeconds < x.durationSeconds ? ` (first ${Math.round(x.measuredSeconds)} s measured)` : ""} · ${x.width}×${x.height}</dd>
+      <dt>Cutting</dt><dd><strong>${x.pacing}</strong> · ${x.shots} shots · median ${x.medianShotSeconds} s · ${x.cutsPerMinute} cuts a minute</dd>
+      <dt>Ground</dt><dd><strong>${x.ground}</strong> · brightness ${Math.round(x.meanLuma)} · <span class="swatches">${x.dominantColors.map((c) => `<i style="background:${esc(c)}" title="${esc(c)}"></i>`).join("")}</span></dd>
+      <dt>Movement</dt><dd>${(x.motionEnergy * 100).toFixed(1)}% change a quarter-second apart · type and graphics ${(x.textShare * 100).toFixed(0)}% of the frame</dd>
+      <dt>Source</dt><dd>${esc(r.origin)} · ${when(r.addedAt)}</dd>
+    </dl>
+    <h2 class="sec" style="margin-top:6px">What is in it</h2>
+    <p class="note">${a.reviewed ? "Accepted: these teach the studio." : r.annotation ? `Suggested by ${esc(a.by)}: they teach nothing until you accept them.` : "Nothing tagged yet. Run /reelcut study-references and Claude will suggest tags from the contact sheet, or tick them yourself."}</p>
+    <div class="mvchips" id="r-moves">${Object.keys(MOVE_WORDS).map((m) => `<span class="chip ${has.has(m) ? "on" : ""}" data-mv="${m}" role="button" tabindex="0" title="${esc(MOVE_WORDS[m])}">${m}</span>`).join("")}</div>
+    <label for="r-text">How type is set</label><select id="r-text">${TEXT_STYLES.map((v) => `<option value="${v}" ${v === (a.textStyle || "") ? "selected" : ""}>${v || "—"}</option>`).join("")}</select>
+    <label for="r-note">Your note (for you; never becomes a rule)</label><input id="r-note" value="${esc(a.note || "")}" maxlength="400">
+    <div class="row">${r.annotation && !a.reviewed ? `<button class="primary" id="r-accept">Accept these tags</button>` : ""}<button id="r-save" class="${r.annotation && !a.reviewed ? "" : "primary"}">Save tags</button><button class="danger" id="r-del">Delete</button><button id="r-close">Close</button></div>
+    <p class="note" style="margin-top:12px">The film stays on this computer, is never placed in a reel, and is not part of the library. Deleting it removes what it taught.</p>
+  </aside>`;
+}
+function taughtPanel() {
+  const rules = (state.learn?.rules || []).filter((r) => r.subject && ["pacing", "ground", "move", "typestyle"].includes(r.subject.type) && r.status !== "expired");
+  const b = state.rbrief, list = (o) => Object.entries(o || {}).sort((p, q) => q[1] - p[1]).map(([k, n]) => `${k} ${n}`).join(", ") || "—";
+  if (!b || !b.included) return "";
+  return `<div class="taught"><strong>${b.included} reference${b.included === 1 ? "" : "s"} in use</strong>${b.excluded ? ` (${b.excluded} off)` : ""} · cutting: median shot ~${b.medianShotSeconds} s (${esc(list(b.pacing))}) · ground: ${esc(list(b.ground))}${b.moves.length ? ` · moves: ${esc(b.moves.slice(0, 6).map(([m, n]) => m + " " + n).join(", "))}` : ""}
+    <div style="margin-top:8px"><span class="note">${b.included < b.minimum ? `A rule needs ${b.minimum} references that agree; ${b.minimum - b.included} more before anything is proposed.` : rules.length ? "What they have taught so far. Rules do nothing until you switch them on in" : "They do not yet agree enough to propose a rule."} ${rules.length ? `<a href="#learnings">Learnings</a>` : ""}</span></div>
+    ${rules.map((r) => `<div class="r"><span class="badge ${r.status}">${r.status}</span>${esc(r.text)} <span class="note">${r.confidence.toFixed(2)}</span></div>`).join("")}</div>`;
+}
+async function renderReferences() {
+  await Promise.all([loadRefs(), api("/api/learnings").then((l) => { state.learn = l; })]);
+  const sel = state.refs.find((r) => r.id === state.rsel);
+  $("#main").innerHTML = `
+    <p class="note">Drop motion-graphics films you admire. reelcut measures how they cut and what they look like; the moves and type style come from tags Claude suggests and you accept. When three or more agree, a rule is <em>proposed</em> in <a href="#learnings">Learnings</a> — nothing changes a reel until you switch it on. The films stay on this computer and are never used in a reel.</p>
+    <div class="drop" id="rdrop" role="group" aria-label="Add reference videos">Drop videos or whole folders here.
+      <div class="row"><button id="r-files">Choose videos</button><button id="r-folder">Choose a folder</button></div>
+      <input type="file" id="r-in" accept="video/*,.mov,.mp4,.webm,.mkv" multiple hidden><input type="file" id="r-indir" webkitdirectory hidden></div>
+    <div class="uploads" id="r-up"></div>
+    ${state.rcounts.queue ? `<p class="note"><strong>${state.rcounts.queue}</strong> still need Claude to look at them: run <code>${esc(state.rcommand)}</code> in Claude Code <button id="r-copy">Copy command</button></p>` : ""}
+    ${taughtPanel()}
+    <div class="${sel ? "split" : ""}">
+      <div>${state.refs.length === 0 ? `<p class="empty">No references yet. Drop a few films above, or run<br><br><code>npm run references -- add path/to/film.mp4</code></p>` : `<div class="grid">${state.refs.map(refCard).join("")}</div>`}</div>
+      ${sel ? refPanel(sel) : ""}
+    </div>`;
+  renderRefUploads(); bindRefDrop();
+  $("#r-copy")?.addEventListener("click", () => { navigator.clipboard?.writeText(state.rcommand); toast("Command copied"); });
+  $$("[data-ref]").forEach((el) => el.addEventListener("click", () => { state.rsel = state.rsel === el.dataset.ref ? null : el.dataset.ref; renderReferences(); }));
+  if (sel) bindRef(sel);
+}
+function renderRefUploads() { const el = $("#r-up"); if (el) el.innerHTML = state.ruploads.map((u) => `<div class="u"><span class="name">${esc(u.name)}</span><span>${u.status}</span><span class="note">${esc(u.detail || "")}</span></div>`).join(""); }
+function bindRefDrop() {
+  const drop = $("#rdrop"); if (!drop) return;
+  const add = (files) => { for (const f of files) if (/^video\//.test(f.type) || /\.(mp4|mov|webm|mkv|m4v)$/i.test(f.name)) state.ruploads.push({ name: f.name, file: f, status: "waiting" }); pumpRefs(); };
+  $("#r-files").addEventListener("click", () => $("#r-in").click()); $("#r-folder").addEventListener("click", () => $("#r-indir").click());
+  $("#r-in").addEventListener("change", (e) => add([...e.target.files])); $("#r-indir").addEventListener("change", (e) => add([...e.target.files]));
+  drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("over"); }); drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+  drop.addEventListener("drop", async (e) => { e.preventDefault(); drop.classList.remove("over"); add((await filesFromDrop(e.dataTransfer)).map((i) => i.file)); });
+}
+let refBusy = 0;
+function pumpRefs() {
+  while (refBusy < 2) {
+    const u = state.ruploads.find((x) => x.status === "waiting"); if (!u) break;
+    u.status = "measuring…"; refBusy++; renderRefUploads();
+    fetch("/api/references/upload", { method: "POST", headers: { "x-reelcut-name": encodeURIComponent(u.name) }, body: u.file })
+      .then(async (res) => { const b = await res.json().catch(() => ({})); u.status = b.outcome ? b.outcome.state : "failed"; u.detail = (b.outcome && b.outcome.reason) || b.error || ""; })
+      .catch((e) => { u.status = "failed"; u.detail = e.message; })
+      .finally(async () => { refBusy--; renderRefUploads(); if (!state.ruploads.some((x) => x.status === "waiting" || x.status === "measuring…")) { await updateBadges(); if (location.hash.startsWith("#references")) renderReferences(); } else pumpRefs(); });
+  }
+}
+function bindRef(r) {
+  const edit = async (body, msg) => { try { await patch(`/api/references/${r.id}`, body); toast(msg); await updateBadges(); renderReferences(); } catch (e) { toast(e.message); } };
+  $("#r-close").addEventListener("click", () => { state.rsel = null; renderReferences(); });
+  $("#r-inc").addEventListener("change", (e) => edit({ include: e.target.checked }, e.target.checked ? "Teaching from it" : "Switched off"));
+  $$("[data-mv]").forEach((el) => el.addEventListener("click", () => el.classList.toggle("on")));
+  const body = () => ({ moves: $$("[data-mv].on").map((c) => c.dataset.mv), ...($("#r-text").value ? { textStyle: $("#r-text").value } : {}), note: $("#r-note").value });
+  $("#r-save").addEventListener("click", () => edit(body(), "Tags saved"));
+  $("#r-accept")?.addEventListener("click", () => edit({ accept: true }, "Accepted"));
+  $("#r-del").addEventListener("click", async () => { if (!confirm("Delete this reference and what it taught?")) return; try { await api(`/api/references/${r.id}`, { method: "DELETE" }); state.rsel = null; toast("Deleted"); await updateBadges(); renderReferences(); } catch (e) { toast(e.message); } });
+}
+
 // ---------- shell
 let poll;
 async function updateBadges() {
@@ -761,6 +868,7 @@ async function updateBadges() {
   $("#n-library").textContent = state.counts.all || "";
   $("#n-review").textContent = state.counts.pending || "";
   $("#n-footage").textContent = state.counts.footage || "";
+  try { const rr = await api("/api/references"); state.rcounts = rr.counts; $("#n-references").textContent = rr.counts.all || ""; } catch { /* the page still works */ }
   $("#n-folders").textContent = state.folders.length || "";
   const waiting = (state.learn?.rules || []).filter((r) => r.status === "proposed" && !r.conflictWith.length).length;
   $("#n-learnings").textContent = waiting || "";
@@ -778,6 +886,7 @@ async function route() {
     else if (tab === "reels") renderReels();
     else if (tab === "jobs") renderJobs();
     else if (tab === "footage") await renderFootage();
+    else if (tab === "references") await renderReferences();
     else if (tab === "review") await renderReview();
     else if (tab === "folders") await renderFolders();
     else if (tab === "learnings") await renderLearnings();

@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { FAST_SHOT_SECONDS, MEDIUM_SHOT_SECONDS } from "../references/vocab.js";
 import { SCOPE_GLOBAL, brandScope, type Rule, type RuleKind, type Signal, type Subject, type SubjectType } from "./schema.js";
 
 /**
@@ -61,8 +62,21 @@ export function templateText(kind: RuleKind, s: Subject): string {
     case "text": return prefer ? `Prefer ${v} on-screen text.` : `Avoid ${v} on-screen text.`;
     case "format": return prefer ? `Prefer the ${v} format.` : `Avoid the ${v} format.`;
     case "sound": return prefer ? `Prefer ${v} for sound effects.` : `Avoid ${v} for sound effects.`;
+    case "pacing": return prefer ? `Your references mostly cut ${v} (${PACING_HINT[v] ?? "similar shots"}).` : `Avoid ${v} cutting.`;
+    case "ground": return prefer ? `Your references mostly sit on a ${v} ground.` : `Avoid a ${v} ground.`;
+    case "move": return prefer ? `Your references often use the "${v}" move (${MOVE_HINT[v] ?? v}).` : `Avoid the "${v}" move.`;
+    case "typestyle": return prefer ? `Your references mostly set text as ${v}.` : `Avoid ${v} text.`;
   }
 }
+
+/** Readable gloss for the rule text, from the fixed values only. */
+const PACING_HINT: Record<string, string> = { fast: `median shot under ${FAST_SHOT_SECONDS}s`, medium: `median shot around ${FAST_SHOT_SECONDS} to ${MEDIUM_SHOT_SECONDS}s`, slow: `median shot over ${MEDIUM_SHOT_SECONDS}s` };
+const MOVE_HINT: Record<string, string> = {
+  wb: "text builds word by word", big: "huge type", kin: "kinetic type", ser: "italic serif accent", hl: "highlighter or box", strike: "strike-through", roll: "values rolling",
+  wheel: "wheel of values", ui: "real product UI", cur: "cursor", chat: "prompt or chat", code: "code", dev: "device frame", tilt: "3D-tilted card", fly: "arrival from depth",
+  num: "big number", mesh: "gradient ground", hud: "viewfinder corners", obj: "3D object", ill: "illustration", icon: "icon set", bub: "bubbles", logo: "logo moment",
+  foot: "footage", sr: "screen recording", cap: "captions",
+};
 
 interface Tally {
   kind: RuleKind;
@@ -146,6 +160,42 @@ function tallyAll(signals: readonly Signal[]): Map<string, Tally> {
   return tallies;
 }
 
+/** The least number of references that must agree before a rule is even proposed. */
+export const REFERENCE_MIN = 3;
+
+/**
+ * What a handful of reference videos agree on.
+ *
+ * A fact (a pacing, a ground, a move, a way of setting type) is evidence for a `prefer` rule when at least
+ * `REFERENCE_MIN` distinct references show it **and** they are the majority of the references that say
+ * anything about that kind of fact — so one odd batch cannot set a rule, and a reference nobody has
+ * annotated does not dilute a move that three annotated ones share. A value that can only be one thing
+ * per film (a pacing, a ground, a text style) needs more than half; moves, which a film has several of,
+ * need half. Always global: a reference is about taste, not about one brand.
+ */
+function referenceCandidates(signals: readonly Signal[]): { scope: string; kind: RuleKind; subject: Subject; p: number; n: number; evidence: { id: string; at: string }[] }[] {
+  const byType = new Map<SubjectType, Set<string>>();
+  const byValue = new Map<string, { subject: Subject; refs: Set<string>; evidence: { id: string; at: string }[] }>();
+  for (const s of signals) {
+    if (s.type !== "reference" || !s.subject || !s.reference) continue;
+    (byType.get(s.subject.type) ?? byType.set(s.subject.type, new Set()).get(s.subject.type)!).add(s.reference);
+    const key = subjectKey(s.subject);
+    const entry = byValue.get(key) ?? { subject: s.subject, refs: new Set<string>(), evidence: [] };
+    entry.refs.add(s.reference);
+    entry.evidence.push({ id: s.id, at: s.at });
+    byValue.set(key, entry);
+  }
+  const out: { scope: string; kind: RuleKind; subject: Subject; p: number; n: number; evidence: { id: string; at: string }[] }[] = [];
+  for (const entry of byValue.values()) {
+    const total = byType.get(entry.subject.type)?.size ?? 0;
+    const x = entry.refs.size;
+    const share = total > 0 ? x / total : 0;
+    const enough = entry.subject.type === "move" ? share >= 0.5 : share > 0.5;
+    if (x >= REFERENCE_MIN && enough) out.push({ scope: SCOPE_GLOBAL, kind: "prefer", subject: entry.subject, p: share, n: total, evidence: entry.evidence });
+  }
+  return out;
+}
+
 export interface InferResult {
   rules: Rule[];
 }
@@ -164,33 +214,36 @@ export function inferRules(signals: readonly Signal[], existing: readonly Rule[]
   const next = new Map<string, Rule>();
   const touched = new Set<string>();
 
+  interface Candidate { scope: string; kind: RuleKind; subject: Subject; p: number; n: number; evidence: { id: string; at: string }[] }
+  const candidates: Candidate[] = [];
+
   for (const t of tallyAll(signals).values()) {
     const prefersOk = (t.reels.size >= 3 && t.downs === 0) || (t.ups >= 2 && t.ups >= 2 * t.downs);
     const avoidOk = t.downs >= 2 && t.ups === 0;
-    const candidates: { kind: RuleKind; p: number; n: number }[] = [];
     const pos = t.ups + W_HABIT * t.habit;
     const neg = t.downs + W_RERENDER * t.rerenders;
-    if (prefersOk) candidates.push({ kind: "prefer", p: pos / (pos + neg), n: pos + neg });
-    if (avoidOk) candidates.push({ kind: "avoid", p: neg / (pos + neg), n: pos + neg });
+    if (prefersOk) candidates.push({ scope: t.scope, kind: "prefer", subject: t.subject, p: pos / (pos + neg), n: pos + neg, evidence: t.evidence });
+    if (avoidOk) candidates.push({ scope: t.scope, kind: "avoid", subject: t.subject, p: neg / (pos + neg), n: pos + neg, evidence: t.evidence });
+  }
+  candidates.push(...referenceCandidates(signals));
 
-    for (const c of candidates) {
-      const key = `${t.scope}|${c.kind}|${subjectKey(t.subject)}`;
-      touched.add(key);
-      const evidence = [...t.evidence].sort((a, b) => b.at.localeCompare(a.at));
-      const lastSeenAt = evidence[0]?.at ?? nowIso;
-      const confidence = decay(wilsonLower(c.p, c.n), lastSeenAt, now);
-      const ids = [...new Set(evidence.map((e) => e.id))].slice(0, EVIDENCE_CAP);
-      const prior = byKey.get(key);
-      if (prior) {
-        const keep = prior.origin === "user" || prior.pinned || prior.status === "disabled";
-        const status = keep ? prior.status : confidence < EXPIRE_BELOW ? "expired" : prior.status === "expired" ? "proposed" : prior.status;
-        next.set(key, { ...prior, evidence: ids, confidence: round(confidence), lastSeenAt, status });
-      } else if (confidence >= EXPIRE_BELOW) {
-        next.set(key, {
-          id: stableId(key), kind: c.kind, subject: t.subject, scope: t.scope, status: "proposed", pinned: false, origin: "inferred",
-          text: templateText(c.kind, t.subject), evidence: ids, confidence: round(confidence), createdAt: nowIso, lastSeenAt, conflictWith: [],
-        });
-      }
+  for (const c of candidates) {
+    const key = `${c.scope}|${c.kind}|${subjectKey(c.subject)}`;
+    touched.add(key);
+    const evidence = [...c.evidence].sort((a, b) => b.at.localeCompare(a.at));
+    const lastSeenAt = evidence[0]?.at ?? nowIso;
+    const confidence = decay(wilsonLower(c.p, c.n), lastSeenAt, now);
+    const ids = [...new Set(evidence.map((e) => e.id))].slice(0, EVIDENCE_CAP);
+    const prior = byKey.get(key);
+    if (prior) {
+      const keep = prior.origin === "user" || prior.pinned || prior.status === "disabled";
+      const status = keep ? prior.status : confidence < EXPIRE_BELOW ? "expired" : prior.status === "expired" ? "proposed" : prior.status;
+      next.set(key, { ...prior, evidence: ids, confidence: round(confidence), lastSeenAt, status });
+    } else if (confidence >= EXPIRE_BELOW) {
+      next.set(key, {
+        id: stableId(key), kind: c.kind, subject: c.subject, scope: c.scope, status: "proposed", pinned: false, origin: "inferred",
+        text: templateText(c.kind, c.subject), evidence: ids, confidence: round(confidence), createdAt: nowIso, lastSeenAt, conflictWith: [],
+      });
     }
   }
 
@@ -225,4 +278,4 @@ export function inferRules(signals: readonly Signal[], existing: readonly Rule[]
 
 const round = (n: number): number => Math.round(n * 1000) / 1000;
 
-export const SUBJECT_ORDER: SubjectType[] = ["look", "accent", "motion", "pattern", "text", "format", "sound"];
+export const SUBJECT_ORDER: SubjectType[] = ["look", "accent", "motion", "pattern", "text", "format", "sound", "pacing", "ground", "move", "typestyle"];

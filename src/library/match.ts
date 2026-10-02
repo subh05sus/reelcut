@@ -98,7 +98,8 @@ export function filterByTags(assets: readonly LibraryAsset[], tags: readonly str
  */
 export function matchLibrary(open: readonly AssetRequirement[], assets: readonly LibraryAsset[], options: MatchOptions = {}): LibraryMatchResult {
   const now = options.now ?? new Date();
-  const pool = filterByTags(assets, options.tags ?? []).filter((a) => a.status === "active" && a.review.state !== "rejected");
+  // A clip a model made is atmosphere, never the thing a requirement names, so it is not offered for one.
+  const pool = filterByTags(assets, options.tags ?? []).filter((a) => a.status === "active" && a.review.state !== "rejected" && a.provenance.source !== "generated");
 
   const matches: LibraryMatch[] = [];
   const stillOpen: AssetRequirement[] = [];

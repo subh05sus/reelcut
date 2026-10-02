@@ -295,8 +295,8 @@ export function placeBlob(source: string, file: string, move: boolean): void {
  */
 export function addAsset(source: string, input: AddAssetInput): AddAssetResult {
   if (!existsSync(source) || !statSync(source).isFile()) throw new LibraryError(`${source} is not a file`);
-  if (input.provenance.source === "drawn" && input.assetKind === "identity") {
-    throw new LibraryError("an identity asset cannot be drawn — a generated logo is a fabricated logo");
+  if ((input.provenance.source === "drawn" || input.provenance.source === "generated") && input.assetKind === "identity") {
+    throw new LibraryError("an identity asset cannot be drawn or generated — a generated logo is a fabricated logo");
   }
 
   const sha256 = sha256Of(source);
@@ -371,7 +371,7 @@ export function updateAsset(id: string, patch: AssetPatch): LibraryAsset {
     }
     if (patch.note !== undefined) asset.provenance.note = patch.note;
     if (patch.assetKind !== undefined) {
-      if (patch.assetKind === "identity" && asset.provenance.source === "drawn") throw new LibraryError("an identity asset cannot be drawn");
+      if (patch.assetKind === "identity" && (asset.provenance.source === "drawn" || asset.provenance.source === "generated")) throw new LibraryError("an identity asset cannot be drawn or generated");
       asset.assetKind = patch.assetKind;
     }
     if (patch.description !== undefined) asset.analysis = { ...asset.analysis, description: patch.description };
@@ -403,7 +403,10 @@ export function setReview(ids: readonly string[], state: ReviewState, by: NonNul
       const accepted = state === "approved" ? asset.tags.filter((t) => (asset.tagOrigin[t] ?? "user") !== "user") : [];
       asset.review = { state, by, at: now };
       if (state === "approved") asset.tagOrigin = reconcileOrigins(asset.tags, {}, "user");
-      if (options.kind) asset.assetKind = options.kind;
+      if (options.kind) {
+        if (options.kind === "identity" && (asset.provenance.source === "drawn" || asset.provenance.source === "generated")) throw new LibraryError("an identity asset cannot be drawn or generated");
+        asset.assetKind = options.kind;
+      }
       out.push({ asset, accepted });
     }
     return out;

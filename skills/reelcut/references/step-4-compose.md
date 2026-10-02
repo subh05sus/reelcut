@@ -64,6 +64,10 @@ holds. **The payoff gets the most time, not the least.**
 completely, *then* bring the next thing, with a real gap. `hyperframes check` catches the overlap
 if you get it wrong — it reports two text blocks in one zone.
 
+**A generated clip is a plate, not a picture of the product.** Where Higgsfield made a background, it goes full-bleed
+(`data-frame="plain" data-fit="cover"`) under a scrim, with all the meaning in HyperFrames type above it. Start
+from `assets/patterns/footage/generated-backdrop.html`. See [generate.md](generate.md).
+
 **A recording is placed, not recreated.** When the beat shows a real step and the library has a moment for
 it, the composition holds a `.rc-footage` box with a `data-footage` reference and the render makes the
 `<video>`. Frame it on the grid, enter it with a rise (never a blur: it is the product and is sharp from the

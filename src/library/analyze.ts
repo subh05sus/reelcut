@@ -504,3 +504,6 @@ export async function analyzeFile(file: string, options: AnalyzeOptions = {}): P
 
   return { mediaType, ext: sniffed.ext, mime: sniffed.mime, name, analysis, autoTags, ...(thumb ? { thumb } : {}), ...(filmstrip ? { filmstrip } : {}), notes };
 }
+
+/** For modules that run ffmpeg the same way (references). */
+export { run as runTool };

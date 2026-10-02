@@ -41,6 +41,8 @@ export type ResolutionKind =
   | "substitute"
   /** Draw it, because it is conceptual and nothing real is being impersonated. */
   | "generate"
+  /** Generate a clip with Higgsfield: atmosphere only, and only when its MCP is connected. */
+  | "higgsfield"
   /** Change the brief so the beat does not need it — usually type-forward instead. */
   | "recompose"
   /** Leave it out. Only ever available to an optional requirement. */
@@ -184,6 +186,12 @@ export function resolutionsFor(req: AssetRequirement): GapResolution[] {
       kind: "generate",
       label: `Draw "${req.name}"`,
       note: "It is conceptual, so nothing real is being impersonated and no reel needs to stall for it.",
+    });
+    out.push({
+      kind: "higgsfield",
+      label: `Generate "${req.name}" with Higgsfield (AI video)`,
+      needs: "the Higgsfield MCP connected, and credits",
+      note: "Atmosphere only — never a real product, mark or screen. If it is not connected, or the generation fails, drawing it above is the fallback.",
     });
     out.push({
       kind: "substitute",

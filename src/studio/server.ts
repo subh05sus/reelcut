@@ -29,6 +29,9 @@ import { claudeQueue, needsClaude } from "../library/queue.js";
 import { blobPath, findAsset, LibraryError, libraryRoot, loadIndex, setReview, thumbBlobPath, updateAsset, type AssetPatch } from "../library/store.js";
 import { addMoment, findMoments, patchFootage, refreshFootageAnalysis, removeMoment, updateMoment, type FootagePatch, type MomentInput, type MomentPatch } from "../library/footage.js";
 import { PLATFORMS } from "../library/schema.js";
+import { HIGGSFIELD_SETTINGS, loadSettings, setHiggsfieldSetting, type HiggsfieldSetting } from "../library/settings.js";
+import { readGeneration } from "../generate/log.js";
+import { acceptAnnotation, annotateReference, buildReferenceBrief, ingestReferenceUpload, loadReferences, referenceBlobPath, referenceSheetPath, referenceThumbPath, removeReference, studyQueue, updateReference, type Reference } from "../references/index.js";
 import type { LibraryAsset } from "../library/schema.js";
 import { filterByTags } from "../library/match.js";
 import { findRun, listRuns } from "../library/runs.js";
@@ -225,6 +228,17 @@ export function cleanRelPath(raw: string): string | undefined {
 /** An asset as the page sees it: the index entry plus whether it is waiting for Claude and where its preview is. */
 export function publicAsset(a: LibraryAsset): LibraryAsset & { queued: boolean; thumbUrl?: string; stripUrl?: string } {
   return { ...a, queued: needsClaude(a), ...(a.thumb ? { thumbUrl: `/files/thumb/${a.id}` } : {}), ...(a.analysis.filmstrip ? { stripUrl: `/files/strip/${a.id}` } : {}) };
+}
+
+/** A reference as the page sees it: the record plus where its pictures and video are. */
+export function publicReference(r: Reference): Reference & { thumbUrl?: string; sheetUrl?: string; videoUrl: string; queued: boolean } {
+  return {
+    ...r,
+    videoUrl: `/files/reference/${r.id}`,
+    ...(r.thumb ? { thumbUrl: `/files/reference-thumb/${r.id}` } : {}),
+    ...(r.sheet ? { sheetUrl: `/files/reference-sheet/${r.id}` } : {}),
+    queued: r.include && !r.annotation,
+  };
 }
 
 function numberField(b: Record<string, unknown>, name: string): number | undefined {
@@ -437,6 +451,67 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
         return sendJson(res, 200, { asset: publicAsset(asset) });
       }
     }
+    // ---- settings that are not a master pause: for now, whether a reel may use Higgsfield
+    if (parts[0] === "api" && parts[1] === "settings") {
+      if (read && parts.length === 2) return sendJson(res, 200, { higgsfield: loadSettings().higgsfield, options: HIGGSFIELD_SETTINGS });
+      if (method === "POST" && parts[2] === "higgsfield" && parts.length === 3) {
+        const b = (await readBody(req)) as { value?: unknown };
+        if (typeof b.value !== "string" || !(HIGGSFIELD_SETTINGS as readonly string[]).includes(b.value)) throw new HttpError(400, `value must be one of ${HIGGSFIELD_SETTINGS.join(", ")}`);
+        return sendJson(res, 200, { higgsfield: setHiggsfieldSetting(b.value as HiggsfieldSetting).higgsfield });
+      }
+    }
+
+    // ---- references: other people's films, kept to learn from. Their own index; nothing here is an asset.
+    if (parts[0] === "api" && parts[1] === "references") {
+      if (read && parts.length === 2) {
+        const refs = loadReferences().references;
+        return sendJson(res, 200, {
+          references: [...refs].sort((a, b) => b.addedAt.localeCompare(a.addedAt)).map(publicReference),
+          brief: buildReferenceBrief(refs),
+          counts: { all: refs.length, included: refs.filter((r) => r.include).length, queue: studyQueue(refs).length },
+          command: "/reelcut study-references",
+        });
+      }
+      if (method === "POST" && parts[2] === "upload" && parts.length === 3) {
+        const length = Number(req.headers["content-length"]);
+        if (!Number.isFinite(length) || length <= 0) throw new HttpError(411, "Content-Length is required: send the file as the request body");
+        if (length > maxFileBytes()) throw new HttpError(413, `larger than the ${Math.round(maxFileBytes() / 1024 / 1024)} MB limit`);
+        let name: string;
+        try {
+          name = cleanName(decodeURIComponent(typeof req.headers["x-reelcut-name"] === "string" ? req.headers["x-reelcut-name"] : "reference"));
+        } catch {
+          throw new HttpError(400, "bad file name header");
+        }
+        const outcome = await ingestReferenceUpload(req, name);
+        const ref = outcome.id ? loadReferences().references.find((r) => r.id === outcome.id) : undefined;
+        return sendJson(res, outcome.state === "added" ? 201 : outcome.state === "duplicate" ? 200 : 422, { outcome, ...(ref ? { reference: publicReference(ref) } : {}) });
+      }
+      if (method === "PATCH" && parts.length === 3) {
+        const b = (await readBody(req)) as Record<string, unknown>;
+        const id = parts[2]!;
+        if (b.name !== undefined && typeof b.name !== "string") throw new HttpError(400, "name must be a string");
+        if (b.include !== undefined && typeof b.include !== "boolean") throw new HttpError(400, "include must be true or false");
+        if (b.moves !== undefined && (!Array.isArray(b.moves) || !b.moves.every((m) => typeof m === "string"))) throw new HttpError(400, "moves must be a list of move words");
+        if (b.textStyle !== undefined && typeof b.textStyle !== "string") throw new HttpError(400, "textStyle must be a word");
+        if (b.note !== undefined && typeof b.note !== "string") throw new HttpError(400, "note must be a string");
+        let ref = loadReferences().references.find((r) => r.id === id);
+        if (!ref) throw new HttpError(404, "no such reference");
+        if (b.name !== undefined || b.include !== undefined) ref = updateReference(id, { ...(b.name !== undefined ? { name: b.name as string } : {}), ...(b.include !== undefined ? { include: b.include as boolean } : {}) });
+        // A person's edit to the tags is accepted as it is written. Claude's tags only ever come in through the CLI.
+        if (b.moves !== undefined || b.textStyle !== undefined || b.note !== undefined) {
+          ref = annotateReference(id, { ...(b.moves !== undefined ? { moves: b.moves as string[] } : {}), ...(b.textStyle !== undefined ? { textStyle: b.textStyle as string } : {}), ...(b.note !== undefined ? { note: b.note as string } : {}) }, "user");
+        } else if (b.accept === true) {
+          ref = acceptAnnotation(id);
+        }
+        return sendJson(res, 200, { reference: publicReference(ref), brief: buildReferenceBrief(loadReferences().references) });
+      }
+      if (method === "DELETE" && parts.length === 3) {
+        if (!loadReferences().references.some((r) => r.id === parts[2])) throw new HttpError(404, "no such reference");
+        removeReference(parts[2]!);
+        return sendJson(res, 200, { ok: true, brief: buildReferenceBrief(loadReferences().references) });
+      }
+    }
+
     // ---- footage: recordings, the moments marked on them, and a person's yes to using one
     if (parts[0] === "api" && parts[1] === "footage" && parts[2] === "find" && read && parts.length === 3) {
       const phrase = url.searchParams.get("q") ?? "";
@@ -649,6 +724,7 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
           jobs: jobs.filter((j) => j.runId === run.id),
           feedback: learned.signals.filter((s) => s.reel === run.id && s.type === "thumb"),
           applied: learned.rules.filter((r) => run.appliedLearnings.includes(r.id)),
+          generation: run.missing ? [] : (() => { try { return readGeneration(JSON.parse(readFileSync(run.manifest, "utf8"))); } catch { return []; } })(),
         });
       }
       if (method === "POST" && parts.length === 4 && parts[3] === "feedback" && run) {
@@ -709,6 +785,12 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
         const asset = findAsset(parts[2]!.replace(/\.[a-z0-9]+$/i, ""));
         if (!asset) throw new HttpError(404, "no such asset");
         return sendFile(req, res, blobPath(asset));
+      }
+      if ((parts[1] === "reference" || parts[1] === "reference-sheet" || parts[1] === "reference-thumb") && parts.length === 3) {
+        const ref = loadReferences().references.find((r) => r.id === parts[2]!.replace(/\.[a-z0-9]+$/i, ""));
+        const file = ref ? (parts[1] === "reference" ? referenceBlobPath(ref) : parts[1] === "reference-sheet" ? referenceSheetPath(ref) : referenceThumbPath(ref)) : undefined;
+        if (!file) throw new HttpError(404, "no such file");
+        return sendFile(req, res, file);
       }
       if (parts[1] === "strip" && parts.length === 3) {
         const asset = findAsset(parts[2]!.replace(/\.[a-z0-9]+$/i, ""));

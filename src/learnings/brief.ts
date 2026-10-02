@@ -45,6 +45,7 @@ const SECTIONS: { title: string; types: readonly (typeof SUBJECT_ORDER)[number][
   { title: "Look and palette", types: ["look", "accent"] },
   { title: "Motion and sound", types: ["motion", "sound"] },
   { title: "Patterns and moves", types: ["pattern"] },
+  { title: "Learned from your references", types: ["pacing", "ground", "move", "typestyle"] },
   { title: "Format and text", types: ["format", "text"] },
 ];
 

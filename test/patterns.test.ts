@@ -63,11 +63,11 @@ describe("the design kit", () => {
   });
 });
 
-describe("the footage pattern", () => {
-  const html = readFileSync(path.join(patternsDir, "footage", "footage-window.html"), "utf8");
+describe.each(["footage-window", "generated-backdrop"])("the footage pattern %s", (name) => {
+  const html = readFileSync(path.join(patternsDir, "footage", `${name}.html`), "utf8");
 
   it("agrees with itself about its id, its timeline and its frame", () => {
-    expect(inspectComposition(html)).toMatchObject({ hasTemplate: true, compositionId: "footage-window", timelineKey: "footage-window", width: 1080, height: 1080 });
+    expect(inspectComposition(html)).toMatchObject({ hasTemplate: true, compositionId: name, timelineKey: name, width: 1080, height: 1080 });
   });
 
   it("asks for a look the kit has, and for helpers the kit exports", () => {
@@ -76,12 +76,12 @@ describe("the footage pattern", () => {
     for (const m of html.matchAll(/RC\.([a-zA-Z]+)\(/g)) expect(helpers.has(m[1]!), m[1]).toBe(true);
   });
 
-  it("places the recording with a placeholder and draws nothing in it", () => {
+  it("places the clip with a placeholder and draws nothing in it", () => {
     expect(html).toMatch(/class="rc-footage" data-footage="[0-9a-f]{16}:m_[0-9a-f]{8}"/);
     expect(html).not.toMatch(/<video|<img/);
   });
 
-  it("keeps the recording sharp: it is never blurred in", () => {
+  it("keeps the clip sharp: it is never blurred in", () => {
     expect(html).not.toMatch(/blurIn\(tl, "#root \.rc-footage"/);
   });
 
