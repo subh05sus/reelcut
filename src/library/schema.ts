@@ -95,6 +95,10 @@ export const AnalysisSchema = z.object({
   createdAt: z.string().optional(),
   /** Blob-relative path of a strip of frames across the recording, e.g. `thumbs/3f2a…-strip.png`. */
   filmstrip: z.string().optional(),
+  /** A flat green backdrop was found: its colour, and how much of the frame and of its border it fills. */
+  greenScreen: z.object({ color: z.string().regex(/^#[0-9a-f]{6}$/), coverage: z.number(), border: z.number() }).optional(),
+  /** When the recording was looked at for a green screen, so it is not looked at again. */
+  greenScreenChecked: z.string().optional(),
 });
 export type Analysis = z.infer<typeof AnalysisSchema>;
 
@@ -131,6 +135,31 @@ export const MomentSchema = z.object({
 });
 export type Moment = z.infer<typeof MomentSchema>;
 
+/**
+ * How a green-screen recording is keyed into a transparent copy. The original is never touched: the keyed
+ * WebM and a sidecar of where the subject is in each frame live beside it, made once and reused until
+ * these settings (or the keying algorithm) change.
+ */
+export const KeySchema = z.object({
+  /** Off: the recording is used as recorded, green and all. */
+  enabled: z.boolean().default(true),
+  /** Overrides the detected backdrop colour. */
+  color: z.string().regex(/^#[0-9a-f]{6}$/).optional(),
+  tolerance: z.number().min(0).max(0.5).default(0.06),
+  softness: z.number().min(0).max(1).default(1),
+  despill: z.number().min(0).max(1).default(1),
+  shadows: z.enum(["keep", "drop"]).default("keep"),
+  choke: z.number().int().min(0).max(3).default(0),
+  /** Blob-relative path of the keyed WebM, e.g. `keyed/3f2a….webm`; set once it has been made. */
+  file: z.string().optional(),
+  /** What the keyed file was made from; a different value means it is out of date. */
+  hash: z.string().optional(),
+  keyedAt: z.string().optional(),
+  /** Why the last attempt failed, if it did. */
+  error: z.string().optional(),
+});
+export type Key = z.infer<typeof KeySchema>;
+
 export const PLATFORMS = ["mac", "windows", "web", "ios", "android", "other"] as const;
 
 export const FootageSchema = z.object({
@@ -146,6 +175,8 @@ export const FootageSchema = z.object({
   /** Body UI text as recorded, in pixels, when the estimate from the size is wrong. */
   textPx: z.number().positive().max(200).optional(),
   moments: z.array(MomentSchema).default([]),
+  /** Green-screen removal. Absent means "as detected, with the defaults". */
+  key: KeySchema.optional(),
 });
 export type Footage = z.infer<typeof FootageSchema>;
 

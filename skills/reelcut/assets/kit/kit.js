@@ -607,6 +607,19 @@
     return tl;
   }
 
+  /**
+   * Let a cut-out drift: one slow, finite move (up and a touch of tilt) over `duration`, never a loop. For a
+   * keyed recording (data-frame="cutout") that has landed and would otherwise sit dead still. `y` and `rotate`
+   * are where it ends up, relative to where it is.
+   */
+  function float(tl, target, at, o) {
+    o = o || {};
+    q(target).forEach(function (el) {
+      tl.fromTo(el, { y: 0, rotation: 0 }, { y: o.y != null ? o.y : -14, rotation: o.rotate != null ? o.rotate : -0.8, duration: o.duration || 2.4, ease: o.ease || "sine.inOut", immediateRender: false }, at);
+    });
+    return tl;
+  }
+
   /** Bring a ring (.rc-spot, inside the recording's .rc-fv) onto the part it points at; `out` takes it away. */
   function spot(tl, target, at, o) {
     o = o || {};
@@ -622,6 +635,6 @@
     blurIn: blurIn, blurOut: blurOut, words: words, chars: chars, lines: lines, rise: rise, flyIn: flyIn, pop: pop,
     type: type, count: count, roll: roll, wheel: wheel, mark: mark,
     cursor: cursor, click: click, cursorEl: cursorEl,
-    camera: camera, iris: iris, wipe: wipe, smear: smear, draw: draw, drift: drift, hud: hud, glass: glass, scramble: scramble, zoomTo: zoomTo, spot: spot,
+    camera: camera, iris: iris, wipe: wipe, smear: smear, draw: draw, drift: drift, hud: hud, glass: glass, scramble: scramble, zoomTo: zoomTo, spot: spot, float: float,
   };
 })();

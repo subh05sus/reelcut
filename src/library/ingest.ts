@@ -5,6 +5,7 @@ import path from "node:path";
 import { randomUUID } from "node:crypto";
 import type { AssetKind } from "../brief/assetRequirementTypes.js";
 import { analyzeFile, wordsFrom } from "./analyze.js";
+import { scheduleKey } from "./key.js";
 import { recordJournal, type JournalEntry } from "./journal.js";
 import { insertPrepared, libraryRoot, loadIndex, mutateIndex, placeBlob, reelcutHome, type PreparedAsset } from "./store.js";
 import { normaliseTags, type TagOrigin } from "./schema.js";
@@ -356,6 +357,8 @@ export async function ingestBatch(items: readonly IngestItem[], options: IngestO
         finish(p.item, { path: p.item.file, state, ...(result.blocked ? { reason: `${result.blocked} earlier, so not added again` } : {}), sha: p.prepared.sha256, assetId: p.prepared.id });
       }
     });
+    // A recording on a green screen is keyed in the background as soon as it is in: by the time anyone uses it, it is done.
+    for (const p of prepared) if (p.prepared.analysis?.greenScreen && p.prepared.mediaType === "video") scheduleKey(p.prepared.id);
   }
 
   const results = items.map((item) => outcomes.get(item) ?? { path: item.file, state: "failed" as const, reason: "not reached (stopped)" });

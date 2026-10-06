@@ -53,30 +53,28 @@ npm run footage -- moment add <asset> --label "download Claude" --in 2 --out 8.5
 npm run footage -- meta <asset> --app Claude --platform mac --recorded 2026-09-30
 ```
 
-**Claude may propose; it may not decide.** `/reelcut tag-footage` has Claude look at each unmarked
-recording's filmstrip and run `npm run footage -- propose …`. A proposal is shown in italics in the Footage
-tab and cannot be matched to a script line until a person confirms it — because the label is what a script
-line gets matched to, and a wrong one puts the wrong step in somebody's film. The filmstrip is eight frames,
-so Claude's boundaries are coarse; the person sets the real ones.
+**Claude indexes; it applies at once.** `/reelcut tag-footage` has Claude look at each unmarked recording's
+filmstrip and run `npm run footage -- propose …`. The moment is usable immediately and shown "by Claude" in the
+Footage tab, because the user chose to remove the approval step: waiting on a person to confirm every label
+stalled whole renders. The filmstrip is eight frames, so Claude's boundaries are coarse; tighten them in the
+Footage tab if a step starts early.
 
-## The gates a recording passes before it is used by itself
+## What stops a recording being used
 
-All of these, in the Footage tab (each is a tick in its checklist):
+Almost nothing, on purpose. There is no approval tick, no confirmation of a moment and no private-information
+tick. What remains:
 
-1. **Approved** — a person looked at the recording.
-2. **Checked for private information** — a person watched *all of it* for emails, notifications, other
-   windows, the menu bar, a colleague's name. This is its own tick, not implied by approving, and **Claude
-   never sets it** (`npm run footage -- check` refuses without `--watched`, which is for when the user says
-   they did). The render refuses a recording without it: there is no way to mask anything in a recording, so
-   the check is the only protection there is.
-3. **Dated** — recorded within 90 days, like a capture. The date comes from the file when it has one, or the
-   person's. An unknown date is never treated as recent.
-4. **A confirmed moment** — not one of Claude's proposals.
-5. **Said yes to once** — the first time a moment is matched it is shown to the user, who is asked in Step 2.
-   A render that uses it records that, and after that a fresh, exact match is used by itself. Moving the
-   moment's start or end asks again.
+1. **Rejected.** A person rejected the recording (the Footage tab's *Reject*): it is never used.
+2. **Dated** — recorded within 90 days, like a capture. The date comes from the file or the person's. An old
+   or unknown date is *offered* in Step 2 rather than used silently.
+3. **Said yes to once** — the first time a moment is matched it is shown to the user in Step 2, in one
+   message with every other question. A render that uses it records that; after that a fresh, exact match is
+   used by itself. Moving the moment's start or end asks again.
+4. **Fits the slot** (see below) and **readable** at the size shown.
 
-Anything short of all five is a **proposal** that says what is missing.
+Because nothing checks a recording for private information any more, and nothing can be masked in one, look at
+the filmstrip yourself and **name anything private in `report.md`** (a browser tab strip, a notification, an
+email address). It is a heads-up for the user, not a gate.
 
 ## Finding the moment a line wants
 
@@ -179,18 +177,53 @@ whatever else is mixed.
   Footage tab. HyperFrames renders it through a proxy for seeking; the original is untouched.
 - The frame checker's `blank_panel` finding is **reported, not gated** for a beat with footage in it: a real
   interface has empty canvases and loading panels, and that is not a composition that forgot to draw.
-- The render refuses, with the reason and the fix, a recording that is not approved, not checked for
-  private information, a moment that is a proposal, a rejected file, or a moment too long for its slot.
-  An old recording renders with a warning.
+- The render refuses, with the reason and the fix, a rejected file, a moment too long for its slot, or a green
+  screen with no keyed copy. An old recording renders with a warning. A beat that is refused is *blocked*, not fatal:
+  the other beats render, and `--preflight` lists every blocked beat in a second.
 
 Put each placed recording in `report.md` with its provenance, like any asset: the moment, the file, who
 recorded it and when, and what was checked.
 
+## Green screens
+
+A recording shot on a flat green backdrop (a card or window on a green screen) is **found when it comes in** (six
+small frames: one dominant strongly-green colour that fills a good part of the frame, touches its border and is
+flat; a green website, a lime button or a photo of grass is not a screen) and **keyed in the background, once**.
+The result is a transparent WebM (VP9 with alpha) saved in the library's `keyed/` folder beside the untouched
+original, with a small sidecar of where the subject is in every frame. It is made again only when its settings,
+the keying algorithm or the source change. A recording added before this existed is looked at the first time the
+Footage tab is opened or a reel that uses it renders (or `npm run footage -- key --all`).
+
+How the green comes out:
+
+- The backdrop is what is reached from the frame's border through green-ish pixels, plus a few pixels around it.
+  Green *inside* the subject (a lime button, a logo) is not connected to the border and is left as recorded.
+- Each pixel there is `subject·a + green·(1 − a)`. The green it has over its other channels gives `a`, and the
+  subject's own colour is recovered by taking the green back out: a white card's anti-aliased edge becomes
+  partly transparent **white**, with no green fringe (this is the despill).
+- A **soft drop shadow** on the green is darkened green, which is exactly `black·a`: it is kept as a soft black
+  shadow. Per recording, *Shadows: keep / remove*.
+- Tolerance (how much green still counts as backdrop; raise it for specks), softness (hard or soft edge),
+  despill and an edge choke (eat 1–3 px into a stubborn halo) are in the Footage tab, with an original/keyed
+  preview on a checkerboard, or `npm run footage -- key <asset> --tolerance 0.08 --shadows drop`.
+  Changing one re-keys in the background.
+
+Placed, a keyed moment is a **cut-out**: the box is cropped to where the subject is during *that moment* (a card
+that slides in is not cut), takes the card's own shape, has no background, rounding or frame, and sits straight on
+the ground. Use `data-frame="cutout"` (the default for a keyed recording), optionally `data-shadow="soft|lifted"`
+for a drop-shadow that follows its outline, and `RC.float` for a slow drift. Start from
+[`patterns/footage/footage-cutout.html`](../assets/patterns/footage/footage-cutout.html). A held last frame is
+made from the keyed copy, so it is transparent too.
+
+If keying fails, the beat is **blocked** with the reason and `npm run footage -- key <asset>` as the fix; a green
+square is never rendered. Turn keying off for a recording (`--off`) only if it is meant to be seen as recorded.
+Sound is not carried into the keyed copy (the voiceover owns the track).
+
 ## Where it breaks, and what stops it
 
-1. **A stale or leaking recording.** A UI that has since changed passes every gate once it fills the slot,
-   and a notification in the corner cannot be masked. → approval, a dated recording that goes stale at 90
-   days, and a private-information check that only a person can tick and that the render enforces.
+1. **A stale or leaking recording.** A UI that has since changed passes once it fills the slot, and a
+   notification in the corner cannot be masked. → a dated recording that goes stale at 90 days, and a line in
+   `report.md` naming anything private seen on the filmstrip. (There is no longer a tick that stops it.)
 2. **A moment that does not fit.** A 40 s install in a 3 s beat, or a recorder with a variable frame rate. →
    the beat's length is the voiceover's; the recording adapts by an even rate to 2x or a held last frame,
    and otherwise is refused with options. Variable frame rates are detected on ingest and rendered through a

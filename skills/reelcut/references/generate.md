@@ -84,9 +84,8 @@ npm run generate -- add out/generated/beat-01.mp4 --mode atmosphere --model "Veo
 ```
 
 It becomes a library video asset whose provenance records the model, the prompt, the job and the credits,
-labelled **AI-generated** everywhere (the Library card, the reel's report). It starts **pending**: **a person
-approves each generated clip** in the Review tab (`npm run library -- review approve <id>`) before a reel can
-use it. It does not need the private-information check recorded footage needs — nothing real is in it.
+labelled **AI-generated** everywhere (the Library card, the reel's report). There is no approval step: a reel can
+use it as soon as it is registered, and only a clip the user rejects is refused.
 
 ### 6. Place it
 
@@ -123,7 +122,7 @@ credits.
 | the beat needs something real | composed in HyperFrames; the plan says why |
 | the tool errors, is not signed in, runs out of credits, rejects the prompt, or takes over ~90 s | **that beat** is composed in HyperFrames; `record … --outcome fallback --reason …` |
 | over the limit of 6 clips | the rest are composed in HyperFrames |
-| the clip is not approved when rendering | the beat is refused with the fix; approve it or compose the beat in HyperFrames |
+| the clip was rejected when rendering | the beat is blocked with the reason; use another clip or compose the beat in HyperFrames |
 
 A failure is never a reason to stop the reel, and never a reason to retry more than once.
 
@@ -137,7 +136,7 @@ estimate are what bound the spend.
 
 1. **A clip that fabricates a product, a logo or text.** Eligibility by requirement kind; a prompt that forbids
    them; generic-only provenance; stills that look like marks or screens are never animated; real type is
-   drawn by HyperFrames; a person approves each clip; the report labels it.
+   drawn by HyperFrames; the report labels it.
 2. **Not connected, slow, out of credits.** Connection is checked before any question; one estimate and one
    yes per reel; a clip cap; a timeout; per-beat fallback, logged; saved clips mean no regeneration.
 3. **A prompt that carries somebody's words.** The idea is cleaned to plain words and bounded, and the fixed

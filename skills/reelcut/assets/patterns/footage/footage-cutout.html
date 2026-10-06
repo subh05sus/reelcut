@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* FOOTAGE CUT-OUT. A recording shot on a green screen, keyed to transparency by the render and cropped to the
+     card, so what sits on the ground is the card itself, with the soft shadow it was recorded with. Nothing is
+     drawn: the recording is a moment from the library (see `npm run footage -- find`), keyed once and reused.
+     The box takes the card's own shape, so its height follows its width: top = 336 + (660 - height) / 2 centres it
+     in the content region (a 2.3:1 card at 912 wide is 396 tall: top 468). It lands with a rise (never blurred:
+     it is the product), then drifts up by a few pixels with a touch of tilt, once, so it never sits dead still.
+     `data-shadow="soft"` adds a drop-shadow that follows the cut-out's outline. To use it: replace data-footage
+     with a moment's `<asset>:<moment>` and the words with your own. */
+  #root { --accent: #3b5bff; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 540px 540px; }
+  #root .rc-footage { left: 84px; top: 468px; width: 912px; }
+</style>
+<div id="root" data-look="paper" data-composition-id="footage-cutout" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(59,91,255,.12); --mesh-2: rgba(212,83,43,.07)"></div>
+  <div class="cam">
+    <div class="rc-head"><span class="ln" style="--ox:-4.3px">Folge</span><span class="ln" style="--ox:2.1px"><em class="rc">Marlon.</em></span></div>
+    <div class="rc-footage" data-footage="0000000000000000:m_00000000" data-shadow="soft"></div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  RC.words(tl, "#root .rc-head .ln:first-child", 0.05, { lead: true });
+  RC.blurIn(tl, "#root .rc-head em", 0.25, { blur: 12, y: 18 });
+  RC.rise(tl, "#root .rc-footage", 0.1, { lead: true, y: 40, duration: 0.8 });
+  RC.float(tl, "#root .rc-footage", 0.9, { y: -12, rotate: -0.7, duration: 3.2 });
+  RC.camera(tl, "#root .cam", 0, { duration: 4.4, to: { scale: 1.02 } });
+  RC.hold(tl, 4.3);
+  window.__timelines["footage-cutout"] = tl;
+})();
+</script>
+</template>
+</body></html>

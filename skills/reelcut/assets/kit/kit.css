@@ -347,6 +347,14 @@
 [data-look] .rc-footage[data-frame="plain"] { border-radius: 0; box-shadow: none; }
 [data-look] .rc-footage .rc-fv { position: absolute; inset: 0; transform-origin: 0 0; }
 [data-look] .rc-footage .rc-fv > video, [data-look] .rc-footage .rc-fv > img.rc-fh { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
+/* A cut-out: a recording shot on a green screen, keyed to transparency by the render (data-keyed). The box is
+   cropped to where the subject is, so it is the card or the window and nothing round it, and it sits straight on
+   the ground: no background, no rounding, no frame. Shadows are drop-shadows of the cut-out itself, so they follow
+   its real outline; a soft shadow the recording already had is kept as part of it.
+   data-shadow: "soft" (resting), "lifted" (floating), none by default. The filter is on the box, after its crop. */
+[data-look] .rc-footage[data-frame="cutout"] { background: none; border-radius: 0; box-shadow: none; }
+[data-look] .rc-footage[data-frame="cutout"][data-shadow="soft"] { filter: drop-shadow(0 10px 22px rgba(0,0,0,.22)) drop-shadow(0 2px 5px rgba(0,0,0,.16)); }
+[data-look] .rc-footage[data-frame="cutout"][data-shadow="lifted"] { filter: drop-shadow(0 34px 44px rgba(0,0,0,.30)) drop-shadow(0 6px 10px rgba(0,0,0,.18)); }
 /* A ring over a part of the recording: --x --y --w --h are fractions of the recording, so it stays on the
    thing it points at however far the recording is zoomed. */
 /* data-fit="cover" fills the box and crops: for a generated background that is a plate, never for a recording

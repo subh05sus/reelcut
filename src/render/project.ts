@@ -5,10 +5,9 @@
  * briefs, captures — was data; everything downstream — `check`, `render`, the frame checker — was
  * a tool waiting for a project. Nothing turned one into the other.
  *
- * It emits two shapes of the same content:
- *
- *   master/                  every beat mounted on hard cuts — the whole reel
- *   clips/beat-03/           one standalone project per beat — what goes into an edit
+ * It emits one standalone project per beat (`clips/beat-03/`), which is what goes into an edit. The
+ * master is not a project: it is the rendered clips joined end to end (`assemble.ts`), so it is exactly
+ * the frames that were checked.
  *
  * Each clip is its own project directory on purpose. A beat that fails `check` or renders wrong
  * then fails *alone*: the other fourteen still ship. One shared project would let a single layout
@@ -87,12 +86,12 @@ export interface ProjectFile {
 }
 
 export interface BuiltProject {
-  master: ProjectFile[];
+  /** One project per beat that was built; a skipped beat has a placement but no project. */
   clips: Record<string, ProjectFile[]>;
   /** Every audio file the project references, with where it goes, so the caller can copy them. */
   assets: { source: string; target: string }[];
   totalSeconds: number;
-  /** Each beat's frame-exact placement in the master. */
+  /** Every beat's frame-exact placement in the reel, skipped beats included, so a clip's length never depends on which beats were built. */
   placements: BeatPlacement[];
 }
 
@@ -276,18 +275,20 @@ function clipElement(id: string, start: number, duration: number, options: Proje
 }
 
 /**
- * Build the master and one standalone project per beat.
+ * Build one standalone project per beat.
  *
  * `sfx` is only honoured when `withSfx` is true — sound is opt-in, so a run without `--sfx` renders
- * silent even if the briefs mentioned sounds.
+ * silent even if the briefs mentioned sounds. Beats in `skip` are placed on the reel's timeline but not
+ * built or checked: they are blocked for a reason the caller reports, and the beats around them still render
+ * at exactly the length they will have in the finished reel.
  */
-export function buildProject(beats: readonly ProjectBeat[], options: ProjectOptions, withSfx = false): BuiltProject {
+export function buildProject(beats: readonly ProjectBeat[], options: ProjectOptions, withSfx = false, skip: ReadonlySet<string> = new Set()): BuiltProject {
   if (beats.length === 0) throw new ProjectError("no beats to build");
   const seen = new Set<string>();
   for (const beat of beats) {
     if (seen.has(beat.id)) throw new ProjectError(`duplicate beat id ${beat.id}`);
     seen.add(beat.id);
-    assertComposition(beat, options);
+    if (!skip.has(beat.id)) assertComposition(beat, options);
   }
 
   if (options.kit) {
@@ -299,22 +300,9 @@ export function buildProject(beats: readonly ProjectBeat[], options: ProjectOpti
   const totalSeconds = placements[placements.length - 1]!.endFrame / options.fps;
   const assets: BuiltProject["assets"] = [];
 
-  const masterClips = placements.map((p) => clipElement(p.id, p.startSeconds, p.durationSeconds, options)).join("\n");
-  const masterAudio = withSfx
-    ? beats
-        .map((beat, i) => audioElements(beat.sfx ?? [], placements[i]!.startSeconds, beat.id, assets))
-        .filter(Boolean)
-        .join("\n")
-    : "";
-
-  const master: ProjectFile[] = [
-    { path: "index.html", contents: hostHtml({ id: "reel", totalSeconds, options, clips: masterClips, audio: masterAudio }) },
-    { path: "hyperframes.json", contents: HYPERFRAMES_JSON },
-    ...beats.map((beat) => ({ path: `compositions/${beat.id}.html`, contents: beat.compositionHtml })),
-  ];
-
   const clips: Record<string, ProjectFile[]> = {};
   beats.forEach((beat, i) => {
+    if (skip.has(beat.id)) return;
     const placement = placements[i]!;
     const clipAssets: BuiltProject["assets"] = [];
     const audio = withSfx ? audioElements(beat.sfx ?? [], 0, beat.id, clipAssets) : "";
@@ -335,5 +323,5 @@ export function buildProject(beats: readonly ProjectBeat[], options: ProjectOpti
     ];
   });
 
-  return { master, clips, assets, totalSeconds, placements };
+  return { clips, assets, totalSeconds, placements };
 }

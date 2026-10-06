@@ -16,7 +16,7 @@ import {
   type Provenance,
 } from "../../../src/library/index.js";
 import { runIdFor } from "../../../src/library/runs.js";
-import { addFolder, annotateAsset, claudeQueue, IngestManager, ingestBatch, isIngestPaused, listFolders, removeFolder, scanDir, setIngestPaused, setReview, summarise, thumbBlobPath, blobPath, updateFolder, type IngestSource } from "../../../src/library/index.js";
+import { addFolder, annotateAsset, claudeQueue, IngestManager, ingestBatch, isIngestPaused, listFolders, removeFolder, scanDir, setIngestPaused, setReview, settleKeying, summarise, thumbBlobPath, blobPath, updateFolder, type IngestSource } from "../../../src/library/index.js";
 import { assetSignals, recordSignals, suppressedTags } from "../../../src/learnings/index.js";
 import { lstatSync } from "node:fs";
 import { DEFAULT_PORT, findRunningStudio, startStudio } from "../../../src/studio/server.js";
@@ -195,6 +195,8 @@ async function ingest(argv: string[]): Promise<void> {
   const outcomes = await ingestBatch(items, { suppress: () => suppressedTags() });
   const count = (state: string) => outcomes.filter((o) => o.state === state).length;
   console.log(`${items.length} file(s): ${count("ingested")} added, ${count("duplicate")} duplicate, ${count("skipped")} skipped, ${count("failed")} failed`);
+  // Recordings on a green screen are keyed in the background; the process must not exit before they are.
+  await settleKeying();
   for (const o of outcomes.filter((x) => x.state === "skipped" || x.state === "failed")) console.log(`  ${o.state}  ${o.path}  ${o.reason ?? ""}`);
   if (!trusted && count("ingested") > 0) console.log("\nAdded as pending: approve them in the studio (Review tab) or with `library review approve <id>`.");
 }

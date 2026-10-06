@@ -2,6 +2,7 @@ import { copyFileSync, linkSync, mkdirSync, rmSync } from "node:fs";
 import path from "node:path";
 import { LIBRARY_ASSET_DIR } from "../library/refs.js";
 import { fitGenerated, fitMoment, footageAgeDays, footageOf, isFootage, isGenerated, momentSeconds, type Fit } from "../library/footage.js";
+import { isKeyed, keyOf, momentKeyView, wantsKey, type KeyView } from "../library/key.js";
 import { STALE_CAPTURE_DAYS } from "../library/match.js";
 import type { LibraryAsset, Moment } from "../library/schema.js";
 import { formatSeconds, ProjectError } from "./project.js";
@@ -18,9 +19,8 @@ import { formatSeconds, ProjectError } from "./project.js";
  * so none of those numbers is ever typed by hand and none can disagree with the moment in the library.
  * The file is not opened, re-encoded or rewritten: what reaches the frame is the recorded pixels.
  *
- * It refuses, with the reason, anything that should not reach a reel: a recording nobody has approved
- * or checked for private information, a moment Claude proposed and nobody confirmed, a rejected file,
- * a moment too long for its slot to be played at a believable speed.
+ * It refuses, with the reason, anything that should not reach a reel: a rejected file, or a moment too
+ * long for its slot to be played at a believable speed.
  */
 
 export class FootageError extends ProjectError {}
@@ -31,6 +31,8 @@ export interface FootageContext {
   format: string;
   beat: { id: string; durationSeconds: number };
   now?: Date;
+  /** How keyed copies are found; the library's own by default. Here so a test needs no files. */
+  keyed?: { isKeyed: (asset: LibraryAsset) => boolean; view: (asset: LibraryAsset, moment: Moment) => KeyView | undefined };
 }
 
 /** One placement of a moment in a beat. */
@@ -52,6 +54,8 @@ export interface HoldFrame {
   assetId: string;
   /** Seconds into the recording to take it from. */
   at: number;
+  /** Take it from the keyed copy (which has transparency) instead of the recording. */
+  keyed?: boolean;
 }
 
 export interface Expansion {
@@ -86,17 +90,13 @@ export function footageRenderProblems(asset: LibraryAsset, moment: Moment, now: 
   const errors: string[] = [];
   const warnings: string[] = [];
   const name = `"${moment.label}" (${asset.name})`;
+  // No approval, confirmation or private-information tick is required: clips and Claude's moments apply by
+  // themselves. Only a person's explicit rejection stops one.
+  if (asset.review.state === "rejected") errors.push(`${name} was rejected`);
   if (isGenerated(asset)) {
-    // Nothing real is in it, so there is no private information to check and no date to go stale: the gate is a person approving the clip.
-    if (asset.review.state === "rejected") errors.push(`${name} was rejected`);
-    else if (asset.review.state !== "approved") errors.push(`${name} is an AI-generated clip nobody has approved — approve it in the studio's Review tab, or: npm run library -- review approve ${asset.id}`);
     if (asset.status !== "active") warnings.push(`${name} is ${asset.status}`);
     return { errors, warnings };
   }
-  if (asset.review.state === "rejected") errors.push(`${name} was rejected`);
-  else if (asset.review.state !== "approved") errors.push(`${name} has not been approved — approve it in the studio's Footage tab, or: npm run library -- review approve ${asset.id}`);
-  if (moment.state !== "confirmed") errors.push(`${name} was proposed by Claude and nobody has confirmed it — confirm it in the studio's Footage tab`);
-  if (!footageOf(asset).privateChecked) errors.push(`${name}: nobody has checked the whole recording for private information (emails, notifications, other windows) — tick that in the studio's Footage tab, or: npm run footage -- check ${asset.id}`);
   if (asset.status !== "active") warnings.push(`${name} is ${asset.status}${asset.supersededBy ? ` by ${asset.supersededBy}` : ""}`);
   const age = footageAgeDays(asset, now);
   if (age === undefined) warnings.push(`${name}: the recording date is unknown, so it cannot be judged stale`);
@@ -143,11 +143,24 @@ export function expandFootage(html: string, ctx: FootageContext): Expansion {
     }
     warnings.push(...fit.notes.map((n) => `${where}: "${moment.label}": ${n}`));
 
+    // A recording on a green screen is placed as its transparent copy. If it cannot be, the beat is refused:
+    // a green square in a finished reel is worse than a beat that says what to do.
+    const keyedCopy = !generated && (ctx.keyed?.isKeyed ?? isKeyed)(asset);
+    if (!generated && !keyedCopy && wantsKey(asset)) {
+      const why = keyOf(asset).error;
+      throw new FootageError(`${where}: "${moment.label}" is on a green screen and has no keyed copy${why ? ` (${why})` : " yet"} — run: npm run footage -- key ${asset.id}, or turn keying off for it`);
+    }
+    const view = keyedCopy ? (ctx.keyed?.view ?? momentKeyView)(asset, moment) : undefined;
+
     count += 1;
     const id = `rcf-${where}-${count}`;
-    const file = `${LIBRARY_ASSET_DIR}/${path.basename(asset.file)}`;
+    const file = keyedCopy ? `${LIBRARY_ASSET_DIR}/${asset.id}-key.webm` : `${LIBRARY_ASSET_DIR}/${path.basename(asset.file)}`;
     const footage = footageOf(asset);
-    const hasSound = !footage.muted && asset.analysis.hasAudio === true;
+    if (keyedCopy && !footage.muted && asset.analysis.hasAudio === true) warnings.push(`${where}: "${moment.label}": the recording's sound is not carried into its keyed copy`);
+    const hasSound = !keyedCopy && !footage.muted && asset.analysis.hasAudio === true;
+    // The keyed copy is the whole frame; the box shows only where the subject is for this moment.
+    const pct = (v: number): string => `${Math.round(v * 100000) / 1000}%`;
+    const place = view ? ` style="position:absolute;right:auto;bottom:auto;left:${pct(-view.x / view.w)};top:${pct(-view.y / view.h)};width:${pct(1 / view.w)};height:${pct(1 / view.h)};object-fit:fill"` : "";
     const media = [
       `id="${id}"`,
       `src="${file}"`,
@@ -161,18 +174,21 @@ export function expandFootage(html: string, ctx: FootageContext): Expansion {
       "playsinline",
       'preload="auto"',
     ].join(" ");
-    let inner = `<video ${media}></video>`;
+    let inner = `<video ${media}${place}></video>`;
     if (fit.holdSeconds > 0) {
-      const target = `${LIBRARY_ASSET_DIR}/${asset.id}-${moment.id}-hold.png`;
-      holds.push({ target, assetId: asset.id, at: Math.max(moment.in, moment.out - 0.05) });
-      inner += `<img class="rc-fh" alt="" src="${target}" data-start="${formatSeconds(at + fit.playSeconds)}" data-duration="${formatSeconds(fit.holdSeconds)}">`;
+      // A keyed hold frame is named for the settings it was made with, so changing them never reuses an old still.
+      const target = `${LIBRARY_ASSET_DIR}/${asset.id}-${moment.id}-hold${keyedCopy ? `-${keyOf(asset).hash?.slice(0, 8) ?? "key"}` : ""}.png`;
+      holds.push({ target, assetId: asset.id, at: Math.max(moment.in, moment.out - 0.05), ...(keyedCopy ? { keyed: true } : {}) });
+      inner += `<img class="rc-fh" alt="" src="${target}" data-start="${formatSeconds(at + fit.playSeconds)}" data-duration="${formatSeconds(fit.holdSeconds)}"${place}>`;
     }
     uses.push({ assetId: asset.id, momentId: moment.id, label: moment.label, at, fit, generated });
 
     // The wrapper keeps what the author wrote, plus what only the library knows: the recording's shape.
     const focus = moment.focus[ctx.format];
-    const vars = `--fw:${asset.analysis.width ?? 16};--fh:${asset.analysis.height ?? 9};`;
+    const vars = view ? `--fw:${view.px.w};--fh:${view.px.h};` : `--fw:${asset.analysis.width ?? 16};--fh:${asset.analysis.height ?? 9};`;
     let attrText = `${before}${after}`;
+    // A cut-out sits on the reel's ground with nothing around it, unless the composition asks for a frame.
+    if (keyedCopy) attrText += `${attr(attrs, "data-frame") === undefined ? ' data-frame="cutout"' : ""} data-keyed="true"`;
     attrText = /\bstyle\s*=\s*["']/i.test(attrText) ? attrText.replace(/\bstyle\s*=\s*(["'])/i, `style=$1${vars}`) : `${attrText} style="${vars}"`;
     if (focus) attrText += ` data-focus="${[focus.x, focus.y, focus.w, focus.h].map((n) => Math.round(n * 10000) / 10000).join(",")}"`;
     // The wrapper's own timing is not the video's: strip it so HyperFrames does not treat it as a clip.

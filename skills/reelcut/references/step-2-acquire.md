@@ -84,10 +84,16 @@ npm run footage -- find "download Claude" --platform mac
 npm run footage -- fit <asset>:<moment> --seconds 4.4    # does it fit the beat, and is its text readable
 ```
 
-A moment is used by itself only when its recording is approved, checked for private information by a
-person, dated within 90 days, and the moment is confirmed and has been said yes to once. **Everything else is
-a proposal: show the user the moment (its label, length, recording and date) and ask once in this step.** A
-render that uses it records the yes; after that a fresh, exact match is used without asking.
+No approval, confirmation or private-information tick is needed: a recording, and the moments Claude indexed
+on it, are used as soon as they match. A moment is used by itself when the match is exact, the recording is
+dated within 90 days, and it has been said yes to once. **A first use, an old recording or a weaker match is a
+proposal: show the user the moment (its label, length, recording and date) and ask once, and put every such
+question in one message, before any composing starts, so nothing waits for an answer halfway through the
+render.** A render that uses a moment records the yes; after that a fresh, exact match is used without asking.
+Only a recording the user rejected is refused.
+
+A recording on a **green screen** is found when it comes in and keyed in the background into a transparent
+copy the render uses (see [footage.md](footage.md#green-screens)). Nothing to ask; mention it in the report.
 
 Nothing matching is a blocking gap for a required real step. Its ways out are to record it, to mark a
 moment in a recording the user already has (the studio's Footage tab), to use another moment, or to

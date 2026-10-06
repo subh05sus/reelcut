@@ -1,6 +1,6 @@
 import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
-import puppeteer from "puppeteer-core";
+import puppeteer, { type Browser } from "puppeteer-core";
 import { resolveBrowser } from "../capture/capture.js";
 import { GSAP_URL, injectKit, usesKit, type Kit } from "../render/project.js";
 
@@ -70,6 +70,17 @@ export interface MeasureOptions {
   /** Screenshot file stem. Defaults to the composition's file name. */
   name?: string;
   executablePath?: string;
+  /** A browser already running, shared across compositions (`measure --all`). Left open afterwards. */
+  browser?: Browser;
+}
+
+/** One headless Chrome for measuring, the one `measureComposition` would launch for itself. */
+export async function launchMeasureBrowser(executablePath?: string): Promise<Browser> {
+  return puppeteer.launch({
+    executablePath: resolveBrowser(executablePath),
+    headless: true,
+    args: ["--no-sandbox", "--hide-scrollbars", "--force-device-scale-factor=1"],
+  });
 }
 
 /** The page: the template's contents, the kit, GSAP, and a stage exactly the size of the frame. */
@@ -179,13 +190,9 @@ export async function measureComposition(options: MeasureOptions): Promise<Measu
   mkdirSync(options.outDir, { recursive: true });
   const name = options.name ?? path.basename(options.file, ".html");
 
-  const browser = await puppeteer.launch({
-    executablePath: resolveBrowser(options.executablePath),
-    headless: true,
-    args: ["--no-sandbox", "--hide-scrollbars", "--force-device-scale-factor=1"],
-  });
+  const browser = options.browser ?? (await launchMeasureBrowser(options.executablePath));
+  const tab = await browser.newPage();
   try {
-    const tab = await browser.newPage();
     await tab.setViewport({ width: 1080, height: 1080, deviceScaleFactor: 1 });
     await tab.setContent(page, { waitUntil: "load", timeout: 60_000 });
     await tab.evaluate(`document.fonts.ready`);
@@ -209,8 +216,15 @@ export async function measureComposition(options: MeasureOptions): Promise<Measu
     }
     return { samples, bearings };
   } finally {
-    await browser.close();
+    if (options.browser) await tab.close();
+    else await browser.close();
   }
+}
+
+/** Where `measure --all` looks in each beat: the entrance (frame 0 must already read), the middle, and the settled end. */
+export function reelTimes(durationSeconds: number): number[] {
+  const end = Math.max(0, durationSeconds - 0.15);
+  return [0.05, Math.round((durationSeconds / 2) * 100) / 100, Math.round(end * 100) / 100];
 }
 
 /** The report as text, one block per time. */

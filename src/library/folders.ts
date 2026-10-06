@@ -80,7 +80,14 @@ export function addFolder(input: AddFolderInput): Folder {
   }
   if (path.parse(real).root === real) throw new LibraryError("a whole drive is too much to watch: choose the folder the assets are in");
   if (samePath(real, os.homedir())) throw new LibraryError("the home folder is too much to watch: choose the folder the assets are in");
-  const home = reelcutHome();
+  // Compared as resolved paths: on a Mac a temp or home folder is often a symlink, and `real` has been resolved.
+  const home = (() => {
+    try {
+      return realpathSync(reelcutHome());
+    } catch {
+      return reelcutHome();
+    }
+  })();
   if (samePath(real, home) || inside(real, home) || inside(home, real)) throw new LibraryError("that folder contains reelcut's own library; choose a different one");
 
   return mutateFolders((folders) => {

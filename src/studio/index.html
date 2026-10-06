@@ -111,6 +111,12 @@
   .taught .r { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 3px 0; font-size: 13px; }
   .fv-wrap { position: relative; background: #000; border-radius: 10px; overflow: hidden; margin-bottom: 8px; }
   .fv-wrap video { width: 100%; display: block; max-height: 46vh; background: #000; }
+  /* The keyed copy has transparency: show it on a checkerboard so what is cut out is plain to see. */
+  .fv-wrap.checker { background: #fff conic-gradient(#d4d4d8 25%, #fff 0 50%, #d4d4d8 0 75%, #fff 0) 0 0 / 20px 20px; }
+  .fv-wrap.checker video { background: transparent; }
+  .keybox { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin: 10px 0; }
+  .keybox .r { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 3px 0; font-size: 13px; }
+  .keybox input[type=range] { width: 120px; }
   .draw { position: absolute; inset: 0; cursor: crosshair; background: rgba(0,0,0,.35); touch-action: none; }
   .draw .hint { position: absolute; left: 0; right: 0; top: 8px; text-align: center; color: #fff; font-size: 12px; pointer-events: none; text-shadow: 0 1px 2px #000; }
   .draw .box { position: absolute; border: 2px solid var(--accent); background: rgba(255,255,255,.12); box-shadow: 0 0 0 9999px rgba(0,0,0,.35); pointer-events: none; }
@@ -616,16 +622,55 @@ const ageDays = (a) => { const at = Date.parse((a.footage && a.footage.recordedA
 async function loadFootage() { const r = await api("/api/assets?type=video"); state.videos = r.assets.filter((a) => a.review.state !== "rejected"); state.counts = r.counts; }
 function footageOf(a) { return Object.assign({ muted: true, moments: [] }, a.footage || {}); }
 function footageCard(a) {
-  const f = footageOf(a), age = ageDays(a), confirmed = f.moments.filter((m) => m.state === "confirmed").length, proposed = f.moments.length - confirmed;
-  const ready = a.review.state === "approved" && f.privateChecked && age != null && confirmed > 0;
+  const f = footageOf(a), n = f.moments.length, byClaude = f.moments.filter((m) => m.origin === "claude").length;
+  const ready = n > 0;
   return `<div class="card ${a.id === state.fsel ? "sel" : ""}" data-fa="${a.id}">
     <div class="thumb" style="aspect-ratio:16/10">${preview(a)}</div>
     <div class="meta"><div class="name" title="${esc(a.name)}">${esc(f.app ? f.app + ": " : "")}${esc(a.name)}</div>
-      <div class="sub"><span class="badge ${a.review.state}">${a.review.state}</span>${f.privateChecked ? `<span class="badge ok">checked</span>` : `<span class="badge warn">not checked</span>`}<span class="badge">${confirmed} moment${confirmed === 1 ? "" : "s"}</span>${proposed ? `<span class="badge proposed">${proposed} proposed</span>` : ""}${ready ? `<span class="badge ok">ready</span>` : ""}</div></div></div>`;
+      <div class="sub"><span class="badge">${n} moment${n === 1 ? "" : "s"}</span>${byClaude ? `<span class="badge" title="Marked by Claude from the filmstrip; used like any other">${byClaude} by Claude</span>` : ""}${keyBadge(a)}${ready ? `<span class="badge ok">ready</span>` : ""}</div></div></div>`;
+}
+// ---------- green screens: detected on ingest, keyed to a transparent copy in the background
+function keyBadge(a) {
+  const k = a.keying;
+  if (!k) return "";
+  if (!k.wanted) return `<span class="badge" title="A green screen was found; keying is off, so it is used as recorded">green, off</span>`;
+  if (k.keyed) return `<span class="badge ok" title="The green is keyed out; the original is untouched">keyed</span>`;
+  if (k.state === "failed" || k.error) return `<span class="badge warn" title="${esc(k.error || "")}">key failed</span>`;
+  return `<span class="badge warn" title="Being keyed in the background">keying…</span>`;
+}
+function keySection(a) {
+  const k = a.keying;
+  if (!k) return "";
+  const key = Object.assign({ enabled: true, tolerance: 0.06, softness: 1, despill: 1, shadows: "keep", choke: 0 }, (a.footage && a.footage.key) || {});
+  const busy = k.state === "queued" || k.state === "running";
+  const status = !k.wanted ? "Keying is off: this recording is used as recorded, green and all." : busy ? "Keying in the background… the preview updates when it is done." : k.keyed ? "Keyed. The original is untouched; the copy is saved and reused." : k.error ? `Could not key it: ${esc(k.error)}` : "Not keyed yet.";
+  const range = (name, min, max, step, label, tip) => `<label class="inline" title="${esc(tip)}">${label} <input type="range" data-k="${name}" min="${min}" max="${max}" step="${step}" value="${key[name]}"> <span class="mono" data-kv="${name}">${key[name]}</span></label>`;
+  return `<h2 class="sec">Green screen</h2>
+  <div class="keybox">
+    <div class="r"><label class="inline"><input type="checkbox" data-k="enabled" ${key.enabled ? "checked" : ""}> Remove the green screen</label><span class="note">${status}</span></div>
+    ${a.keyedUrl ? `<div class="r"><span class="note">Preview</span><button id="key-orig">Original</button><button id="key-keyed" class="primary">Keyed on a checkerboard</button></div>` : ""}
+    <div class="r">${range("tolerance", 0, 0.3, 0.01, "Tolerance", "How much green still counts as backdrop. Raise it if green specks remain; lower it if the subject's edges thin out.")}${range("softness", 0, 1, 0.05, "Softness", "1 keeps the anti-aliased edge; 0 cuts a hard edge.")}</div>
+    <div class="r">${range("despill", 0, 1, 0.05, "Despill", "How much green is taken out of the edges.")}<label class="inline" title="Eat into the edge by this many pixels, for a stubborn halo">Edge choke <select data-k="choke">${[0, 1, 2, 3].map((v) => `<option ${v === key.choke ? "selected" : ""}>${v}</option>`).join("")}</select> px</label></div>
+    <div class="r"><label class="inline">Shadows <select data-k="shadows"><option value="keep" ${key.shadows === "keep" ? "selected" : ""}>Keep as a soft shadow</option><option value="drop" ${key.shadows === "drop" ? "selected" : ""}>Remove</option></select></label><button class="primary" id="key-apply">Apply and re-key</button></div>
+  </div>`;
+}
+function bindKey(a, run) {
+  if (!a.keying) return;
+  const v = $("#fv"), wrap = v.closest(".fv-wrap");
+  const swap = (src, checker) => { const t = v.currentTime, playing = !v.paused; v.src = src; wrap.classList.toggle("checker", checker); v.addEventListener("loadedmetadata", () => { v.currentTime = t; if (playing) v.play(); }, { once: true }); };
+  $("#key-orig")?.addEventListener("click", () => swap(fileUrl(a), false));
+  $("#key-keyed")?.addEventListener("click", () => swap(a.keyedUrl, true));
+  $$("[data-k][type=range]").forEach((el) => el.addEventListener("input", () => { $(`[data-kv="${el.dataset.k}"]`).textContent = el.value; }));
+  $("#key-apply").addEventListener("click", run(() => patch(`/api/assets/${a.id}/key`, {
+    enabled: $('[data-k="enabled"]').checked,
+    tolerance: Number($('[data-k="tolerance"]').value), softness: Number($('[data-k="softness"]').value), despill: Number($('[data-k="despill"]').value),
+    choke: Number($('[data-k="choke"]').value), shadows: $('[data-k="shadows"]').value,
+  }), "Re-keying in the background…"));
+  $('[data-k="enabled"]').addEventListener("change", run(() => patch(`/api/assets/${a.id}/key`, { enabled: $('[data-k="enabled"]').checked }), "Saved"));
 }
 function footagePanel(a) {
   const f = footageOf(a), x = a.analysis || {}, age = ageDays(a), len = x.durationSeconds || 0;
-  const confirmed = f.moments.filter((m) => m.state === "confirmed").length;
+  const n = f.moments.length;
   const check = (done, text) => `<li class="${done ? "done" : ""}"><span class="mk">${done ? "✓" : "○"}</span><div>${text}</div></li>`;
   const recorded = (f.recordedAt || x.createdAt || "").slice(0, 10);
   const seg = (m) => len ? `<i class="${m.state}" style="left:${(m.in / len) * 100}%;width:${((m.out - m.in) / len) * 100}%" title="${esc(m.label)}"></i>` : "";
@@ -636,10 +681,8 @@ function footagePanel(a) {
     <div class="tl" aria-hidden="true">${f.moments.map(seg).join("")}</div>
     <h2>${esc(a.name)}</h2>
     <ul class="checks">
-      ${check(a.review.state === "approved", `Approved to use${a.review.state !== "approved" ? ` <button data-fr="approved">Approve</button> <button class="danger" data-fr="rejected">Reject</button>` : ""}`)}
-      ${check(!!f.privateChecked, `I watched all of it and nothing private is in it (emails, notifications, other windows, the menu bar)<br><label class="inline"><input type="checkbox" id="fp" ${f.privateChecked ? "checked" : ""}> Yes, I checked the whole recording</label>`)}
       ${check(age != null, age != null ? `Recorded ${Math.floor(age)} day${Math.floor(age) === 1 ? "" : "s"} ago${age > 90 ? " — over 90 days: it will be offered, not used by itself" : ""}` : "Recording date unknown: set it so staleness can be judged")}
-      ${check(confirmed > 0, confirmed > 0 ? `${confirmed} confirmed moment${confirmed === 1 ? "" : "s"}` : "Mark at least one moment: a step, with its start and end")}
+      ${check(n > 0, n > 0 ? `${n} moment${n === 1 ? "" : "s"}, usable now` : "No moments yet: mark a step, or let Claude index it (<code>/reelcut tag-footage</code>)")}
     </ul>
     <dl>
       <dt>Size</dt><dd>${x.width ? `${x.width} × ${x.height}` : "not measured"}${x.fps ? ` · ${x.fps} fps${x.vfr ? " (variable: rendered through a proxy)" : ""}` : ""}${x.hasAudio ? " · has sound" : ""}</dd>
@@ -651,20 +694,21 @@ function footagePanel(a) {
       <label class="inline"><input type="checkbox" id="fa-mute" ${f.muted ? "checked" : ""}> Muted (the voiceover owns the sound)</label>
       <label class="inline" title="Body text as recorded, in pixels. Left empty, it is estimated from the size.">Text size <input class="num" id="fa-text" type="number" min="6" max="200" step="1" style="width:70px" value="${f.textPx || ""}" placeholder="auto"></label>
       <button id="fa-save">Save details</button></div>
+    ${keySection(a)}
     <h2 class="sec">Moments</h2>
     <p class="note">A script line is matched to a moment, not the file. Scrub to the start, press <em>Mark in</em>, scrub to the end, press <em>Mark out</em>, name what the viewer sees happen. Nothing here changes the recording.</p>
     ${f.moments.map((m) => momentRow(a, m)).join("") || `<p class="note">None yet.</p>`}
     <div class="mom"><strong>Add a moment</strong>
       <div class="r"><input class="lab" id="nm-label" placeholder="download Claude" aria-label="What happens"><label class="inline">in <input class="num" id="nm-in" type="number" min="0" step="0.1"></label><label class="inline">out <input class="num" id="nm-out" type="number" min="0" step="0.1"></label></div>
       <div class="r"><input class="lab" id="nm-tags" placeholder="tags: claude, download, mac" aria-label="Tags"><button class="primary" id="nm-add">Add moment</button></div></div>
-    <div class="row"><button id="fa-analyze" title="Measure size, frame rate and make the filmstrip">Re-measure</button><button id="f-close">Close</button></div>
+    <div class="row"><button id="fa-analyze" title="Measure size, frame rate and make the filmstrip">Re-measure</button><button class="danger" data-fr="rejected" title="Never use this recording">Reject</button><button id="f-close">Close</button></div>
   </aside>`;
 }
 function momentRow(a, m) {
   const fmt = state.ffmt || "1:1", fo = (m.focus || {})[fmt] || {};
   const pct = (v) => (v == null ? "" : Math.round(v * 1000) / 10);
   return `<div class="mom ${m.state}" data-m="${m.id}">
-    <div class="r"><input class="lab" data-f="label" value="${esc(m.label)}" aria-label="Label">${m.state === "proposed" ? `<span class="badge proposed">proposed by Claude</span><button class="primary" data-act="confirm">Confirm</button>` : ""}${m.acceptedAt ? `<span class="badge ok" title="You said yes to using it">used before</span>` : ""}</div>
+    <div class="r"><input class="lab" data-f="label" value="${esc(m.label)}" aria-label="Label">${m.origin === "claude" ? `<span class="badge" title="Marked by Claude from the filmstrip">by Claude</span>` : ""}${m.acceptedAt ? `<span class="badge ok" title="You said yes to using it">used before</span>` : ""}</div>
     <div class="r"><label class="inline">in <input class="num" data-f="in" type="number" min="0" step="0.1" value="${m.in}"></label><label class="inline">out <input class="num" data-f="out" type="number" min="0" step="0.1" value="${m.out}"></label>
       <span class="note">${(m.out - m.in).toFixed(1)} s</span><button data-act="in" title="Set in to the video's time">in = now</button><button data-act="out" title="Set out to the video's time">out = now</button><button data-act="play">Play</button></div>
     <div class="r"><input class="lab" data-f="tags" value="${esc(m.tags.join(", "))}" aria-label="Tags" placeholder="tags"><button data-act="save">Save</button><button class="danger" data-act="del">Delete</button></div>
@@ -678,6 +722,11 @@ function momentRow(a, m) {
 }
 async function renderFootage() {
   await loadFootage();
+  // Recordings on a green screen are keyed in the background. Once per visit, look at any added before that existed,
+  // and while something is being keyed, look again until it is done.
+  if (!state.keyScanned) { state.keyScanned = true; try { const r = await post("/api/footage/key-scan"); if (r.queued.length) await loadFootage(); } catch (e) { /* not fatal: keying is also done when a reel renders */ } }
+  clearTimeout(renderFootage.poll);
+  if (state.videos.some((a) => a.keying && (a.keying.state === "queued" || a.keying.state === "running"))) renderFootage.poll = setTimeout(() => { if (location.hash.startsWith("#footage")) renderFootage(); }, 1800);
   const sel = state.videos.find((a) => a.id === state.fsel);
   $("#main").innerHTML = `
     <p class="note">Screen recordings and other footage, used exactly as recorded. Drop one on <a href="#library">Library</a>, then mark the steps in it as <em>moments</em>. reelcut trims, frames and at most speeds up a moment; it never redraws it. ${state.videos.length ? "" : ""}</p>
@@ -732,7 +781,7 @@ function bindFootage(a) {
   $("#mark-out").addEventListener("click", () => { $("#nm-out").value = t(); });
   $("#f-close").addEventListener("click", () => { state.fsel = null; renderFootage(); });
   $$("[data-fr]").forEach((el) => el.addEventListener("click", run(() => post("/api/assets/review", { ids: [a.id], state: el.dataset.fr }), `Marked ${el.dataset.fr}`)));
-  $("#fp").addEventListener("change", run(() => patch(`/api/assets/${a.id}/footage`, { privateChecked: $("#fp").checked }), "Saved"));
+  bindKey(a, run);
   $("#fa-save").addEventListener("click", run(() => patch(`/api/assets/${a.id}/footage`, { app: $("#fa-app").value, ...($("#fa-plat").value ? { platform: $("#fa-plat").value } : {}), ...($("#fa-date").value ? { recordedAt: $("#fa-date").value } : {}), muted: $("#fa-mute").checked, ...($("#fa-text").value ? { textPx: Number($("#fa-text").value) } : {}) }), "Saved"));
   $("#fa-analyze").addEventListener("click", run(() => post(`/api/assets/${a.id}/analyze`), "Measured"));
   $("#nm-add").addEventListener("click", run(() => {
@@ -745,7 +794,6 @@ function bindFootage(a) {
     const body = () => ({ label: field("label").value, in: parseFloat(field("in").value), out: parseFloat(field("out").value), tags: field("tags").value.split(",").map((x) => x.trim()).filter(Boolean) });
     const act = (name, fn, msg) => $(`[data-act="${name}"]`, row)?.addEventListener("click", run(fn, msg));
     act("save", () => patch(`/api/assets/${a.id}/moments/${id}`, body()), "Saved");
-    act("confirm", () => patch(`/api/assets/${a.id}/moments/${id}`, { ...body(), confirm: true }), "Confirmed");
     act("del", () => api(`/api/assets/${a.id}/moments/${id}`, { method: "DELETE" }), "Deleted");
     $(`[data-act="in"]`, row).addEventListener("click", () => { field("in").value = t(); });
     $(`[data-act="out"]`, row).addEventListener("click", () => { field("out").value = t(); });

@@ -72,7 +72,7 @@ export function findMoment(asset: LibraryAsset, momentId: string): Moment | unde
 
 // ---------------------------------------------------------------- changing a recording's record
 
-function requireVideo(asset: LibraryAsset | undefined, id: string): LibraryAsset {
+export function requireVideo(asset: LibraryAsset | undefined, id: string): LibraryAsset {
   if (!asset) throw new LibraryError(`no asset ${id}`);
   if (!isFootage(asset)) throw new LibraryError(`${id} is not a video (it is ${asset.mediaType})`);
   return asset;
@@ -141,8 +141,8 @@ function cleanFocus(focus: Record<string, Focus> | undefined): Record<string, Fo
 }
 
 /**
- * Add a moment. A person's moment is confirmed; Claude's is only ever a proposal (a generated clip's own whole-length moment is the one exception), so what a script line
- * gets matched to has always been looked at by someone.
+ * Add a moment. Every moment is usable as soon as it is added, whoever marked it: Claude indexing a
+ * recording from its filmstrip applies directly. `origin` still says who marked it, so the studio can show it.
  */
 export function addMoment(id: string, input: MomentInput, by: "user" | "claude" | "generated" = "user"): { asset: LibraryAsset; moment: Moment } {
   return mutateIndex((index) => {
@@ -158,11 +158,9 @@ export function addMoment(id: string, input: MomentInput, by: "user" | "claude" 
       in: Math.round(input.in * 1000) / 1000,
       out: Math.round(input.out * 1000) / 1000,
       tags: normaliseTags(input.tags ?? []),
-      // A generated clip's one moment is its whole length, made by the registration itself: the gate on a
-      // generated clip is a person approving the clip, not confirming a label Claude wrote.
-      state: by === "claude" ? "proposed" : "confirmed",
+      state: "confirmed",
       origin: by === "user" ? "user" : "claude",
-      focus: by === "claude" ? {} : cleanFocus(input.focus),
+      focus: cleanFocus(input.focus),
       ...(input.note ? { note: input.note.slice(0, 300) } : {}),
     };
     asset.footage = { ...footage, moments: [...footage.moments, moment] };
@@ -181,7 +179,7 @@ export interface MomentPatch {
   confirm?: boolean;
 }
 
-/** Edit a moment. A person's edit; Claude has no way to change one, only to propose another. */
+/** Edit a moment. A moment left over as `proposed` from before indexing applied by itself becomes confirmed when it is edited. */
 export function updateMoment(id: string, momentId: string, patch: MomentPatch): { asset: LibraryAsset; moment: Moment } {
   return mutateIndex((index) => {
     const asset = requireVideo(index.assets.find((a) => a.id === id), id);
@@ -233,7 +231,7 @@ export function acceptMoments(refs: readonly { assetId: string; momentId: string
       const asset = index.assets.find((a) => a.id === assetId);
       const footage = asset?.footage;
       const moment = footage?.moments.find((m) => m.id === momentId);
-      if (!asset || !footage || !moment || moment.state !== "confirmed" || moment.acceptedAt) continue;
+      if (!asset || !footage || !moment || moment.acceptedAt) continue;
       moment.acceptedAt = now;
     }
   });
@@ -313,16 +311,14 @@ export interface FootageMatch {
 /**
  * Why a matched moment may not be used without asking, or `undefined` when it may.
  *
- * A recording is a real product surface, so it carries every reason a capture does — and two more: that
- * somebody watched all of it for private information, and that a person has said yes to this moment at
- * least once. Anything short of all of it is a proposal that says what is missing.
+ * No approval, no confirmation and no private-information tick are needed: a recording and the moments
+ * Claude indexes on it apply by themselves. What still makes a match a proposal is a weak match, a
+ * recording that may be stale, and the first use of a moment, which is shown to the user once.
  */
 export function footageBlockReason(asset: LibraryAsset, moment: Moment, confidence: FootageConfidence, now: Date): string | undefined {
-  if (asset.review.state !== "approved") return "not reviewed yet — approve it in the studio (Footage tab) to let reelcut use it by itself";
-  if (moment.state !== "confirmed") return "this moment was proposed by Claude and nobody has confirmed it";
+  if (asset.review.state === "rejected") return "it was rejected";
   if (confidence !== "exact") return `${confidence} match`;
   if (asset.status !== "active") return `status is ${asset.status}`;
-  if (!footageOf(asset).privateChecked) return "nobody has checked the whole recording for private information (emails, notifications, other windows)";
   const age = footageAgeDays(asset, now);
   if (age === undefined) return "the recording date is unknown — set it in the studio so staleness can be judged";
   if (age > STALE_CAPTURE_DAYS) return `recorded ${Math.floor(age)} days ago — confirm the screen has not changed`;

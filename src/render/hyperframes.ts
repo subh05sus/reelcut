@@ -48,6 +48,8 @@ export interface HyperframesRenderOptions {
    * saturated UI colours and the thin text of a recorded interface, which is the whole point of the footage.
    */
   videoFrameFormat?: "png" | "jpg" | "auto";
+  /** Chrome workers for this render. Left out, HyperFrames picks; set when several clips render at once so they share the cores. */
+  workers?: number;
 }
 
 export interface HyperframesRenderResult {
@@ -167,7 +169,7 @@ export function parseCheckReport(stdout: string): CheckReport {
 }
 
 export async function renderHyperframesProject(options: HyperframesRenderOptions): Promise<HyperframesRenderResult> {
-  const { projectDir, outputPath, quality = "looks", samples = 24, skipCheck = false, timeoutMs = DEFAULT_TIMEOUT_MS, videoFrameFormat } = options;
+  const { projectDir, outputPath, quality = "looks", samples = 24, skipCheck = false, timeoutMs = DEFAULT_TIMEOUT_MS, videoFrameFormat, workers } = options;
   try {
     await access(path.join(projectDir, "index.html"));
   } catch {
@@ -188,7 +190,7 @@ export async function renderHyperframesProject(options: HyperframesRenderOptions
       if (report.layoutSamples === 0) {
         return { status: "failed", error: "check audited 0 layout samples — a lint error switches the layout and contrast audits off, so this is not a pass", checkSamples: 0 };
       }
-      return await renderOnly({ projectDir, outputPath, quality, timeoutMs, checkSamples: report.layoutSamples, ...(videoFrameFormat ? { videoFrameFormat } : {}) });
+      return await renderOnly({ projectDir, outputPath, quality, timeoutMs, checkSamples: report.layoutSamples, ...(videoFrameFormat ? { videoFrameFormat } : {}), ...(workers ? { workers } : {}) });
     } catch (error) {
       // A non-zero exit from `check` is a real gate failure: findings, or a lint error. Its JSON is
       // still on stdout, and that — not stderr's font-fetch log — says what to fix.
@@ -199,7 +201,7 @@ export async function renderHyperframesProject(options: HyperframesRenderOptions
     }
   }
 
-  return await renderOnly({ projectDir, outputPath, quality, timeoutMs, ...(videoFrameFormat ? { videoFrameFormat } : {}) });
+  return await renderOnly({ projectDir, outputPath, quality, timeoutMs, ...(videoFrameFormat ? { videoFrameFormat } : {}), ...(workers ? { workers } : {}) });
 }
 
 async function renderOnly(args: {
@@ -209,12 +211,13 @@ async function renderOnly(args: {
   timeoutMs: number;
   checkSamples?: number;
   videoFrameFormat?: "png" | "jpg" | "auto";
+  workers?: number;
 }): Promise<HyperframesRenderResult> {
-  const { projectDir, outputPath, quality, timeoutMs, checkSamples, videoFrameFormat } = args;
+  const { projectDir, outputPath, quality, timeoutMs, checkSamples, videoFrameFormat, workers } = args;
   await mkdir(path.dirname(path.resolve(outputPath)), { recursive: true });
 
   try {
-    await run(cliLine(["render", "--quality", quality, ...(videoFrameFormat ? ["--video-frame-format", videoFrameFormat] : []), "--output", path.resolve(outputPath)]), {
+    await run(cliLine(["render", "--quality", quality, ...(videoFrameFormat ? ["--video-frame-format", videoFrameFormat] : []), ...(workers ? ["--workers", String(workers)] : []), "--output", path.resolve(outputPath)]), {
       cwd: projectDir,
       timeout: timeoutMs,
       maxBuffer: 64 * 1024 * 1024,

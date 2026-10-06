@@ -87,12 +87,17 @@ describe("placeBeats", () => {
 describe("buildProject", () => {
   const beats = [beat("beat-00", 2.57), beat("beat-03", 2.2), beat("beat-07", 4.07)];
 
-  it("mounts every beat in the master, in order, on hard cuts", () => {
+  it("places every beat on the reel in order, on hard cuts, for the master join", () => {
     const built = buildProject(beats, OPTIONS);
-    const index = built.master.find((f) => f.path === "index.html")!.contents;
-    expect(index).toContain('data-composition-src="compositions/beat-00.html" data-start="0"');
-    expect(index).toContain('data-composition-src="compositions/beat-03.html" data-start="2.566666"');
-    expect(built.master.filter((f) => f.path.startsWith("compositions/"))).toHaveLength(3);
+    expect(built.placements.map((p) => [p.id, p.startFrame])).toEqual([["beat-00", 0], ["beat-03", 77], ["beat-07", 143]]);
+  });
+
+  it("places a skipped beat but does not build or check it, so its neighbours keep their length", () => {
+    const broken = { id: "beat-03", durationSeconds: 2.2, compositionHtml: "<div>not a composition</div>" };
+    const built = buildProject([beats[0]!, broken, beats[2]!], OPTIONS, false, new Set(["beat-03"]));
+    expect(Object.keys(built.clips)).toEqual(["beat-00", "beat-07"]);
+    expect(built.placements).toEqual(buildProject(beats, OPTIONS).placements);
+    expect(() => buildProject([beats[0]!, broken], OPTIONS)).toThrow(ProjectError);
   });
 
   it("makes each clip a standalone project, so one failing beat fails alone", () => {
@@ -106,7 +111,7 @@ describe("buildProject", () => {
     }
   });
 
-  it("gives the master a duration equal to the sum of its beats, in whole frames", () => {
+  it("gives the reel a duration equal to the sum of its beats, in whole frames", () => {
     const built = buildProject(beats, OPTIONS);
     expect(built.totalSeconds * 30).toBe(Math.round((2.57 + 2.2 + 4.07) * 30));
     const clipTotal = built.placements.reduce((s, p) => s + (p.endFrame - p.startFrame), 0);
@@ -114,8 +119,8 @@ describe("buildProject", () => {
   });
 
   it("registers a host timeline, without which nothing binds", () => {
-    const index = buildProject(beats, OPTIONS).master.find((f) => f.path === "index.html")!.contents;
-    expect(index).toContain('window.__timelines["reel"] = gsap.timeline({ paused: true })');
+    const index = buildProject(beats, OPTIONS).clips["beat-03"]!.find((f) => f.path === "index.html")!.contents;
+    expect(index).toContain('window.__timelines["clip-beat-03"] = gsap.timeline({ paused: true })');
   });
 
   it("refuses duplicate ids", () => {
@@ -134,15 +139,8 @@ describe("buildProject", () => {
 
     it("stays silent unless --sfx is on, even when the briefs mention sounds", () => {
       const built = buildProject(withCue, OPTIONS, false);
-      expect(built.master.find((f) => f.path === "index.html")!.contents).not.toContain("<audio");
+      for (const files of Object.values(built.clips)) expect(files.find((f) => f.path === "index.html")!.contents).not.toContain("<audio");
       expect(built.assets).toEqual([]);
-    });
-
-    it("places a cue on the master timeline at the beat's start plus its offset", () => {
-      const index = buildProject(withCue, OPTIONS, true).master.find((f) => f.path === "index.html")!.contents;
-      // Written a microsecond early by formatSeconds, which keeps every time below its boundary.
-      expect(index).toContain('data-start="0.199999"');
-      expect(index).toContain('data-start="2.666666"'); // beat-03 starts at 77 frames = 2.566666s, + 0.1
     });
 
     it("keeps a cue beat-relative inside the beat's own clip", () => {
@@ -151,14 +149,16 @@ describe("buildProject", () => {
     });
 
     it("gives every audio element an id, since an id-less one is silently dropped from the mix", () => {
-      const index = buildProject(withCue, OPTIONS, true).master.find((f) => f.path === "index.html")!.contents;
+      const index = buildProject(withCue, OPTIONS, true).clips["beat-00"]!.find((f) => f.path === "index.html")!.contents;
+      expect(index).toContain("<audio");
       for (const tag of index.match(/<audio[^>]*>/g) ?? []) expect(tag).toMatch(/\bid="/);
     });
 
     it("sits under the voice by default", () => {
-      const index = buildProject(withCue, OPTIONS, true).master.find((f) => f.path === "index.html")!.contents;
-      expect(index).toContain(`data-volume="${SFX_DEFAULT_VOLUME}"`);
-      expect(index).toContain('data-volume="0.2"');
+      const built = buildProject(withCue, OPTIONS, true);
+      const html = (id: string) => built.clips[id]!.find((f) => f.path === "index.html")!.contents;
+      expect(html("beat-00")).toContain(`data-volume="${SFX_DEFAULT_VOLUME}"`);
+      expect(html("beat-03")).toContain('data-volume="0.2"');
     });
 
     it("copies a shared sound once, not once per use", () => {
@@ -208,9 +208,8 @@ describe("the design kit", () => {
     expect(injectKit(once, kit)).toBe(once);
   });
 
-  it("reaches every clip and the master through buildProject", () => {
+  it("reaches every clip through buildProject", () => {
     const built = buildProject([{ id: "beat-01", durationSeconds: 2, compositionHtml: withLook("beat-01") }], { ...OPTIONS, kit });
     expect(built.clips["beat-01"]!.find((f) => f.path.endsWith("beat-01.html"))!.contents).toContain("data-rc-kit");
-    expect(built.master.find((f) => f.path.endsWith("beat-01.html"))!.contents).toContain("data-rc-kit");
   });
 });

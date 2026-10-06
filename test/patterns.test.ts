@@ -63,7 +63,7 @@ describe("the design kit", () => {
   });
 });
 
-describe.each(["footage-window", "generated-backdrop"])("the footage pattern %s", (name) => {
+describe.each(["footage-window", "footage-cutout", "generated-backdrop"])("the footage pattern %s", (name) => {
   const html = readFileSync(path.join(patternsDir, "footage", `${name}.html`), "utf8");
 
   it("agrees with itself about its id, its timeline and its frame", () => {

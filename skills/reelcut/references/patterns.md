@@ -65,12 +65,14 @@ palette and timings is the fallback. It beats no clip. It does not beat a compos
 
 ## Footage
 
-One more pattern lives apart, in `assets/patterns/footage/`, because it needs a real recording in the library
+Two more patterns live apart, in `assets/patterns/footage/`, because it needs a real recording in the library
 to render and so is not part of the example reel:
 
 | pattern | look | for a beat that | the move |
 |---|---|---|---|
 | `footage-window` | paper | shows a real step being done | a recording sits in a framed box under the sentence; a ring finds the thing to look at, the recording moves in to frame it, a glass pill names the step. Nothing in the window is drawn. |
+
+| `footage-cutout` | paper | shows a person, card or window recorded on a green screen | the green is keyed out once by the render and the box is cropped to the subject, so it sits straight on the ground with its recorded soft shadow; it rises in, then drifts a few pixels with a touch of tilt. |
 
 | `generated-backdrop` | ink | needs atmosphere under a line | an AI-generated background (Higgsfield) fills the frame behind a scrim, with the headline and a supporting line in real type above it; labelled AI-generated |
 

@@ -358,7 +358,7 @@ npm run generate -- add clip.mp4 --model "Veo 3" --prompt "…" --beat beat-01 -
 npm run generate -- record beat-01 --manifest out/reel.json --outcome generated|fallback|skipped
 ```
 
-A generated clip is generic (never identity), starts pending until you approve it, is placed under real
+A generated clip is generic (never identity), is used as soon as it is registered (no approval step), is placed under real
 HyperFrames type, is labelled AI-generated, and is saved so re-rendering never calls Higgsfield again. At most 6
 clips a reel. See [generate.md](skills/reelcut/references/generate.md). The Higgsfield tools were not
 connected where this was built, so the live call is Claude's, untried here; everything around it is tested.
@@ -384,8 +384,8 @@ See [reference-videos.md](skills/reelcut/references/reference-videos.md).
 Where the honest picture is a recording of something happening, reelcut places the recording instead of
 animating a copy of it. Drop a screen recording on the studio's Library page; it is measured, previewed and
 given a **filmstrip** of eight frames across it. In the **Footage** tab you scrub it, mark the steps in it as
-named **moments** ("download Claude", 0:02 to 0:08.5), and tick that you watched all of it for private
-information. A script line is then matched to a moment, not a file.
+named **moments** ("download Claude", 0:02 to 0:08.5), or let Claude index them from the filmstrip. A script
+line is then matched to a moment, not a file.
 
 ```bash
 npm run footage -- list
@@ -398,11 +398,19 @@ What may be done to a recording: trim it to a moment, frame it in a rounded wind
 it, play a long step faster (one even rate, at most 2x), hold its last frame, and annotate over it with a
 ring or a glass step pill. Never redraw it, edit inside it, slow it down or loop it. The beat's length is the
 voiceover's: the recording adapts, and a moment that would need more than 2x is refused with its ways out
-rather than quietly cut. A recording is used by itself only when it is approved, checked for private
-information **by a person** (nothing can be masked in a recording, so this is the whole protection), dated
-within 90 days, and the moment is confirmed and has been said yes to once. Claude can propose moments from
-the filmstrip (`/reelcut tag-footage`); it can never confirm one. Details, and the three ways it can go
-wrong, in [footage.md](skills/reelcut/references/footage.md).
+rather than quietly cut. Nothing needs approving: a recording, and the moments Claude indexes from its filmstrip
+(`/reelcut tag-footage`), are used as soon as they match. Only a first use, a recording over 90 days old or a
+weaker match is asked about once. Nothing can be masked in a recording, so a private detail in one is only
+flagged in the report.
+
+**Green screens.** A recording on a flat green backdrop is detected when it comes in and keyed, once, into a
+transparent WebM saved beside it (the original is untouched): the green is removed from the backdrop reached
+from the frame's border, soft edges keep their partial transparency with the green taken back out of them, a
+soft drop shadow on the green stays as a soft shadow (or is removed, per recording), and each moment is cropped
+to the card in it. The Footage tab shows original and keyed on a checkerboard, with tolerance, softness, despill,
+shadow and edge controls; `npm run footage -- key <asset>` does the same from the command line. Place one with
+`data-frame="cutout"` (see the `footage-cutout` pattern). Details, and the three ways it can go wrong, in
+[footage.md](skills/reelcut/references/footage.md).
 
 ### When something is missing
 
@@ -517,20 +525,24 @@ when a gap actually blocks the reel. Reports only — it never moves or renames 
 ### `npm run render` — beats to clips, a master and a thumbnail
 
 ```bash
-npm run render -- examples/notiz-apps/reel.json [--sfx] [--clips-only] [--master-only]
+npm run render -- examples/notiz-apps/reel.json [--preflight] [--sfx] [--clips-only] [--master-only] [--only beat-03] [--jobs N]
 ```
 
 `reel.json` lists the beats, their durations and their compositions. Every beat renders as its own
-project, so one broken beat fails alone and the rest still ship. Each file then goes through the
-frame checker, and only files that rendered **and** passed are reported as delivered.
+project, several at a time (worked out from your cores and memory; `--jobs` overrides), so one broken beat
+fails alone and the rest still ship. A beat that cannot render yet (footage that does not fit, a missing
+asset) is listed as blocked and the others render around it; `--preflight` lists every blocker in a second
+without rendering. Each file then goes through the frame checker, and only files that rendered **and** passed
+are reported as delivered. The master is the passing clips **joined**, not rendered a second time, and
+`contact.jpg` shows five frames of every beat.
 
 ```
-4 beats, 18.13s, 1080x1080 @ 30fps, silent
-  beat-00 … ok
-  beat-03 … ok
-  beat-10 … ok
-  beat-13 … ok
-  master … ok
+4 beats, 18.13s, 1080x1080 @ 30fps, silent · 3 clips at a time, 3 workers each
+  beat-00 … ok  (15.2s)
+  beat-03 … ok  (23.8s)
+  beat-10 … ok  (12.0s)
+  beat-13 … ok  (12.9s)
+  master … joined (4 clips, 544 frames)
   poster … 6.25s (hook_settled), baked as frame 0 — 544 frames, unchanged
 
 5 of 5 rendered and passed.
@@ -550,6 +562,9 @@ Three things it checks that would otherwise fail silently:
 unless asked for.
 
 ### `npm run measure` — a beat's layout, to the pixel
+
+`npm run measure -- --all out/reel.json` does the whole reel in one Chrome session and writes one sheet
+(`measure/reel-sheet.jpg`, a row per beat) and one list of findings.
 
 ```bash
 npm run measure -- skills/reelcut/assets/patterns/pricing-toggle.html 4.3 --guides --scan \n  --select ".rc-head||.plan" --bearings ".rc-head .ln"

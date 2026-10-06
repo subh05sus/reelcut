@@ -16,7 +16,14 @@ import {
   momentSeconds,
   parseTime,
   clock,
+  detectKey,
+  ensureKeyed,
+  isKeyed,
+  keyColor,
+  keyOf,
   patchFootage,
+  patchKey,
+  wantsKey,
   recordedAt,
   refreshFootageAnalysis,
   removeMoment,
@@ -38,15 +45,17 @@ import { frameSizeFor, isOutputFormat } from "../../../src/core/constants.js";
  *   npm run footage -- moment set <asset> <moment> [--label ...] [--in ...] [--out ...] [--tags ...] [--focus ...] [--note ...]
  *   npm run footage -- moment confirm|remove <asset> <moment>
  *   npm run footage -- meta <asset> [--app Claude] [--platform mac] [--recorded 2026-09-30] [--muted true|false] [--text-px 26]
- *   npm run footage -- check <asset> --watched [--undo]       (a person watched all of it for private information)
- *   npm run footage -- propose <asset> --label "..." --in 2 --out 8.5 [--tags a,b]     (Claude; never confirms)
- *   npm run footage -- queue [--json]                          (recordings with nothing marked yet, and proposals waiting)
+ *   npm run footage -- check <asset> [--undo]                  (optional note: someone watched it for private information)
+ *   npm run footage -- propose <asset> --label "..." --in 2 --out 8.5 [--tags a,b]     (Claude's indexing; applies immediately)
+ *   npm run footage -- queue [--json]                          (recordings with nothing marked yet)
  *   npm run footage -- accept <asset>:<moment>                 (a person said yes to using it)
  *   npm run footage -- analyze <asset>                         (measure a video that came in without it)
+ *   npm run footage -- key <asset> [--off|--on] [--shadows keep|drop] [--tolerance 0.06] [--softness 1] [--despill 1] [--choke 0] [--color #00f600]
+ *   npm run footage -- key --all                               (look at every recording; key the ones on a green screen)
  *
  * Recordings come in the way every asset does: drop them on the studio, or `npm run library -- ingest`.
- * Nothing here changes a recording. A moment is a pair of times, and it has to be confirmed by a person
- * before a script line is matched to it.
+ * Nothing here changes a recording. A moment is a pair of times, and it is usable as soon as it is
+ * marked, by a person or by Claude indexing the filmstrip: no approval or confirmation is needed.
  */
 
 function flag(argv: string[], name: string): string | undefined {
@@ -102,12 +111,14 @@ function describe(a: LibraryAsset): string {
     f.platform,
     age === undefined ? "date unknown" : `${Math.floor(age)}d old`,
   ].filter(Boolean);
-  const state = [`<${a.review.state}>`, f.privateChecked ? "checked for private info" : "NOT checked for private info", a.status !== "active" ? `[${a.status}]` : undefined].filter(Boolean);
-  return `${a.id}  ${f.app ? `${f.app}: ` : ""}${a.name}\n${" ".repeat(18)}${facts.join(" · ")}\n${" ".repeat(18)}${state.join(" · ")}`;
+  const k = keyOf(a);
+  const green = a.analysis.greenScreen ? (!k.enabled ? "green screen, keying OFF" : isKeyed(a) ? `green screen ${keyColor(a)}, keyed (shadows ${k.shadows})` : `green screen ${keyColor(a)}, not keyed yet`) : undefined;
+  const state = [green, a.review.state === "rejected" ? "<rejected>" : undefined, f.privateChecked ? "checked for private info" : undefined, a.status !== "active" ? `[${a.status}]` : undefined].filter(Boolean);
+  return `${a.id}  ${f.app ? `${f.app}: ` : ""}${a.name}\n${" ".repeat(18)}${facts.join(" · ")}${state.length ? `\n${" ".repeat(18)}${state.join(" · ")}` : ""}`;
 }
 
 function momentLine(a: LibraryAsset, m: Moment): string {
-  const flags = [m.state === "proposed" ? "PROPOSED by Claude, unconfirmed" : undefined, m.acceptedAt ? "used before" : undefined, Object.keys(m.focus).length ? `focus ${Object.keys(m.focus).join(",")}` : undefined].filter(Boolean);
+  const flags = [m.origin === "claude" ? "indexed by Claude" : undefined, m.acceptedAt ? "used before" : undefined, Object.keys(m.focus).length ? `focus ${Object.keys(m.focus).join(",")}` : undefined].filter(Boolean);
   return `    ${a.id}:${m.id}  ${clock(m.in)}–${clock(m.out)} (${momentSeconds(m).toFixed(1)}s)  ${m.label}${m.tags.length ? `  #${m.tags.join(" #")}` : ""}${flags.length ? `  [${flags.join("; ")}]` : ""}`;
 }
 
@@ -256,15 +267,9 @@ function meta(argv: string[]): void {
 }
 
 function check(argv: string[]): void {
-  const watched = bool(argv, "--watched");
+  bool(argv, "--watched"); // accepted for older scripts; the note no longer gates anything
   const undo = bool(argv, "--undo");
   const a = asset(argv.find((x) => !x.startsWith("--")));
-  if (!undo && !watched) {
-    throw new Error(
-      "This records that a PERSON watched the whole recording for private information (emails, notifications, other windows, the menu bar). " +
-        "Claude never does this for them: it is the studio's Footage tab, or this command with --watched once the user has said they did.",
-    );
-  }
   console.log(describe(patchFootage(a.id, { privateChecked: !undo })));
 }
 
@@ -277,7 +282,7 @@ function propose(argv: string[]): void {
   if (!label) throw new Error('--label "what the viewer sees happen" is required');
   const { moment: m } = addMoment(a.id, { label, in: inAt, out: outAt, tags }, "claude");
   console.log(momentLine(a, m));
-  console.log("Proposed. It cannot be matched to a script line until a person confirms it in the studio's Footage tab.");
+  console.log("Added. It applies immediately: a script line can be matched to it now.");
 }
 
 function queue(argv: string[]): void {
@@ -285,12 +290,11 @@ function queue(argv: string[]): void {
   const strip = (a: LibraryAsset): string | undefined => (a.analysis.filmstrip ? path.join(path.dirname(path.dirname(blobPath(a))), a.analysis.filmstrip) : undefined);
   const waiting = loadIndex().assets.filter((a) => isFootage(a) && a.status === "active" && a.review.state !== "rejected" && !a.private);
   const bare = waiting.filter((a) => footageOf(a).moments.length === 0);
-  const proposed = waiting.flatMap((a) => footageOf(a).moments.filter((m) => m.state === "proposed").map((m) => ({ a, m })));
   if (json) {
-    console.log(JSON.stringify({ unmarked: bare.map((a) => ({ id: a.id, name: a.name, seconds: a.analysis.durationSeconds, filmstrip: strip(a), file: blobPath(a), tags: a.tags })), proposed: proposed.map(({ a, m }) => ({ ref: `${a.id}:${m.id}`, label: m.label })) }, null, 2));
+    console.log(JSON.stringify({ unmarked: bare.map((a) => ({ id: a.id, name: a.name, seconds: a.analysis.durationSeconds, filmstrip: strip(a), file: blobPath(a), tags: a.tags })) }, null, 2));
     return;
   }
-  console.log(`${bare.length} recording(s) with nothing marked; ${proposed.length} proposed moment(s) waiting for a person`);
+  console.log(`${bare.length} recording(s) with nothing marked`);
   for (const a of bare) console.log(`  ${a.id}  ${a.name}  ${a.analysis.durationSeconds ? clock(a.analysis.durationSeconds) : ""}${strip(a) && existsSync(strip(a)!) ? `  filmstrip ${strip(a)}` : "  (no filmstrip: run `footage analyze`)"}`);
 }
 
@@ -298,6 +302,64 @@ function accept(argv: string[]): void {
   const target = ref(argv[0]);
   acceptMoments([{ assetId: target.asset.id, momentId: target.moment.id }]);
   console.log(`accepted ${target.moment.label}`);
+}
+
+const number = (argv: string[], name: string, min: number, max: number): number | undefined => {
+  const raw = flag(argv, name);
+  if (raw === undefined) return undefined;
+  const value = Number(raw);
+  if (!Number.isFinite(value) || value < min || value > max) throw new Error(`${name} must be a number from ${min} to ${max}`);
+  return value;
+};
+
+/** Detect a green screen, set how it is keyed, and make the transparent copy (once; it is saved and reused). */
+async function key(argv: string[]): Promise<void> {
+  const all = bool(argv, "--all");
+  const off = bool(argv, "--off");
+  const on = bool(argv, "--on");
+  const shadows = flag(argv, "--shadows");
+  const color = flag(argv, "--color");
+  const tolerance = number(argv, "--tolerance", 0, 0.5);
+  const softness = number(argv, "--softness", 0, 1);
+  const despill = number(argv, "--despill", 0, 1);
+  const choke = number(argv, "--choke", 0, 3);
+  if (shadows !== undefined && shadows !== "keep" && shadows !== "drop") throw new Error("--shadows keep|drop");
+  if (color !== undefined && !/^#[0-9a-f]{6}$/i.test(color)) throw new Error("--color must look like #00f600");
+  const log = (m: string) => console.log(`  ${m}`);
+
+  if (all) {
+    const videos = loadIndex().assets.filter((a) => isFootage(a) && a.status === "active" && a.review.state !== "rejected");
+    for (const v of videos) {
+      const looked = detectKey(v.id);
+      if (!wantsKey(looked)) continue;
+      console.log(describe(looked));
+      if (!isKeyed(looked)) await ensureKeyed(v.id, { log });
+    }
+    return;
+  }
+
+  const a = asset(argv.find((x) => !x.startsWith("--")));
+  if (off && on) throw new Error("--off or --on, not both");
+  const changed = off || on || shadows !== undefined || color !== undefined || tolerance !== undefined || softness !== undefined || despill !== undefined || choke !== undefined;
+  if (changed) {
+    patchKey(a.id, {
+      ...(off ? { enabled: false } : on ? { enabled: true } : {}),
+      ...(shadows ? { shadows: shadows as "keep" | "drop" } : {}),
+      ...(color ? { color: color.toLowerCase() } : {}),
+      ...(tolerance !== undefined ? { tolerance } : {}),
+      ...(softness !== undefined ? { softness } : {}),
+      ...(despill !== undefined ? { despill } : {}),
+      ...(choke !== undefined ? { choke } : {}),
+    });
+  }
+  const looked = detectKey(a.id);
+  if (!wantsKey(looked)) {
+    console.log(describe(looked));
+    console.log(!keyOf(looked).enabled ? "Keying is off for this recording: it is used as recorded." : "No flat green backdrop was found. If it is on a screen of another colour, pass --color #rrggbb --on.");
+    return;
+  }
+  const done = await ensureKeyed(a.id, { log });
+  console.log(describe(done));
 }
 
 async function analyze(argv: string[]): Promise<void> {
@@ -332,8 +394,10 @@ async function main(): Promise<void> {
       return accept(rest);
     case "analyze":
       return analyze(rest);
+    case "key":
+      return key(rest);
     default:
-      console.error("usage: footage list|show|find|fit|moment|meta|check|propose|queue|accept|analyze (see the header of scripts/footage.ts)");
+      console.error("usage: footage list|show|find|fit|moment|meta|check|propose|queue|accept|analyze|key (see the header of scripts/footage.ts)");
       process.exitCode = 2;
   }
 }

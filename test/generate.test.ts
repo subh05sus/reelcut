@@ -292,13 +292,13 @@ describe.runIf(hasFfmpeg())("a generated clip in the library", { timeout: 60_000
     expect(matchLibrary([req], loadIndex().assets).matches).toEqual([]);
   });
 
-  it("is placed only once a person has approved it, needs no private-information check, and is trimmed rather than sped up", async () => {
+  it("is placed without anyone approving it, and is trimmed rather than sped up", async () => {
     const { asset, moment } = await registerGenerated(input(clip(8)));
     const html = `<template><div id="root" data-look="paper"><div class="rc-footage" data-footage="${asset.id}:${moment.id}" data-frame="plain"></div></div></template>`;
     const ctx = (assets: LibraryAsset[], seconds: number) => ({ assets, format: "1:1", beat: { id: "beat-04", durationSeconds: seconds } });
-    expect(() => expandFootage(html, ctx(loadIndex().assets, 4.4))).toThrow(/AI-generated clip nobody has approved/);
+    expect(loadIndex().assets[0]!.review.state).not.toBe("approved");
+    expect(() => expandFootage(html, ctx(loadIndex().assets, 4.4))).not.toThrow();
 
-    setReview([asset.id], "approved", "user");
     const approved = loadIndex().assets;
     expect(footageRenderProblems(approved[0]!, moment, new Date()).errors).toEqual([]);
 

@@ -77,10 +77,10 @@ describe("the Footage tab's routes", () => {
     expect(footageOf(loadIndex().assets[0]!).moments).toEqual([]);
   });
 
-  it("confirms a proposal from Claude when a person says so", async () => {
+  it("treats a moment Claude indexed as usable, and still accepts a confirm from an older page", async () => {
     const id = video();
     const { moment } = addMoment(id, { label: "open the app", in: 8, out: 11 }, "claude");
-    expect(footageOf(loadIndex().assets[0]!).moments[0]!.state).toBe("proposed");
+    expect(footageOf(loadIndex().assets[0]!).moments[0]!.state).toBe("confirmed");
     await request(`/api/assets/${id}/moments/${moment.id}`, "PATCH", { confirm: true });
     expect(footageOf(loadIndex().assets[0]!).moments[0]).toMatchObject({ state: "confirmed", origin: "claude" });
   });

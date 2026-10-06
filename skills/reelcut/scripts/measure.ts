@@ -1,8 +1,11 @@
-import { readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { findMoment, footageLegibility, loadIndex } from "../../../src/library/index.js";
-import { formatMeasureReport, measureComposition, parseMeasureArgs } from "../../../src/verify/measure.js";
+import { formatMeasureReport, launchMeasureBrowser, measureComposition, parseMeasureArgs, reelTimes } from "../../../src/verify/measure.js";
+import type { Kit } from "../../../src/render/project.js";
+import { stackSheets } from "../../../src/render/assemble.js";
 
 /**
  * Measure a composition: layout rectangles, text baselines, optical side bearings, the grid drawn
@@ -22,11 +25,61 @@ import { formatMeasureReport, measureComposition, parseMeasureArgs } from "../..
  *
  * Reports, never fixes. Pair it with `hyperframes check`: that says whether a beat is broken, this
  * says whether it is exact. See references/kit.md, "Layout discipline".
+ *
+ *   npm run measure -- --all out/reel.json [--out out/measure]
+ *
+ * measures every beat of a reel in ONE Chrome session — the entrance, the middle and the settled end, with
+ * the guides and the scan on — and writes one sheet (`<out>/reel-sheet.jpg`, a row per beat) and one list of
+ * findings. One pass over the whole reel instead of a browser launch per beat per round.
  */
+async function measureAll(manifestPath: string, outDir: string, kit: Kit): Promise<void> {
+  const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as { beats: { id: string; durationSeconds: number; composition: string }[] };
+  const base = path.dirname(manifestPath);
+  const browser = await launchMeasureBrowser();
+  const rows: string[] = [];
+  let findings = 0;
+  try {
+    for (const beat of manifest.beats) {
+      const file = path.resolve(base, beat.composition);
+      if (!existsSync(file)) {
+        console.log(`${beat.id}  composition not found at ${file}`);
+        findings += 1;
+        continue;
+      }
+      const times = reelTimes(beat.durationSeconds);
+      const report = await measureComposition({ file, times, kit, outDir, guides: true, scan: true, keepCamera: true, browser, name: beat.id });
+      const found = report.samples.flatMap((s) => s.findings.map((f) => `  t=${s.at}  ${f.kind}  ${f.el}  "${f.text}"  ${f.detail}`));
+      findings += found.length;
+      console.log(found.length ? `${beat.id}  ${found.length} to look at\n${found.join("\n")}` : `${beat.id}  clean`);
+      const row = path.join(outDir, `${beat.id}-row.jpg`);
+      execFileSync("ffmpeg", ["-v", "error", "-y", ...report.samples.flatMap((s) => ["-i", s.screenshot]), "-filter_complex", `${report.samples.map((_, i) => `[${i}:v]scale=360:-2[s${i}]`).join(";")};${report.samples.map((_, i) => `[s${i}]`).join("")}hstack=inputs=${report.samples.length}`, "-q:v", "3", row]);
+      rows.push(row);
+    }
+  } finally {
+    await browser.close();
+  }
+  const sheet = stackSheets(rows, path.join(outDir, "reel-sheet.jpg"));
+  console.log("");
+  console.log(`${manifest.beats.length} beats measured, ${findings} finding(s).${sheet ? ` Sheet: ${sheet} (a row per beat: entrance, middle, settled end; guides on)` : ""}`);
+  if (findings > 0) process.exitCode = 1;
+}
+
 async function main(): Promise<void> {
-  const args = parseMeasureArgs(process.argv.slice(2));
+  const raw = process.argv.slice(2);
+  if (raw[0] === "--all") {
+    const here = path.dirname(fileURLToPath(import.meta.url));
+    const kitDir = path.resolve(here, "..", "assets", "kit");
+    const kit = { css: readFileSync(path.join(kitDir, "kit.css"), "utf8"), js: readFileSync(path.join(kitDir, "kit.js"), "utf8") };
+    const base = process.env.INIT_CWD ?? process.cwd();
+    if (!raw[1]) throw new Error("usage: measure.ts --all <reel.json> [--out dir]");
+    const outAt = raw.indexOf("--out");
+    const manifest = path.resolve(base, raw[1]);
+    await measureAll(manifest, path.resolve(base, outAt >= 0 && raw[outAt + 1] ? raw[outAt + 1]! : path.join(path.dirname(manifest), "measure")), kit);
+    return;
+  }
+  const args = parseMeasureArgs(raw);
   if (!args) {
-    console.error('usage: measure.ts <composition.html> <t1,t2,…> [--guides] [--scan] [--no-camera] [--select "a||b"] [--baselines "a"] [--bearings "a"] [--out dir] [--name stem]');
+    console.error('usage: measure.ts --all <reel.json> [--out dir]  |  measure.ts <composition.html> <t1,t2,…> [--guides] [--scan] [--no-camera] [--select "a||b"] [--baselines "a"] [--bearings "a"] [--out dir] [--name stem]');
     process.exitCode = 2;
     return;
   }

@@ -20,6 +20,7 @@ import {
   hasFfmpeg,
   LibraryAssetSchema,
   loadIndex,
+  mutateIndex,
   MAX_MOMENTS,
   parseTime,
   patchFootage,
@@ -86,13 +87,18 @@ describe("footage in the library", () => {
     expect(() => addMoment(asset.id, { label: "x", in: 0, out: 2 })).toThrow(/not a video/);
   });
 
-  it("makes whatever Claude writes a proposal, and only a person can confirm it", () => {
+  it("applies what Claude indexes straight away, and remembers who marked it", () => {
     const a = recording();
     const { moment } = addMoment(a.id, { label: "open the app", in: 8.5, out: 11, focus: { "1:1": { x: 0, y: 0, w: 0.5, h: 0.5 } } }, "claude");
-    expect(moment).toMatchObject({ state: "proposed", origin: "claude", focus: {} });
-    expect(findMoments(loadIndex().assets, "open the app")[0]).toMatchObject({ decision: "proposal" });
-    expect(findMoments(loadIndex().assets, "open the app")[0]!.why).toMatch(/proposed by Claude/);
-    updateMoment(a.id, moment.id, { confirm: true });
+    expect(moment).toMatchObject({ state: "confirmed", origin: "claude", focus: { "1:1": { x: 0, y: 0, w: 0.5, h: 0.5 } } });
+    expect(findMoments(loadIndex().assets, "open the app")[0]!.why).not.toMatch(/proposed|confirm/);
+  });
+
+  it("confirms a moment left as a proposal by an older version when it is edited", () => {
+    const a = recording();
+    const { moment } = addMoment(a.id, { label: "open the app", in: 8.5, out: 11 }, "claude");
+    mutateIndex((index) => { index.assets[0]!.footage!.moments[0]!.state = "proposed"; });
+    updateMoment(a.id, moment.id, { out: 10.5 });
     expect(footageOf(loadIndex().assets[0]!).moments[0]!.state).toBe("confirmed");
   });
 
@@ -113,11 +119,11 @@ describe("footage in the library", () => {
     expect(footageOf(loadIndex().assets[0]!).moments[0]!.acceptedAt).toBeUndefined();
   });
 
-  it("does not mark a proposal as used", () => {
+  it("marks a moment Claude indexed as used once it renders", () => {
     const a = recording();
     const { moment } = addMoment(a.id, { label: "download Claude", in: 2, out: 8 }, "claude");
     acceptMoments([{ assetId: a.id, momentId: moment.id }]);
-    expect(footageOf(loadIndex().assets[0]!).moments[0]!.acceptedAt).toBeUndefined();
+    expect(footageOf(loadIndex().assets[0]!).moments[0]!.acceptedAt).toBeDefined();
   });
 
   it("removes a moment, and says when there is none", () => {
@@ -184,10 +190,11 @@ describe("finding the moment a line wants", () => {
     expect(m!.decision).toBe("proposal");
   });
 
-  it("does not use a recording nobody has approved, nor one that was rejected", () => {
+  it("uses a recording nobody has approved, but never one that was rejected", () => {
     const pending = recording({ approved: false, recorded: daysAgo(5) });
-    addMoment(pending.id, { label: "download Claude", in: 2, out: 8 });
-    expect(findMoments(loadIndex().assets, phrase)[0]!.why).toMatch(/not reviewed yet/);
+    const { moment } = addMoment(pending.id, { label: "download Claude", in: 2, out: 8 });
+    acceptMoments([{ assetId: pending.id, momentId: moment.id }]);
+    expect(findMoments(loadIndex().assets, phrase)[0]).toMatchObject({ decision: "auto" });
     setReview([pending.id], "rejected", "user");
     expect(findMoments(loadIndex().assets, phrase)).toEqual([]);
   });
@@ -201,11 +208,11 @@ describe("finding the moment a line wants", () => {
     expect(findMoments(loadIndex().assets, phrase)[0]!.decision).toBe("auto");
   });
 
-  it("never uses by itself a recording nobody checked for private information", () => {
+  it("does not need a private-information check to use a recording by itself", () => {
     const a = recording({ checked: false, recorded: daysAgo(5) });
     const { moment } = addMoment(a.id, { label: "download Claude", in: 2, out: 8 });
     acceptMoments([{ assetId: a.id, momentId: moment.id }]);
-    expect(findMoments(loadIndex().assets, phrase)[0]!.why).toMatch(/private information/);
+    expect(findMoments(loadIndex().assets, phrase)[0]).toMatchObject({ decision: "auto" });
   });
 
   it("goes stale like a capture, and an unknown date is never taken as recent", () => {
@@ -375,14 +382,14 @@ describe("expanding a placeholder into the video that plays it", () => {
     expect(() => expandFootage(html(' data-at="3" data-for="2"').replace("REF", ref), ctx([a], 4))).toThrow(/runs past the end/);
   });
 
-  it("refuses what has not been approved, checked, confirmed or has been rejected", () => {
+  it("places what nobody approved, checked or confirmed, and refuses only what was rejected", () => {
     const pending = setup({ approved: false });
-    expect(() => expandFootage(html().replace("REF", pending.ref), ctx([pending.a]))).toThrow(/has not been approved/);
+    expect(() => expandFootage(html().replace("REF", pending.ref), ctx([pending.a]))).not.toThrow();
     const unchecked = setup({ checked: false });
-    expect(() => expandFootage(html().replace("REF", unchecked.ref), ctx([unchecked.a]))).toThrow(/private information/);
-    const proposed = recording({ recorded: daysAgo(2) });
-    const { moment } = addMoment(proposed.id, { label: "download Claude", in: 2, out: 6 }, "claude");
-    expect(() => expandFootage(html().replace("REF", `${proposed.id}:${moment.id}`), ctx([loadIndex().assets.find((x) => x.id === proposed.id)!]))).toThrow(/proposed by Claude/);
+    expect(() => expandFootage(html().replace("REF", unchecked.ref), ctx([unchecked.a]))).not.toThrow();
+    const indexed = recording({ recorded: daysAgo(2) });
+    const { moment } = addMoment(indexed.id, { label: "download Claude", in: 2, out: 6 }, "claude");
+    expect(() => expandFootage(html().replace("REF", `${indexed.id}:${moment.id}`), ctx([loadIndex().assets.find((x) => x.id === indexed.id)!]))).not.toThrow();
     const rejected = setup();
     setReview([rejected.a.id], "rejected", "user");
     expect(() => expandFootage(html().replace("REF", rejected.ref), ctx(loadIndex().assets))).toThrow(/was rejected/);

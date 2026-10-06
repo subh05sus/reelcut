@@ -27,6 +27,7 @@ import { IngestError, ingestBatch, maxFileBytes, streamToTemp, type IngestSource
 import { summarise } from "../library/journal.js";
 import { claudeQueue, needsClaude } from "../library/queue.js";
 import { blobPath, findAsset, LibraryError, libraryRoot, loadIndex, setReview, thumbBlobPath, updateAsset, type AssetPatch } from "../library/store.js";
+import { detectKey, isKeyed, keyedBlob, keyingStatus, keyOf, patchKey, scheduleKey, wantsKey, type KeyPatch } from "../library/key.js";
 import { addMoment, findMoments, patchFootage, refreshFootageAnalysis, removeMoment, updateMoment, type FootagePatch, type MomentInput, type MomentPatch } from "../library/footage.js";
 import { PLATFORMS } from "../library/schema.js";
 import { HIGGSFIELD_SETTINGS, loadSettings, setHiggsfieldSetting, type HiggsfieldSetting } from "../library/settings.js";
@@ -226,8 +227,16 @@ export function cleanRelPath(raw: string): string | undefined {
 }
 
 /** An asset as the page sees it: the index entry plus whether it is waiting for Claude and where its preview is. */
-export function publicAsset(a: LibraryAsset): LibraryAsset & { queued: boolean; thumbUrl?: string; stripUrl?: string } {
-  return { ...a, queued: needsClaude(a), ...(a.thumb ? { thumbUrl: `/files/thumb/${a.id}` } : {}), ...(a.analysis.filmstrip ? { stripUrl: `/files/strip/${a.id}` } : {}) };
+export function publicAsset(a: LibraryAsset): LibraryAsset & { queued: boolean; thumbUrl?: string; stripUrl?: string; keyedUrl?: string; keying?: { wanted: boolean; keyed: boolean; state: string; error?: string } } {
+  const green = a.mediaType === "video" && (a.analysis.greenScreen !== undefined || keyOf(a).color !== undefined);
+  return {
+    ...a,
+    queued: needsClaude(a),
+    ...(a.thumb ? { thumbUrl: `/files/thumb/${a.id}` } : {}),
+    ...(a.analysis.filmstrip ? { stripUrl: `/files/strip/${a.id}` } : {}),
+    ...(green && isKeyed(a) ? { keyedUrl: `/files/keyed/${a.id}?v=${keyOf(a).hash ?? ""}` } : {}),
+    ...(green ? { keying: { wanted: wantsKey(a), keyed: isKeyed(a), ...keyingStatus(a.id), ...(keyOf(a).error ? { error: keyOf(a).error } : {}) } } : {}),
+  };
 }
 
 /** A reference as the page sees it: the record plus where its pictures and video are. */
@@ -299,6 +308,31 @@ function toFootagePatch(body: unknown): FootagePatch {
   if (b.privateChecked !== undefined) {
     if (typeof b.privateChecked !== "boolean") throw new HttpError(400, "privateChecked must be true or false");
     patch.privateChecked = b.privateChecked;
+  }
+  return patch;
+}
+
+function toKeyPatch(body: unknown): KeyPatch {
+  if (typeof body !== "object" || body === null) throw new HttpError(400, "expected an object");
+  const b = body as Record<string, unknown>;
+  const patch: KeyPatch = {};
+  if (b.enabled !== undefined) {
+    if (typeof b.enabled !== "boolean") throw new HttpError(400, "enabled must be true or false");
+    patch.enabled = b.enabled;
+  }
+  if (b.color !== undefined) {
+    if (b.color !== null && (typeof b.color !== "string" || !/^#[0-9a-f]{6}$/i.test(b.color))) throw new HttpError(400, "color must look like #00f600");
+    patch.color = b.color === null ? null : (b.color as string).toLowerCase();
+  }
+  for (const name of ["tolerance", "softness", "despill"] as const) {
+    const v = numberField(b, name);
+    if (v !== undefined) patch[name] = v;
+  }
+  const choke = numberField(b, "choke");
+  if (choke !== undefined) patch.choke = Math.round(choke);
+  if (b.shadows !== undefined) {
+    if (b.shadows !== "keep" && b.shadows !== "drop") throw new HttpError(400, "shadows must be keep or drop");
+    patch.shadows = b.shadows;
   }
   return patch;
 }
@@ -521,6 +555,29 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
     if (parts[0] === "api" && parts[1] === "assets" && parts.length >= 4 && parts[3] === "footage" && method === "PATCH" && parts.length === 4) {
       const asset = patchFootage(parts[2]!, toFootagePatch(await readBody(req)));
       return sendJson(res, 200, { asset: publicAsset(asset) });
+    }
+    // ---- green screens: detected on ingest and keyed in the background; these tune it and say how it is going
+    if (parts[0] === "api" && parts[1] === "footage" && parts[2] === "key-scan" && method === "POST" && parts.length === 3) {
+      // Recordings added before green-screen removal existed are looked at once; anything on a green screen is queued.
+      const queued: string[] = [];
+      for (const a of loadIndex().assets.filter((x) => x.mediaType === "video" && x.status === "active" && x.review.state !== "rejected")) {
+        const looked = detectKey(a.id);
+        if (wantsKey(looked) && !isKeyed(looked) && keyingStatus(a.id).state === "idle") {
+          scheduleKey(a.id);
+          queued.push(a.id);
+        }
+      }
+      return sendJson(res, 200, { queued });
+    }
+    if (parts[0] === "api" && parts[1] === "assets" && parts.length === 4 && parts[3] === "key") {
+      if (!findAsset(parts[2]!)) throw new HttpError(404, "no such asset");
+      if (method === "PATCH") {
+        const asset = patchKey(parts[2]!, toKeyPatch(await readBody(req)));
+        // The copy is made again in the background; its hash no longer matches, so nothing uses the old one meanwhile.
+        if (wantsKey(asset)) scheduleKey(asset.id);
+        return sendJson(res, 200, { asset: publicAsset(asset) });
+      }
+      if (read) return sendJson(res, 200, { asset: publicAsset(findAsset(parts[2]!)!) });
     }
     if (parts[0] === "api" && parts[1] === "assets" && parts.length === 4 && parts[3] === "analyze" && method === "POST") {
       const found = findAsset(parts[2]!);
@@ -791,6 +848,12 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
         const file = ref ? (parts[1] === "reference" ? referenceBlobPath(ref) : parts[1] === "reference-sheet" ? referenceSheetPath(ref) : referenceThumbPath(ref)) : undefined;
         if (!file) throw new HttpError(404, "no such file");
         return sendFile(req, res, file);
+      }
+      if (parts[1] === "keyed" && parts.length === 3) {
+        const asset = findAsset(parts[2]!.replace(/\.[a-z0-9]+$/i, ""));
+        const keyed = asset && isKeyed(asset) ? keyedBlob(asset) : undefined;
+        if (!keyed) throw new HttpError(404, "no keyed copy yet");
+        return sendFile(req, res, keyed);
       }
       if (parts[1] === "strip" && parts.length === 3) {
         const asset = findAsset(parts[2]!.replace(/\.[a-z0-9]+$/i, ""));

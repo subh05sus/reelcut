@@ -138,8 +138,8 @@ they have approved match like any other. The ones still `pending` are shown as p
 applied by themselves: say so, and tell the user they can approve them in the studio's Review tab.
 
 **Higgsfield (AI video) is for backgrounds and abstract ideas only**, and only when connected and agreed. A beat that
-needs a real product, mark, screen or recorded step is never generated; a generated clip is generic, starts
-pending until a person approves it, is placed under HyperFrames type, and is labelled AI-generated in the
+needs a real product, mark, screen or recorded step is never generated; a generated clip is generic, is used
+as soon as it is registered (no approval step), is placed under HyperFrames type, and is labelled AI-generated in the
 report. Any failure, timeout or missing connection falls back to composing that beat in HyperFrames, and is
 logged (`npm run generate -- record`). See [references/generate.md](references/generate.md).
 
@@ -186,7 +186,12 @@ Where a beat shows a recorded step, **place the recording; do not recreate it**:
 `<div class="rc-footage" data-footage="<asset>:<moment>">` in the composition, framed on the grid, with
 `RC.rise` (never a blur) and, where the text is small, `RC.zoomTo`. Start from
 [`patterns/footage/footage-window.html`](assets/patterns/footage/footage-window.html). Check the box with
-`npm run measure -- <beat.html> <t> --format <fmt>`: an ILLEGIBLE footage line is a failed beat.
+`npm run measure -- <beat.html> <t> --format <fmt>`: an ILLEGIBLE footage line is a failed beat. A recording
+shot on a green screen is keyed to transparency by the render; place it with `data-frame="cutout"` and start from
+[`patterns/footage/footage-cutout.html`](assets/patterns/footage/footage-cutout.html).
+
+**Compose in parallel.** The beats are independent files, so split them across subagents, each owning only its own
+`src/beat-NN.html` and `compositions/beat-NN.html`; then measure and render the whole reel once, not beat by beat.
 
 Apply the learned rules you read in Step 0 where they fit the beat, record their ids in `reel.json`
 as `appliedLearnings`, list them under **Applied learnings** in `plan.md`, and put the pattern a beat
@@ -194,7 +199,11 @@ was adapted from in its `pattern` field, so the studio can learn which patterns 
 
 **Gate:** `npx hyperframes check --samples 24` passes **with a non-zero sample count**. See the
 hard rules below — a clean-looking report with zero samples means nothing ran.
-Then measure it: `npm run measure -- <beat.html> <times> --guides --scan` puts the beat on the grid
+Then measure the whole reel once: `npm run measure -- --all reel.json` measures every beat in one Chrome session
+(entrance, middle, settled end; guides and scan on) and writes `measure/reel-sheet.jpg` and one list of findings.
+**At most two measure rounds per beat.** After the second, ship it, or fall back to the nearest pattern, and say
+so in `report.md`; more rounds are where the hour goes. For one beat in detail,
+`npm run measure -- <beat.html> <times> --guides --scan` puts the beat on the grid
 ([references/kit.md](references/kit.md#layout-discipline): 84px margins, a 336–996 content region,
 the headline's ink flush with the margin) and flags anything outside the safe area or under 16px.
 `check` says a beat is not broken; `measure` says it is exact.
@@ -205,9 +214,12 @@ the headline's ink flush with the margin) and flags anything outside the safe ar
 
 **Read:** [references/step-5-render.md](references/step-5-render.md)
 
-Write `reel.json`, then `npm run render -- reel.json`. It renders each beat as its own clip and a
-master that mounts them all, checks every file, and bakes the hook's strongest settled frame in as
-the thumbnail. Add `--sfx` for sound effects: `npm run sfx -- suggest reel.json --apply` proposes cues
+Write `reel.json`, run `npm run render -- reel.json --preflight` (a second: it lists every beat that cannot
+render yet, and why, without rendering), then `npm run render -- reel.json`. It renders the clips several at a
+time, checks every file, joins the passing clips into the master (no second render: the master is exactly the
+clips that passed) and bakes the hook's strongest settled frame in as the thumbnail. A blocked beat does not
+hold up the others; render it later with `--only`, and the master is joined then. Look at `contact.jpg` (a row
+of five frames per beat) instead of re-opening compositions in a browser. Add `--sfx` for sound effects: `npm run sfx -- suggest reel.json --apply` proposes cues
 from the user's own approved sounds (see [references/step-5-render.md](references/step-5-render.md)).
 Write the report. The run is recorded; open the studio
 (http://localhost:5198) or not, as the user chose in Step 0.
@@ -276,21 +288,16 @@ lists them. This mode is how Claude helps.
 npm run footage -- queue --json      # unmarked recordings: id, length, a filmstrip image, tags
 ```
 
-For each, **view the filmstrip** (Read tool: eight frames across the recording) and propose the steps you can
-see:
+For each, **view the filmstrip** (Read tool: eight frames across the recording) and index the steps you can see:
 
 ```bash
 npm run footage -- propose <asset> --label "download Claude" --in 2 --out 8.5 --tags claude,download,mac
 ```
 
 A label is what the viewer sees happen, in the words a script would use for it. The boundaries are coarse —
-eight frames — and that is fine: they are proposals.
-
-**Never** confirm a moment, approve a recording, or tick the private-information check
-(`footage check` refuses without `--watched`, which is for when the user says they did). A proposal waits,
-in italics, until a person confirms it in the Footage tab, and a recording nobody checked for private
-information is refused by the render. Tell the user how many moments were proposed and that they need
-confirming.
+eight frames — and that is fine: the user can tighten them in the Footage tab. What you index applies at once;
+there is nothing for anyone to confirm. If a filmstrip shows something that looks private (a tab strip,
+a notification, an email), say so in the report: nothing checks for it any more.
 
 ---
 
@@ -327,13 +334,13 @@ the move keeps easing. An entrance from `opacity: 0` makes the first frame of a 
 frame 0 of the first beat is the thumbnail.
 
 **A generated clip is never the real thing.** Higgsfield output is atmosphere under real type: never a product
-screen, a logo or lettering, never `identity`, never placed before a person approves it, always labelled
+screen, a logo or lettering, never `identity`, always labelled
 AI-generated, and never regenerated by a re-render.
 
 **A recording is used as recorded.** Trim, frame, zoom, speed up to 2x, hold its last frame, annotate over
-it. Never re-create it as an animation when a recording exists, never edit what is inside it, never use one
-nobody has checked for private information. Nothing can be masked in a recording, so that check is the whole
-protection.
+it. Never re-create it as an animation when a recording exists, never edit what is inside it. Nothing can be
+masked in a recording, so a private detail in one (a tab strip, a notification) is only ever flagged in the report.
+A green screen is keyed out by the render and never left in the picture.
 
 **Determinism.** No `Date.now()`, no `performance.now()`, no unseeded `Math.random()`, no
 render-time network, no `repeat: -1`. Every frame must be reproducible from its time alone.

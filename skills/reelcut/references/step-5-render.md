@@ -5,30 +5,22 @@
 One HyperFrames project, three kinds of file:
 
 ```
-out/project/
-  index.html                    the master — mounts every beat on hard cuts
-  compositions/beat-03.html     one sub-composition per beat (a <template>)
-  clip-beat-03/index.html       a standalone host mounting just that beat
+out/project/clips/beat-03/
+  index.html                    a standalone host mounting just that beat
+  compositions/beat-03.html     the beat's sub-composition (a <template>)
 ```
 
-The master's clip list is a direct serialisation of the beats — `data-start` is the running sum of
-the durations before it, `data-duration` is the beat's own. No transitions, no overlap: every
-boundary is a hard cut.
+There is no master project. The master is the rendered clips joined end to end (`ffmpeg` stream copy, hard
+cuts, every boundary on a frame), after each clip's frame count is checked against its place in the reel. The
+first version rendered a second, nested project: it doubled the render time, and in it a timeline driven from an
+`onUpdate` (a counting number) was seeked with its events suppressed, so the master was not the video the beats
+had been checked as. Joining the clips that passed is exactly what passed.
 
-```html
-<div id="beat-03" class="clip"
-     data-composition-id="beat-03"
-     data-composition-src="compositions/beat-03.html"
-     data-start="2.57" data-duration="2.20"
-     data-track-index="0" data-width="1080" data-height="1080"></div>
-```
-
-The host owns no motion of its own, but a host timeline still has to exist and be registered or the
-runtime has nothing to bind:
+Each host still needs a registered timeline or the runtime has nothing to bind:
 
 ```js
 window.__timelines = window.__timelines || {};
-window.__timelines["reel"] = gsap.timeline({ paused: true });
+window.__timelines["clip-beat-03"] = gsap.timeline({ paused: true });
 ```
 
 Give every host clip a stable `id` — without one, Studio cannot target it and `lint` warns.

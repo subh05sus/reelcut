@@ -2,6 +2,7 @@ import { execFile, execFileSync } from "node:child_process";
 import { closeSync, mkdirSync, openSync, readFileSync, readSync, statSync } from "node:fs";
 import path from "node:path";
 import { normaliseTags, type Analysis, type MediaType } from "./schema.js";
+import { detectGreen, sampleSmallFrames } from "./chroma.js";
 
 /**
  * The deterministic pass: what a file is and what can be measured about it, without understanding it.
@@ -481,6 +482,17 @@ export async function analyzeFile(file: string, options: AnalyzeOptions = {}): P
 
   let filmstrip: string | undefined;
   if (mediaType === "video" && options.filmstripOut && ffmpeg && (await writeFilmstrip(file, options.filmstripOut, analysis.durationSeconds))) filmstrip = options.filmstripOut;
+
+  // A flat green backdrop: found now, so a recording on one is keyed without anybody asking.
+  if (mediaType === "video" && ffmpeg && analysis.width && analysis.height && analysis.durationSeconds) {
+    try {
+      const found = detectGreen(sampleSmallFrames(file, { width: analysis.width, height: analysis.height, durationSeconds: analysis.durationSeconds }));
+      analysis.greenScreenChecked = new Date().toISOString();
+      if (found.detected) analysis.greenScreen = { color: found.color as `#${string}`, coverage: found.coverage, border: found.border };
+    } catch {
+      // not being able to look is not a reason to refuse the file; it is looked at again when it is used
+    }
+  }
 
   if (mediaType === "audio" && ffmpeg) {
     const samples = await decodeMono(file);
