@@ -2,163 +2,542 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>reelcut studio</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23ff9230'/%3E%3Cpath d='M13 10.5v11l9-5.5z' fill='%232a1300'/%3E%3C/svg%3E" />
+<script>
+  // Theme before first paint: System (default), Light or Dark, kept in this browser. Settings › Appearance changes it.
+  (function () {
+    var root = document.documentElement, dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    try {
+      var pref = localStorage.getItem("reelcut:theme") || "system";
+      root.dataset.themePref = pref;
+      root.dataset.theme = pref === "dark" || (pref === "system" && dark) ? "dark" : "light";
+      if (localStorage.getItem("reelcut:rail") === "1") root.dataset.rail = "1";
+    } catch (e) { root.dataset.theme = dark ? "dark" : "light"; }
+  })();
+</script>
 <style>
+  /* ================================================================ tokens
+     Apple's semantic colours. Phones (< 900 px) are iOS: a black base in dark mode, grouped cells above it,
+     elevated surfaces for anything presented. Desktops are macOS: graphite content, a window-grey sidebar,
+     85% labels. One accent: the reelcut orange, tuned per mode so it passes contrast. */
   :root {
-    --bg: #f4f2ee; --panel: #ffffff; --ink: #16161a; --muted: #67665f; --line: #e2dfd9;
-    --accent: #c2410c; --ok: #1f7a46; --warn: #a96a12; --bad: #b3372a; --chip: #ece8e1;
-    color-scheme: light dark; --radius: 10px; --mono: ui-monospace, "Cascadia Code", Consolas, monospace;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --ease: cubic-bezier(0.2, 0, 0, 1);
+    --ease-ios: cubic-bezier(0.32, 0.72, 0, 1);
+    --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+    --side-w: 236px;
+    --tabbar-h: 62px;
+    --r-card: 12px; --r-group: 12px; --r-field: 8px; --r-sheet: 28px;
+
+    /* light, phone: iOS grouped */
+    --bg: #f2f2f7; --bg-side: #f2f2f7; --cell: #ffffff; --cell-2: #f2f2f7; --elev: #ffffff; --elev-2: #f2f2f7;
+    /* Secondary labels at 76%, not iOS's 60%: 60% on the grouped grey is 3.3:1, under the 4.5:1 small text needs. */
+    --label: #000000; --label-2: rgb(60 60 67 / 0.76); --label-3: rgb(60 60 67 / 0.3);
+    --sep: rgb(60 60 67 / 0.29); --sep-opaque: #c6c6c8;
+    /* Red under white text: the system red is 3.4:1 with white, so filled red surfaces use the deeper one. */
+    --red-fill: #d70015;
+    --fill-1: rgb(120 120 128 / 0.2); --fill-2: rgb(120 120 128 / 0.16); --fill-3: rgb(118 118 128 / 0.12); --fill-4: rgb(116 116 128 / 0.08);
+    --field: #ffffff; --field-edge: rgb(60 60 67 / 0.18);
+    --thumb: #ffffff;
+    --accent: #c2410c; --accent-text: #c2410c; --on-accent: #ffffff;
+    --green: #186a2e; --orange: #a34a00; --red: #d70015; --blue: #0066cc;
+    --scrim: rgb(0 0 0 / 0.32);
+    --shadow-pop: 0 16px 40px -14px rgb(0 0 0 / 0.22), 0 2px 6px -2px rgb(0 0 0 / 0.06);
+    --ring: var(--accent);
+    --background: var(--bg); --foreground: var(--label);
+    color-scheme: light;
   }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg: #111113; --panel: #1a1a1d; --ink: #eceae6; --muted: #9a9894; --line: #2a2a2e; --chip: #26262a; --ok: #3fbf74; --warn: #e0a84a; --bad: #ef6b5b; --accent: #ff7a4d; }
+  :root[data-theme="dark"] {
+    /* dark, phone: iOS black */
+    --bg: #000000; --bg-side: #000000; --cell: #1c1c1e; --cell-2: #2c2c2e; --elev: #1c1c1e; --elev-2: #2c2c2e;
+    --label: #ffffff; --label-2: rgb(235 235 245 / 0.6); --label-3: rgb(235 235 245 / 0.3);
+    --sep: rgb(84 84 88 / 0.6); --sep-opaque: #38383a;
+    --fill-1: rgb(120 120 128 / 0.36); --fill-2: rgb(120 120 128 / 0.32); --fill-3: rgb(118 118 128 / 0.24); --fill-4: rgb(118 118 128 / 0.18);
+    --field: rgb(118 118 128 / 0.24); --field-edge: transparent;
+    --thumb: #636366;
+    --accent: #ff9230; --accent-text: #ffa04f; --on-accent: #2a1300;
+    --green: #30d158; --orange: #ff9230; --red: #ff4245; --blue: #409cff;
+    --scrim: rgb(0 0 0 / 0.5);
+    --shadow-pop: 0 20px 48px -14px rgb(0 0 0 / 0.6), 0 2px 6px -2px rgb(0 0 0 / 0.3);
+    color-scheme: dark;
   }
+  @media (min-width: 900px) {
+    /* light, desktop: macOS */
+    :root { --bg: #ffffff; --bg-side: #f0f0f2; --cell: #f5f5f7; --cell-2: #ebebef; --elev: #ffffff; --elev-2: #f5f5f7;
+      --label: rgb(0 0 0 / 0.85); --label-2: rgb(0 0 0 / 0.55); --label-3: rgb(0 0 0 / 0.28); --sep: rgb(0 0 0 / 0.1); --field: #ffffff; --field-edge: rgb(0 0 0 / 0.14); }
+    /* dark, desktop: macOS graphite */
+    :root[data-theme="dark"] { --bg: #1e1e1e; --bg-side: #292929; --cell: #2a2a2a; --cell-2: #333335; --elev: #323232; --elev-2: #3a3a3c;
+      --label: rgb(255 255 255 / 0.85); --label-2: rgb(255 255 255 / 0.55); --label-3: rgb(255 255 255 / 0.25); --sep: rgb(255 255 255 / 0.1);
+      --field: rgb(255 255 255 / 0.06); --field-edge: rgb(255 255 255 / 0.1); --thumb: #636366; }
+  }
+  @media (prefers-contrast: more) {
+    :root { --label-2: rgb(60 60 67 / 0.8); --sep: rgb(60 60 67 / 0.5); }
+    :root[data-theme="dark"] { --label-2: rgb(235 235 245 / 0.8); --sep: rgb(235 235 245 / 0.35); }
+  }
+
+  /* ================================================================ type
+     Four sizes a screen. Desktop: comfortable macOS (14 px body). Phone: iOS (17 px body, 34 px large title). */
+  :root { --fs-lt: 34px; --lh-lt: 41px; --fs-t: 20px; --lh-t: 25px; --fs-b: 17px; --lh-b: 22px; --fs-s: 15px; --lh-s: 20px; --fs-c: 12px; --lh-c: 16px; --row: 52px; --ctl: 40px; }
+  @media (min-width: 900px) { :root { --fs-lt: 22px; --lh-lt: 28px; --fs-t: 15px; --lh-t: 20px; --fs-b: 14px; --lh-b: 20px; --fs-s: 13px; --lh-s: 18px; --fs-c: 11px; --lh-c: 14px; --row: 40px; --ctl: 30px; } }
+
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
-  header { display: flex; align-items: center; gap: 20px; padding: 12px 24px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--bg); z-index: 5; flex-wrap: wrap; }
-  header h1 { font-size: 15px; margin: 0; letter-spacing: -0.01em; }
-  header h1 span { color: var(--accent); }
-  nav { display: flex; gap: 4px; flex-wrap: wrap; }
-  nav a { color: var(--muted); text-decoration: none; padding: 6px 12px; border-radius: 999px; }
-  nav a.on { background: var(--ink); color: var(--bg); }
-  nav a .n { font-variant-numeric: tabular-nums; opacity: .75; margin-left: 4px; }
-  .sync { margin-left: auto; display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; }
-  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ok); display: inline-block; }
-  .dot.busy { background: var(--warn); } .dot.off { background: var(--bad); }
-  main { padding: 20px 24px 60px; max-width: 1400px; margin: 0 auto; }
-  h2.sec { font-size: 15px; margin: 22px 0 10px; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--label); font: var(--fs-b) / var(--lh-b) var(--font); -webkit-font-smoothing: antialiased; }
+  a { color: var(--accent-text); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code, .mono { font-family: var(--mono); font-size: 0.86em; }
+  .grow { flex: 1; min-width: 0; }
+  .note { color: var(--label-2); font-size: var(--fs-s); line-height: var(--lh-s); }
+  .lede { color: var(--label-2); font-size: var(--fs-s); line-height: var(--lh-s); margin: 0 0 20px; max-width: 72ch; }
+  .tnum { font-variant-numeric: tabular-nums; }
+  [hidden] { display: none !important; }
+
+  /* Keyboard focus: one ring, 2 px in the accent, 2 px off the control. */
+  :is(a[href], button, summary, [role="button"], [role="tab"], [tabindex]:not([tabindex="-1"])):focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+  :is(input, select, textarea):focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 45%, transparent); border-color: var(--accent); }
+
+  /* ================================================================ glass (floating controls only)
+     Ported from the SparkMentor kit (liquid-glass.css): a blurred, saturation-lifted backdrop under a translucent
+     fill, light pooled under the top edge, a specular hairline brightest along the top, a soft deep lift. */
+  .liquid-glass {
+    --glass-tint: rgb(255 255 255 / 0.42); --glass-blur: 12px; --glass-saturate: 180%; --glass-luma: 1.05;
+    --glass-edge-top: rgb(255 255 255 / 0.9); --glass-edge-side: rgb(255 255 255 / 0.3); --glass-edge-low: rgb(0 0 0 / 0.035); --glass-edge-bottom: rgb(0 0 0 / 0.07);
+    --glass-glow: rgb(255 255 255 / 0.5); --glass-shadow: 0 8px 24px -10px rgb(0 0 0 / 0.2), 0 1px 3px 0 rgb(0 0 0 / 0.06);
+    --glass-veil: rgb(255 255 255 / 0.22); --glass-solid: var(--elev); --glass-solid-edge: color-mix(in srgb, var(--label) 8%, transparent);
+    position: relative; isolation: isolate; background: var(--glass-tint);
+    -webkit-backdrop-filter: blur(calc(var(--glass-blur) + var(--glass-blur-extra, 0px))) saturate(var(--glass-saturate)) brightness(var(--glass-luma));
+    backdrop-filter: blur(calc(var(--glass-blur) + var(--glass-blur-extra, 0px))) saturate(var(--glass-saturate)) brightness(var(--glass-luma));
+    box-shadow: var(--glass-shadow);
+  }
+  [data-theme="dark"] .liquid-glass {
+    --glass-tint: rgb(36 36 42 / 0.46); --glass-blur: 14px; --glass-saturate: 150%; --glass-luma: 0.85;
+    --glass-edge-top: rgb(255 255 255 / 0.3); --glass-edge-side: rgb(255 255 255 / 0.06); --glass-edge-low: rgb(255 255 255 / 0.025); --glass-edge-bottom: rgb(255 255 255 / 0.09);
+    --glass-glow: rgb(255 255 255 / 0.08); --glass-shadow: 0 12px 30px -10px rgb(0 0 0 / 0.65), 0 2px 6px -1px rgb(0 0 0 / 0.4);
+    --glass-veil: rgb(24 24 27 / 0.32); --glass-solid-edge: color-mix(in srgb, var(--label) 10%, transparent);
+  }
+  .liquid-glass::before { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none; background: linear-gradient(180deg, var(--glass-glow), transparent min(60%, 1.25rem)); }
+  .liquid-glass::after { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; padding: 1px; pointer-events: none;
+    background: linear-gradient(180deg, var(--glass-edge-top) 0, var(--glass-edge-side) min(45%, 1.25rem), var(--glass-edge-low) calc(100% - min(30%, 1rem)), var(--glass-edge-bottom) 100%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+  .liquid-glass.liquid-glass-milky { --glass-tint: rgb(255 255 255 / 0.62); }
+  [data-theme="dark"] .liquid-glass.liquid-glass-milky { --glass-tint: rgb(40 40 46 / 0.62); }
+  .liquid-lens { background: rgb(255 255 255 / 0.35); box-shadow: inset 0 0 4px 0 rgb(255 255 255 / 0.6), inset 1px 1px 1px -0.5px rgb(255 255 255 / 0.9), 0 2px 8px -2px rgb(0 0 0 / 0.15); }
+  [data-theme="dark"] .liquid-lens { background: rgb(255 255 255 / 0.14); box-shadow: inset 0 0 4px 0 rgb(255 255 255 / 0.12), inset 1px 1px 1px -0.5px rgb(255 255 255 / 0.3), 0 2px 8px -2px rgb(0 0 0 / 0.4); }
+  /* Bar material: full-width chrome (the page header), the page colour at 80% over a blur. */
+  .material-bar { background-color: color-mix(in srgb, var(--bg) 80%, transparent); -webkit-backdrop-filter: blur(16px) saturate(180%); backdrop-filter: blur(16px) saturate(180%); }
+  .scroll-edge-bottom { background: linear-gradient(to top, var(--bg) 0%, color-mix(in srgb, var(--bg) 65%, transparent) 45%, transparent 100%); }
+  /* Reduce Transparency: frostier, steadier glass (not opaque). No backdrop-filter, or Increase Contrast: solid. */
+  @media (prefers-reduced-transparency: reduce) { .liquid-glass { --glass-blur-extra: 10px; background: linear-gradient(var(--glass-veil), var(--glass-veil)), var(--glass-tint); } }
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .liquid-glass { background: var(--glass-solid); } .liquid-glass::before { display: none; } .liquid-glass::after { background: var(--glass-solid-edge); }
+    .material-bar { background-color: var(--bg); }
+  }
+  @media (prefers-contrast: more) {
+    .liquid-glass { background: var(--bg) !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; outline: 1px solid var(--label); }
+    .liquid-glass::before, .liquid-glass::after { display: none; }
+    .liquid-lens { background: transparent !important; box-shadow: none !important; outline: 2px solid var(--label); outline-offset: -2px; }
+    .material-bar { background-color: var(--bg); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  }
+
+  /* ================================================================ shell */
+  .app { min-height: 100vh; }
+  .side { display: none; }
+  @media (min-width: 900px) {
+    .app { display: grid; grid-template-columns: var(--side-w) minmax(0, 1fr); transition: grid-template-columns 300ms var(--ease); }
+    [data-rail="1"] .app { --side-w: 64px; }
+    .side { display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; background: var(--bg-side); border-right: 1px solid var(--sep); padding: 12px 10px; overflow: hidden auto; }
+  }
+  .side .brand { display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 8px 0 10px; margin-bottom: 8px; font-weight: 600; font-size: 15px; white-space: nowrap; }
+  .side .brand b { color: var(--accent-text); font-weight: 600; }
+  .side .brand .grow + button { margin-right: -4px; }
+  .side .cap { font-size: 11px; line-height: 14px; font-weight: 600; color: var(--label-2); padding: 16px 10px 6px; white-space: nowrap; }
+  .nav-i { display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 8px; color: var(--label); font-size: 14px; white-space: nowrap; text-decoration: none !important; transition: background-color 120ms var(--ease); }
+  .nav-i svg { flex: none; color: var(--accent-text); }
+  .nav-i:hover { background: var(--fill-4); }
+  .nav-i.on { background: var(--fill-2); font-weight: 600; }
+  .nav-i.on .n { color: var(--label); }
+  .nav-i:active { background: var(--fill-1); }
+  .nav-i .n { margin-left: auto; color: var(--label-2); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .side .foot { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--sep); display: flex; align-items: center; gap: 8px; padding-left: 10px; color: var(--label-2); font-size: 12px; white-space: nowrap; }
+  [data-rail="1"] .side .lab, [data-rail="1"] .side .cap, [data-rail="1"] .nav-i .n, [data-rail="1"] .side .brand span, [data-rail="1"] .side .foot .lab { display: none; }
+  [data-rail="1"] .side .brand { justify-content: center; padding: 0; }
+  [data-rail="1"] .nav-i { justify-content: center; padding: 0; }
+  [data-rail="1"] .side .foot { flex-direction: column; padding-left: 0; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); display: inline-block; flex: none; }
+  .dot.busy { background: var(--orange); } .dot.off { background: var(--red); }
+
+  main { min-width: 0; padding: 0 16px calc(var(--tabbar-h) + max(env(safe-area-inset-bottom), 12px) + 32px); }
+  @media (min-width: 900px) { main { padding: 0 32px 64px; } }
+  #main.enter { animation: pagein 220ms var(--ease); }
+  @keyframes pagein { from { opacity: 0; transform: translateY(4px); } }
+
+  /* Page header. Desktop: a sticky bar with the title and the page's actions. Phone: a large title that hands over
+     to an inline title in a top bar as it scrolls away. */
+  .phead { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 0 16px; }
+  .phead h1 { margin: 0; font-size: var(--fs-lt); line-height: var(--lh-lt); font-weight: 700; letter-spacing: -0.01em; min-width: 0; overflow-wrap: anywhere; }
+  .phead .acts { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-left: auto; }
+  .phead .back { display: inline-flex; align-items: center; gap: 2px; color: var(--accent-text); font-size: var(--fs-b); margin-left: -6px; }
+  @media (min-width: 900px) {
+    .phead { position: sticky; top: 0; z-index: 20; min-height: 56px; padding: 10px 32px; margin: 0 -32px 16px; border-bottom: 1px solid transparent; transition: border-color 150ms var(--ease); }
+    .phead.material-bar[data-scrolled="true"] { border-bottom-color: var(--sep); }
+  }
+  @media (max-width: 899px) {
+    .phead { padding-top: calc(env(safe-area-inset-top) + 52px); }
+    .phead .acts:has(.search) { margin-left: 0; width: 100%; }
+    .phead .acts .search { flex: 1; }
+  }
+  .topbar { display: none; }
+  @media (max-width: 899px) {
+    .topbar { display: flex; position: fixed; z-index: 30; top: 0; left: 0; right: 0; height: calc(env(safe-area-inset-top) + 44px); padding: env(safe-area-inset-top) 16px 0; align-items: center; justify-content: center; font-size: 17px; font-weight: 600; border-bottom: 1px solid transparent; }
+    .topbar .t { opacity: 0; transition: opacity 150ms var(--ease); }
+    .topbar[data-scrolled="true"] { border-bottom-color: var(--sep); }
+    .topbar[data-scrolled="true"] .t { opacity: 1; }
+  }
+
+  /* Phone tab bar: a milky glass capsule floating above the content, a lens under the current tab. */
+  .tabbar { display: none; }
+  @media (max-width: 899px) {
+    .tab-edge { position: fixed; left: 0; right: 0; bottom: 0; height: 112px; z-index: 39; pointer-events: none; }
+    .tabbar { display: grid; grid-template-columns: repeat(4, 1fr); position: fixed; z-index: 40; left: 16px; right: 16px; bottom: max(env(safe-area-inset-bottom), 12px); height: var(--tabbar-h); padding: 5px; border-radius: 999px; transition: height 300ms var(--ease); }
+    .tabbar .lens { position: absolute; top: 5px; bottom: 5px; left: 5px; width: calc((100% - 10px) / 4); border-radius: 999px; transform: translateX(calc(var(--i, 0) * 100%)); transition: transform 380ms var(--ease-ios); }
+    .tabbar a { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: var(--label); text-decoration: none !important; border-radius: 999px; transition: transform 150ms var(--ease); }
+    .tabbar a:active { transform: scale(0.92); }
+    .tabbar a .lab { font-size: 11px; line-height: 13px; font-weight: 500; overflow: hidden; max-height: 13px; transition: max-height 300ms var(--ease), opacity 200ms var(--ease); }
+    .tabbar a .n { position: absolute; top: 4px; left: calc(50% + 6px); min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--red-fill); color: #fff; font-size: 11px; font-weight: 600; line-height: 18px; text-align: center; }
+    .tabbar a .n:empty { display: none; }
+    .tabbar.min { height: 50px; }
+    .tabbar.min a .lab { max-height: 0; opacity: 0; }
+  }
+
+  /* ================================================================ controls */
+  button { font: inherit; font-size: var(--fs-s); font-weight: 500; line-height: 1; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    height: var(--ctl); padding: 0 14px; border: 0; border-radius: 999px; background: var(--fill-3); color: var(--label); white-space: nowrap; position: relative;
+    transition: transform 150ms var(--ease), background-color 120ms var(--ease), opacity 120ms; -webkit-tap-highlight-color: transparent; }
+  button:hover { background: var(--fill-2); }
+  button:active { transform: scale(0.97); }
+  button.primary { background: var(--accent); color: var(--on-accent); font-weight: 600; }
+  button.primary:hover { background: color-mix(in srgb, var(--accent) 88%, var(--label)); }
+  button.danger { color: var(--red); }
+  button.plain { background: transparent; color: var(--accent-text); padding: 0 8px; }
+  button.plain:hover { background: var(--fill-4); }
+  button.icon { width: var(--ctl); padding: 0; color: var(--label-2); background: transparent; }
+  button.icon:hover { background: var(--fill-3); color: var(--label); }
+  button.icon:active { transform: scale(0.9); }
+  button.sm { height: 26px; padding: 0 10px; font-size: 12px; }
+  button.on { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent-text); }
+  button:disabled { opacity: 0.4; cursor: default; transform: none; }
+  @media (pointer: coarse) { button::after { content: ""; position: absolute; inset: -4px -2px; } }
+  select.sm-select { height: 26px; font-size: 12px; padding: 0 24px 0 8px; background-position: right 8px center; }
+  @media (max-width: 899px) { button.sm { height: 34px; padding: 0 12px; font-size: 14px; } button.sm::after { inset: -5px -2px; } select.sm-select { height: 44px; font-size: 15px; } }
+
+  input, select, textarea { font: inherit; font-size: var(--fs-b); color: var(--label); background: var(--field); border: 1px solid var(--field-edge); border-radius: var(--r-field); height: var(--ctl); padding: 0 10px; min-width: 0; }
+  @media (max-width: 899px) { input, select, textarea { font-size: max(16px, var(--fs-s)); height: 44px; } }
+  textarea { height: auto; padding: 8px 10px; }
+  input::placeholder { color: var(--label-3); }
+  select { appearance: none; padding-right: 28px; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none' stroke='%238e8e93' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m1 1 4 4 4-4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
+  input[type="checkbox"], input[type="range"] { accent-color: var(--accent); height: auto; padding: 0; border: 0; background: none; }
+  input[type="checkbox"] { width: 16px; height: 16px; margin: 0; }
+  input[type="range"] { min-width: 120px; }
+  input[type="file"] { display: none; }
+  input.num { width: 76px; }
+  /* A switch: on/off settings that apply at once. */
+  input.switch { appearance: none; position: relative; width: 38px; height: 22px; border-radius: 999px; background: var(--fill-1); cursor: pointer; flex: none; transition: background-color 200ms var(--ease); }
+  input.switch::before { content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgb(0 0 0 / 0.25); transition: transform 200ms var(--ease), width 150ms var(--ease); }
+  input.switch:active::before { width: 22px; }
+  input.switch:checked { background: var(--green); }
+  input.switch:checked::before { transform: translateX(16px); }
+  input.switch:checked:active::before { transform: translateX(12px); }
+  @media (max-width: 899px) { input.switch { width: 51px; height: 31px; } input.switch::before { width: 27px; height: 27px; } input.switch:checked::before { transform: translateX(20px); } input.switch:active::before { width: 31px; } input.switch:checked:active::before { transform: translateX(16px); } }
+  label.inline { display: inline-flex; align-items: center; gap: 8px; color: var(--label); font-size: var(--fs-s); }
+
+  /* Capsule search field. */
+  .search { position: relative; display: inline-flex; align-items: center; }
+  .search svg { position: absolute; left: 10px; color: var(--label-2); pointer-events: none; }
+  .search input { border-radius: 999px; padding-left: 32px; width: 240px; background: var(--fill-3); border-color: transparent; }
+  @media (max-width: 899px) { .search input { width: 100%; } }
+
+  /* Segmented control: a soft track, one thumb that slides to the chosen option. */
+  .seg { position: relative; display: inline-grid; grid-auto-flow: column; grid-auto-columns: auto; padding: 2px; border-radius: 999px; background: var(--fill-3); isolation: isolate; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+  .seg::-webkit-scrollbar { display: none; }
+  .seg .thumb-s { position: absolute; z-index: -1; top: 2px; bottom: 2px; left: 0; width: var(--w, 0); transform: translateX(var(--x, 0)); border-radius: 999px; background: var(--thumb); box-shadow: 0 1px 3px rgb(0 0 0 / 0.12), 0 0 0 0.5px rgb(0 0 0 / 0.04); transition: transform 300ms var(--ease), width 300ms var(--ease); }
+  .seg button { height: calc(var(--ctl) - 4px); background: transparent; border-radius: 999px; padding: 0 12px; color: var(--label); font-weight: 500; }
+  .seg button:hover { background: transparent; }
+  .seg button[aria-pressed="true"] { font-weight: 600; }
+  .seg button .n { color: var(--label-2); font-weight: 400; font-variant-numeric: tabular-nums; }
+  .seg.full { display: grid; grid-auto-columns: 1fr; width: 100%; }
+
   .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 16px; }
-  input, select, textarea { font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; }
-  input[type=search] { min-width: 240px; }
-  input[type=checkbox] { padding: 0; }
-  button { font: inherit; cursor: pointer; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 8px; padding: 6px 12px; }
-  button.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-  button.danger { color: var(--bad); }
-  button:disabled { opacity: .5; cursor: default; }
-  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; background: var(--chip); color: var(--ink); border: 1px solid transparent; cursor: pointer; user-select: none; }
-  .chip.on { border-color: var(--accent); color: var(--accent); }
-  .chip .n { color: var(--muted); font-variant-numeric: tabular-nums; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; cursor: pointer; transition: border-color .15s; position: relative; }
-  .card:hover { border-color: var(--muted); }
-  .card.sel { border-color: var(--accent); }
-  .card .pick { position: absolute; left: 8px; top: 8px; z-index: 2; width: 18px; height: 18px; }
-  .thumb { aspect-ratio: 1 / 1; background: repeating-conic-gradient(var(--chip) 0 25%, transparent 0 50%) 0 0 / 16px 16px; display: grid; place-items: center; overflow: hidden; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; height: 26px; padding: 0 10px; border-radius: 999px; background: var(--fill-3); color: var(--label); font-size: 13px; cursor: pointer; user-select: none; transition: background-color 120ms var(--ease), transform 150ms var(--ease); }
+  .chip:active { transform: scale(0.96); }
+  .chip.on { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent-text); }
+  .chip .n { color: var(--label-2); font-variant-numeric: tabular-nums; }
+  .chip svg { opacity: 0.7; }
+
+  /* Badges: small capsules, a 15% tint of a system colour with its text in the colour. */
+  .badge { display: inline-flex; align-items: center; height: 18px; padding: 0 8px; border-radius: 999px; font-size: 11px; font-weight: 600; line-height: 1; background: var(--fill-3); color: var(--label-2); white-space: nowrap; }
+  @media (max-width: 899px) { .badge { height: 20px; font-size: 12px; } }
+  .badge.identity { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent-text); }
+  .badge.ok, .badge.approved, .badge.active, .badge.done { background: color-mix(in srgb, var(--green) 15%, transparent); color: var(--green); }
+  .badge.warn, .badge.running, .badge.pending, .badge.queued, .badge.proposed { background: color-mix(in srgb, var(--orange) 15%, transparent); color: var(--orange); }
+  .badge.superseded, .badge.retired, .badge.missing, .badge.rejected, .badge.failed, .badge.bad { background: color-mix(in srgb, var(--red) 15%, transparent); color: var(--red); }
+
+  /* ================================================================ content */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+  @media (max-width: 899px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; } }
+  .card { background: var(--cell); border-radius: var(--r-card); overflow: hidden; cursor: pointer; position: relative; color: var(--label); text-decoration: none !important; display: block;
+    transition: transform 160ms var(--ease), box-shadow 160ms var(--ease); }
+  .card:active { transform: scale(0.98); }
+  .card.sel { box-shadow: 0 0 0 2px var(--accent); }
+  .card .pick { position: absolute; left: 10px; top: 10px; z-index: 2; width: 20px; height: 20px; }
+  .thumb { aspect-ratio: 1 / 1; background: var(--fill-4); display: grid; place-items: center; overflow: hidden; }
   .thumb img, .thumb video { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
-  .thumb .ext { font: 600 22px var(--mono); color: var(--muted); text-transform: uppercase; }
+  [data-theme="dark"] .thumb img { filter: brightness(0.92); }
+  .thumb .ext { font: 600 20px var(--mono); color: var(--label-3); text-transform: uppercase; }
   .thumb.wave { aspect-ratio: 3 / 1; }
-  .meta { padding: 10px 12px; }
-  .meta .name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .meta .sub { color: var(--muted); font-size: 12px; display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
-  .badge { font-size: 11px; padding: 1px 7px; border-radius: 4px; background: var(--chip); color: var(--muted); }
-  .badge.identity { color: var(--accent); }
-  .badge.superseded, .badge.retired, .badge.missing, .badge.rejected, .badge.failed { color: var(--bad); }
-  .badge.ok, .badge.approved { color: var(--ok); }
-  .badge.running, .badge.pending, .badge.queued, .badge.proposed { color: var(--warn); }
-  .split { display: grid; grid-template-columns: 1fr 390px; gap: 20px; align-items: start; }
-  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; position: sticky; top: 70px; max-height: calc(100vh - 90px); overflow: auto; }
-  .panel h2 { font-size: 16px; margin: 0 0 12px; word-break: break-word; }
-  .panel .preview { margin-bottom: 12px; }
-  .panel audio { width: 100%; margin-bottom: 12px; }
-  dl { display: grid; grid-template-columns: 90px 1fr; gap: 6px 10px; margin: 0 0 14px; font-size: 13px; }
-  dt { color: var(--muted); } dd { margin: 0; word-break: break-word; }
-  label { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 4px; }
-  label + input, label + select, label + textarea { width: 100%; }
-  label.inline select, label.inline input:not([type=checkbox]) { width: auto; }
-  label.inline { display: inline-flex; align-items: center; gap: 6px; margin: 0; color: var(--ink); font-size: 13px; }
-  code, .mono { font-family: var(--mono); font-size: 12px; }
-  .ref { display: flex; gap: 6px; align-items: center; background: var(--chip); padding: 6px 8px; border-radius: 6px; margin-bottom: 12px; }
-  .ref code { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .row { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; align-items: center; }
-  .empty { color: var(--muted); padding: 40px 0; text-align: center; }
-  .empty code { background: var(--chip); padding: 2px 6px; border-radius: 4px; }
-  .note { color: var(--muted); font-size: 13px; }
-  .swatches { display: flex; gap: 6px; } .swatches i { width: 18px; height: 18px; border-radius: 4px; display: inline-block; border: 1px solid var(--line); }
-  .tag.auto { font-style: italic; color: var(--muted); }
-  .drop { border: 2px dashed var(--line); border-radius: var(--radius); padding: 18px; text-align: center; color: var(--muted); margin-bottom: 16px; background: var(--panel); transition: border-color .15s, background .15s; }
-  .drop.over { border-color: var(--accent); background: var(--chip); color: var(--ink); }
-  .drop .row { justify-content: center; margin-top: 10px; }
-  .uploads { margin: -4px 0 16px; font-size: 13px; }
-  .uploads .u { display: grid; grid-template-columns: 1fr 90px 160px; gap: 10px; align-items: center; padding: 3px 0; border-bottom: 1px solid var(--line); }
-  progress { width: 100%; height: 6px; }
-  .reel-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
-  .reel-head h2 { margin: 0; font-size: 18px; }
-  .master { background: #000; border-radius: var(--radius); overflow: hidden; margin-bottom: 18px; display: grid; place-items: center; }
-  .master video { max-width: 100%; max-height: 70vh; display: block; }
-  .clips { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin-bottom: 20px; }
-  .clip { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
-  .clip video { width: 100%; display: block; background: #000; aspect-ratio: 1/1; object-fit: contain; }
-  .clip .meta { display: flex; flex-direction: column; gap: 8px; }
-  .clip .meta .top { display: flex; justify-content: space-between; align-items: center; }
-  .clip .fb { display: flex; gap: 6px; align-items: center; }
-  .clip .fb input { flex: 1; min-width: 0; }
-  button.on { border-color: var(--accent); color: var(--accent); }
-  details { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 10px; }
-  summary { cursor: pointer; font-weight: 600; }
-  pre { white-space: pre-wrap; font: 12px/1.5 var(--mono); margin: 10px 0 0; max-height: 420px; overflow: auto; }
-  .job, .rule, .folder { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 10px; }
-  .job .top, .rule .top, .folder .top { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-  .rule input.text { flex: 1; min-width: 220px; }
-  .rule.conflict { border-color: var(--warn); }
-  .bar2 { height: 6px; background: var(--chip); border-radius: 3px; width: 70px; overflow: hidden; } .bar2 i { display: block; height: 100%; background: var(--accent); }
-  .grow { flex: 1; }
-  .mvchips { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 10px; }
-  .mvchips .chip { font-size: 12px; padding: 2px 9px; }
-  .sheet img { width: 100%; display: block; border-radius: 8px; border: 1px solid var(--line); cursor: zoom-in; }
-  .tag.unrev { font-style: italic; color: var(--muted); }
-  .taught { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 16px; }
-  .taught .r { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 3px 0; font-size: 13px; }
-  .fv-wrap { position: relative; background: #000; border-radius: 10px; overflow: hidden; margin-bottom: 8px; }
+  .meta { padding: 10px 12px 12px; }
+  .meta .name { font-weight: 600; font-size: var(--fs-b); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  @media (max-width: 899px) { .meta .name { font-size: 15px; } }
+  .meta .sub { color: var(--label-2); font-size: var(--fs-c); line-height: var(--lh-c); display: flex; gap: 4px 6px; flex-wrap: wrap; align-items: center; margin-top: 6px; }
+  .tag { color: var(--label-2); }
+  .tag.auto, .tag.unrev { font-style: italic; color: var(--label-3); }
+
+  .empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 64px 16px; color: var(--label-2); }
+  .empty .disc { width: 56px; height: 56px; border-radius: 50%; background: var(--fill-4); color: var(--label-3); display: grid; place-items: center; margin-bottom: 8px; }
+  .empty h3 { margin: 0; font-size: 17px; line-height: 22px; font-weight: 600; color: var(--label); }
+  .empty p { margin: 0; font-size: var(--fs-s); line-height: var(--lh-s); max-width: 44ch; }
+  .empty code { background: var(--fill-3); color: var(--label); padding: 2px 6px; border-radius: 6px; }
+  .empty .acts { margin-top: 12px; display: flex; gap: 8px; }
+
+  /* Inset groups: rows in a rounded cell, hairlines inset from the leading edge, a caption above. */
+  .cap { font-size: var(--fs-s); line-height: var(--lh-s); color: var(--label-2); margin: 24px 0 8px; padding: 0 4px; display: flex; align-items: baseline; gap: 8px; }
+  @media (max-width: 899px) { .cap { padding: 0 16px; font-size: 13px; } }
+  .cap:first-child { margin-top: 0; }
+  .cap b { color: var(--label); font-weight: 600; }
+  .foot-note { font-size: 13px; line-height: 18px; color: var(--label-2); margin: 8px 0 0; padding: 0 4px; }
+  .group { background: var(--cell); border-radius: var(--r-group); overflow: hidden; }
+  .group + .group { margin-top: 16px; }
+  .row-i { position: relative; display: flex; align-items: center; gap: 12px; min-height: var(--row); padding: 8px 16px; background: var(--cell); }
+  .row-i + .row-i::before, .row-i + .row-i .row-c::before { content: ""; position: absolute; left: 16px; right: 0; top: 0; height: 1px; background: var(--sep); }
+  .row-i + .row-i .row-c::before { display: none; }
+  .row-i.wrap { flex-wrap: wrap; }
+  .row-i .t { font-size: var(--fs-b); line-height: var(--lh-b); }
+  .row-i .s { font-size: var(--fs-s); line-height: var(--lh-s); color: var(--label-2); }
+  .col { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+  .col .t, .col .s { overflow: hidden; text-overflow: ellipsis; }
+  .form-row .t { font-size: var(--fs-b); line-height: var(--lh-b); }
+  .form-row .s { font-size: var(--fs-s); line-height: var(--lh-s); color: var(--label-2); }
+  .row-i .trail { display: flex; align-items: center; gap: 8px; margin-left: auto; color: var(--label-2); }
+  .tile { width: 29px; height: 29px; border-radius: 7px; display: grid; place-items: center; color: #fff; background: var(--blue); flex: none; }
+  .row-i input.bare { border: 0; background: transparent; padding: 0; height: auto; min-height: 28px; font-size: var(--fs-b); flex: 1; min-width: 160px; }
+  @media (max-width: 899px) { .row-i input.bare { min-height: 44px; } }
+  .row-i input.bare:focus-visible { box-shadow: none; text-decoration: underline; text-decoration-color: var(--accent); }
+  .row-i pre { width: 100%; }
+  .meter { height: 4px; width: 60px; border-radius: 999px; background: var(--fill-2); overflow: hidden; flex: none; } .meter i { display: block; height: 100%; background: var(--accent); border-radius: inherit; }
+
+  /* Swipe actions (touch): the row slides to show its actions. */
+  .swipe { overflow: hidden; padding: 0; }
+  .swipe .row-c { position: relative; z-index: 1; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; width: 100%; min-height: var(--row); padding: 8px 16px; background: var(--cell); transition: transform 300ms var(--ease); touch-action: pan-y; }
+  .swipe .row-c.dragging { transition: none; }
+  .swipe .sw-acts { position: absolute; inset: 0 0 0 auto; display: flex; }
+  .swipe .sw-acts button { height: 100%; border-radius: 0; padding: 0 18px; color: #fff; background: var(--fill-1); font-weight: 600; }
+  .swipe .sw-acts button.danger { background: var(--red-fill); color: #fff; }
+  .swipe .sw-acts button.accent { background: var(--accent); color: var(--on-accent); }
+
+  dl { display: grid; grid-template-columns: minmax(80px, auto) 1fr; margin: 0; font-size: var(--fs-s); line-height: var(--lh-s); }
+  dl dt, dl dd { padding: 10px 0; margin: 0; border-top: 1px solid var(--sep); }
+  dl dt { color: var(--label-2); padding-left: 16px; padding-right: 12px; }
+  dl dd { padding-right: 16px; overflow-wrap: anywhere; }
+  dl dt:first-of-type, dl dt:first-of-type + dd { border-top: 0; }
+  .swatches { display: inline-flex; gap: 6px; vertical-align: middle; } .swatches i { width: 16px; height: 16px; border-radius: 4px; display: inline-block; box-shadow: inset 0 0 0 1px var(--sep); }
+
+  /* Disclosure groups. */
+  details.group { padding: 0; margin-top: 16px; }
+  details.group > summary { list-style: none; display: flex; align-items: center; gap: 8px; min-height: var(--row); padding: 0 16px; cursor: pointer; font-weight: 600; }
+  details.group > summary::-webkit-details-marker { display: none; }
+  details.group > summary::after { content: ""; margin-left: auto; width: 8px; height: 8px; border-right: 2px solid var(--label-3); border-bottom: 2px solid var(--label-3); transform: rotate(-45deg); transition: transform 200ms var(--ease); }
+  details.group[open] > summary::after { transform: rotate(45deg); }
+  details.group > :not(summary) { margin: 0 16px 14px; }
+  details.group ul { padding-left: 18px; }
+  pre { white-space: pre-wrap; font: 12px/1.5 var(--mono); margin: 0; max-height: 420px; overflow: auto; color: var(--label-2); }
+
+  /* The inspector: a column beside the grid on a desktop, a bottom sheet on a phone. */
+  .split { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 24px; align-items: start; }
+  .split > .scrim { display: none; }
+  .panel { position: sticky; top: 72px; max-height: calc(100vh - 88px); overflow: auto; overscroll-behavior: contain; background: var(--bg-side); border-radius: 16px; padding: 16px; animation: inspector 260ms var(--ease); }
+  :root[data-theme="light"] .panel { box-shadow: inset 0 0 0 1px var(--sep); }
+  @keyframes inspector { from { opacity: 0; transform: translateX(12px); } }
+  .panel > h2 { font-size: 17px; line-height: 22px; font-weight: 700; margin: 12px 0 4px; overflow-wrap: anywhere; }
+  .panel .cap { margin-top: 20px; }
+  .panel .group { background: var(--cell); }
+  [data-theme="dark"] .panel .group { background: color-mix(in srgb, var(--label) 6%, var(--bg-side)); }
+  .panel .pbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 16px; }
+  /* The close disc sits over media, so it carries its own solid backing. */
+  .closer-disc { position: absolute; top: 24px; right: 24px; z-index: 2; width: 30px; height: 30px; color: var(--label) !important; background: color-mix(in srgb, var(--elev) 88%, transparent) !important; box-shadow: 0 1px 4px rgb(0 0 0 / 0.25); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+  @media (max-width: 899px) { .closer-disc { top: 32px; right: 24px; width: 32px; height: 32px; } }
+  .form-row { display: flex; align-items: center; gap: 12px; padding: 8px 16px; min-height: var(--row); position: relative; flex-wrap: wrap; }
+  .form-row + .form-row::before { content: ""; position: absolute; left: 16px; right: 0; top: 0; height: 1px; background: var(--sep); }
+  .form-row > label { color: var(--label); font-size: var(--fs-s); min-width: 72px; }
+  .form-row > input:not([type="checkbox"]):not([type="range"]), .form-row > select { flex: 1; min-width: 120px; }
+  .form-row .hint { width: 100%; font-size: 12px; color: var(--label-2); margin-top: -4px; }
+  @media (max-width: 899px) {
+    .split { display: block; }
+    .split > .scrim { display: block; position: fixed; inset: 0; z-index: 50; background: var(--scrim); animation: fade 200ms var(--ease); }
+    .split > .panel { position: fixed; z-index: 51; left: 0; right: 0; bottom: 0; top: auto; max-height: 88vh; border-radius: var(--r-sheet) var(--r-sheet) 0 0; padding: 20px 16px calc(env(safe-area-inset-bottom) + 24px); background: var(--elev); box-shadow: var(--shadow-pop); animation: sheetup 380ms var(--ease-ios); }
+    .split > .panel::before { content: ""; position: sticky; top: -12px; display: block; width: 36px; height: 5px; border-radius: 999px; background: var(--fill-1); margin: -8px auto 12px; }
+    [data-theme="dark"] .split > .panel .group { background: var(--elev-2); }
+    body:has(.split > .panel) { overflow: hidden; }
+  }
+  @keyframes sheetup { from { transform: translateY(100%); } }
+  @keyframes fade { from { opacity: 0; } }
+
+  /* Library and footage specifics. */
+  .ref { display: flex; gap: 8px; align-items: center; background: var(--fill-4); padding: 4px 4px 4px 12px; border-radius: 999px; margin: 8px 0 4px; }
+  .ref code { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--label-2); }
+  .uploads:not(:empty) { margin-bottom: 16px; }
+  .uploads .row-i { display: grid; grid-template-columns: minmax(0, 1fr) 90px minmax(0, 180px); font-size: var(--fs-s); }
+  .uploads .row-i span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  progress { width: 100%; height: 4px; appearance: none; border: 0; border-radius: 999px; background: var(--fill-2); overflow: hidden; }
+  progress::-webkit-progress-bar { background: var(--fill-2); } progress::-webkit-progress-value { background: var(--accent); } progress::-moz-progress-bar { background: var(--accent); }
+  .active-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: -8px 0 16px; }
+  .fv-wrap { position: relative; background: #000; border-radius: 12px; overflow: hidden; }
   .fv-wrap video { width: 100%; display: block; max-height: 46vh; background: #000; }
-  /* The keyed copy has transparency: show it on a checkerboard so what is cut out is plain to see. */
   .fv-wrap.checker { background: #fff conic-gradient(#d4d4d8 25%, #fff 0 50%, #d4d4d8 0 75%, #fff 0) 0 0 / 20px 20px; }
   .fv-wrap.checker video { background: transparent; }
-  .keybox { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin: 10px 0; }
-  .keybox .r { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 3px 0; font-size: 13px; }
-  .keybox input[type=range] { width: 120px; }
-  .draw { position: absolute; inset: 0; cursor: crosshair; background: rgba(0,0,0,.35); touch-action: none; }
+  .scrub { display: flex; align-items: center; gap: 8px; margin: 10px 0 8px; }
+  .scrub .mono { font-size: 13px; }
+  .draw { position: absolute; inset: 0; cursor: crosshair; background: rgb(0 0 0 / 0.35); touch-action: none; }
   .draw .hint { position: absolute; left: 0; right: 0; top: 8px; text-align: center; color: #fff; font-size: 12px; pointer-events: none; text-shadow: 0 1px 2px #000; }
-  .draw .box { position: absolute; border: 2px solid var(--accent); background: rgba(255,255,255,.12); box-shadow: 0 0 0 9999px rgba(0,0,0,.35); pointer-events: none; }
-  .strip { position: relative; margin-bottom: 6px; cursor: crosshair; border-radius: 6px; overflow: hidden; background: var(--chip); }
+  .draw .box { position: absolute; border: 2px solid var(--accent); background: rgb(255 255 255 / 0.12); box-shadow: 0 0 0 9999px rgb(0 0 0 / 0.35); pointer-events: none; }
+  .strip { position: relative; margin-bottom: 6px; cursor: crosshair; border-radius: 8px; overflow: hidden; background: var(--fill-4); }
   .strip img { width: 100%; display: block; }
   .strip .head { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--accent); pointer-events: none; }
-  .tl { position: relative; height: 12px; background: var(--chip); border-radius: 6px; margin-bottom: 12px; overflow: hidden; }
-  .tl i { position: absolute; top: 0; bottom: 0; background: var(--ok); opacity: .75; border-right: 1px solid var(--bg); }
-  .tl i.proposed { background: var(--warn); }
-  .checks { margin: 0 0 12px; padding: 0; list-style: none; font-size: 13px; }
-  .checks li { display: flex; gap: 8px; align-items: center; padding: 2px 0; }
-  .checks .mk { width: 16px; text-align: center; font-weight: 700; color: var(--muted); } .checks .done .mk { color: var(--ok); }
-  .mom { border: 1px solid var(--line); border-radius: 10px; padding: 10px; margin-bottom: 8px; }
-  .mom.proposed { border-color: var(--warn); }
-  .mom .r { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 6px; }
-  .mom input.lab { flex: 1; min-width: 150px; } .mom label.inline input.num, label.inline input.num { width: 76px; }
-  .checks li { align-items: flex-start; } .checks .mk { padding-top: 1px; } .checks label.inline { margin-top: 4px; }
-  .mom details { border: 0; padding: 0; margin: 6px 0 0; background: transparent; } .mom details summary { font-weight: 500; font-size: 12px; color: var(--muted); }
-  .badge.warn { color: var(--warn); }
-  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 8px 16px; border-radius: 8px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 20; }
-  .toast.on { opacity: 1; }
-  a { color: inherit; }
-  @media (max-width: 860px) { .split { grid-template-columns: 1fr; } .panel { position: static; max-height: none; } header { gap: 10px; } main { padding: 16px; } input[type=search] { min-width: 0; width: 100%; } .sync { margin-left: 0; } }
-  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  .tl { position: relative; height: 6px; background: var(--fill-2); border-radius: 999px; overflow: hidden; }
+  .tl i { position: absolute; top: 0; bottom: 0; background: var(--green); border-right: 1px solid var(--bg-side); }
+  .checks { list-style: none; margin: 0; padding: 0; }
+  .checks li { position: relative; display: flex; gap: 10px; align-items: flex-start; padding: 10px 16px; font-size: var(--fs-s); line-height: var(--lh-s); }
+  .checks li + li::before { content: ""; position: absolute; left: 42px; right: 0; top: 0; height: 1px; background: var(--sep); }
+  .checks .mk { width: 16px; height: 16px; flex: none; border-radius: 50%; margin-top: 1px; display: grid; place-items: center; background: var(--fill-2); color: transparent; }
+  .checks .done .mk { background: var(--green); color: #fff; }
+  .mom { position: relative; padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
+  .mom + .mom::before { content: ""; position: absolute; left: 16px; right: 0; top: 0; height: 1px; background: var(--sep); }
+  .mom .r { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .mom input.lab { flex: 1; min-width: 140px; }
+  .mom details > summary { font-size: 13px; color: var(--label-2); cursor: pointer; padding: 2px 0; }
+  .mom details .r { margin-top: 8px; }
+  .mom details p { margin: 8px 0 0; }
+  .keyrange { display: grid; grid-template-columns: 80px 1fr 40px; align-items: center; gap: 10px; padding: 6px 16px; font-size: var(--fs-s); }
+  .keyrange input { width: 100%; min-width: 0; }
+  .keyrange .v { text-align: right; color: var(--label-2); font-variant-numeric: tabular-nums; font-size: 12px; }
+
+  /* Reels. */
+  .master { background: #000; border-radius: 16px; overflow: hidden; margin-bottom: 24px; display: grid; place-items: center; }
+  .master video { max-width: 100%; max-height: 70vh; display: block; }
+  .clips { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-bottom: 8px; }
+  .clip { background: var(--cell); border-radius: var(--r-card); overflow: hidden; }
+  .clip video { width: 100%; display: block; background: #000; aspect-ratio: 1 / 1; object-fit: contain; }
+  .clip .meta { display: flex; flex-direction: column; gap: 10px; }
+  .clip .meta .top { display: flex; justify-content: space-between; align-items: center; }
+  .clip .fb { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .clip .fb input { flex: 1; min-width: 100px; }
+  .sheet-img img { width: 100%; display: block; border-radius: 8px; cursor: zoom-in; margin-top: 12px; }
+  .mvchips { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 16px; }
+
+  /* ================================================================ presented surfaces: solid, elevated */
+  .scrim-g { position: fixed; inset: 0; z-index: 150; background: var(--scrim); animation: fade 200ms var(--ease); }
+  .sheet { position: fixed; z-index: 151; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(480px, calc(100vw - 32px)); max-height: calc(100vh - 64px); overflow: auto;
+    background: var(--elev); border-radius: var(--r-sheet); padding: 24px; box-shadow: var(--shadow-pop); border: 1px solid color-mix(in srgb, var(--label) 8%, transparent); animation: dlg 260ms var(--ease); }
+  @keyframes dlg { from { opacity: 0; transform: translate(-50%, -48%) scale(0.97); } }
+  .sheet h2 { margin: 0 40px 4px 0; font-size: 20px; line-height: 25px; font-weight: 700; }
+  .sheet .sub { color: var(--label-2); font-size: var(--fs-s); margin: 0 0 16px; }
+  .sheet .closer { position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; border-radius: 50%; background: var(--fill-3); color: var(--label-2); padding: 0; }
+  .sheet .group { background: var(--elev-2); }
+  [data-theme="light"] .sheet .group { background: var(--cell-2); }
+  .sheet .cap { padding: 0 4px; }
+  .sheet .acts { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; flex-wrap: wrap; }
+  @media (max-width: 899px) {
+    .sheet { left: 0; right: 0; top: auto; bottom: 0; width: auto; transform: none; max-height: 90vh; border-radius: var(--r-sheet) var(--r-sheet) 0 0; padding: 20px 16px calc(env(safe-area-inset-bottom) + 20px); animation: sheetup 380ms var(--ease-ios); }
+    .sheet::before { content: ""; display: block; width: 36px; height: 5px; border-radius: 999px; background: var(--fill-1); margin: -8px auto 12px; }
+    .sheet .acts { flex-direction: column-reverse; } .sheet .acts button { width: 100%; height: 50px; border-radius: 12px; font-size: 17px; }
+  }
+  .menu { position: fixed; z-index: 200; min-width: 220px; max-width: min(320px, calc(100vw - 16px)); max-height: 70vh; overflow: auto; padding: 6px; border-radius: 12px; background: var(--elev); box-shadow: var(--shadow-pop);
+    border: 1px solid color-mix(in srgb, var(--label) 10%, transparent); transform-origin: var(--ox, top) var(--oy, left); animation: menuin 150ms var(--ease); }
+  [data-theme="dark"] .menu { background: var(--elev-2); }
+  @keyframes menuin { from { opacity: 0; transform: scale(0.96); } }
+  .menu button { width: 100%; justify-content: flex-start; height: 32px; padding: 0 10px; border-radius: 8px; background: transparent; font-size: 14px; font-weight: 400; gap: 10px; }
+  .menu button:hover, .menu button:focus-visible { background: var(--accent); color: var(--on-accent); outline: none; }
+  .menu button:active { transform: none; }
+  .menu button.danger { color: var(--red); } .menu button.danger:hover { background: var(--red-fill); color: #fff; }
+  .menu button .ck { width: 14px; flex: none; display: inline-grid; place-items: center; }
+  .menu button .n { margin-left: auto; color: var(--label-3); font-variant-numeric: tabular-nums; }
+  .menu button:hover .n { color: inherit; opacity: 0.7; }
+  .menu hr { border: 0; height: 1px; background: var(--sep); margin: 6px 4px; }
+  .menu .mcap { font-size: 12px; color: var(--label-3); padding: 6px 10px 4px; }
+  @media (max-width: 899px) { .menu button { height: 44px; font-size: 17px; } }
+
+  /* Floating action bar: the selection's actions, on glass, within thumb reach. */
+  .fab { position: fixed; z-index: 45; left: calc(var(--side-w) + (100vw - var(--side-w)) / 2); bottom: 24px; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 18px; border-radius: 999px; animation: fabin 300ms var(--ease); white-space: nowrap; }
+  .fab .count { font-weight: 600; font-size: var(--fs-s); margin-right: 4px; }
+  @keyframes fabin { from { opacity: 0; transform: translate(-50%, 16px); } }
+  @media (max-width: 899px) { .fab { left: 50%; bottom: calc(max(env(safe-area-inset-bottom), 12px) + var(--tabbar-h) + 12px); max-width: calc(100vw - 32px); overflow-x: auto; } }
+
+  /* Whole-window drop. */
+  .dropzone { position: fixed; inset: 12px; z-index: 300; border-radius: 20px; border: 2px dashed var(--accent); background: color-mix(in srgb, var(--bg) 88%, transparent); display: grid; place-items: center; text-align: center; pointer-events: none; opacity: 0; transition: opacity 150ms var(--ease); }
+  .dropzone.on { opacity: 1; }
+  .dropzone h2 { margin: 12px 0 4px; font-size: 22px; } .dropzone p { margin: 0; color: var(--label-2); }
+  .dropzone svg { color: var(--accent-text); }
+
+  /* Toast: a solid pill, bottom centre on a desktop, top centre on a phone. */
+  .toast { position: fixed; z-index: 400; left: calc(var(--side-w) + (100vw - var(--side-w)) / 2); bottom: 24px; transform: translate(-50%, 12px); display: flex; align-items: center; gap: 8px; min-height: 44px; max-width: min(560px, calc(100vw - 32px)); padding: 10px 20px; border-radius: 999px;
+    background: #1c1c1e; color: #fff; font-size: 14px; font-weight: 500; box-shadow: var(--shadow-pop); opacity: 0; pointer-events: none; transition: opacity 160ms var(--ease-exit), transform 160ms var(--ease-exit); }
+  [data-theme="dark"] .toast { background: #3a3a3c; }
+  .toast.on { opacity: 1; transform: translate(-50%, 0); transition: opacity 220ms var(--ease), transform 300ms var(--ease); }
+  @media (max-width: 899px) { .toast { left: 50%; bottom: auto; top: calc(env(safe-area-inset-top) + 12px); transform: translate(-50%, -12px); } }
+
+  /* Skeleton: quiet placeholders shaped like the grid, no shimmer. */
+  .skel { background: var(--fill-4); border-radius: var(--r-card); }
+  .skel.card { aspect-ratio: 1 / 1.2; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after { animation-duration: 1ms !important; animation-delay: 0ms !important; transition-property: opacity, background-color, color, border-color !important; }
+    button:active, .card:active, .chip:active, .tabbar a:active { transform: none !important; }
+  }
 </style>
 </head>
 <body>
-<header>
-  <h1>reelcut <span>studio</span></h1>
-  <nav aria-label="Sections">
-    <a href="#library" data-tab="library">Library<span class="n" id="n-library"></span></a>
-    <a href="#footage" data-tab="footage">Footage<span class="n" id="n-footage"></span></a>
-    <a href="#review" data-tab="review">Review<span class="n" id="n-review"></span></a>
-    <a href="#folders" data-tab="folders">Folders<span class="n" id="n-folders"></span></a>
-    <a href="#references" data-tab="references">References<span class="n" id="n-references"></span></a>
-    <a href="#learnings" data-tab="learnings">Learnings<span class="n" id="n-learnings"></span></a>
-    <a href="#reels" data-tab="reels">Reels<span class="n" id="n-reels"></span></a>
-    <a href="#jobs" data-tab="jobs">Jobs<span class="n" id="n-jobs"></span></a>
-  </nav>
-  <div class="sync" aria-live="polite"><label class="inline" style="font-size:13px;color:var(--muted)" title="Whether a reel may use Higgsfield (AI video) for beats that can be generated. Only asked when the Higgsfield MCP is connected; anything that fails falls back to HyperFrames.">Higgsfield <select id="hf" style="padding:3px 6px"><option value="ask">ask each reel</option><option value="always">always (when connected)</option><option value="never">never</option></select></label><span class="dot" id="dot"></span><span id="sync-text">Indexing</span><button id="pause" title="Pause or resume reading watched folders">Pause</button></div>
-</header>
-<main id="main"></main>
+<div class="app">
+  <aside class="side" aria-label="Sections">
+    <div class="brand"><span>reelcut <b>studio</b></span><span class="grow"></span><button class="icon sm" id="rail" title="Collapse the sidebar (⌘B)" aria-label="Collapse the sidebar"></button></div>
+    <nav>
+      <a class="nav-i" href="#library" data-tab="library" title="Library"><span data-ic="library"></span><span class="lab">Library</span><span class="n" data-count="library"></span></a>
+      <a class="nav-i" href="#footage" data-tab="footage" title="Footage"><span data-ic="footage"></span><span class="lab">Footage</span><span class="n" data-count="footage"></span></a>
+      <a class="nav-i" href="#reels" data-tab="reels" title="Reels"><span data-ic="reels"></span><span class="lab">Reels</span><span class="n" data-count="reels"></span></a>
+      <div class="cap">Manage</div>
+      <a class="nav-i" href="#review" data-tab="review" title="Review"><span data-ic="review"></span><span class="lab">Review</span><span class="n" data-count="review"></span></a>
+      <a class="nav-i" href="#folders" data-tab="folders" title="Folders"><span data-ic="folders"></span><span class="lab">Folders</span><span class="n" data-count="folders"></span></a>
+      <a class="nav-i" href="#references" data-tab="references" title="References"><span data-ic="references"></span><span class="lab">References</span><span class="n" data-count="references"></span></a>
+      <a class="nav-i" href="#learnings" data-tab="learnings" title="Learnings"><span data-ic="learnings"></span><span class="lab">Learnings</span><span class="n" data-count="learnings"></span></a>
+      <a class="nav-i" href="#jobs" data-tab="jobs" title="Jobs"><span data-ic="jobs"></span><span class="lab">Jobs</span><span class="n" data-count="jobs"></span></a>
+    </nav>
+    <div class="foot" aria-live="polite"><span class="dot" id="dot"></span><span class="lab grow" id="sync-text">Indexing</span><button class="icon" id="pause" style="width:28px;height:28px" title="Pause reading watched folders" aria-label="Pause reading watched folders"></button><button class="icon" id="settings" style="width:28px;height:28px" title="Settings" aria-label="Settings"></button></div>
+  </aside>
+  <main id="main" tabindex="-1"></main>
+</div>
+<div class="topbar material-bar" id="topbar" aria-hidden="true"><span class="t" id="topbar-t"></span></div>
+<div class="tab-edge scroll-edge-bottom"></div>
+<nav class="tabbar liquid-glass liquid-glass-milky" id="tabbar" aria-label="Sections">
+  <span class="lens liquid-lens" aria-hidden="true"></span>
+  <a href="#library" data-tab="library"><span data-ic="library" data-sz="22"></span><span class="lab">Library</span></a>
+  <a href="#footage" data-tab="footage"><span data-ic="footage" data-sz="22"></span><span class="lab">Footage</span></a>
+  <a href="#reels" data-tab="reels"><span data-ic="reels" data-sz="22"></span><span class="lab">Reels</span></a>
+  <a href="#more" data-tab="more" id="more-tab"><span data-ic="more" data-sz="22"></span><span class="lab">More</span><span class="n" data-count="more"></span></a>
+</nav>
+<div class="dropzone" id="dropzone" aria-hidden="true"><div><span data-ic="upload" data-sz="40"></span><h2 id="dropzone-t">Drop to add to the library</h2><p>Files or whole folders. They are checked, previewed and tagged on arrival.</p></div></div>
+<input type="file" id="in-files" multiple><input type="file" id="in-folder" webkitdirectory>
+<input type="file" id="r-in" accept="video/*,.mov,.mp4,.webm,.mkv" multiple><input type="file" id="r-indir" webkitdirectory>
+<input type="file" id="import" accept="application/json" aria-label="Import learnings">
 <div class="toast" id="toast" role="status"></div>
 <script>
 const $ = (sel, el = document) => el.querySelector(sel);
@@ -166,10 +545,38 @@ const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const IMG = new Set(["png", "jpg", "jpeg", "gif", "webp", "avif", "svg"]);
 const VID = new Set(["mp4", "webm", "mov"]);
-const AUD = new Set(["mp3", "wav", "ogg", "m4a", "flac", "aiff"]);
-const TYPES = [["", "All"], ["image", "Images"], ["vector", "Vectors"], ["video", "Video"], ["audio", "Sounds (SFX)"], ["document", "Documents"]];
-const state = { tagFilter: new Set(), q: "", type: "", selected: null, assets: [], counts: { all: 0, pending: 0, queue: 0, audio: 0 }, tags: {}, runs: [], jobs: [], folders: [], ingest: null, picked: new Set(), uploads: [], dropKind: "generic", dropPrivate: false, learn: null, videos: [], fsel: null, ffmt: "1:1", refs: [], rbrief: null, rcounts: { all: 0, included: 0, queue: 0 }, rcommand: "/reelcut study-references", rsel: null, ruploads: [] };
+const TYPES = [["", "All"], ["image", "Images"], ["vector", "Vectors"], ["video", "Video"], ["audio", "Sounds"], ["document", "Docs"]];
+const state = { tagFilter: new Set(), q: "", type: "", selected: null, assets: [], counts: { all: 0, pending: 0, queue: 0, audio: 0 }, tags: {}, runs: [], jobs: [], folders: [], ingest: null, picked: new Set(), uploads: [], dropKind: "generic", dropPrivate: false, learn: null, videos: [], fsel: null, ffmt: "1:1", refs: [], rbrief: null, rcounts: { all: 0, included: 0, queue: 0 }, rcommand: "/reelcut study-references", rsel: null, ruploads: [], tab: "library" };
+const isPhone = () => window.matchMedia("(max-width: 899px)").matches;
 
+// ---------- icons (Lucide shapes, 1.8 stroke: San Francisco's regular weight)
+const ICONS = {
+  library: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/>',
+  footage: '<path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z"/><path d="m6.2 5.3 3.1 3.9M12.4 3.4l3.1 4"/><path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/>',
+  reels: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="m10 8.5 5.5 3.5-5.5 3.5Z"/>',
+  review: '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
+  folders: '<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
+  references: '<path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>',
+  learnings: '<path d="M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2Z"/><path d="M19 3v4M17 5h4"/>',
+  jobs: '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+  settings: '<path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"/>',
+  more: '<circle cx="5" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.6" fill="currentColor" stroke="none"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  pause: '<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>',
+  play: '<path d="m7 4 13 8-13 8Z"/>',
+  back: '<path d="m15 18-6-6 6-6"/>',
+  down: '<path d="m6 9 6 6 6-6"/>',
+  x: '<path d="M18 6 6 18M6 6l12 12"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  rail: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/>',
+  tag: '<path d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z"/><circle cx="7.5" cy="7.5" r="1" fill="currentColor"/>',
+  upload: '<path d="M12 15V3m-5 5 5-5 5 5M5 21h14"/>',
+};
+function ic(name, size = 18) { return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ""}</svg>`; }
+function paintIcons(root = document) { $$("[data-ic]", root).forEach((el) => { el.outerHTML = ic(el.dataset.ic, Number(el.dataset.sz) || 18); }); }
+
+// ---------- plumbing
 async function api(path, init) {
   const res = await fetch(path, { headers: { "Content-Type": "application/json" }, ...init });
   const body = await res.json().catch(() => ({}));
@@ -178,7 +585,7 @@ async function api(path, init) {
 }
 const post = (path, body) => api(path, { method: "POST", body: JSON.stringify(body ?? {}) });
 const patch = (path, body) => api(path, { method: "PATCH", body: JSON.stringify(body) });
-function toast(text) { const t = $("#toast"); t.textContent = text; t.classList.add("on"); clearTimeout(toast.timer); toast.timer = setTimeout(() => t.classList.remove("on"), 2400); }
+function toast(text) { const t = $("#toast"); t.textContent = text; t.classList.add("on"); clearTimeout(toast.timer); toast.timer = setTimeout(() => t.classList.remove("on"), 3200); }
 function when(iso) { return iso ? new Date(iso).toLocaleString() : "—"; }
 function dur(s) { return s == null ? "—" : s < 10 ? `${s.toFixed(2)} s` : `${Math.round(s)} s`; }
 function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
@@ -191,22 +598,177 @@ function preview(a, controls = false) {
 }
 function tagHtml(a, n = 99) { return a.tags.slice(0, n).map((t) => `<span class="tag ${(a.tagOrigin || {})[t] && a.tagOrigin[t] !== "user" ? "auto" : ""}" title="${(a.tagOrigin || {})[t] && a.tagOrigin[t] !== "user" ? "suggested by " + a.tagOrigin[t] + ", not yet reviewed" : "yours"}">#${esc(t)}</span>`).join(" "); }
 
-// ---------- master status and pause
+// ---------- building blocks
+function pageHead(title, { actions = "", back = "" } = {}) {
+  $("#topbar-t").textContent = title.replace(/<[^>]+>/g, "");
+  return `<header class="phead material-bar">${back}<h1>${title}</h1><div class="acts">${actions}</div></header>`;
+}
+function emptyState(icon, title, line, actions = "") {
+  return `<div class="empty"><div class="disc">${ic(icon, 26)}</div><h3>${title}</h3><p>${line}</p>${actions ? `<div class="acts">${actions}</div>` : ""}</div>`;
+}
+/** A segmented control. `opts` is [value, label][]. Call bindSeg after it is on the page. */
+function segHtml(id, opts, value, extra = "") {
+  return `<div class="seg ${extra}" id="${id}" role="group">${opts.map(([v, l]) => `<button type="button" data-v="${esc(v)}" aria-pressed="${v === value}">${l}</button>`).join("")}<span class="thumb-s" aria-hidden="true"></span></div>`;
+}
+function placeThumb(seg, animate) {
+  const on = $('button[aria-pressed="true"]', seg), th = $(".thumb-s", seg);
+  if (!on || !th) return;
+  if (!animate) th.style.transition = "none";
+  th.style.setProperty("--x", on.offsetLeft + "px"); th.style.setProperty("--w", on.offsetWidth + "px");
+  if (!animate) requestAnimationFrame(() => { th.style.transition = ""; });
+}
+function bindSeg(id, onChange) {
+  const seg = document.getElementById(id); if (!seg) return;
+  placeThumb(seg, false);
+  $$("button", seg).forEach((b) => b.addEventListener("click", () => {
+    if (b.getAttribute("aria-pressed") === "true") return;
+    $$("button", seg).forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    placeThumb(seg, true); onChange(b.dataset.v);
+  }));
+}
+window.addEventListener("resize", debounce(() => $$(".seg").forEach((s) => placeThumb(s, false)), 100));
+
+// Menus: solid, elevated, grown from the trigger. items: { label, act, danger, check, n, sep, cap, keep }.
+let menuEl = null;
+function closeMenu() { if (menuEl) { menuEl.remove(); menuEl = null; document.removeEventListener("pointerdown", menuAway, true); } }
+function menuAway(e) { if (menuEl && !menuEl.contains(e.target)) closeMenu(); }
+function openMenu(at, items) {
+  closeMenu();
+  const m = document.createElement("div"); m.className = "menu"; m.setAttribute("role", "menu");
+  m.innerHTML = items.map((it, i) => it.sep ? "<hr>" : it.cap ? `<div class="mcap">${esc(it.cap)}</div>` : `<button role="menuitem" data-i="${i}" class="${it.danger ? "danger" : ""}">${it.check !== undefined ? `<span class="ck">${it.check ? ic("check", 14) : ""}</span>` : ""}<span>${esc(it.label)}</span>${it.n != null ? `<span class="n">${it.n}</span>` : ""}</button>`).join("");
+  document.body.appendChild(m); menuEl = m;
+  const r = at instanceof Element ? at.getBoundingClientRect() : { left: at.x, right: at.x, top: at.y, bottom: at.y };
+  const w = m.offsetWidth, h = m.offsetHeight;
+  let x = at instanceof Element ? r.right - w : r.left, y = r.bottom + 6;
+  if (x < 8) x = Math.min(r.left, innerWidth - w - 8); if (x + w > innerWidth - 8) x = innerWidth - w - 8;
+  let up = false; if (y + h > innerHeight - 8) { y = Math.max(8, r.top - h - 6); up = true; }
+  Object.assign(m.style, { left: x + "px", top: y + "px", "--oy": up ? "bottom" : "top", "--ox": x + w / 2 > r.left ? "right" : "left" });
+  m.style.transformOrigin = `${x + w - 10 > r.left ? "right" : "left"} ${up ? "bottom" : "top"}`;
+  $$("button", m).forEach((b) => b.addEventListener("click", async () => {
+    const it = items[Number(b.dataset.i)];
+    if (!it.keep) closeMenu();
+    await it.act?.();
+    if (it.keep && it.check !== undefined) { it.check = !it.check; b.querySelector(".ck").innerHTML = it.check ? ic("check", 14) : ""; }
+  }));
+  setTimeout(() => document.addEventListener("pointerdown", menuAway, true));
+  m.querySelector("button")?.focus({ preventScroll: true });
+}
+/** Row actions: a ⋯ button, right-click, and (on touch) a swipe that shows the actions marked `swipe`. */
+function rowActions(row, items) {
+  $("[data-more]", row)?.addEventListener("click", (e) => { e.stopPropagation(); openMenu(e.currentTarget, items()); });
+  row.addEventListener("contextmenu", (e) => { if (e.target.closest("input, textarea, select")) return; e.preventDefault(); openMenu({ x: e.clientX, y: e.clientY }, items()); });
+  const c = $(".row-c", row); if (!c) return;
+  const acts = items().filter((it) => it.swipe);
+  if (!acts.length) return;
+  const box = document.createElement("div"); box.className = "sw-acts";
+  box.innerHTML = acts.map((it, i) => `<button data-sw="${i}" class="${it.danger ? "danger" : it.accent ? "accent" : ""}">${esc(it.short || it.label)}</button>`).join("");
+  row.insertBefore(box, c);
+  $$("[data-sw]", box).forEach((b) => b.addEventListener("click", () => { c.style.transform = ""; acts[Number(b.dataset.sw)].act(); }));
+  let x0 = null, y0 = 0, dx = 0, open = false, horizontal = null;
+  c.addEventListener("pointerdown", (e) => { if (e.pointerType !== "touch" || e.target.closest("input, select, textarea")) return; x0 = e.clientX; y0 = e.clientY; horizontal = null; });
+  c.addEventListener("pointermove", (e) => {
+    if (x0 === null) return;
+    const mx = e.clientX - x0, my = e.clientY - y0;
+    if (horizontal === null && Math.abs(mx) + Math.abs(my) > 8) horizontal = Math.abs(mx) > Math.abs(my);
+    if (!horizontal) return;
+    const max = box.offsetWidth; dx = Math.max(-max * 1.15, Math.min(0, mx + (open ? -max : 0)));
+    c.classList.add("dragging"); c.style.transform = `translateX(${dx}px)`;
+  });
+  const end = () => {
+    if (x0 === null) return; x0 = null; c.classList.remove("dragging");
+    if (!horizontal) return;
+    open = dx < -box.offsetWidth * 0.4; c.style.transform = open ? `translateX(${-box.offsetWidth}px)` : "";
+  };
+  c.addEventListener("pointerup", end); c.addEventListener("pointercancel", end);
+}
+
+// Sheets: a centred dialog on a desktop, a bottom sheet on a phone. Solid and elevated, never glass.
+let sheetClose = null;
+function openSheet({ title, sub = "", body, bind, label }) {
+  closeSheet();
+  const back = document.createElement("div"); back.className = "scrim-g";
+  const s = document.createElement("div"); s.className = "sheet"; s.setAttribute("role", "dialog"); s.setAttribute("aria-modal", "true"); s.setAttribute("aria-label", label || title);
+  s.innerHTML = `<button class="closer icon" data-sclose aria-label="Close">${ic("x", 16)}</button><h2>${title}</h2>${sub ? `<p class="sub">${sub}</p>` : ""}${body}`;
+  document.body.append(back, s);
+  const prev = document.activeElement;
+  sheetClose = () => { back.remove(); s.remove(); sheetClose = null; prev?.focus?.({ preventScroll: true }); };
+  back.addEventListener("click", () => sheetClose?.());
+  $$("[data-sclose]", s).forEach((b) => b.addEventListener("click", () => sheetClose?.()));
+  bind?.(s);
+  ($("input:not([type=checkbox]), select", s) || $("button:not(.closer)", s))?.focus({ preventScroll: true });
+  return s;
+}
+function closeSheet() { sheetClose?.(); }
+/** An alert for a destructive choice: a title that states the consequence, one line, Cancel and the action. */
+function ask({ title, detail = "", ok = "OK", danger = false }) {
+  return new Promise((resolve) => {
+    let answered = false;
+    openSheet({ title, sub: detail, body: `<div class="acts"><button data-sclose>Cancel</button><button class="${danger ? "primary danger-fill" : "primary"}" id="ask-ok" style="${danger ? "background:var(--red-fill);color:#fff" : ""}">${esc(ok)}</button></div>`,
+      bind: (s) => { $("#ask-ok", s).addEventListener("click", () => { answered = true; closeSheet(); resolve(true); }); } });
+    const prev = sheetClose; sheetClose = () => { prev(); if (!answered) resolve(false); };
+  });
+}
+function askText({ title, value = "", ok = "Save", placeholder = "" }) {
+  return new Promise((resolve) => {
+    let answered = false;
+    openSheet({ title, body: `<input id="ask-in" style="width:100%" value="${esc(value)}" placeholder="${esc(placeholder)}"><div class="acts"><button data-sclose>Cancel</button><button class="primary" id="ask-ok">${esc(ok)}</button></div>`,
+      bind: (s) => { const go = () => { answered = true; const v = $("#ask-in", s).value.trim(); closeSheet(); resolve(v || null); }; $("#ask-ok", s).addEventListener("click", go); $("#ask-in", s).addEventListener("keydown", (e) => { if (e.key === "Enter") go(); }); } });
+    const prev = sheetClose; sheetClose = () => { prev(); if (!answered) resolve(null); };
+  });
+}
+
+// ---------- status, settings, appearance
 async function loadIngest() {
   try { state.ingest = await api("/api/ingest"); } catch { return; }
   const s = state.ingest.status, el = $("#dot");
   el.className = "dot " + (s.paused ? "off" : s.scanning ? "busy" : "");
   $("#sync-text").textContent = s.paused ? "Paused" : s.scanning ? `Indexing${s.pending ? ` · ${s.pending} left` : ""}` : "Idle";
-  $("#pause").textContent = s.paused ? "Resume" : "Pause";
+  $("#pause").innerHTML = ic(s.paused ? "play" : "pause", 16);
+  $("#pause").title = s.paused ? "Resume reading watched folders" : "Pause reading watched folders";
+  $("#pause").setAttribute("aria-label", $("#pause").title);
 }
-$("#pause").addEventListener("click", async () => {
+async function togglePause() {
   const paused = !state.ingest?.status.paused;
   try { await post("/api/ingest/pause", { paused }); toast(paused ? "Paused: watched folders are not being read" : "Resumed"); await loadIngest(); } catch (e) { toast(e.message); }
-});
+}
+$("#pause").addEventListener("click", togglePause);
 setInterval(loadIngest, 2500);
-async function loadHf() { try { $("#hf").value = (await api("/api/settings")).higgsfield; } catch { /* the page still works */ } }
-$("#hf").addEventListener("change", async (e) => { try { await post("/api/settings/higgsfield", { value: e.target.value }); toast(e.target.value === "ask" ? "Step 0 will ask about Higgsfield when it is connected" : e.target.value === "always" ? "Higgsfield will be used when connected, without asking" : "Higgsfield will not be used"); } catch (err) { toast(err.message); loadHf(); } });
-loadHf();
+function setTheme(pref) {
+  try { localStorage.setItem("reelcut:theme", pref); } catch { /* the choice lasts this visit */ }
+  const root = document.documentElement; root.dataset.themePref = pref;
+  root.dataset.theme = pref === "dark" || (pref === "system" && matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
+}
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if ((document.documentElement.dataset.themePref || "system") === "system") setTheme("system"); });
+async function openSettings() {
+  let hf = "ask"; try { hf = (await api("/api/settings")).higgsfield; } catch { /* shown as Ask */ }
+  const s = state.ingest?.status;
+  openSheet({ title: "Settings", body: `
+    <div class="cap">Appearance</div>
+    ${segHtml("set-theme", [["system", "System"], ["light", "Light"], ["dark", "Dark"]], document.documentElement.dataset.themePref || "system", "full")}
+    <div class="cap">Higgsfield (AI video)</div>
+    ${segHtml("set-hf", [["ask", "Ask each reel"], ["always", "Always"], ["never", "Never"]], hf, "full")}
+    <p class="foot-note">Whether a reel may generate backgrounds and abstract beats with Higgsfield. Only asked when it is connected; anything that fails falls back to HyperFrames.</p>
+    <div class="cap">Watched folders</div>
+    <div class="group"><div class="row-i"><span class="dot ${s?.paused ? "off" : s?.scanning ? "busy" : ""}"></span><span class="t grow">${s?.paused ? "Paused" : s?.scanning ? "Indexing" : "Watching, idle"}</span><button class="sm" id="set-pause">${s?.paused ? "Resume" : "Pause"}</button></div></div>`,
+    bind: () => {
+      bindSeg("set-theme", setTheme);
+      bindSeg("set-hf", async (v) => { try { await post("/api/settings/higgsfield", { value: v }); toast(v === "ask" ? "Step 0 will ask about Higgsfield when it is connected" : v === "always" ? "Higgsfield will be used when connected, without asking" : "Higgsfield will not be used"); } catch (e) { toast(e.message); } });
+      $("#set-pause").addEventListener("click", async () => { await togglePause(); closeSheet(); });
+    } });
+}
+$("#settings").addEventListener("click", openSettings);
+function setRail(on) { document.documentElement.dataset.rail = on ? "1" : ""; try { localStorage.setItem("reelcut:rail", on ? "1" : "0"); } catch {} setTimeout(() => $$(".seg").forEach((s) => placeThumb(s, false)), 320); }
+$("#rail").addEventListener("click", () => setRail(document.documentElement.dataset.rail !== "1"));
+function openMore() {
+  const c = (n) => (n ? `<span class="badge">${n}</span>` : "");
+  const s = state.ingest?.status;
+  openSheet({ title: "More", body: `<div class="group">${[["review", "Review", state.counts.pending], ["folders", "Folders", state.folders.length], ["references", "References", state.rcounts.all], ["learnings", "Learnings", (state.learn?.rules || []).filter((r) => r.status === "proposed" && !r.conflictWith.length).length], ["jobs", "Jobs", state.jobs.filter((j) => j.status === "running").length]]
+      .map(([k, l, n]) => `<a class="row-i" href="#${k}" data-sclose style="color:var(--label);text-decoration:none"><span class="tile" style="background:var(--fill-1);color:var(--label)">${ic(k, 17)}</span><span class="t grow">${l}</span>${c(n)}<span style="color:var(--label-3)">${ic("back", 14).replace("m15 18-6-6 6-6", "m9 18 6-6-6-6")}</span></a>`).join("")}</div>
+    <div class="group"><button class="row-i" id="more-set" style="width:100%;border-radius:0;justify-content:flex-start;height:auto;font-size:var(--fs-b);font-weight:400"><span class="tile" style="background:#8e8e93">${ic("settings", 17)}</span><span class="t grow" style="text-align:left">Settings</span></button>
+      <div class="row-i"><span class="dot ${s?.paused ? "off" : s?.scanning ? "busy" : ""}"></span><span class="s grow">${esc($("#sync-text").textContent)}</span><button class="sm" id="more-pause">${s?.paused ? "Resume" : "Pause"}</button></div></div>`,
+    bind: (sh) => { $("#more-set", sh).addEventListener("click", () => { closeSheet(); openSettings(); }); $("#more-pause", sh).addEventListener("click", async () => { await togglePause(); closeSheet(); }); } });
+}
+$("#more-tab").addEventListener("click", (e) => { e.preventDefault(); openMore(); });
 
 // ---------- library
 async function loadLibrary() {
@@ -214,49 +776,52 @@ async function loadLibrary() {
   const [a, t] = await Promise.all([api(`/api/assets?tags=${encodeURIComponent(tags)}&q=${encodeURIComponent(state.q)}&type=${state.type}`), api("/api/tags")]);
   state.assets = a.assets; state.counts = a.counts; state.tags = t.tags;
 }
-function dropZone() {
-  return `<div class="drop" id="drop" role="group" aria-label="Upload assets">
-    Drop files or whole folders here. They are checked, previewed and tagged on arrival, and wait in <a href="#review">Review</a> until you approve them.
-    <div class="row">
-      <button id="pick-files">Choose files</button><button id="pick-folder">Choose a folder</button>
-      <label class="inline">Treat as <select id="drop-kind"><option value="generic" ${state.dropKind === "generic" ? "selected" : ""}>generic</option><option value="identity" ${state.dropKind === "identity" ? "selected" : ""}>identity (real brand marks or product screens)</option></select></label>
-      <label class="inline"><input type="checkbox" id="drop-private" ${state.dropPrivate ? "checked" : ""}> Private (never shown to Claude)</label>
-    </div>
-    <input type="file" id="in-files" multiple hidden><input type="file" id="in-folder" webkitdirectory hidden>
-  </div>
-  <div class="uploads" id="uploads"></div>`;
+function addMenu(btn) {
+  openMenu(btn, [
+    { label: "Choose files…", act: () => $("#in-files").click() },
+    { label: "Choose a folder…", act: () => $("#in-folder").click() },
+    { sep: true }, { cap: "What you add next" },
+    { label: "Real brand marks or product screens", check: state.dropKind === "identity", keep: true, act: () => { state.dropKind = state.dropKind === "identity" ? "generic" : "identity"; } },
+    { label: "Private (never shown to Claude)", check: state.dropPrivate, keep: true, act: () => { state.dropPrivate = !state.dropPrivate; } },
+  ]);
 }
 function renderLibrary() {
-  const tagEntries = Object.entries(state.tags).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 40);
   const sel = state.assets.find((a) => a.id === state.selected);
+  const tagCount = Object.keys(state.tags).length;
   $("#main").innerHTML = `
-    ${dropZone()}
-    <div class="bar">
-      <input type="search" id="q" placeholder="Search name, tag, description or source…" aria-label="Search" value="${esc(state.q)}">
-      ${TYPES.map(([v, l]) => `<span class="chip ${state.type === v ? "on" : ""}" data-type="${v}" role="button" tabindex="0">${l}${v === "audio" ? ` <span class="n">${state.counts.audio}</span>` : ""}</span>`).join("")}
-    </div>
-    <div class="bar">${tagEntries.map(([t, n]) => `<span class="chip ${state.tagFilter.has(t) ? "on" : ""}" data-tag="${esc(t)}" role="button" tabindex="0">#${esc(t)} <span class="n">${n}</span></span>`).join("")}</div>
+    ${pageHead("Library", { actions: `<label class="search">${ic("search", 15)}<input type="search" id="q" placeholder="Search" aria-label="Search names, tags, descriptions and sources" value="${esc(state.q)}"></label><button class="primary" id="add">${ic("plus", 16)}Add</button>` })}
+    <div class="bar">${segHtml("types", TYPES.map(([v, l]) => [v, v === "audio" && state.counts.audio ? `${l} <span class="n">${state.counts.audio}</span>` : l]), state.type)}
+      ${tagCount ? `<button id="tags">${ic("tag", 15)}Tags${state.tagFilter.size ? ` · ${state.tagFilter.size}` : ""}${ic("down", 14)}</button>` : ""}</div>
+    ${state.tagFilter.size ? `<div class="active-tags">${[...state.tagFilter].map((t) => `<span class="chip on" data-untag="${esc(t)}" role="button" tabindex="0" title="Remove this filter">#${esc(t)} ${ic("x", 12)}</span>`).join("")}</div>` : ""}
+    <div class="uploads group" id="uploads"></div>
     <div class="${sel ? "split" : ""}">
       <div>${state.assets.length === 0 ? emptyLibrary() : `<div class="grid">${state.assets.map(assetCard).join("")}</div>`}</div>
-      ${sel ? assetPanel(sel) : ""}
+      ${sel ? `<div class="scrim" data-close-panel></div>${assetPanel(sel)}` : ""}
     </div>`;
-  bindDrop(); renderUploads();
+  renderUploads();
+  bindSeg("types", async (v) => { state.type = v; await loadLibrary(); renderLibrary(); });
+  $("#add").addEventListener("click", (e) => addMenu(e.currentTarget));
+  $("#empty-add")?.addEventListener("click", (e) => addMenu(e.currentTarget));
+  $("#tags")?.addEventListener("click", (e) => {
+    const entries = Object.entries(state.tags).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 60);
+    openMenu(e.currentTarget, [...(state.tagFilter.size ? [{ label: "Clear all tags", act: async () => { state.tagFilter.clear(); await loadLibrary(); renderLibrary(); } }, { sep: true }] : []),
+      ...entries.map(([t, n]) => ({ label: `#${t}`, n, check: state.tagFilter.has(t), act: async () => { state.tagFilter.has(t) ? state.tagFilter.delete(t) : state.tagFilter.add(t); await loadLibrary(); renderLibrary(); } }))]);
+  });
+  $$("[data-untag]").forEach((el) => el.addEventListener("click", async () => { state.tagFilter.delete(el.dataset.untag); await loadLibrary(); renderLibrary(); }));
   $("#q").addEventListener("input", debounce(async (e) => { state.q = e.target.value; await loadLibrary(); renderLibrary(); const q = $("#q"); q.focus(); q.setSelectionRange(state.q.length, state.q.length); }, 200));
-  $$("[data-type]").forEach((el) => el.addEventListener("click", async () => { state.type = el.dataset.type; await loadLibrary(); renderLibrary(); }));
-  $$("[data-tag]").forEach((el) => el.addEventListener("click", async () => { const t = el.dataset.tag; state.tagFilter.has(t) ? state.tagFilter.delete(t) : state.tagFilter.add(t); await loadLibrary(); renderLibrary(); }));
   $$("[data-asset]").forEach((el) => el.addEventListener("click", () => { state.selected = state.selected === el.dataset.asset ? null : el.dataset.asset; renderLibrary(); }));
   if (sel) bindPanel(sel);
 }
 function emptyLibrary() {
-  if (state.tagFilter.size || state.q || state.type) return `<p class="empty">Nothing matches that filter.</p>`;
-  return `<p class="empty">The library is empty. Drop files above, add a watched folder in <a href="#folders">Folders</a>, or run<br><br><code>npm run library -- add assets/in/claude-logo.svg --kind identity --tags claude,logo --url https://anthropic.com/brand</code></p>`;
+  if (state.tagFilter.size || state.q || state.type) return emptyState("search", "Nothing matches", "Try another search, or clear the type and tag filters.");
+  return emptyState("library", "The library is empty", "Drop files or whole folders anywhere on this window, or watch a folder so new files come in by themselves.", `<button class="primary" id="empty-add">${ic("plus", 16)}Add files</button><a href="#folders"><button>Watch a folder</button></a>`);
 }
 function assetCard(a) {
-  return `<div class="card ${a.id === state.selected ? "sel" : ""}" data-asset="${a.id}">
+  return `<div class="card ${a.id === state.selected ? "sel" : ""}" data-asset="${a.id}" role="button" tabindex="0" aria-pressed="${a.id === state.selected}">
     <div class="thumb ${a.mediaType === "audio" ? "wave" : ""}">${preview(a)}</div>
     <div class="meta">
       <div class="name" title="${esc(a.name)}">${esc(a.name)}</div>
-      <div class="sub"><span class="badge ${a.assetKind}">${a.assetKind}</span>${a.review.state !== "approved" ? `<span class="badge ${a.review.state}">${a.review.state}</span>` : ""}${a.queued ? `<span class="badge queued">needs Claude</span>` : ""}${a.provenance && a.provenance.source === "generated" ? `<span class="badge warn" title="Made by a model, not recorded">AI-generated</span>` : ""}${a.status !== "active" ? `<span class="badge ${a.status}">${a.status}</span>` : ""}${tagHtml(a, 4)}</div>
+      <div class="sub">${a.assetKind === "identity" ? `<span class="badge identity">identity</span>` : ""}${a.review.state !== "approved" ? `<span class="badge ${a.review.state}">${a.review.state}</span>` : ""}${a.queued ? `<span class="badge queued">needs Claude</span>` : ""}${a.provenance && a.provenance.source === "generated" ? `<span class="badge warn" title="Made by a model, not recorded">AI-generated</span>` : ""}${a.status !== "active" ? `<span class="badge ${a.status}">${a.status}</span>` : ""}${tagHtml(a, 3)}</div>
     </div>
   </div>`;
 }
@@ -271,14 +836,18 @@ function analysisRows(a) {
   if (x.description) rows.push(["Claude says", esc(x.description)]);
   return rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
 }
+function panelClose(id) { return `<button class="icon closer-disc" id="${id}" data-close aria-label="Close" title="Close (Esc)">${ic("x", 16)}</button>`; }
 function assetPanel(a) {
   const p = a.provenance, ref = `assets/library/${a.file.split("/").pop()}`;
   return `<aside class="panel" aria-label="Asset details">
-    <div class="preview thumb ${a.mediaType === "audio" ? "wave" : ""}">${preview(a, true)}</div>
-    ${a.mediaType === "audio" ? `<audio controls preload="none" src="${fileUrl(a)}"></audio>` : ""}
+    ${panelClose("close")}
+    <div class="thumb ${a.mediaType === "audio" ? "wave" : ""}" style="border-radius:12px">${preview(a, true)}</div>
+    ${a.mediaType === "audio" ? `<audio controls preload="none" src="${fileUrl(a)}" style="width:100%;margin-top:8px"></audio>` : ""}
     <h2>${esc(a.name)}</h2>
-    <div class="ref"><code title="${ref}">${ref}</code><button id="copy">Copy</button></div>
-    <dl>
+    <div class="ref"><code title="${ref}">${ref}</code><button class="sm" id="copy">Copy</button></div>
+    ${a.review.state !== "approved" ? `<div class="pbar"><button class="primary" data-review="approved">Approve</button><button class="danger" data-review="rejected">Reject</button></div>` : ""}
+    <div class="cap">Details</div>
+    <div class="group"><dl>
       <dt>Kind</dt><dd>${a.assetKind}${a.mediaType !== "other" ? ` · ${a.mediaType}` : ""}</dd>
       <dt>Review</dt><dd><span class="badge ${a.review.state}">${a.review.state}</span>${a.review.by ? ` by ${esc(a.review.by)}` : ""}${a.private ? ` · private` : ""}</dd>
       <dt>Status</dt><dd>${a.status}${a.supersededBy ? ` → <a href="#" data-goto="${a.supersededBy}">${a.supersededBy}</a>` : ""}</dd>
@@ -290,17 +859,17 @@ function assetPanel(a) {
       <dt>Added</dt><dd>${when(a.addedAt)}</dd><dt>Last used</dt><dd>${when(a.lastUsedAt)}</dd>
       <dt>Used in</dt><dd>${a.usedIn.length ? a.usedIn.map((r) => `<a href="#reels/${r}">${r}</a>`).join(", ") : "—"}</dd>
       <dt>File</dt><dd>${(a.bytes / 1024).toFixed(0)} kB · ${a.ext}</dd>
-    </dl>
-    ${a.review.state !== "approved" ? `<div class="row" style="margin-top:0"><button class="primary" data-review="approved">Approve</button><button class="danger" data-review="rejected">Reject</button></div>` : `<div class="row" style="margin-top:0"><button data-review="pending">Move back to review</button></div>`}
-    <label for="f-name">Name</label><input id="f-name" value="${esc(a.name)}">
-    <label for="f-tags">Tags, comma separated${a.mediaType === "audio" ? " (cue words: click, whoosh, pop, type, riser, hit…)" : ""}</label><input id="f-tags" value="${esc(a.tags.join(", "))}">
-    <label for="f-kind">Kind (only you decide that something is a real brand mark or product screen)</label>
-    <select id="f-kind">${["generic", "identity"].map((s) => `<option ${s === a.assetKind ? "selected" : ""}>${s}</option>`).join("")}</select>
-    <label for="f-status">Status</label>
-    <select id="f-status">${["active", "superseded", "retired"].map((s) => `<option ${s === a.status ? "selected" : ""}>${s}</option>`).join("")}</select>
-    <label for="f-sup">Superseded by (asset id)</label><input id="f-sup" class="mono" value="${esc(a.supersededBy || "")}" placeholder="the newer asset's id">
-    <label for="f-note">Note for report.md</label><input id="f-note" value="${esc(p.note || "")}" placeholder="e.g. masked: account email in header">
-    <div class="row"><button class="primary" id="save">Save</button><button id="close">Close</button></div>
+    </dl></div>
+    <div class="cap">Edit</div>
+    <div class="group">
+      <div class="form-row"><label for="f-name">Name</label><input id="f-name" value="${esc(a.name)}"></div>
+      <div class="form-row"><label for="f-tags">Tags</label><input id="f-tags" value="${esc(a.tags.join(", "))}" placeholder="comma separated">${a.mediaType === "audio" ? `<span class="hint">Cue words: click, whoosh, pop, type, riser, hit…</span>` : ""}</div>
+      <div class="form-row"><label for="f-kind">Kind</label><select id="f-kind">${["generic", "identity"].map((s) => `<option ${s === a.assetKind ? "selected" : ""}>${s}</option>`).join("")}</select><span class="hint">Only you decide that something is a real brand mark or product screen.</span></div>
+      <div class="form-row"><label for="f-status">Status</label><select id="f-status">${["active", "superseded", "retired"].map((s) => `<option ${s === a.status ? "selected" : ""}>${s}</option>`).join("")}</select></div>
+      <div class="form-row"><label for="f-sup">Superseded by</label><input id="f-sup" class="mono" value="${esc(a.supersededBy || "")}" placeholder="the newer asset's id"></div>
+      <div class="form-row"><label for="f-note">Report note</label><input id="f-note" value="${esc(p.note || "")}" placeholder="e.g. masked: account email in header"></div>
+    </div>
+    <div class="pbar"><button class="primary" id="save">Save</button>${a.review.state === "approved" ? `<button data-review="pending">Move back to review</button>` : ""}</div>
   </aside>`;
 }
 function bindPanel(a) {
@@ -317,19 +886,25 @@ function bindPanel(a) {
   });
 }
 
-// ---------- upload
+// ---------- upload: drop anywhere on the window, or Add
 const MAX_PARALLEL = 3;
-function bindDrop() {
-  const drop = $("#drop"); if (!drop) return;
-  const addAll = (items) => { state.dropKind = $("#drop-kind").value; state.dropPrivate = $("#drop-private").checked; enqueue(items); };
-  $("#pick-files").addEventListener("click", () => $("#in-files").click());
-  $("#pick-folder").addEventListener("click", () => $("#in-folder").click());
-  $("#in-files").addEventListener("change", (e) => { addAll([...e.target.files].map((file) => ({ file, rel: "" }))); e.target.value = ""; });
-  $("#in-folder").addEventListener("change", (e) => { addAll([...e.target.files].map((file) => ({ file, rel: (file.webkitRelativePath || "").split("/").slice(0, -1).join("/") }))); e.target.value = ""; });
-  ["dragenter", "dragover"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("over"); }));
-  ["dragleave", "drop"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
-  drop.addEventListener("drop", async (e) => addAll(await filesFromDrop(e.dataTransfer)));
-}
+$("#in-files").addEventListener("change", (e) => { enqueue([...e.target.files].map((file) => ({ file, rel: "" }))); e.target.value = ""; });
+$("#in-folder").addEventListener("change", (e) => { enqueue([...e.target.files].map((file) => ({ file, rel: (file.webkitRelativePath || "").split("/").slice(0, -1).join("/") }))); e.target.value = ""; });
+let dragDepth = 0;
+const dropTarget = () => (state.tab === "references" ? "references" : state.tab === "library" || state.tab === "footage" || state.tab === "review" ? "library" : null);
+window.addEventListener("dragenter", (e) => {
+  if (![...(e.dataTransfer?.types || [])].includes("Files") || !dropTarget()) return;
+  dragDepth++; $("#dropzone-t").textContent = dropTarget() === "references" ? "Drop to add references" : "Drop to add to the library"; $("#dropzone").classList.add("on");
+});
+window.addEventListener("dragleave", () => { dragDepth = Math.max(0, dragDepth - 1); if (!dragDepth) $("#dropzone").classList.remove("on"); });
+window.addEventListener("dragover", (e) => { if (dropTarget() && [...(e.dataTransfer?.types || [])].includes("Files")) e.preventDefault(); });
+window.addEventListener("drop", async (e) => {
+  dragDepth = 0; $("#dropzone").classList.remove("on");
+  const target = dropTarget(); if (!target || !e.dataTransfer?.files?.length) return;
+  e.preventDefault();
+  const items = await filesFromDrop(e.dataTransfer);
+  if (target === "references") addRefs(items.map((i) => i.file)); else enqueue(items);
+});
 async function filesFromDrop(dt) {
   const out = [];
   const walk = async (entry, dir) => {
@@ -368,7 +943,7 @@ function send(u) {
     xhr.onload = () => {
       let body = {}; try { body = JSON.parse(xhr.responseText); } catch {}
       u.progress = 1;
-      if (xhr.status === 201) { u.status = "done"; u.note = "added, waiting for review"; }
+      if (xhr.status === 201) { u.status = "done"; u.note = "added"; }
       else if (xhr.status === 200) { u.status = "done"; u.note = "already in the library"; }
       else { u.status = "failed"; u.note = body.outcome?.reason || body.error || `error ${xhr.status}`; }
       resolve();
@@ -380,13 +955,13 @@ function send(u) {
 function renderUploads() {
   const el = $("#uploads"); if (!el) return;
   const list = state.uploads.slice(-40);
-  el.innerHTML = list.map((u) => `<div class="u"><span title="${esc(u.rel ? u.rel + "/" : "")}${esc(u.file.name)}">${esc(u.file.name)}</span><progress max="1" value="${u.progress}"></progress><span class="${u.status === "failed" ? "badge failed" : "note"}">${esc(u.status === "sending" ? "uploading…" : u.note || u.status)}</span></div>`).join("");
+  el.innerHTML = list.map((u) => `<div class="row-i"><span title="${esc(u.rel ? u.rel + "/" : "")}${esc(u.file.name)}">${esc(u.file.name)}</span><progress max="1" value="${u.progress}"></progress><span class="${u.status === "failed" ? "badge failed" : "s"}">${esc(u.status === "sending" ? "uploading…" : u.note || u.status)}</span></div>`).join("");
 }
 async function finishUploads() {
   const done = state.uploads.filter((u) => u.status === "done").length, failed = state.uploads.filter((u) => u.status === "failed").length;
   toast(`${done} added${failed ? `, ${failed} failed` : ""}`);
   state.uploads = state.uploads.filter((u) => u.status === "failed");
-  await loadLibrary(); if (location.hash.slice(1).split("/")[0] === "library" || !location.hash) renderLibrary();
+  await loadLibrary(); if (state.tab === "library") renderLibrary();
   updateBadges();
 }
 
@@ -395,200 +970,201 @@ async function renderReview() {
   const [a, q] = await Promise.all([api("/api/assets?review=pending"), api("/api/queue")]);
   const list = a.assets; state.counts = a.counts;
   const folders = state.folders;
+  for (const id of [...state.picked]) if (!list.some((x) => x.id === id)) state.picked.delete(id);
   $("#main").innerHTML = `
-    <p class="note">What was dropped in waits here. Nothing below can be used by a reel on its own until you approve it, and Claude's and the machine's tags show in <em>italics</em> until you have. ${q.assets.length ? `<strong>${q.assets.length}</strong> still need Claude to look at them: run <code>${esc(q.command)}</code> in Claude Code <button id="copy-cmd">Copy command</button>` : ""}</p>
-    <div class="bar">
-      <button id="sel-all">Select all</button><button id="sel-none">Select none</button>
-      <button class="primary" id="approve" disabled>Approve</button><button id="approve-id" disabled title="Only for real brand marks and product screens">Approve as identity</button><button class="danger" id="reject" disabled>Reject</button>
-      <span class="note" id="picked"></span>
-    </div>
-    ${list.length === 0 ? `<p class="empty">Nothing is waiting for review.</p>` : `<div class="grid">${list.map((x) => `<div class="card ${state.picked.has(x.id) ? "sel" : ""}" data-asset="${x.id}"><input class="pick" type="checkbox" aria-label="Select ${esc(x.name)}" ${state.picked.has(x.id) ? "checked" : ""} data-pick="${x.id}"><div class="thumb ${x.mediaType === "audio" ? "wave" : ""}">${preview(x)}</div><div class="meta"><div class="name" title="${esc(x.name)}">${esc(x.name)}</div><div class="sub"><span class="badge ${x.assetKind}">${x.assetKind}</span>${x.queued ? `<span class="badge queued">needs Claude</span>` : ""}${x.folderId ? `<span class="badge">${esc((folders.find((f) => f.id === x.folderId) || {}).label || "folder")}</span>` : ""}${tagHtml(x, 6)}</div></div></div>`).join("")}</div>`}`;
-  const sync = () => { const n = state.picked.size; ["approve", "approve-id", "reject"].forEach((id) => { $("#" + id).disabled = n === 0; }); $("#picked").textContent = n ? `${n} selected` : ""; };
+    ${pageHead("Review", { actions: list.length ? `<button class="plain" id="sel-all">Select all</button>${state.picked.size ? `<button class="plain" id="sel-none">Select none</button>` : ""}` : "" })}
+    <p class="lede">What was dropped in waits here until you approve it. Claude's and the machine's tags show in <em>italics</em> until you have.</p>
+    ${q.assets.length ? `<div class="group" style="margin-bottom:20px"><div class="row-i"><span class="tile" style="background:var(--orange)">${ic("learnings", 16)}</span><div class="col"><span class="t">${q.assets.length} still need Claude to look at them</span><span class="s">Run <code>${esc(q.command)}</code> in Claude Code</span></div><button class="sm" id="copy-cmd">Copy</button></div></div>` : ""}
+    ${list.length === 0 ? emptyState("review", "Nothing is waiting", "New files from the library and your watched folders show up here.") : `<div class="grid">${list.map((x) => `<div class="card ${state.picked.has(x.id) ? "sel" : ""}" data-asset="${x.id}"><input class="pick" type="checkbox" aria-label="Select ${esc(x.name)}" ${state.picked.has(x.id) ? "checked" : ""} data-pick="${x.id}"><div class="thumb ${x.mediaType === "audio" ? "wave" : ""}">${preview(x)}</div><div class="meta"><div class="name" title="${esc(x.name)}">${esc(x.name)}</div><div class="sub">${x.assetKind === "identity" ? `<span class="badge identity">identity</span>` : ""}${x.queued ? `<span class="badge queued">needs Claude</span>` : ""}${x.folderId ? `<span class="badge">${esc((folders.find((f) => f.id === x.folderId) || {}).label || "folder")}</span>` : ""}${tagHtml(x, 4)}</div></div></div>`).join("")}</div>`}
+    <div id="fab-slot"></div>`;
+  const sync = () => {
+    const n = state.picked.size, slot = $("#fab-slot");
+    if (!n) { slot.innerHTML = ""; return; }
+    if (!$(".fab", slot)) {
+      slot.innerHTML = `<div class="fab liquid-glass liquid-glass-milky" role="toolbar" aria-label="Selection"><span class="count" id="picked"></span><button class="danger" id="reject">Reject</button><button id="approve-id" title="Only for real brand marks and product screens">As identity</button><button class="primary" id="approve">Approve</button></div>`;
+      act("approve", "approved"); act("approve-id", "approved", "identity"); act("reject", "rejected");
+    }
+    $("#picked").textContent = `${n} selected`;
+  };
+  const act = (id, st, kind) => $("#" + id).addEventListener("click", async () => {
+    try { await post("/api/assets/review", { ids: [...state.picked], state: st, ...(kind ? { kind } : {}) }); toast(`${state.picked.size} ${st}`); state.picked.clear(); await updateBadges(); renderReview(); } catch (e) { toast(e.message); }
+  });
   sync();
   $$("[data-pick]").forEach((el) => el.addEventListener("click", (e) => { e.stopPropagation(); el.checked ? state.picked.add(el.dataset.pick) : state.picked.delete(el.dataset.pick); el.closest(".card").classList.toggle("sel", el.checked); sync(); }));
   $$(".card[data-asset]").forEach((el) => el.addEventListener("click", (e) => { if (e.target.closest("input")) return; state.selected = el.dataset.asset; location.hash = "#library"; }));
   $("#sel-all")?.addEventListener("click", () => { list.forEach((x) => state.picked.add(x.id)); renderReview(); });
   $("#sel-none")?.addEventListener("click", () => { state.picked.clear(); renderReview(); });
   $("#copy-cmd")?.addEventListener("click", () => { navigator.clipboard?.writeText(q.command); toast("Command copied"); });
-  const act = (id, st, kind) => $("#" + id).addEventListener("click", async () => {
-    try { await post("/api/assets/review", { ids: [...state.picked], state: st, ...(kind ? { kind } : {}) }); toast(`${state.picked.size} ${st}`); state.picked.clear(); await updateBadges(); renderReview(); } catch (e) { toast(e.message); }
-  });
-  act("approve", "approved"); act("approve-id", "approved", "identity"); act("reject", "rejected");
 }
 
 // ---------- folders
 async function loadFolders() { state.folders = (await api("/api/folders")).folders; }
-function folderCard(f) {
+function folderRow(f) {
   const c = f.summary || {};
-  return `<div class="folder" data-folder="${f.id}">
-    <div class="top"><strong>${esc(f.label || f.path.split(/[\\/]/).pop())}</strong><code class="grow" title="${esc(f.path)}">${esc(f.path)}</code>${f.paused ? `<span class="badge failed">paused</span>` : `<span class="badge ok">watching</span>`}${f.lastError ? `<span class="badge failed" title="${esc(f.lastError)}">${esc(f.lastError)}</span>` : ""}</div>
-    <div class="row">
-      <span class="note">${c.ingested || 0} added · ${c.duplicate || 0} duplicates · ${c.skipped || 0} skipped · ${c.failed || 0} failed · last scan ${when(f.lastScanAt)}</span>
+  return `<div class="row-i swipe" data-folder="${f.id}"><div class="row-c">
+    <span class="tile" style="background:${f.paused ? "#8e8e93" : "var(--blue)"}">${ic("folders", 16)}</span>
+    <div class="col"><span class="t">${esc(f.label || f.path.split(/[\\/]/).pop())}</span><span class="s mono" title="${esc(f.path)}">${esc(f.path)}</span>
+      <span class="s">${c.ingested || 0} added · ${c.duplicate || 0} duplicates · ${c.skipped || 0} skipped · ${c.failed || 0} failed · last scan ${when(f.lastScanAt)}</span></div>
+    <div class="trail">${f.kind === "identity" ? `<span class="badge identity">identity</span>` : ""}${f.trusted ? `<span class="badge">trusted</span>` : ""}${f.private ? `<span class="badge">private</span>` : ""}${f.paused ? `<span class="badge failed">paused</span>` : `<span class="badge ok">watching</span>`}${f.lastError ? `<span class="badge failed" title="${esc(f.lastError)}">error</span>` : ""}<button class="icon" data-more aria-label="Actions for ${esc(f.label || f.path)}">${ic("more", 18)}</button></div>
+  </div></div>`;
+}
+function addFolderSheet() {
+  openSheet({ title: "Watch a folder", sub: "reelcut reads it and never writes to it. A Google Drive, Dropbox or OneDrive folder works: it is just a place on this computer.", body: `
+    <div class="group">
+      <div class="form-row"><label for="nf-path">Path</label><input id="nf-path" placeholder="/Users/you/Google Drive/Brand kit"></div>
+      <div class="form-row"><label for="nf-label">Name</label><input id="nf-label" placeholder="optional"></div>
+      <div class="form-row"><label for="nf-kind">Kind</label><select id="nf-kind"><option value="generic">Generic</option><option value="identity">Real brand marks or product screens</option></select></div>
     </div>
-    <div class="row">
-      <label class="inline">Kind <select data-f="kind"><option ${f.kind === "generic" ? "selected" : ""}>generic</option><option ${f.kind === "identity" ? "selected" : ""}>identity</option></select></label>
-      <label class="inline"><input type="checkbox" data-f="trusted" ${f.trusted ? "checked" : ""}> Trusted (skip review)</label>
-      <label class="inline"><input type="checkbox" data-f="private" ${f.private ? "checked" : ""}> Private (never shown to Claude)</label>
-      <span class="grow"></span>
-      <button data-f="pause">${f.paused ? "Resume this folder" : "Pause this folder"}</button><button data-f="rescan" ${f.paused ? "disabled" : ""}>Rescan now</button><button class="danger" data-f="remove">Stop watching</button>
+    <div class="group">
+      <div class="form-row"><label for="nf-trusted" class="grow">Trusted: skip review</label><input type="checkbox" class="switch" id="nf-trusted"></div>
+      <div class="form-row"><label for="nf-private" class="grow">Private: never shown to Claude</label><input type="checkbox" class="switch" id="nf-private"></div>
     </div>
-  </div>`;
+    <div class="acts"><button data-sclose>Cancel</button><button class="primary" id="nf-add">Watch folder</button></div>`,
+    bind: (s) => $("#nf-add", s).addEventListener("click", async () => {
+      try { await post("/api/folders", { path: $("#nf-path").value, label: $("#nf-label").value, kind: $("#nf-kind").value, trusted: $("#nf-trusted").checked, private: $("#nf-private").checked });
+        closeSheet(); toast("Watching; the first scan has started"); await updateBadges(); renderFolders(); } catch (e) { toast(e.message); }
+    }) });
 }
 async function renderFolders() {
   await Promise.all([loadFolders(), loadIngest()]);
   const s = state.ingest?.status;
   $("#main").innerHTML = `
-    <p class="note">reelcut reads these folders and never writes to them — a Google Drive, Dropbox or OneDrive folder works, since it is just a place on this computer. New files are checked, previewed and tagged, then wait in <a href="#review">Review</a> unless the folder is trusted. Removing a folder keeps everything already added. ${s?.paused ? `<strong>Everything is paused</strong> (top right).` : ""}</p>
-    <h2 class="sec">Add a folder</h2>
-    <div class="bar">
-      <input id="nf-path" class="grow" placeholder="Full path, e.g. C:\\Users\\you\\Google Drive\\Brand kit" aria-label="Folder path">
-      <input id="nf-label" placeholder="Name (optional)" aria-label="Name">
-      <label class="inline">Kind <select id="nf-kind"><option>generic</option><option>identity</option></select></label>
-      <label class="inline"><input type="checkbox" id="nf-trusted"> Trusted</label>
-      <label class="inline"><input type="checkbox" id="nf-private"> Private</label>
-      <button class="primary" id="nf-add">Watch folder</button>
-    </div>
-    <h2 class="sec">Watched folders</h2>
-    ${state.folders.length ? state.folders.map(folderCard).join("") : `<p class="empty">No folders yet.</p>`}
-    ${state.ingest?.summary.attention.length ? `<details><summary>Skipped and failed files (${state.ingest.summary.attention.length})</summary><pre>${esc(state.ingest.summary.attention.map((e) => `${e.state}  ${e.path}\n    ${e.reason || ""}`).join("\n"))}</pre></details>` : ""}`;
-  $("#nf-add").addEventListener("click", async () => {
-    try {
-      await post("/api/folders", { path: $("#nf-path").value, label: $("#nf-label").value, kind: $("#nf-kind").value, trusted: $("#nf-trusted").checked, private: $("#nf-private").checked });
-      toast("Watching; the first scan has started"); await updateBadges(); renderFolders();
-    } catch (e) { toast(e.message); }
-  });
-  $$("[data-folder]").forEach((card) => {
-    const id = card.dataset.folder, f = state.folders.find((x) => x.id === id);
-    $$("[data-f]", card).forEach((el) => {
-      const key = el.dataset.f;
-      if (el.tagName === "BUTTON") el.addEventListener("click", async () => {
-        try {
-          if (key === "pause") await patch(`/api/folders/${id}`, { paused: !f.paused });
-          if (key === "rescan") { await post(`/api/folders/${id}/rescan`); toast("Scanning…"); }
-          if (key === "remove") { if (!confirm("Stop watching this folder? Assets already added stay.")) return; await api(`/api/folders/${id}`, { method: "DELETE" }); }
-          await updateBadges(); renderFolders();
-        } catch (e) { toast(e.message); }
-      });
-      else el.addEventListener("change", async () => { try { await patch(`/api/folders/${id}`, { [key]: el.type === "checkbox" ? el.checked : el.value }); toast("Saved"); } catch (e) { toast(e.message); } });
-    });
+    ${pageHead("Folders", { actions: `<button class="primary" id="nf-open">${ic("plus", 16)}Add folder</button>` })}
+    <p class="lede">New files in these folders are checked, previewed and tagged, then wait in <a href="#review">Review</a> unless the folder is trusted. Removing a folder keeps everything already added.${s?.paused ? ` <b style="color:var(--label)">Everything is paused.</b>` : ""}</p>
+    ${state.folders.length ? `<div class="group">${state.folders.map(folderRow).join("")}</div>` : emptyState("folders", "No folders yet", "Watch a folder and anything saved into it comes into the library by itself.", `<button class="primary" id="nf-empty">${ic("plus", 16)}Add folder</button>`)}
+    ${state.ingest?.summary.attention.length ? `<details class="group"><summary>Skipped and failed files (${state.ingest.summary.attention.length})</summary><pre>${esc(state.ingest.summary.attention.map((e) => `${e.state}  ${e.path}\n    ${e.reason || ""}`).join("\n"))}</pre></details>` : ""}`;
+  $("#nf-open").addEventListener("click", addFolderSheet); $("#nf-empty")?.addEventListener("click", addFolderSheet);
+  $$("[data-folder]").forEach((row) => {
+    const id = row.dataset.folder, f = state.folders.find((x) => x.id === id);
+    const set = async (body, msg) => { try { await patch(`/api/folders/${id}`, body); toast(msg); await updateBadges(); renderFolders(); } catch (e) { toast(e.message); } };
+    rowActions(row, () => [
+      { label: "Trusted: skip review", check: f.trusted, act: () => set({ trusted: !f.trusted }, "Saved") },
+      { label: "Private: never shown to Claude", check: f.private, act: () => set({ private: !f.private }, "Saved") },
+      { label: "Real brand marks or product screens", check: f.kind === "identity", act: () => set({ kind: f.kind === "identity" ? "generic" : "identity" }, "Saved") },
+      { sep: true },
+      { label: f.paused ? "Resume this folder" : "Pause this folder", short: f.paused ? "Resume" : "Pause", swipe: true, act: () => set({ paused: !f.paused }, f.paused ? "Resumed" : "Paused") },
+      ...(f.paused ? [] : [{ label: "Rescan now", act: async () => { try { await post(`/api/folders/${id}/rescan`); toast("Scanning…"); } catch (e) { toast(e.message); } } }]),
+      { sep: true },
+      { label: "Stop watching", short: "Remove", danger: true, swipe: true, act: async () => {
+        if (!(await ask({ title: "Stop watching this folder?", detail: "Assets already added stay in the library.", ok: "Stop watching", danger: true }))) return;
+        try { await api(`/api/folders/${id}`, { method: "DELETE" }); toast("Stopped watching"); await updateBadges(); renderFolders(); } catch (e) { toast(e.message); }
+      } },
+    ]);
   });
 }
 
 // ---------- learnings
 async function loadLearn() { state.learn = await api("/api/learnings"); }
 const SUBJECTS = { look: ["paper", "ink", "flood", "sky", "cinema", "poster", "cool"], motion: ["restrained", "default", "energetic"], text: ["full", "key-lines", "minimal", "none"], format: ["1:1", "9:16", "16:9", "4:5"], sound: ["effects", "silent"], pattern: [], accent: [] };
-function ruleCard(r) {
+function ruleRow(r) {
   const conflict = r.conflictWith.length > 0;
-  return `<div class="rule ${conflict ? "conflict" : ""}" data-rule="${r.id}">
-    <div class="top">
-      <span class="badge ${r.status}">${r.status}</span>${conflict ? `<span class="badge failed" title="the opposite rule exists in this scope: neither is applied until you resolve it">conflict</span>` : ""}
-      <input class="text" data-r="text" value="${esc(r.text)}" aria-label="Rule text">
-      <select data-r="scope" aria-label="Scope"><option value="global" ${r.scope === "global" ? "selected" : ""}>everywhere</option>${r.scope !== "global" ? `<option value="${esc(r.scope)}" selected>${esc(r.scope.replace("brand:", "for "))}</option>` : ""}</select>
-      <span class="bar2" title="confidence ${r.confidence}"><i style="width:${Math.round(r.confidence * 100)}%"></i></span>
+  return `<div class="row-i swipe" data-rule="${r.id}"><div class="row-c">
+    <input class="bare" data-r="text" value="${esc(r.text)}" aria-label="Rule text">
+    <div class="trail">
+      ${conflict ? `<span class="badge failed" title="The opposite rule exists in this scope: neither is applied until you resolve it">conflict</span>` : ""}${r.pinned ? `<span class="badge">pinned</span>` : ""}
+      <select class="sm-select" data-r="scope" aria-label="Scope"><option value="global" ${r.scope === "global" ? "selected" : ""}>everywhere</option>${r.scope !== "global" ? `<option value="${esc(r.scope)}" selected>${esc(r.scope.replace("brand:", "for "))}</option>` : ""}</select>
+      <span class="meter" title="confidence ${r.confidence}"><i style="width:${Math.round(r.confidence * 100)}%"></i></span>
+      ${r.status !== "active" ? `<button class="sm primary" data-r="accept">${r.status === "proposed" ? "Accept" : "Turn on"}</button>` : ""}
+      <button class="icon" data-more aria-label="More for this rule">${ic("more", 18)}</button>
     </div>
-    <div class="row" style="margin-top:8px">
-      <span class="note">${r.origin === "user" ? "written or edited by you" : `inferred from ${r.evidence.length} signal${r.evidence.length === 1 ? "" : "s"}`} · last seen ${when(r.lastSeenAt)}</span><span class="grow"></span>
-      ${r.status !== "active" ? `<button class="primary" data-r="accept">${r.status === "proposed" ? "Accept" : "Turn on"}</button>` : `<button data-r="disable">Turn off</button>`}
-      <button data-r="pin" class="${r.pinned ? "on" : ""}" title="A pinned rule never expires">${r.pinned ? "Pinned" : "Pin"}</button>
-      <button data-r="why">Why?</button><button class="danger" data-r="delete">Delete</button>
-    </div>
-    <div class="why" hidden></div>
-  </div>`;
+    <span class="s" style="width:100%">${r.origin === "user" ? "Written or edited by you" : `Inferred from ${r.evidence.length} signal${r.evidence.length === 1 ? "" : "s"}`} · last seen ${when(r.lastSeenAt)}</span>
+    <div class="why" style="width:100%" hidden></div>
+  </div></div>`;
 }
 async function renderLearnings() {
   await loadLearn();
   const { rules, notes } = state.learn;
-  const group = (title, list) => list.length ? `<h2 class="sec">${title} (${list.length})</h2>${list.map(ruleCard).join("")}` : "";
+  const group = (title, list, note = "") => list.length ? `<div class="cap"><b>${title}</b> ${list.length}</div><div class="group">${list.map(ruleRow).join("")}</div>${note ? `<p class="foot-note">${note}</p>` : ""}` : "";
   $("#main").innerHTML = `
-    <p class="note">What the studio has noticed about your taste. Claude reads only the rules that are <strong>on</strong>, at the start of each reel, and lists the ones it applied in the plan. Proposed rules do nothing until you accept them. Edit a sentence and the rule becomes yours.</p>
-    <div class="bar"><button id="export">Export</button><label class="inline">Import <input type="file" id="import" accept="application/json" aria-label="Import learnings"></label><span class="note">${state.learn.signals} signals recorded</span></div>
+    ${pageHead("Learnings", { actions: `<button class="icon" id="l-more" aria-label="Export or import">${ic("more", 20)}</button>` })}
+    <p class="lede">What the studio has noticed about your taste. Claude reads only the rules that are on, at the start of each reel. Edit a sentence and the rule becomes yours. ${state.learn.signals} signals recorded.</p>
     ${group("On", rules.filter((r) => r.status === "active" && !r.conflictWith.length))}
-    ${group("In conflict", rules.filter((r) => r.conflictWith.length && (r.status === "active" || r.status === "proposed")))}
-    ${group("Proposed", rules.filter((r) => r.status === "proposed" && !r.conflictWith.length))}
+    ${group("In conflict", rules.filter((r) => r.conflictWith.length && (r.status === "active" || r.status === "proposed")), "Neither rule of a conflicting pair is applied until you turn one off.")}
+    ${group("Proposed", rules.filter((r) => r.status === "proposed" && !r.conflictWith.length), "Proposed rules do nothing until you accept them.")}
     ${group("Off or expired", rules.filter((r) => r.status === "disabled" || r.status === "expired"))}
-    ${rules.length ? "" : `<p class="empty">Nothing learned yet. Render a few reels and leave a thumb on the beats you like or don't, and proposals will appear here.</p>`}
-    <h2 class="sec">Write a rule</h2>
-    <div class="bar">
-      <select id="nr-kind"><option value="note">Note (any guidance)</option><option value="prefer">Prefer</option><option value="avoid">Avoid</option></select>
-      <select id="nr-type" aria-label="Subject"><option value="">—</option>${Object.keys(SUBJECTS).map((k) => `<option>${k}</option>`).join("")}</select>
-      <input id="nr-value" placeholder="value, e.g. cool or #2f5bff" aria-label="Subject value">
-      <input id="nr-text" class="grow" placeholder="In your words (for a note), e.g. never more than two accent colours" aria-label="Rule text">
-      <input id="nr-brand" placeholder="Brand (optional)" aria-label="Brand">
-      <button class="primary" id="nr-add">Add</button>
+    ${rules.length ? "" : emptyState("learnings", "Nothing learned yet", "Render a few reels and say which beats work, and proposals appear here.")}
+    <div class="cap"><b>Write a rule</b></div>
+    <div class="group">
+      <div class="form-row"><label for="nr-kind">Kind</label><select id="nr-kind"><option value="note">Note (any guidance)</option><option value="prefer">Prefer</option><option value="avoid">Avoid</option></select></div>
+      <div class="form-row"><label for="nr-type">About</label><select id="nr-type"><option value="">—</option>${Object.keys(SUBJECTS).map((k) => `<option>${k}</option>`).join("")}</select><input id="nr-value" placeholder="value, e.g. cool or #2f5bff" aria-label="Value"></div>
+      <div class="form-row"><label for="nr-text">In your words</label><input id="nr-text" placeholder="e.g. never more than two accent colours"></div>
+      <div class="form-row"><label for="nr-brand">Brand</label><input id="nr-brand" placeholder="optional"><button class="primary" id="nr-add">Add</button></div>
     </div>
-    ${notes.length ? `<h2 class="sec">Notes you left on beats</h2>${notes.map((n) => `<div class="rule"><div class="top"><span class="grow">${esc(n.note)}</span><span class="note">${esc(n.reel || "")} ${esc(n.beat || "")} · ${when(n.at)}</span><button data-promote="${n.id}">Make it a rule</button></div></div>`).join("")}` : ""}`;
-  $("#export").addEventListener("click", async () => {
-    const data = await api("/api/learnings/export"); const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })); a.download = "reelcut-learnings.json"; a.click(); URL.revokeObjectURL(a.href);
-  });
-  $("#import").addEventListener("change", async (e) => {
-    const file = e.target.files[0]; if (!file) return;
-    try { const r = await api("/api/learnings/import", { method: "POST", body: await file.text() }); toast(`Imported ${r.added} new, ${r.replaced} replaced, ${r.skipped} skipped. Inferred rules arrive as proposals.`); renderLearnings(); } catch (err) { toast(err.message); }
-  });
+    ${notes.length ? `<div class="cap"><b>Notes you left on beats</b></div><div class="group">${notes.map((n) => `<div class="row-i wrap"><div class="col"><span class="t">${esc(n.note)}</span><span class="s">${esc(n.reel || "")} ${esc(n.beat || "")} · ${when(n.at)}</span></div><button class="sm" data-promote="${n.id}">Make it a rule</button></div>`).join("")}</div>` : ""}`;
+  $("#l-more").addEventListener("click", (e) => openMenu(e.currentTarget, [
+    { label: "Export…", act: async () => { const data = await api("/api/learnings/export"); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })); a.download = "reelcut-learnings.json"; a.click(); URL.revokeObjectURL(a.href); } },
+    { label: "Import…", act: () => $("#import").click() },
+  ]));
   $("#nr-add").addEventListener("click", async () => {
     const type = $("#nr-type").value, value = $("#nr-value").value.trim();
-    try {
-      await post("/api/learnings/rules", { kind: $("#nr-kind").value, ...(type && value ? { subject: { type, value } } : {}), text: $("#nr-text").value || undefined, brand: $("#nr-brand").value || undefined });
-      toast("Added and on"); await updateBadges(); renderLearnings();
-    } catch (err) { toast(err.message); }
+    try { await post("/api/learnings/rules", { kind: $("#nr-kind").value, ...(type && value ? { subject: { type, value } } : {}), text: $("#nr-text").value || undefined, brand: $("#nr-brand").value || undefined }); toast("Added and on"); await updateBadges(); renderLearnings(); } catch (err) { toast(err.message); }
   });
   $$("[data-promote]").forEach((el) => el.addEventListener("click", async () => {
-    const text = prompt("Rule, in your words:", state.learn.notes.find((n) => n.id === el.dataset.promote)?.note || ""); if (!text) return;
+    const text = await askText({ title: "Make it a rule", value: state.learn.notes.find((n) => n.id === el.dataset.promote)?.note || "", ok: "Add rule" }); if (!text) return;
     try { await post("/api/learnings/promote", { signal: el.dataset.promote, text }); toast("Added and on"); renderLearnings(); } catch (err) { toast(err.message); }
   }));
-  $$("[data-rule]").forEach((card) => {
-    const id = card.dataset.rule, r = rules.find((x) => x.id === id);
+  $$("[data-rule]").forEach((row) => {
+    const id = row.dataset.rule, r = rules.find((x) => x.id === id);
     const save = async (body, msg) => { try { await patch(`/api/learnings/rules/${id}`, body); toast(msg); await updateBadges(); renderLearnings(); } catch (err) { toast(err.message); } };
-    $("[data-r=text]", card).addEventListener("change", (e) => save({ text: e.target.value }, "Saved: this rule is now yours"));
-    $("[data-r=scope]", card).addEventListener("change", (e) => save({ scope: e.target.value }, "Saved"));
-    $("[data-r=accept]", card)?.addEventListener("click", () => save({ status: "active" }, "On: Claude will apply it"));
-    $("[data-r=disable]", card)?.addEventListener("click", () => save({ status: "disabled" }, "Off"));
-    $("[data-r=pin]", card).addEventListener("click", () => save({ pinned: !r.pinned }, r.pinned ? "Unpinned" : "Pinned"));
-    $("[data-r=delete]", card).addEventListener("click", async () => { try { await api(`/api/learnings/rules/${id}`, { method: "DELETE" }); toast("Deleted"); await updateBadges(); renderLearnings(); } catch (err) { toast(err.message); } });
-    $("[data-r=why]", card).addEventListener("click", async () => {
-      const box = $(".why", card); if (!box.hidden) { box.hidden = true; return; }
+    $("[data-r=text]", row).addEventListener("change", (e) => save({ text: e.target.value }, "Saved: this rule is now yours"));
+    $("[data-r=scope]", row).addEventListener("change", (e) => save({ scope: e.target.value }, "Saved"));
+    $("[data-r=accept]", row)?.addEventListener("click", () => save({ status: "active" }, "On: Claude will apply it"));
+    const why = async () => {
+      const box = $(".why", row); if (!box.hidden) { box.hidden = true; return; }
       const { evidence } = await api(`/api/learnings/why/${id}`);
       box.innerHTML = evidence.length ? `<pre>${esc(evidence.map((s) => `${s.type.padEnd(8)} ${s.subject ? s.subject.type + " " + s.subject.value : ""}${s.rating ? " " + s.rating : ""}  reel ${s.reel || "—"} ${s.beat || ""}  ${when(s.at)}${s.note ? "\n         “" + s.note + "”" : ""}`).join("\n"))}</pre>` : `<p class="note">No evidence on file: you wrote this one, or its signals have aged out.</p>`;
       box.hidden = false;
-    });
+    };
+    rowActions(row, () => [
+      ...(r.status === "active" ? [{ label: "Turn off", act: () => save({ status: "disabled" }, "Off") }] : [{ label: r.status === "proposed" ? "Accept" : "Turn on", short: r.status === "proposed" ? "Accept" : "On", accent: true, swipe: true, act: () => save({ status: "active" }, "On: Claude will apply it") }]),
+      { label: r.pinned ? "Unpin" : "Pin (never expires)", act: () => save({ pinned: !r.pinned }, r.pinned ? "Unpinned" : "Pinned") },
+      { label: "Why?", act: why },
+      { sep: true },
+      { label: "Delete", danger: true, swipe: true, act: async () => { try { await api(`/api/learnings/rules/${id}`, { method: "DELETE" }); toast("Deleted"); await updateBadges(); renderLearnings(); } catch (err) { toast(err.message); } } },
+    ]);
   });
 }
+$("#import").addEventListener("change", async (e) => {
+  const file = e.target.files[0]; e.target.value = ""; if (!file) return;
+  try { const r = await api("/api/learnings/import", { method: "POST", body: await file.text() }); toast(`Imported ${r.added} new, ${r.replaced} replaced, ${r.skipped} skipped`); renderLearnings(); } catch (err) { toast(err.message); }
+});
 
 // ---------- reels
 async function loadRuns() { state.runs = (await api("/api/runs")).runs; }
 function runFile(run, rel) { return `/files/run/${run.id}/${rel.split("/").map(encodeURIComponent).join("/")}`; }
 function runTitle(run) { const parts = run.outDir.split(/[\\/]/).filter(Boolean); return parts.slice(-2).join("/"); }
 function renderReels() {
-  if (state.runs.length === 0) { $("#main").innerHTML = `<p class="empty">No reels yet. Every <code>npm run render -- reel.json</code> shows up here.</p>`; return; }
-  $("#main").innerHTML = `<div class="grid">${state.runs.map((r) => `
-    <a class="card" href="#reels/${r.id}" style="text-decoration:none">
+  $("#main").innerHTML = `${pageHead("Reels")}${state.runs.length === 0 ? emptyState("reels", "No reels yet", "Every <code>npm run render -- reel.json</code> shows up here, with its clips, the master and the report.") : `<div class="grid">${state.runs.map((r) => `
+    <a class="card" href="#reels/${r.id}">
       <div class="thumb">${r.missing ? `<span class="ext">gone</span>` : r.poster ? `<img src="${runFile(r, r.poster)}" alt="">` : r.clips[0] ? `<video src="${runFile(r, r.clips[0])}#t=0.5" muted preload="metadata"></video>` : `<span class="ext">—</span>`}</div>
       <div class="meta"><div class="name" title="${esc(r.outDir)}">${esc(runTitle(r))}</div>
-        <div class="sub"><span>${when(r.renderedAt)}</span><span>${r.clips.length} clips</span>${r.missing ? `<span class="badge missing">missing</span>` : ""}</div></div>
-    </a>`).join("")}</div>`;
+        <div class="sub"><span>${when(r.renderedAt)}</span><span>· ${r.clips.length} clips</span>${r.missing ? `<span class="badge missing">missing</span>` : ""}</div></div>
+    </a>`).join("")}</div>`}`;
 }
 async function renderReel(id) {
   let data;
-  try { data = await api(`/api/runs/${id}`); } catch (e) { $("#main").innerHTML = `<p class="empty">${esc(e.message)}</p>`; return; }
+  try { data = await api(`/api/runs/${id}`); } catch (e) { $("#main").innerHTML = `${pageHead("Reel", { back: `<a class="back" href="#reels">${ic("back", 20)}Reels</a>` })}${emptyState("reels", "That reel is not here", esc(e.message))}`; return; }
   const { run, plan, report, feedback = [], applied = [], generation = [] } = data;
   const running = state.jobs.find((j) => j.status === "running");
   const fb = (b) => feedback.find((f) => f.beat === b) || {};
   $("#main").innerHTML = `
-    <div class="reel-head"><a href="#reels">← Reels</a><h2>${esc(runTitle(run))}</h2><span class="mono" style="color:var(--muted)">${esc(run.outDir)}</span>${run.brand ? `<span class="badge">${esc(run.brand)}</span>` : ""}${run.missing ? `<span class="badge missing">folder missing</span>` : ""}</div>
+    ${pageHead(esc(runTitle(run)), { back: `<a class="back" href="#reels">${ic("back", 20)}Reels</a>`, actions: `${run.brand ? `<span class="badge">${esc(run.brand)}</span>` : ""}${run.missing ? `<span class="badge missing">folder missing</span>` : ""}` })}
+    <p class="lede mono" style="font-size:12px;margin-top:-8px">${esc(run.outDir)}</p>
     ${run.master && !run.missing ? `<div class="master"><video src="${runFile(run, run.master)}" controls preload="metadata" ${run.poster ? `poster="${runFile(run, run.poster)}"` : ""}></video></div>` : ""}
-    <p class="note">Tell the studio what works. A thumb on a beat is the clearest signal it gets; a note stays on the beat and can become a rule in <a href="#learnings">Learnings</a>.</p>
+    <div class="cap"><b>Beats</b> ${run.beats.length}<span class="grow"></span><span>Say what works: a thumb on a beat is the clearest signal the studio gets.</span></div>
     <div class="clips">${run.beats.map((b) => {
       const clip = run.clips.find((c) => c === `clips/${b}.mp4`), f = fb(b);
       return `<div class="clip" data-beat="${esc(b)}">
         ${clip && !run.missing ? `<video src="${runFile(run, clip)}?v=${encodeURIComponent(run.renderedAt)}" controls preload="metadata"></video>` : `<div class="thumb"><span class="ext">no clip</span></div>`}
-        <div class="meta"><div class="top"><span class="mono">${esc(b)}</span><button data-render="${esc(b)}" ${run.missing || running ? "disabled" : ""}>Re-render</button></div>
-          <div class="fb"><button data-rate="up" class="${f.rating === "up" ? "on" : ""}" aria-pressed="${f.rating === "up"}">Works</button><button data-rate="down" class="${f.rating === "down" ? "on" : ""}" aria-pressed="${f.rating === "down"}">Not quite</button><input data-note placeholder="Note…" value="${esc(f.note || "")}" aria-label="Note for ${esc(b)}"><button data-save-note>Save</button></div></div>
+        <div class="meta"><div class="top"><span class="mono">${esc(b)}</span><button class="sm" data-render="${esc(b)}" ${run.missing || running ? "disabled" : ""}>Re-render</button></div>
+          <div class="fb"><div class="seg" role="group" aria-label="Rate ${esc(b)}"><button data-rate="up" aria-pressed="${f.rating === "up"}">Works</button><button data-rate="down" aria-pressed="${f.rating === "down"}">Not quite</button><span class="thumb-s"></span></div><input data-note placeholder="Note…" value="${esc(f.note || "")}" aria-label="Note for ${esc(b)}"><button class="sm" data-save-note>Save</button></div></div>
       </div>`; }).join("")}</div>
-    ${generation.length ? `<details open><summary>Higgsfield (${generation.filter((g) => g.outcome === "generated").length} generated, ${generation.filter((g) => g.outcome === "fallback").length} fell back)</summary><ul>${generation.map((g) => `<li><span class="mono">${esc(g.beat)}</span> <span class="badge ${g.outcome === "generated" ? "ok" : g.outcome === "fallback" ? "warn" : ""}">${esc(g.outcome)}</span> ${esc(g.reason || "")}${g.assetId ? ` <a href="#library" data-lib="${g.assetId}" class="mono">${g.assetId}</a>` : ""}</li>`).join("")}</ul><p class="note">Every beat that was not generated was composed in HyperFrames.</p></details>` : ""}
-    ${applied.length ? `<details open><summary>Learnings applied to this reel (${applied.length})</summary><ul>${applied.map((r) => `<li>${esc(r.text)} <span class="note">${r.status === "active" ? "" : "(" + r.status + ")"}</span></li>`).join("")}</ul></details>` : ""}
-    ${run.libraryAssets.length ? `<details open><summary>Library assets used (${run.libraryAssets.length})</summary><p>${run.libraryAssets.map((a) => `<a href="#library" data-lib="${a}" class="mono">${a}</a>`).join(" · ")}</p></details>` : ""}
-    ${report ? `<details><summary>report.md</summary><pre>${esc(report)}</pre></details>` : ""}
-    ${plan ? `<details><summary>plan.md</summary><pre>${esc(plan)}</pre></details>` : ""}`;
+    ${generation.length ? `<details class="group" open><summary>Higgsfield · ${generation.filter((g) => g.outcome === "generated").length} generated, ${generation.filter((g) => g.outcome === "fallback").length} fell back</summary><ul>${generation.map((g) => `<li><span class="mono">${esc(g.beat)}</span> <span class="badge ${g.outcome === "generated" ? "ok" : g.outcome === "fallback" ? "warn" : ""}">${esc(g.outcome)}</span> ${esc(g.reason || "")}${g.assetId ? ` <a href="#library" data-lib="${g.assetId}" class="mono">${g.assetId}</a>` : ""}</li>`).join("")}</ul><p class="note">Every beat that was not generated was composed in HyperFrames.</p></details>` : ""}
+    ${applied.length ? `<details class="group" open><summary>Learnings applied · ${applied.length}</summary><ul>${applied.map((r) => `<li>${esc(r.text)} <span class="note">${r.status === "active" ? "" : "(" + r.status + ")"}</span></li>`).join("")}</ul></details>` : ""}
+    ${run.libraryAssets.length ? `<details class="group" open><summary>Library assets used · ${run.libraryAssets.length}</summary><p>${run.libraryAssets.map((a) => `<a href="#library" data-lib="${a}" class="mono">${a}</a>`).join(" · ")}</p></details>` : ""}
+    ${report ? `<details class="group"><summary>report.md</summary><pre>${esc(report)}</pre></details>` : ""}
+    ${plan ? `<details class="group"><summary>plan.md</summary><pre>${esc(plan)}</pre></details>` : ""}`;
+  $$(".clip .seg").forEach((s) => placeThumb(s, false));
   $$("[data-lib]").forEach((el) => el.addEventListener("click", () => { state.selected = el.dataset.lib; }));
   $$("[data-render]").forEach((el) => el.addEventListener("click", async () => {
     try { await post(`/api/runs/${run.id}/render`, { beat: el.dataset.render }); toast(`Rendering ${el.dataset.render}…`); location.hash = "#jobs"; } catch (e) { toast(e.message); }
@@ -597,8 +1173,8 @@ async function renderReel(id) {
     const beat = card.dataset.beat;
     const send = async (body, msg) => { try { await post(`/api/runs/${run.id}/feedback`, { beat, ...body }); toast(msg); } catch (e) { toast(e.message); } };
     $$("[data-rate]", card).forEach((b) => b.addEventListener("click", async () => {
+      $$("[data-rate]", card).forEach((x) => x.setAttribute("aria-pressed", String(x === b))); placeThumb($(".seg", card), true);
       await send({ rating: b.dataset.rate, note: $("[data-note]", card).value }, b.dataset.rate === "up" ? "Noted: this works" : "Noted: not quite");
-      $$("[data-rate]", card).forEach((x) => { x.classList.toggle("on", x === b); x.setAttribute("aria-pressed", String(x === b)); });
     }));
     $("[data-save-note]", card).addEventListener("click", () => { const note = $("[data-note]", card).value.trim(); if (note) send({ note }, "Note saved"); });
   });
@@ -607,11 +1183,9 @@ async function renderReel(id) {
 // ---------- jobs
 async function loadJobs() { state.jobs = (await api("/api/jobs")).jobs; }
 function renderJobs() {
-  if (state.jobs.length === 0) { $("#main").innerHTML = `<p class="empty">No renders started from the studio yet.</p>`; return; }
-  $("#main").innerHTML = state.jobs.map((j) => `
-    <div class="job"><div class="top"><span class="badge ${j.status}">${j.status}</span><strong class="mono">${esc(j.beat)}</strong>
-      <a href="#reels/${j.runId}">reel ${j.runId}</a><span style="color:var(--muted)">${when(j.startedAt)}</span></div>
-      <pre>${esc(j.log.slice(-40).join("\n")) || "…"}</pre></div>`).join("");
+  $("#main").innerHTML = `${pageHead("Jobs")}${state.jobs.length === 0 ? emptyState("jobs", "No renders yet", "Re-render a beat from a reel and it runs here, with its log.") : `<div class="group">${state.jobs.map((j) => `
+    <details class="row-i wrap" style="display:block;padding:0" ${j.status === "running" ? "open" : ""}><summary class="row-i" style="cursor:pointer;list-style:none"><span class="badge ${j.status}">${j.status}</span><span class="t mono">${esc(j.beat)}</span><a href="#reels/${j.runId}" class="s">reel ${j.runId}</a><span class="s grow" style="text-align:right">${when(j.startedAt)}</span></summary>
+      <pre style="padding:0 16px 14px">${esc(j.log.slice(-40).join("\n")) || "…"}</pre></details>`).join("")}</div>`}`;
 }
 
 // ---------- footage: recordings, marked into moments a script line can use
@@ -623,11 +1197,10 @@ async function loadFootage() { const r = await api("/api/assets?type=video"); st
 function footageOf(a) { return Object.assign({ muted: true, moments: [] }, a.footage || {}); }
 function footageCard(a) {
   const f = footageOf(a), n = f.moments.length, byClaude = f.moments.filter((m) => m.origin === "claude").length;
-  const ready = n > 0;
-  return `<div class="card ${a.id === state.fsel ? "sel" : ""}" data-fa="${a.id}">
+  return `<div class="card ${a.id === state.fsel ? "sel" : ""}" data-fa="${a.id}" role="button" tabindex="0" aria-pressed="${a.id === state.fsel}">
     <div class="thumb" style="aspect-ratio:16/10">${preview(a)}</div>
     <div class="meta"><div class="name" title="${esc(a.name)}">${esc(f.app ? f.app + ": " : "")}${esc(a.name)}</div>
-      <div class="sub"><span class="badge">${n} moment${n === 1 ? "" : "s"}</span>${byClaude ? `<span class="badge" title="Marked by Claude from the filmstrip; used like any other">${byClaude} by Claude</span>` : ""}${keyBadge(a)}${ready ? `<span class="badge ok">ready</span>` : ""}</div></div></div>`;
+      <div class="sub">${n ? `<span>${n} moment${n === 1 ? "" : "s"}${byClaude ? ` · ${byClaude} by Claude` : ""}</span>` : `<span class="badge warn">no moments</span>`}${keyBadge(a)}</div></div></div>`;
 }
 // ---------- green screens: detected on ingest, keyed to a transparent copy in the background
 function keyBadge(a) {
@@ -635,7 +1208,7 @@ function keyBadge(a) {
   if (!k) return "";
   if (!k.wanted) return `<span class="badge" title="A green screen was found; keying is off, so it is used as recorded">green, off</span>`;
   if (k.keyed) return `<span class="badge ok" title="The green is keyed out; the original is untouched">keyed</span>`;
-  if (k.state === "failed" || k.error) return `<span class="badge warn" title="${esc(k.error || "")}">key failed</span>`;
+  if (k.state === "failed" || k.error) return `<span class="badge failed" title="${esc(k.error || "")}">key failed</span>`;
   return `<span class="badge warn" title="Being keyed in the background">keying…</span>`;
 }
 function keySection(a) {
@@ -643,25 +1216,25 @@ function keySection(a) {
   if (!k) return "";
   const key = Object.assign({ enabled: true, tolerance: 0.06, softness: 1, despill: 1, shadows: "keep", choke: 0 }, (a.footage && a.footage.key) || {});
   const busy = k.state === "queued" || k.state === "running";
-  const status = !k.wanted ? "Keying is off: this recording is used as recorded, green and all." : busy ? "Keying in the background… the preview updates when it is done." : k.keyed ? "Keyed. The original is untouched; the copy is saved and reused." : k.error ? `Could not key it: ${esc(k.error)}` : "Not keyed yet.";
-  const range = (name, min, max, step, label, tip) => `<label class="inline" title="${esc(tip)}">${label} <input type="range" data-k="${name}" min="${min}" max="${max}" step="${step}" value="${key[name]}"> <span class="mono" data-kv="${name}">${key[name]}</span></label>`;
-  return `<h2 class="sec">Green screen</h2>
-  <div class="keybox">
-    <div class="r"><label class="inline"><input type="checkbox" data-k="enabled" ${key.enabled ? "checked" : ""}> Remove the green screen</label><span class="note">${status}</span></div>
-    ${a.keyedUrl ? `<div class="r"><span class="note">Preview</span><button id="key-orig">Original</button><button id="key-keyed" class="primary">Keyed on a checkerboard</button></div>` : ""}
-    <div class="r">${range("tolerance", 0, 0.3, 0.01, "Tolerance", "How much green still counts as backdrop. Raise it if green specks remain; lower it if the subject's edges thin out.")}${range("softness", 0, 1, 0.05, "Softness", "1 keeps the anti-aliased edge; 0 cuts a hard edge.")}</div>
-    <div class="r">${range("despill", 0, 1, 0.05, "Despill", "How much green is taken out of the edges.")}<label class="inline" title="Eat into the edge by this many pixels, for a stubborn halo">Edge choke <select data-k="choke">${[0, 1, 2, 3].map((v) => `<option ${v === key.choke ? "selected" : ""}>${v}</option>`).join("")}</select> px</label></div>
-    <div class="r"><label class="inline">Shadows <select data-k="shadows"><option value="keep" ${key.shadows === "keep" ? "selected" : ""}>Keep as a soft shadow</option><option value="drop" ${key.shadows === "drop" ? "selected" : ""}>Remove</option></select></label><button class="primary" id="key-apply">Apply and re-key</button></div>
+  const status = !k.wanted ? "Used as recorded, green and all." : busy ? "Keying in the background… the preview updates when it is done." : k.keyed ? "Keyed. The original is untouched; the copy is saved and reused." : k.error ? `Could not key it: ${esc(k.error)}` : "Not keyed yet.";
+  const range = (name, min, max, step, label, tip) => `<div class="keyrange" title="${esc(tip)}"><label for="k-${name}">${label}</label><input id="k-${name}" type="range" data-k="${name}" min="${min}" max="${max}" step="${step}" value="${key[name]}"><span class="v" data-kv="${name}">${key[name]}</span></div>`;
+  return `<div class="cap">Green screen</div>
+  <div class="group">
+    <div class="form-row"><div class="col grow"><span class="t">Remove the green screen</span><span class="s">${status}</span></div><input type="checkbox" class="switch" data-k="enabled" aria-label="Remove the green screen" ${key.enabled ? "checked" : ""}></div>
+    ${a.keyedUrl ? `<div class="form-row"><span class="grow s">Preview</span>${segHtml("key-view", [["orig", "Original"], ["keyed", "Keyed"]], "orig")}</div>` : ""}
+    ${key.enabled ? `<div style="padding:6px 0">${range("tolerance", 0, 0.3, 0.01, "Tolerance", "How much green still counts as backdrop. Raise it if green specks remain; lower it if the subject's edges thin out.")}${range("softness", 0, 1, 0.05, "Softness", "1 keeps the anti-aliased edge; 0 cuts a hard edge.")}${range("despill", 0, 1, 0.05, "Despill", "How much green is taken out of the edges.")}</div>
+    <div class="form-row"><label for="k-shadows" class="grow">Shadows</label><select id="k-shadows" data-k="shadows" style="flex:0 0 auto"><option value="keep" ${key.shadows === "keep" ? "selected" : ""}>Keep as a soft shadow</option><option value="drop" ${key.shadows === "drop" ? "selected" : ""}>Remove</option></select></div>
+    <div class="form-row" title="Eat into the edge by this many pixels, for a stubborn halo"><label for="k-choke" class="grow">Edge choke</label><select id="k-choke" data-k="choke" style="flex:0 0 auto">${[0, 1, 2, 3].map((v) => `<option value="${v}" ${v === key.choke ? "selected" : ""}>${v} px</option>`).join("")}</select></div>
+    <div class="form-row"><span class="grow"></span><button class="primary" id="key-apply">Apply and re-key</button></div>` : ""}
   </div>`;
 }
 function bindKey(a, run) {
   if (!a.keying) return;
   const v = $("#fv"), wrap = v.closest(".fv-wrap");
   const swap = (src, checker) => { const t = v.currentTime, playing = !v.paused; v.src = src; wrap.classList.toggle("checker", checker); v.addEventListener("loadedmetadata", () => { v.currentTime = t; if (playing) v.play(); }, { once: true }); };
-  $("#key-orig")?.addEventListener("click", () => swap(fileUrl(a), false));
-  $("#key-keyed")?.addEventListener("click", () => swap(a.keyedUrl, true));
+  bindSeg("key-view", (val) => swap(val === "keyed" ? a.keyedUrl : fileUrl(a), val === "keyed"));
   $$("[data-k][type=range]").forEach((el) => el.addEventListener("input", () => { $(`[data-kv="${el.dataset.k}"]`).textContent = el.value; }));
-  $("#key-apply").addEventListener("click", run(() => patch(`/api/assets/${a.id}/key`, {
+  $("#key-apply")?.addEventListener("click", run(() => patch(`/api/assets/${a.id}/key`, {
     enabled: $('[data-k="enabled"]').checked,
     tolerance: Number($('[data-k="tolerance"]').value), softness: Number($('[data-k="softness"]').value), despill: Number($('[data-k="despill"]').value),
     choke: Number($('[data-k="choke"]').value), shadows: $('[data-k="shadows"]').value,
@@ -671,53 +1244,55 @@ function bindKey(a, run) {
 function footagePanel(a) {
   const f = footageOf(a), x = a.analysis || {}, age = ageDays(a), len = x.durationSeconds || 0;
   const n = f.moments.length;
-  const check = (done, text) => `<li class="${done ? "done" : ""}"><span class="mk">${done ? "✓" : "○"}</span><div>${text}</div></li>`;
+  const check = (done, text) => `<li class="${done ? "done" : ""}"><span class="mk">${ic("check", 10)}</span><div>${text}</div></li>`;
   const recorded = (f.recordedAt || x.createdAt || "").slice(0, 10);
-  const seg = (m) => len ? `<i class="${m.state}" style="left:${(m.in / len) * 100}%;width:${((m.out - m.in) / len) * 100}%" title="${esc(m.label)}"></i>` : "";
+  const seg = (m) => len ? `<i style="left:${(m.in / len) * 100}%;width:${((m.out - m.in) / len) * 100}%" title="${esc(m.label)}"></i>` : "";
   return `<aside class="panel" aria-label="Recording details">
+    ${panelClose("f-close")}
     <div class="fv-wrap"><video id="fv" controls preload="metadata" src="${fileUrl(a)}"></video></div>
-    <div class="row" style="margin:0 0 8px"><span class="mono" id="now">0:00.0</span><span class="note">of ${len ? clock(len) : "?"}</span><span class="grow"></span><button id="mark-in" title="Start a moment here">Mark in</button><button id="mark-out" title="End the moment here">Mark out</button></div>
+    <div class="scrub"><span class="mono" id="now">0:00.0</span><span class="note">of ${len ? clock(len) : "?"}</span><span class="grow"></span><button class="sm" id="mark-in" title="Start a moment here">Mark in</button><button class="sm" id="mark-out" title="End the moment here">Mark out</button></div>
     ${a.stripUrl ? `<div class="strip" id="strip" title="Click to jump"><img src="${a.stripUrl}" alt="Frames across the recording"><span class="head" id="head" style="left:0"></span></div>` : ""}
     <div class="tl" aria-hidden="true">${f.moments.map(seg).join("")}</div>
     <h2>${esc(a.name)}</h2>
-    <ul class="checks">
+    <div class="group" style="margin-top:12px"><ul class="checks">
       ${check(age != null, age != null ? `Recorded ${Math.floor(age)} day${Math.floor(age) === 1 ? "" : "s"} ago${age > 90 ? " — over 90 days: it will be offered, not used by itself" : ""}` : "Recording date unknown: set it so staleness can be judged")}
       ${check(n > 0, n > 0 ? `${n} moment${n === 1 ? "" : "s"}, usable now` : "No moments yet: mark a step, or let Claude index it (<code>/reelcut tag-footage</code>)")}
-    </ul>
-    <dl>
-      <dt>Size</dt><dd>${x.width ? `${x.width} × ${x.height}` : "not measured"}${x.fps ? ` · ${x.fps} fps${x.vfr ? " (variable: rendered through a proxy)" : ""}` : ""}${x.hasAudio ? " · has sound" : ""}</dd>
-      ${x.description ? `<dt>Claude says</dt><dd>${esc(x.description)}</dd>` : ""}
-    </dl>
-    <div class="row" style="margin-top:0"><label class="inline">App <input id="fa-app" value="${esc(f.app || "")}" placeholder="Claude"></label>
-      <label class="inline">Platform <select id="fa-plat">${PLATFORMS.map((v) => `<option value="${v}" ${v === (f.platform || "") ? "selected" : ""}>${v || "—"}</option>`).join("")}</select></label>
-      <label class="inline">Recorded <input type="date" id="fa-date" value="${esc(recorded)}"></label>
-      <label class="inline"><input type="checkbox" id="fa-mute" ${f.muted ? "checked" : ""}> Muted (the voiceover owns the sound)</label>
-      <label class="inline" title="Body text as recorded, in pixels. Left empty, it is estimated from the size.">Text size <input class="num" id="fa-text" type="number" min="6" max="200" step="1" style="width:70px" value="${f.textPx || ""}" placeholder="auto"></label>
-      <button id="fa-save">Save details</button></div>
+    </ul></div>
     ${keySection(a)}
-    <h2 class="sec">Moments</h2>
-    <p class="note">A script line is matched to a moment, not the file. Scrub to the start, press <em>Mark in</em>, scrub to the end, press <em>Mark out</em>, name what the viewer sees happen. Nothing here changes the recording.</p>
-    ${f.moments.map((m) => momentRow(a, m)).join("") || `<p class="note">None yet.</p>`}
-    <div class="mom"><strong>Add a moment</strong>
-      <div class="r"><input class="lab" id="nm-label" placeholder="download Claude" aria-label="What happens"><label class="inline">in <input class="num" id="nm-in" type="number" min="0" step="0.1"></label><label class="inline">out <input class="num" id="nm-out" type="number" min="0" step="0.1"></label></div>
-      <div class="r"><input class="lab" id="nm-tags" placeholder="tags: claude, download, mac" aria-label="Tags"><button class="primary" id="nm-add">Add moment</button></div></div>
-    <div class="row"><button id="fa-analyze" title="Measure size, frame rate and make the filmstrip">Re-measure</button><button class="danger" data-fr="rejected" title="Never use this recording">Reject</button><button id="f-close">Close</button></div>
+    <div class="cap">Moments</div>
+    <div class="group">
+      ${f.moments.map((m) => momentRow(a, m)).join("")}
+      <div class="mom"><span class="t" style="font-weight:600">Add a moment</span>
+        <div class="r"><input class="lab" id="nm-label" placeholder="what happens, e.g. download Claude" aria-label="What happens"><input class="num" id="nm-in" type="number" min="0" step="0.1" placeholder="in" aria-label="In"><input class="num" id="nm-out" type="number" min="0" step="0.1" placeholder="out" aria-label="Out"></div>
+        <div class="r"><input class="lab" id="nm-tags" placeholder="tags: claude, download, mac" aria-label="Tags"><button class="primary" id="nm-add">Add</button></div></div>
+    </div>
+    <p class="foot-note">A script line is matched to a moment, not the file. Scrub to the start, press Mark in, scrub to the end, press Mark out, then name what the viewer sees happen.</p>
+    <div class="cap">Details</div>
+    <div class="group">
+      <dl><dt>Size</dt><dd>${x.width ? `${x.width} × ${x.height}` : "not measured"}${x.fps ? ` · ${x.fps} fps${x.vfr ? " (variable: rendered through a proxy)" : ""}` : ""}${x.hasAudio ? " · has sound" : ""}</dd>${x.description ? `<dt>Claude says</dt><dd>${esc(x.description)}</dd>` : ""}</dl>
+      <div class="form-row" style="border-top:1px solid var(--sep)"><label for="fa-app">App</label><input id="fa-app" value="${esc(f.app || "")}" placeholder="Claude"></div>
+      <div class="form-row"><label for="fa-plat">Platform</label><select id="fa-plat">${PLATFORMS.map((v) => `<option value="${v}" ${v === (f.platform || "") ? "selected" : ""}>${v || "—"}</option>`).join("")}</select></div>
+      <div class="form-row"><label for="fa-date">Recorded</label><input type="date" id="fa-date" value="${esc(recorded)}"></div>
+      <div class="form-row" title="Body text as recorded, in pixels. Left empty, it is estimated from the size."><label for="fa-text">Text size</label><input class="num" id="fa-text" type="number" min="6" max="200" step="1" value="${f.textPx || ""}" placeholder="auto"><span class="s grow">px as recorded</span></div>
+      <div class="form-row"><label for="fa-mute" class="grow">Muted: the voiceover owns the sound</label><input type="checkbox" class="switch" id="fa-mute" ${f.muted ? "checked" : ""}></div>
+      <div class="form-row"><span class="grow"></span><button class="primary" id="fa-save">Save details</button></div>
+    </div>
+    <div class="pbar"><button id="fa-analyze" title="Measure size, frame rate and make the filmstrip">Re-measure</button><span class="grow"></span><button class="danger" data-fr="rejected" title="Never use this recording">Reject recording</button></div>
   </aside>`;
 }
 function momentRow(a, m) {
   const fmt = state.ffmt || "1:1", fo = (m.focus || {})[fmt] || {};
   const pct = (v) => (v == null ? "" : Math.round(v * 1000) / 10);
-  return `<div class="mom ${m.state}" data-m="${m.id}">
+  return `<div class="mom" data-m="${m.id}">
     <div class="r"><input class="lab" data-f="label" value="${esc(m.label)}" aria-label="Label">${m.origin === "claude" ? `<span class="badge" title="Marked by Claude from the filmstrip">by Claude</span>` : ""}${m.acceptedAt ? `<span class="badge ok" title="You said yes to using it">used before</span>` : ""}</div>
-    <div class="r"><label class="inline">in <input class="num" data-f="in" type="number" min="0" step="0.1" value="${m.in}"></label><label class="inline">out <input class="num" data-f="out" type="number" min="0" step="0.1" value="${m.out}"></label>
-      <span class="note">${(m.out - m.in).toFixed(1)} s</span><button data-act="in" title="Set in to the video's time">in = now</button><button data-act="out" title="Set out to the video's time">out = now</button><button data-act="play">Play</button></div>
-    <div class="r"><input class="lab" data-f="tags" value="${esc(m.tags.join(", "))}" aria-label="Tags" placeholder="tags"><button data-act="save">Save</button><button class="danger" data-act="del">Delete</button></div>
+    <div class="r"><input class="num" data-f="in" type="number" min="0" step="0.1" value="${m.in}" aria-label="In"><button class="sm" data-act="in" title="Set in to the video's time">Set</button><span class="note">to</span><input class="num" data-f="out" type="number" min="0" step="0.1" value="${m.out}" aria-label="Out"><button class="sm" data-act="out" title="Set out to the video's time">Set</button><span class="note tnum">${(m.out - m.in).toFixed(1)} s</span></div>
+    <div class="r"><input class="lab" data-f="tags" value="${esc(m.tags.join(", "))}" aria-label="Tags" placeholder="tags"><button class="sm icon" data-act="play" title="Play this moment" aria-label="Play this moment" style="width:26px;background:var(--fill-3);color:var(--label)">${ic("play", 13)}</button><button class="sm" data-act="save">Save</button><button class="sm danger" data-act="del">Delete</button></div>
     <details><summary>Zoom to a region, for the ${fmt} reel${Object.keys(m.focus || {}).length ? ` (saved for ${Object.keys(m.focus).join(", ")})` : ""}</summary>
-      <div class="r"><label class="inline">Format <select data-act="fmt">${FORMATS.map((v) => `<option ${v === fmt ? "selected" : ""}>${v}</option>`).join("")}</select></label>
-      <label class="inline">x % <input class="num" data-fo="x" type="number" min="0" max="100" step="1" value="${pct(fo.x)}"></label><label class="inline">y % <input class="num" data-fo="y" type="number" min="0" max="100" step="1" value="${pct(fo.y)}"></label>
-      <label class="inline">w % <input class="num" data-fo="w" type="number" min="5" max="100" step="1" value="${pct(fo.w)}"></label><label class="inline">h % <input class="num" data-fo="h" type="number" min="5" max="100" step="1" value="${pct(fo.h)}"></label>
-      <button data-act="draw" title="Drag a box on the video">Draw on the video</button><button data-act="focus">Save region</button><button data-act="unfocus">Clear</button></div>
-      <p class="note">A part of the recording to move in on: draw it on the video, or type percentages of its width and height. Give it the recording's own proportions (width % and height % equal) and the view is exactly that region. Zooming only frames the recording; it is never changed.</p></details>
+      <div class="r"><select data-act="fmt" aria-label="Format" style="flex:0 0 auto">${FORMATS.map((v) => `<option ${v === fmt ? "selected" : ""}>${v}</option>`).join("")}</select>
+      <input class="num" data-fo="x" type="number" min="0" max="100" step="1" value="${pct(fo.x)}" placeholder="x %" aria-label="x %"><input class="num" data-fo="y" type="number" min="0" max="100" step="1" value="${pct(fo.y)}" placeholder="y %" aria-label="y %">
+      <input class="num" data-fo="w" type="number" min="5" max="100" step="1" value="${pct(fo.w)}" placeholder="w %" aria-label="w %"><input class="num" data-fo="h" type="number" min="5" max="100" step="1" value="${pct(fo.h)}" placeholder="h %" aria-label="h %"></div>
+      <div class="r"><button class="sm" data-act="draw" title="Drag a box on the video">Draw on the video</button><button class="sm primary" data-act="focus">Save region</button><button class="sm plain" data-act="unfocus">Clear</button></div>
+      <p class="note">Draw the part to move in on, or type percentages. With width and height equal, the view is exactly that region. The recording itself is never changed.</p></details>
   </div>`;
 }
 async function renderFootage() {
@@ -726,13 +1301,14 @@ async function renderFootage() {
   // and while something is being keyed, look again until it is done.
   if (!state.keyScanned) { state.keyScanned = true; try { const r = await post("/api/footage/key-scan"); if (r.queued.length) await loadFootage(); } catch (e) { /* not fatal: keying is also done when a reel renders */ } }
   clearTimeout(renderFootage.poll);
-  if (state.videos.some((a) => a.keying && (a.keying.state === "queued" || a.keying.state === "running"))) renderFootage.poll = setTimeout(() => { if (location.hash.startsWith("#footage")) renderFootage(); }, 1800);
+  if (state.videos.some((a) => a.keying && (a.keying.state === "queued" || a.keying.state === "running"))) renderFootage.poll = setTimeout(() => { if (state.tab === "footage") renderFootage(); }, 1800);
   const sel = state.videos.find((a) => a.id === state.fsel);
   $("#main").innerHTML = `
-    <p class="note">Screen recordings and other footage, used exactly as recorded. Drop one on <a href="#library">Library</a>, then mark the steps in it as <em>moments</em>. reelcut trims, frames and at most speeds up a moment; it never redraws it. ${state.videos.length ? "" : ""}</p>
+    ${pageHead("Footage")}
+    <p class="lede">Screen recordings, used exactly as recorded. Mark the steps in each as moments; reelcut trims, frames and at most speeds one up, and keys out a green screen. It never redraws it.</p>
     <div class="${sel ? "split" : ""}">
-      <div>${state.videos.length === 0 ? `<p class="empty">No recordings yet. Drop a screen recording on the <a href="#library">Library</a> page, or run<br><br><code>npm run library -- ingest recording.mov</code></p>` : `<div class="grid">${state.videos.map(footageCard).join("")}</div>`}</div>
-      ${sel ? footagePanel(sel) : ""}
+      <div>${state.videos.length === 0 ? emptyState("footage", "No recordings yet", "Drop a screen recording anywhere on this window, or run <code>npm run library -- ingest recording.mov</code>.") : `<div class="grid">${state.videos.map(footageCard).join("")}</div>`}</div>
+      ${sel ? `<div class="scrim" data-close-panel></div>${footagePanel(sel)}` : ""}
     </div>`;
   $$("[data-fa]").forEach((el) => el.addEventListener("click", () => { state.fsel = state.fsel === el.dataset.fa ? null : el.dataset.fa; renderFootage(); }));
   if (sel) bindFootage(sel);
@@ -746,8 +1322,8 @@ function drawRegion(v, row) {
   const o = document.createElement("div"); o.className = "draw"; o.innerHTML = '<div class="hint">Drag a box on the part to zoom into. Esc cancels.</div>';
   wrap.appendChild(o);
   const stop = () => { o.remove(); document.removeEventListener("keydown", onKey); };
-  const onKey = (e) => { if (e.key === "Escape") stop(); };
-  document.addEventListener("keydown", onKey);
+  const onKey = (e) => { if (e.key === "Escape") { e.stopPropagation(); stop(); } };
+  document.addEventListener("keydown", onKey, true);
   // Where the picture really is inside the element: the video is letterboxed to keep its shape.
   const content = () => { const r = o.getBoundingClientRect(), k = Math.min(r.width / v.videoWidth, r.height / v.videoHeight), w = v.videoWidth * k, h = v.videoHeight * k; return { left: r.left + (r.width - w) / 2, top: r.top + (r.height - h) / 2, w, h, r }; };
   const frac = (e, c) => ({ x: Math.min(1, Math.max(0, (e.clientX - c.left) / c.w)), y: Math.min(1, Math.max(0, (e.clientY - c.top) / c.h)) });
@@ -780,9 +1356,13 @@ function bindFootage(a) {
   $("#mark-in").addEventListener("click", () => { $("#nm-in").value = t(); });
   $("#mark-out").addEventListener("click", () => { $("#nm-out").value = t(); });
   $("#f-close").addEventListener("click", () => { state.fsel = null; renderFootage(); });
-  $$("[data-fr]").forEach((el) => el.addEventListener("click", run(() => post("/api/assets/review", { ids: [a.id], state: el.dataset.fr }), `Marked ${el.dataset.fr}`)));
+  $$("[data-fr]").forEach((el) => el.addEventListener("click", async () => {
+    if (!(await ask({ title: "Reject this recording?", detail: "It will never be used in a reel, and is not added again if it is dropped in later.", ok: "Reject", danger: true }))) return;
+    await run(() => post("/api/assets/review", { ids: [a.id], state: "rejected" }), "Rejected")(); state.fsel = null; renderFootage();
+  }));
   bindKey(a, run);
   $("#fa-save").addEventListener("click", run(() => patch(`/api/assets/${a.id}/footage`, { app: $("#fa-app").value, ...($("#fa-plat").value ? { platform: $("#fa-plat").value } : {}), ...($("#fa-date").value ? { recordedAt: $("#fa-date").value } : {}), muted: $("#fa-mute").checked, ...($("#fa-text").value ? { textPx: Number($("#fa-text").value) } : {}) }), "Saved"));
+  $("#fa-mute").addEventListener("change", run(() => patch(`/api/assets/${a.id}/footage`, { muted: $("#fa-mute").checked }), "Saved"));
   $("#fa-analyze").addEventListener("click", run(() => post(`/api/assets/${a.id}/analyze`), "Measured"));
   $("#nm-add").addEventListener("click", run(() => {
     const label = $("#nm-label").value.trim(), i = parseFloat($("#nm-in").value), o = parseFloat($("#nm-out").value);
@@ -817,73 +1397,72 @@ const TEXT_STYLES = ["", "kinetic", "key-lines", "minimal", "none"];
 async function loadRefs() { const r = await api("/api/references"); state.refs = r.references; state.rbrief = r.brief; state.rcounts = r.counts; state.rcommand = r.command; }
 function refCard(r) {
   const x = r.analysis, a = r.annotation, tags = a ? [...a.moves, a.textStyle].filter(Boolean) : [];
-  return `<div class="card ${r.id === state.rsel ? "sel" : ""}" data-ref="${r.id}" style="${r.include ? "" : "opacity:.55"}">
+  return `<div class="card ${r.id === state.rsel ? "sel" : ""}" data-ref="${r.id}" role="button" tabindex="0" style="${r.include ? "" : "opacity:.55"}">
     <div class="thumb" style="aspect-ratio:16/9">${r.thumbUrl ? `<img src="${r.thumbUrl}" alt="" loading="lazy">` : `<span class="ext">${esc(r.ext)}</span>`}</div>
     <div class="meta"><div class="name" title="${esc(r.name)}">${esc(r.name)}</div>
-      <div class="sub"><span class="badge">${x.pacing}</span><span class="badge">${x.ground}</span><span class="badge">~${x.medianShotSeconds}s shot</span>${r.include ? "" : `<span class="badge">off</span>`}${r.queued ? `<span class="badge queued">needs Claude</span>` : ""}</div>
-      <div class="sub">${tags.map((t) => `<span class="tag ${a.reviewed ? "" : "unrev"}" title="${a.reviewed ? "accepted" : "suggested by " + a.by + ", not yet accepted"}">#${esc(t)}</span>`).join(" ")}</div></div></div>`;
+      <div class="sub"><span class="badge">${x.pacing}</span><span class="badge">${x.ground}</span><span>~${x.medianShotSeconds} s shots</span>${r.include ? "" : `<span class="badge">off</span>`}${r.queued ? `<span class="badge queued">needs Claude</span>` : ""}</div>
+      ${tags.length ? `<div class="sub">${tags.map((t) => `<span class="tag ${a.reviewed ? "" : "unrev"}" title="${a.reviewed ? "accepted" : "suggested by " + a.by + ", not yet accepted"}">#${esc(t)}</span>`).join(" ")}</div>` : ""}</div></div>`;
 }
 function refPanel(r) {
   const x = r.analysis, a = r.annotation || { moves: [], reviewed: false };
   const has = new Set(a.moves);
   return `<aside class="panel" aria-label="Reference details">
+    ${panelClose("r-close")}
     <div class="fv-wrap"><video id="rv" controls preload="metadata" src="${r.videoUrl}"></video></div>
-    ${r.sheetUrl ? `<div class="sheet"><a href="${r.sheetUrl}" target="_blank" rel="noopener"><img src="${r.sheetUrl}" alt="24 frames across the film" loading="lazy"></a></div>` : ""}
+    ${r.sheetUrl ? `<div class="sheet-img"><a href="${r.sheetUrl}" target="_blank" rel="noopener"><img src="${r.sheetUrl}" alt="24 frames across the film" loading="lazy"></a></div>` : ""}
     <h2>${esc(r.name)}</h2>
-    <label class="inline" style="margin-bottom:8px"><input type="checkbox" id="r-inc" ${r.include ? "checked" : ""}> Teach from this reference</label>
-    <dl>
+    <div class="group" style="margin-top:12px"><div class="form-row"><label for="r-inc" class="grow">Teach from this reference</label><input type="checkbox" class="switch" id="r-inc" ${r.include ? "checked" : ""}></div></div>
+    <div class="cap">Measured</div>
+    <div class="group"><dl>
       <dt>Length</dt><dd>${dur(x.durationSeconds)}${x.measuredSeconds < x.durationSeconds ? ` (first ${Math.round(x.measuredSeconds)} s measured)` : ""} · ${x.width}×${x.height}</dd>
-      <dt>Cutting</dt><dd><strong>${x.pacing}</strong> · ${x.shots} shots · median ${x.medianShotSeconds} s · ${x.cutsPerMinute} cuts a minute</dd>
-      <dt>Ground</dt><dd><strong>${x.ground}</strong> · brightness ${Math.round(x.meanLuma)} · <span class="swatches">${x.dominantColors.map((c) => `<i style="background:${esc(c)}" title="${esc(c)}"></i>`).join("")}</span></dd>
+      <dt>Cutting</dt><dd><b>${x.pacing}</b> · ${x.shots} shots · median ${x.medianShotSeconds} s · ${x.cutsPerMinute} cuts a minute</dd>
+      <dt>Ground</dt><dd><b>${x.ground}</b> · brightness ${Math.round(x.meanLuma)} · <span class="swatches">${x.dominantColors.map((c) => `<i style="background:${esc(c)}" title="${esc(c)}"></i>`).join("")}</span></dd>
       <dt>Movement</dt><dd>${(x.motionEnergy * 100).toFixed(1)}% change a quarter-second apart · type and graphics ${(x.textShare * 100).toFixed(0)}% of the frame</dd>
       <dt>Source</dt><dd>${esc(r.origin)} · ${when(r.addedAt)}</dd>
-    </dl>
-    <h2 class="sec" style="margin-top:6px">What is in it</h2>
-    <p class="note">${a.reviewed ? "Accepted: these teach the studio." : r.annotation ? `Suggested by ${esc(a.by)}: they teach nothing until you accept them.` : "Nothing tagged yet. Run /reelcut study-references and Claude will suggest tags from the contact sheet, or tick them yourself."}</p>
-    <div class="mvchips" id="r-moves">${Object.keys(MOVE_WORDS).map((m) => `<span class="chip ${has.has(m) ? "on" : ""}" data-mv="${m}" role="button" tabindex="0" title="${esc(MOVE_WORDS[m])}">${m}</span>`).join("")}</div>
-    <label for="r-text">How type is set</label><select id="r-text">${TEXT_STYLES.map((v) => `<option value="${v}" ${v === (a.textStyle || "") ? "selected" : ""}>${v || "—"}</option>`).join("")}</select>
-    <label for="r-note">Your note (for you; never becomes a rule)</label><input id="r-note" value="${esc(a.note || "")}" maxlength="400">
-    <div class="row">${r.annotation && !a.reviewed ? `<button class="primary" id="r-accept">Accept these tags</button>` : ""}<button id="r-save" class="${r.annotation && !a.reviewed ? "" : "primary"}">Save tags</button><button class="danger" id="r-del">Delete</button><button id="r-close">Close</button></div>
-    <p class="note" style="margin-top:12px">The film stays on this computer, is never placed in a reel, and is not part of the library. Deleting it removes what it taught.</p>
+    </dl></div>
+    <div class="cap">What is in it</div>
+    <div class="group">
+      <div class="mvchips" id="r-moves">${Object.keys(MOVE_WORDS).map((m) => `<span class="chip ${has.has(m) ? "on" : ""}" data-mv="${m}" role="button" tabindex="0" title="${esc(MOVE_WORDS[m])}">${m}</span>`).join("")}</div>
+      <div class="form-row" style="border-top:1px solid var(--sep)"><label for="r-text">Type set as</label><select id="r-text">${TEXT_STYLES.map((v) => `<option value="${v}" ${v === (a.textStyle || "") ? "selected" : ""}>${v || "—"}</option>`).join("")}</select></div>
+      <div class="form-row"><label for="r-note">Your note</label><input id="r-note" value="${esc(a.note || "")}" maxlength="400" placeholder="for you; never becomes a rule"></div>
+    </div>
+    <p class="foot-note">${a.reviewed ? "Accepted: these teach the studio." : r.annotation ? `Suggested by ${esc(a.by)}: they teach nothing until you accept them.` : "Nothing tagged yet. Run /reelcut study-references and Claude suggests tags from the contact sheet, or tick them yourself."}</p>
+    <div class="pbar">${r.annotation && !a.reviewed ? `<button class="primary" id="r-accept">Accept these tags</button>` : ""}<button id="r-save" class="${r.annotation && !a.reviewed ? "" : "primary"}">Save tags</button><span class="grow"></span><button class="danger" id="r-del">Delete</button></div>
+    <p class="foot-note">The film stays on this computer, is never placed in a reel, and is not part of the library. Deleting it removes what it taught.</p>
   </aside>`;
 }
 function taughtPanel() {
   const rules = (state.learn?.rules || []).filter((r) => r.subject && ["pacing", "ground", "move", "typestyle"].includes(r.subject.type) && r.status !== "expired");
   const b = state.rbrief, list = (o) => Object.entries(o || {}).sort((p, q) => q[1] - p[1]).map(([k, n]) => `${k} ${n}`).join(", ") || "—";
   if (!b || !b.included) return "";
-  return `<div class="taught"><strong>${b.included} reference${b.included === 1 ? "" : "s"} in use</strong>${b.excluded ? ` (${b.excluded} off)` : ""} · cutting: median shot ~${b.medianShotSeconds} s (${esc(list(b.pacing))}) · ground: ${esc(list(b.ground))}${b.moves.length ? ` · moves: ${esc(b.moves.slice(0, 6).map(([m, n]) => m + " " + n).join(", "))}` : ""}
-    <div style="margin-top:8px"><span class="note">${b.included < b.minimum ? `A rule needs ${b.minimum} references that agree; ${b.minimum - b.included} more before anything is proposed.` : rules.length ? "What they have taught so far. Rules do nothing until you switch them on in" : "They do not yet agree enough to propose a rule."} ${rules.length ? `<a href="#learnings">Learnings</a>` : ""}</span></div>
-    ${rules.map((r) => `<div class="r"><span class="badge ${r.status}">${r.status}</span>${esc(r.text)} <span class="note">${r.confidence.toFixed(2)}</span></div>`).join("")}</div>`;
+  return `<div class="group" style="margin-bottom:20px"><div class="row-i wrap"><div class="col"><span class="t"><b>${b.included} reference${b.included === 1 ? "" : "s"} in use</b>${b.excluded ? ` (${b.excluded} off)` : ""}</span>
+    <span class="s">Cutting: median shot ~${b.medianShotSeconds} s (${esc(list(b.pacing))}) · ground: ${esc(list(b.ground))}${b.moves.length ? ` · moves: ${esc(b.moves.slice(0, 6).map(([m, n]) => m + " " + n).join(", "))}` : ""}</span>
+    <span class="s">${b.included < b.minimum ? `A rule needs ${b.minimum} references that agree; ${b.minimum - b.included} more before anything is proposed.` : rules.length ? `What they have taught so far. Rules do nothing until you switch them on in <a href="#learnings">Learnings</a>.` : "They do not yet agree enough to propose a rule."}</span></div></div>
+    ${rules.map((r) => `<div class="row-i"><span class="badge ${r.status}">${r.status}</span><span class="t grow">${esc(r.text)}</span><span class="s tnum">${r.confidence.toFixed(2)}</span></div>`).join("")}</div>`;
 }
 async function renderReferences() {
   await Promise.all([loadRefs(), api("/api/learnings").then((l) => { state.learn = l; })]);
   const sel = state.refs.find((r) => r.id === state.rsel);
   $("#main").innerHTML = `
-    <p class="note">Drop motion-graphics films you admire. reelcut measures how they cut and what they look like; the moves and type style come from tags Claude suggests and you accept. When three or more agree, a rule is <em>proposed</em> in <a href="#learnings">Learnings</a> — nothing changes a reel until you switch it on. The films stay on this computer and are never used in a reel.</p>
-    <div class="drop" id="rdrop" role="group" aria-label="Add reference videos">Drop videos or whole folders here.
-      <div class="row"><button id="r-files">Choose videos</button><button id="r-folder">Choose a folder</button></div>
-      <input type="file" id="r-in" accept="video/*,.mov,.mp4,.webm,.mkv" multiple hidden><input type="file" id="r-indir" webkitdirectory hidden></div>
-    <div class="uploads" id="r-up"></div>
-    ${state.rcounts.queue ? `<p class="note"><strong>${state.rcounts.queue}</strong> still need Claude to look at them: run <code>${esc(state.rcommand)}</code> in Claude Code <button id="r-copy">Copy command</button></p>` : ""}
+    ${pageHead("References", { actions: `<button class="primary" id="r-add">${ic("plus", 16)}Add</button>` })}
+    <p class="lede">Motion-graphics films you admire. reelcut measures how they cut and look; the moves come from tags Claude suggests and you accept. When three agree, a rule is proposed in <a href="#learnings">Learnings</a>. The films stay on this computer and are never used in a reel.</p>
+    <div class="uploads group" id="r-up"></div>
+    ${state.rcounts.queue ? `<div class="group" style="margin-bottom:20px"><div class="row-i"><span class="tile" style="background:var(--orange)">${ic("learnings", 16)}</span><div class="col"><span class="t">${state.rcounts.queue} still need Claude to look at them</span><span class="s">Run <code>${esc(state.rcommand)}</code> in Claude Code</span></div><button class="sm" id="r-copy">Copy</button></div></div>` : ""}
     ${taughtPanel()}
     <div class="${sel ? "split" : ""}">
-      <div>${state.refs.length === 0 ? `<p class="empty">No references yet. Drop a few films above, or run<br><br><code>npm run references -- add path/to/film.mp4</code></p>` : `<div class="grid">${state.refs.map(refCard).join("")}</div>`}</div>
-      ${sel ? refPanel(sel) : ""}
+      <div>${state.refs.length === 0 ? emptyState("references", "No references yet", "Drop a few films you admire anywhere on this window, or run <code>npm run references -- add film.mp4</code>.") : `<div class="grid">${state.refs.map(refCard).join("")}</div>`}</div>
+      ${sel ? `<div class="scrim" data-close-panel></div>${refPanel(sel)}` : ""}
     </div>`;
-  renderRefUploads(); bindRefDrop();
+  renderRefUploads();
+  $("#r-add").addEventListener("click", (e) => openMenu(e.currentTarget, [{ label: "Choose videos…", act: () => $("#r-in").click() }, { label: "Choose a folder…", act: () => $("#r-indir").click() }]));
   $("#r-copy")?.addEventListener("click", () => { navigator.clipboard?.writeText(state.rcommand); toast("Command copied"); });
   $$("[data-ref]").forEach((el) => el.addEventListener("click", () => { state.rsel = state.rsel === el.dataset.ref ? null : el.dataset.ref; renderReferences(); }));
   if (sel) bindRef(sel);
 }
-function renderRefUploads() { const el = $("#r-up"); if (el) el.innerHTML = state.ruploads.map((u) => `<div class="u"><span class="name">${esc(u.name)}</span><span>${u.status}</span><span class="note">${esc(u.detail || "")}</span></div>`).join(""); }
-function bindRefDrop() {
-  const drop = $("#rdrop"); if (!drop) return;
-  const add = (files) => { for (const f of files) if (/^video\//.test(f.type) || /\.(mp4|mov|webm|mkv|m4v)$/i.test(f.name)) state.ruploads.push({ name: f.name, file: f, status: "waiting" }); pumpRefs(); };
-  $("#r-files").addEventListener("click", () => $("#r-in").click()); $("#r-folder").addEventListener("click", () => $("#r-indir").click());
-  $("#r-in").addEventListener("change", (e) => add([...e.target.files])); $("#r-indir").addEventListener("change", (e) => add([...e.target.files]));
-  drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("over"); }); drop.addEventListener("dragleave", () => drop.classList.remove("over"));
-  drop.addEventListener("drop", async (e) => { e.preventDefault(); drop.classList.remove("over"); add((await filesFromDrop(e.dataTransfer)).map((i) => i.file)); });
-}
+function renderRefUploads() { const el = $("#r-up"); if (el) el.innerHTML = state.ruploads.map((u) => `<div class="row-i"><span>${esc(u.name)}</span><span class="s">${u.status}</span><span class="s">${esc(u.detail || "")}</span></div>`).join(""); }
+function addRefs(files) { for (const f of files) if (/^video\//.test(f.type) || /\.(mp4|mov|webm|mkv|m4v)$/i.test(f.name)) state.ruploads.push({ name: f.name, file: f, status: "waiting" }); renderRefUploads(); pumpRefs(); }
+$("#r-in").addEventListener("change", (e) => { addRefs([...e.target.files]); e.target.value = ""; });
+$("#r-indir").addEventListener("change", (e) => { addRefs([...e.target.files]); e.target.value = ""; });
 let refBusy = 0;
 function pumpRefs() {
   while (refBusy < 2) {
@@ -892,7 +1471,7 @@ function pumpRefs() {
     fetch("/api/references/upload", { method: "POST", headers: { "x-reelcut-name": encodeURIComponent(u.name) }, body: u.file })
       .then(async (res) => { const b = await res.json().catch(() => ({})); u.status = b.outcome ? b.outcome.state : "failed"; u.detail = (b.outcome && b.outcome.reason) || b.error || ""; })
       .catch((e) => { u.status = "failed"; u.detail = e.message; })
-      .finally(async () => { refBusy--; renderRefUploads(); if (!state.ruploads.some((x) => x.status === "waiting" || x.status === "measuring…")) { await updateBadges(); if (location.hash.startsWith("#references")) renderReferences(); } else pumpRefs(); });
+      .finally(async () => { refBusy--; renderRefUploads(); if (!state.ruploads.some((x) => x.status === "waiting" || x.status === "measuring…")) { state.ruploads = state.ruploads.filter((x) => x.status === "failed"); await updateBadges(); if (state.tab === "references") renderReferences(); } else pumpRefs(); });
   }
 }
 function bindRef(r) {
@@ -903,30 +1482,43 @@ function bindRef(r) {
   const body = () => ({ moves: $$("[data-mv].on").map((c) => c.dataset.mv), ...($("#r-text").value ? { textStyle: $("#r-text").value } : {}), note: $("#r-note").value });
   $("#r-save").addEventListener("click", () => edit(body(), "Tags saved"));
   $("#r-accept")?.addEventListener("click", () => edit({ accept: true }, "Accepted"));
-  $("#r-del").addEventListener("click", async () => { if (!confirm("Delete this reference and what it taught?")) return; try { await api(`/api/references/${r.id}`, { method: "DELETE" }); state.rsel = null; toast("Deleted"); await updateBadges(); renderReferences(); } catch (e) { toast(e.message); } });
+  $("#r-del").addEventListener("click", async () => {
+    if (!(await ask({ title: "Delete this reference?", detail: "What it taught goes with it.", ok: "Delete", danger: true }))) return;
+    try { await api(`/api/references/${r.id}`, { method: "DELETE" }); state.rsel = null; toast("Deleted"); await updateBadges(); renderReferences(); } catch (e) { toast(e.message); }
+  });
 }
 
 // ---------- shell
 let poll;
+function setCount(name, v) { $$(`[data-count="${name}"]`).forEach((el) => { el.textContent = v || ""; }); }
 async function updateBadges() {
   try {
     const [lib, folders, learn] = await Promise.all([api("/api/assets?limit=0"), api("/api/folders"), api("/api/learnings")]);
     state.counts = lib.counts; state.folders = folders.folders; state.learn = learn;
   } catch { return; }
-  $("#n-library").textContent = state.counts.all || "";
-  $("#n-review").textContent = state.counts.pending || "";
-  $("#n-footage").textContent = state.counts.footage || "";
-  try { const rr = await api("/api/references"); state.rcounts = rr.counts; $("#n-references").textContent = rr.counts.all || ""; } catch { /* the page still works */ }
-  $("#n-folders").textContent = state.folders.length || "";
+  setCount("library", state.counts.all);
+  setCount("review", state.counts.pending);
+  setCount("footage", state.counts.footage);
+  try { const rr = await api("/api/references"); state.rcounts = rr.counts; setCount("references", rr.counts.all); } catch { /* the page still works */ }
+  setCount("folders", state.folders.length);
   const waiting = (state.learn?.rules || []).filter((r) => r.status === "proposed" && !r.conflictWith.length).length;
-  $("#n-learnings").textContent = waiting || "";
-  $("#n-reels").textContent = state.runs.length || "";
-  $("#n-jobs").textContent = state.jobs.filter((j) => j.status === "running").length ? "●" : "";
+  setCount("learnings", waiting);
+  setCount("reels", state.runs.length);
+  setCount("jobs", state.jobs.filter((j) => j.status === "running").length ? "●" : "");
+  setCount("more", (state.counts.pending || 0) + waiting || "");
 }
+const TAB_INDEX = { library: 0, footage: 1, reels: 2 };
+function skeleton(title) { $("#main").innerHTML = `${pageHead(title)}<div class="grid" aria-busy="true">${Array.from({ length: 8 }, () => `<div class="skel card"></div>`).join("")}</div>`; }
 async function route() {
   const [tab, id] = (location.hash.slice(1) || "library").split("/");
-  $$("nav a").forEach((a) => a.classList.toggle("on", a.dataset.tab === tab));
+  if (tab === "more") { history.replaceState(null, "", `#${state.tab}`); openMore(); return; }
+  const changed = tab !== state.tab;
+  state.tab = tab;
+  closeMenu(); closeSheet();
+  $$("[data-tab]").forEach((a) => { const on = a.dataset.tab === tab; a.classList.toggle("on", on); if (on) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+  $("#tabbar").style.setProperty("--i", TAB_INDEX[tab] ?? 3);
   clearTimeout(poll);
+  const slow = setTimeout(() => skeleton(tab[0].toUpperCase() + tab.slice(1)), 150);
   try {
     await Promise.all([loadRuns(), loadJobs(), loadIngest()]);
     await updateBadges();
@@ -939,9 +1531,47 @@ async function route() {
     else if (tab === "folders") await renderFolders();
     else if (tab === "learnings") await renderLearnings();
     else { await loadLibrary(); renderLibrary(); }
-  } catch (e) { $("#main").innerHTML = `<p class="empty">${esc(e.message)}</p>`; }
+  } catch (e) { $("#main").innerHTML = `${pageHead("Something went wrong")}${emptyState("x", "This page could not load", esc(e.message), `<button class="primary" id="retry">Retry</button>`)}`; $("#retry")?.addEventListener("click", route); }
+  clearTimeout(slow);
+  if (changed) { const m = $("#main"); m.classList.remove("enter"); void m.offsetWidth; m.classList.add("enter"); window.scrollTo(0, 0); }
+  afterRender();
   if (tab === "jobs" && state.jobs.some((j) => j.status === "running")) poll = setTimeout(route, 2000);
 }
+// After every render: the inspector's scrim, the header's hairline, the phone's inline title.
+let titleIO;
+// Pages re-render themselves (a click on a card, a save), so the bindings below follow every change to #main.
+new MutationObserver(() => { queueMicrotask(afterRender); }).observe(document.getElementById("main"), { childList: true });
+function afterRender() {
+  $$("[data-close-panel]:not([data-bound])").forEach((s) => { s.dataset.bound = "1"; s.addEventListener("click", () => $(".panel [data-close]")?.click()); });
+  const h1 = $(".phead h1"), head = $(".phead");
+  if (!h1 || h1 === afterRender.h1) return;
+  afterRender.h1 = h1;
+  titleIO?.disconnect();
+  titleIO = new IntersectionObserver(([e]) => {
+    const scrolled = !e.isIntersecting;
+    $("#topbar").dataset.scrolled = String(scrolled);
+    if (head) head.dataset.scrolled = String(window.scrollY > 4);
+  }, { rootMargin: "-44px 0px 0px 0px" });
+  titleIO.observe(h1);
+}
+// The phone tab bar shrinks while scrolling down, and comes back on the way up or near the top.
+let lastY = 0;
+window.addEventListener("scroll", () => {
+  const y = window.scrollY, bar = $("#tabbar"), head = $(".phead");
+  if (head) head.dataset.scrolled = String(y > 4);
+  if (y < 40) bar.classList.remove("min"); else if (y - lastY > 8) bar.classList.add("min"); else if (lastY - y > 8) bar.classList.remove("min");
+  if (Math.abs(y - lastY) > 8 || y < 40) lastY = y;
+}, { passive: true });
+$("#tabbar").addEventListener("click", (e) => { if (e.target.closest("a")) $("#tabbar").classList.remove("min"); });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") { if (menuEl) return closeMenu(); if (sheetClose) return closeSheet(); const c = $(".panel [data-close]"); if (c && !e.target.closest("input, textarea, select")) c.click(); return; }
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "b") { e.preventDefault(); setRail(document.documentElement.dataset.rail !== "1"); }
+  if (e.key === "/" && !e.target.closest("input, textarea, select") && $("#q")) { e.preventDefault(); $("#q").focus(); }
+  if ((e.key === "Enter" || e.key === " ") && e.target.matches?.(".card[role=button], .chip[role=button]")) { e.preventDefault(); e.target.click(); }
+});
+$("#rail").innerHTML = ic("rail", 16);
+$("#settings").innerHTML = ic("settings", 17);
+paintIcons();
 window.addEventListener("hashchange", route);
 route();
 </script>

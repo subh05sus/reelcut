@@ -13,3 +13,7 @@ Thumbs.db
 # Render output of the examples — regenerable, like out/.
 examples/*/project/
 examples/*/clips/
+
+# design screenshots: regenerate with the apple-glass shoot script
+docs/design/apple-glass/before/
+docs/design/apple-glass/after/
