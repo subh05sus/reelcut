@@ -501,6 +501,93 @@
   .skel { background: var(--fill-4); border-radius: var(--r-card); }
   .skel.card { aspect-ratio: 1 / 1.2; }
 
+  /* ================================================================ create
+     A reel made by talking to Claude. Chat on the left, the reel taking shape on the right. The composer floats (glass:
+     the functional layer); messages, steps, question and permission cards are content (solid). */
+  .cr { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 24px; align-items: start; }
+  .cr-chat { min-width: 0; display: flex; flex-direction: column; gap: 14px; padding-bottom: 220px; max-width: 760px; }
+  .cr-panel { position: sticky; top: 72px; max-height: calc(100vh - 96px); overflow: auto; background: var(--cell); border-radius: var(--r-group); padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+  .cr-panel .note, .cr-panel .foot-note { margin: 0; }
+  .cr-panel h3 { margin: 0; font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .cr-tabs { display: none; }
+  @media (max-width: 1099px) { .cr { grid-template-columns: minmax(0, 1fr); } .cr-panel { display: none; position: static; max-height: none; } .cr[data-view="reel"] .cr-panel { display: flex; } .cr[data-view="reel"] .cr-chat { display: none; } .cr-tabs { display: block; margin-bottom: 12px; } }
+  .ev-user { align-self: flex-end; max-width: 82%; background: var(--fill-2); border-radius: 20px 20px 6px 20px; padding: 10px 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .ev-user .files { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .ev-text { line-height: 1.55; overflow-wrap: anywhere; }
+  .ev-text p { margin: 0 0 10px; } .ev-text p:last-child { margin-bottom: 0; }
+  .ev-text ul, .ev-text ol { margin: 0 0 10px; padding-left: 22px; }
+  .ev-text code { background: var(--fill-3); padding: 0 4px; border-radius: 4px; }
+  .ev-text pre { background: var(--fill-4); padding: 10px 12px; border-radius: 10px; overflow: auto; font: 12px/1.5 var(--mono); }
+  .ev-text h1, .ev-text h2, .ev-text h3 { font-size: 15px; margin: 12px 0 6px; }
+  .ev-text table { border-collapse: collapse; font-size: 13px; margin: 0 0 10px; } .ev-text td, .ev-text th { border-bottom: 1px solid var(--sep); padding: 4px 10px 4px 0; text-align: left; }
+  .ev-tool { border-radius: 10px; font-size: 13px; color: var(--label-2); }
+  .ev-tool + .ev-tool { margin-top: -10px; }
+  .ev-tool > summary { list-style: none; display: flex; align-items: center; gap: 8px; min-height: 28px; padding: 2px 8px; border-radius: 8px; cursor: pointer; }
+  .ev-tool > summary::-webkit-details-marker { display: none; }
+  .ev-tool > summary:hover { background: var(--fill-4); }
+  .ev-tool .st { width: 14px; height: 14px; flex: none; display: grid; place-items: center; color: var(--green); }
+  .ev-tool .st.run { border-radius: 50%; border: 2px solid var(--label-3); border-top-color: var(--accent); animation: spin 900ms linear infinite; }
+  .ev-tool .st.err { color: var(--red); }
+  .ev-tool .nm { font-weight: 600; color: var(--label); }
+  .ev-tool .tn { color: var(--label-2); }
+  @media (pointer: coarse) { .ev-tool > summary { min-height: 44px; } .ev-tool + .ev-tool { margin-top: -8px; } }
+  .ev-tool pre { margin: 4px 8px 8px 30px; max-height: 260px; overflow: auto; background: var(--fill-4); border-radius: 8px; padding: 8px 12px; font: 12px/1.5 var(--mono); white-space: pre-wrap; color: var(--label); }
+  .ev-media { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 4px 30px; }
+  .ev-media img, .ev-media video { height: 140px; border-radius: 10px; background: var(--fill-4); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .ev-status { align-self: center; font-size: 12px; color: var(--label-2); padding: 4px 10px; border-radius: 999px; background: var(--fill-4); }
+  .ev-status.error { color: var(--red); background: color-mix(in srgb, var(--red) 12%, transparent); }
+  /* Question and permission cards: solid, elevated, Apple's shapes. */
+  .qcard { background: var(--elev); border-radius: 18px; padding: 16px; box-shadow: var(--shadow-pop); display: flex; flex-direction: column; gap: 14px; border: 1px solid var(--sep); }
+  [data-theme="dark"] .qcard { background: var(--elev-2); }
+  .qcard .q { display: flex; flex-direction: column; gap: 8px; }
+  .qcard .q > b { font-size: var(--fs-b); line-height: var(--lh-b); }
+  .qcard .hdr { align-self: flex-start; }
+  .qcard .opt { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 12px; background: var(--fill-4); cursor: pointer; transition: background-color 120ms var(--ease), transform 150ms var(--ease); }
+  .qcard .opt:hover { background: var(--fill-3); }
+  .qcard .opt:active { transform: scale(0.99); }
+  .qcard .opt.on { background: color-mix(in srgb, var(--accent) 16%, transparent); box-shadow: inset 0 0 0 1.5px var(--accent); }
+  .qcard .opt .mk { width: 18px; height: 18px; flex: none; margin-top: 1px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--label-3); display: grid; place-items: center; color: var(--on-accent); }
+  .qcard .opt.multi .mk { border-radius: 5px; }
+  .qcard .opt.on .mk { background: var(--accent); box-shadow: none; }
+  .qcard .opt .l { font-weight: 600; } .qcard .opt .d { font-size: 13px; color: var(--label-2); line-height: 18px; }
+  .qcard .opt pre { margin: 6px 0 0; font: 11px/1.35 var(--mono); color: var(--label-2); white-space: pre; overflow: auto; max-width: 100%; }
+  .qcard .other { display: flex; gap: 8px; } .qcard .other input { flex: 1; }
+  .qcard .acts { display: flex; gap: 8px; justify-content: flex-end; }
+  .qcard.done { box-shadow: none; opacity: .75; }
+  .qcard .ans { font-size: 13px; color: var(--label-2); }
+  .qcard .ans b { color: var(--label); }
+  .pcard code { display: block; white-space: pre-wrap; background: var(--fill-4); padding: 8px 10px; border-radius: 8px; font: 12px/1.45 var(--mono); max-height: 180px; overflow: auto; }
+  .typing { display: inline-flex; gap: 4px; padding: 6px 2px; } .typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--label-3); animation: blink 1.2s infinite; }
+  .typing i:nth-child(2) { animation-delay: .2s; } .typing i:nth-child(3) { animation-delay: .4s; }
+  @keyframes blink { 0%, 80%, 100% { opacity: .3; } 40% { opacity: 1; } }
+  /* The composer: a floating glass panel at the foot of the chat. */
+  .composer { position: fixed; z-index: 25; bottom: 16px; width: min(760px, calc(100vw - var(--side-w) - 400px - 96px)); left: calc(var(--side-w) + 32px); border-radius: 26px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  @media (max-width: 1099px) { .composer { width: auto; right: 32px; } }
+  @media (max-width: 899px) { .composer { left: 12px; right: 12px; width: auto; bottom: calc(var(--tabbar-h) + max(env(safe-area-inset-bottom), 12px) + 10px); border-radius: 22px; } }
+  .composer.land { width: min(720px, calc(100vw - var(--side-w) - 64px)); left: calc(var(--side-w) + (100vw - var(--side-w)) / 2 - min(360px, (100vw - var(--side-w) - 64px) / 2)); bottom: 32px; }
+  @media (max-width: 899px) { .composer.land { left: 12px; right: 12px; width: auto; bottom: calc(var(--tabbar-h) + max(env(safe-area-inset-bottom), 12px) + 10px); } }
+  .composer .chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .composer .chips select { height: 28px; font-size: 13px; border-radius: 999px; padding: 0 26px 0 10px; background-color: var(--fill-3); border-color: transparent; }
+  .composer .row { display: flex; align-items: flex-end; gap: 8px; }
+  .composer textarea { flex: 1; min-height: 40px; max-height: 240px; resize: none; border: 0; background: transparent; padding: 8px; font-size: var(--fs-b); line-height: 24px; }
+  @media (max-width: 899px) { .composer textarea { min-height: 44px; padding: 10px 8px; } .composer .send { width: 44px !important; height: 44px !important; } }
+  .composer textarea:focus-visible { box-shadow: none; }
+  .composer .send { width: 36px; height: 36px; padding: 0; border-radius: 50%; background: var(--accent); color: var(--on-accent); flex: none; }
+  .composer .send.stop { background: var(--label); color: var(--bg); }
+  .composer .files { display: flex; gap: 6px; flex-wrap: wrap; } .composer .files:empty { display: none; }
+  .composer .meta { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--label-2); padding: 0 6px; }
+  .cr-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .cr-meter { display: inline-flex; gap: 10px; align-items: center; font-size: 12px; color: var(--label-2); font-variant-numeric: tabular-nums; }
+  .cr-land { max-width: 720px; margin: 8vh auto 0; text-align: center; }
+  .cr-land h2 { font-size: 30px; line-height: 36px; margin: 0 0 8px; letter-spacing: -0.01em; }
+  .cr-beats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .cr-beat { border-radius: 10px; overflow: hidden; background: var(--fill-4); aspect-ratio: 1; position: relative; display: grid; place-items: center; font-size: 11px; color: var(--label-2); }
+  .cr-beat img, .cr-beat video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .cr-beat b { position: absolute; left: 6px; bottom: 6px; z-index: 2; background: rgb(0 0 0 / .55); color: #fff; padding: 1px 6px; border-radius: 6px; font-size: 11px; }
+  .cr-panel video.master, .cr-panel img.sheet { width: 100%; border-radius: 12px; background: #000; }
+  .cr-list .row-i { cursor: pointer; }
+
   /* ================================================================ personality
      The design crafter: a steps rail, the step's choices, a live summary of the personality. On a phone the rail is a
      progress bar on top and the summary opens as a bottom sheet. Everything here is content (solid); glass is only the
@@ -614,6 +701,7 @@
   <aside class="side" aria-label="Sections">
     <div class="brand"><span>reelcut <b>studio</b></span><span class="grow"></span><button class="icon sm" id="rail" title="Collapse the sidebar (⌘B)" aria-label="Collapse the sidebar"></button></div>
     <nav>
+      <a class="nav-i" href="#create" data-tab="create" title="Create"><span data-ic="create"></span><span class="lab">Create</span><span class="n" data-count="create"></span></a>
       <a class="nav-i" href="#library" data-tab="library" title="Library"><span data-ic="library"></span><span class="lab">Library</span><span class="n" data-count="library"></span></a>
       <a class="nav-i" href="#footage" data-tab="footage" title="Footage"><span data-ic="footage"></span><span class="lab">Footage</span><span class="n" data-count="footage"></span></a>
       <a class="nav-i" href="#reels" data-tab="reels" title="Reels"><span data-ic="reels"></span><span class="lab">Reels</span><span class="n" data-count="reels"></span></a>
@@ -635,8 +723,8 @@
 <div class="tab-edge scroll-edge-bottom"></div>
 <nav class="tabbar liquid-glass liquid-glass-milky" id="tabbar" aria-label="Sections">
   <span class="lens liquid-lens" aria-hidden="true"></span>
+  <a href="#create" data-tab="create"><span data-ic="create" data-sz="22"></span><span class="lab">Create</span></a>
   <a href="#library" data-tab="library"><span data-ic="library" data-sz="22"></span><span class="lab">Library</span></a>
-  <a href="#footage" data-tab="footage"><span data-ic="footage" data-sz="22"></span><span class="lab">Footage</span></a>
   <a href="#reels" data-tab="reels"><span data-ic="reels" data-sz="22"></span><span class="lab">Reels</span></a>
   <a href="#more" data-tab="more" id="more-tab"><span data-ic="more" data-sz="22"></span><span class="lab">More</span><span class="n" data-count="more"></span></a>
 </nav>
@@ -680,6 +768,10 @@ const ICONS = {
   rail: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/>',
   tag: '<path d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z"/><circle cx="7.5" cy="7.5" r="1" fill="currentColor"/>',
   upload: '<path d="M12 15V3m-5 5 5-5 5 5M5 21h14"/>',
+  create: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8Z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8Z"/>',
+  attach: '<path d="m21 11-8.6 8.6a5.7 5.7 0 0 1-8-8L13 3a3.8 3.8 0 0 1 5.4 5.4l-8.7 8.6a1.9 1.9 0 0 1-2.7-2.7l8-8"/>',
+  up: '<path d="M12 19V5M5 12l7-7 7 7"/>',
+  stop: '<rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/>',
   personality: '<path d="M12 2a10 10 0 0 0 0 20c.9 0 1.6-.7 1.6-1.7 0-.4-.2-.8-.4-1.1-.3-.3-.5-.7-.5-1.1 0-.9.8-1.7 1.7-1.7h2c3 0 5.6-2.5 5.6-5.5C22 6 17.5 2 12 2Z"/><circle cx="13.5" cy="6.5" r="1.2" fill="currentColor"/><circle cx="17.5" cy="10.5" r="1.2" fill="currentColor"/><circle cx="8.5" cy="7.5" r="1.2" fill="currentColor"/><circle cx="6.5" cy="12.5" r="1.2" fill="currentColor"/>',
   dice: '<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.2" fill="currentColor"/><circle cx="16" cy="16" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/>',
   lock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
@@ -875,13 +967,291 @@ $("#rail").addEventListener("click", () => setRail(document.documentElement.data
 function openMore() {
   const c = (n) => (n ? `<span class="badge">${n}</span>` : "");
   const s = state.ingest?.status;
-  openSheet({ title: "More", body: `<div class="group">${[["personality", "Personality", 0], ["review", "Review", state.counts.pending], ["sounds", "Sounds", state.packSounds.length], ["patterns", "Patterns", state.patterns.length], ["folders", "Folders", state.folders.length], ["references", "References", state.rcounts.all], ["learnings", "Learnings", (state.learn?.rules || []).filter((r) => r.status === "proposed" && !r.conflictWith.length).length], ["jobs", "Jobs", state.jobs.filter((j) => j.status === "running").length]]
+  openSheet({ title: "More", body: `<div class="group">${[["footage", "Footage", state.counts.footage], ["personality", "Personality", 0], ["review", "Review", state.counts.pending], ["sounds", "Sounds", state.packSounds.length], ["patterns", "Patterns", state.patterns.length], ["folders", "Folders", state.folders.length], ["references", "References", state.rcounts.all], ["learnings", "Learnings", (state.learn?.rules || []).filter((r) => r.status === "proposed" && !r.conflictWith.length).length], ["jobs", "Jobs", state.jobs.filter((j) => j.status === "running").length]]
       .map(([k, l, n]) => `<a class="row-i" href="#${k}" data-sclose style="color:var(--label);text-decoration:none"><span class="tile" style="background:var(--fill-1);color:var(--label)">${ic(k, 17)}</span><span class="t grow">${l}</span>${c(n)}<span style="color:var(--label-3)">${ic("back", 14).replace("m15 18-6-6 6-6", "m9 18 6-6-6-6")}</span></a>`).join("")}</div>
     <div class="group"><button class="row-i" id="more-set" style="width:100%;border-radius:0;justify-content:flex-start;height:auto;font-size:var(--fs-b);font-weight:400"><span class="tile" style="background:#8e8e93">${ic("settings", 17)}</span><span class="t grow" style="text-align:left">Settings</span></button>
       <div class="row-i"><span class="dot ${s?.paused ? "off" : s?.scanning ? "busy" : ""}"></span><span class="s grow">${esc($("#sync-text").textContent)}</span><button class="sm" id="more-pause">${s?.paused ? "Resume" : "Pause"}</button></div></div>`,
     bind: (sh) => { $("#more-set", sh).addEventListener("click", () => { closeSheet(); openSettings(); }); $("#more-pause", sh).addEventListener("click", async () => { await togglePause(); closeSheet(); }); } });
 }
 $("#more-tab").addEventListener("click", (e) => { e.preventDefault(); openMore(); });
+
+// ---------- create: make a reel by talking to Claude (Claude Code, with your login, running /reelcut)
+const cr = { list: null, meta: null, events: [], byId: new Map(), es: null, files: [], reelTimer: null, tick: null, view: "chat", draft: { settings: {}, model: "", effort: "" } };
+const media = (p) => `/files/create-media?path=${encodeURIComponent(p)}`;
+const isVid = (p) => /\.(mp4|webm)$/i.test(p);
+
+/** A small, safe markdown: paragraphs, lists, code, bold, italics, headings, tables. Escaped first. */
+function md(src) {
+  const lines = esc(src).split("\n"), out = []; let list = null, code = null, table = null;
+  const inline = (t) => t.replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>").replace(/(^|[^*])\*([^*\s][^*]*)\*/g, "$1<i>$2</i>");
+  const flush = () => { if (list) { out.push(`<${list.t}>${list.items.map((i) => `<li>${inline(i)}</li>`).join("")}</${list.t}>`); list = null; } if (table) { out.push(`<table>${table.map((r) => `<tr>${r.map((c) => `<td>${inline(c)}</td>`).join("")}</tr>`).join("")}</table>`); table = null; } };
+  for (const l of lines) {
+    if (l.startsWith("```")) { if (code) { out.push(`<pre>${code.join("\n")}</pre>`); code = null; } else { flush(); code = []; } continue; }
+    if (code) { code.push(l); continue; }
+    let m;
+    if ((m = /^\s*[-*] (.*)/.exec(l))) { if (!list || list.t !== "ul") { flush(); list = { t: "ul", items: [] }; } list.items.push(m[1]); continue; }
+    if ((m = /^\s*\d+\. (.*)/.exec(l))) { if (!list || list.t !== "ol") { flush(); list = { t: "ol", items: [] }; } list.items.push(m[1]); continue; }
+    if (/^\|.*\|\s*$/.test(l)) { if (/^\|[\s:|-]+\|\s*$/.test(l)) continue; flush(); (table = table || []).push(l.split("|").slice(1, -1).map((c) => c.trim())); continue; }
+    flush();
+    if ((m = /^#{1,3} (.*)/.exec(l))) { out.push(`<h3>${inline(m[1])}</h3>`); continue; }
+    if (l.trim()) out.push(`<p>${inline(l)}</p>`);
+  }
+  if (code) out.push(`<pre>${code.join("\n")}</pre>`);
+  flush();
+  return out.join("");
+}
+
+function evHtml(e) {
+  switch (e.k) {
+    case "user": return `<div class="ev-user" data-ev="${e.id}">${esc(e.text)}${e.files?.length ? `<div class="files">${e.files.map((f) => `<span class="chip">${ic("attach", 12)} ${esc(f.name)}</span>`).join("")}</div>` : ""}</div>`;
+    case "text": return `<div class="ev-text" data-ev="${e.id}">${md(e.text) || `<span class="typing"><i></i><i></i><i></i></span>`}</div>`;
+    case "status": return `<div class="ev-status ${e.tone}" data-ev="${e.id}">${esc(e.text)}</div>`;
+    case "tool": {
+      const st = e.status === "running" ? `<span class="st run"></span>` : e.status === "error" ? `<span class="st err">${ic("x", 12)}</span>` : `<span class="st">${ic("check", 12)}</span>`;
+      const m = e.media?.length ? `<div class="ev-media">${e.media.map((p) => isVid(p) ? `<video src="${media(p)}" muted loop playsinline controls preload="metadata"></video>` : `<a href="${media(p)}" target="_blank"><img src="${media(p)}" loading="lazy"></a>`).join("")}</div>` : "";
+      return `<div data-ev="${e.id}"><details class="ev-tool"><summary>${st}<span class="grow">${esc(e.summary)}</span><span class="tn">${esc(e.name)}</span></summary><pre>${esc(e.input)}${e.output ? `\n\n→ ${esc(e.output)}` : ""}</pre></details>${m}</div>`;
+    }
+    case "question": {
+      if (e.status !== "waiting") return `<div class="qcard done" data-ev="${e.id}">${e.questions.map((q) => `<div class="ans">${esc(q.question)} — <b>${esc(e.answers?.[q.question] ?? (e.status === "cancelled" ? "not answered" : ""))}</b></div>`).join("")}</div>`;
+      return `<div class="qcard" data-ev="${e.id}">${e.questions.map((q, qi) => `<div class="q" data-qi="${qi}">${q.header ? `<span class="badge identity hdr">${esc(q.header)}</span>` : ""}<b>${esc(q.question)}</b>
+        ${q.options.map((o, oi) => `<div class="opt ${q.multiSelect ? "multi" : ""}" role="button" tabindex="0" data-oi="${oi}"><span class="mk"></span><div class="grow"><div class="l">${esc(o.label)}</div>${o.description ? `<div class="d">${esc(o.description)}</div>` : ""}${o.preview ? `<pre>${esc(o.preview)}</pre>` : ""}</div></div>`).join("")}
+        <div class="other"><input placeholder="Other…" data-other="${qi}"></div></div>`).join("")}
+        <div class="acts"><button class="primary" data-answer>Send ${e.questions.length > 1 ? "answers" : "answer"}</button></div></div>`;
+    }
+    case "permission": {
+      if (e.status !== "waiting") return `<div class="qcard done pcard" data-ev="${e.id}"><div class="ans">${esc(e.tool)}: <b>${e.status === "allowed" ? "allowed" : e.status === "denied" ? "declined" : "cancelled"}</b></div></div>`;
+      return `<div class="qcard pcard" data-ev="${e.id}"><div class="q"><span class="badge warn hdr">Permission</span><b>Claude wants to use ${esc(e.tool)}: it ${esc(e.reason)}.</b><code>${esc(e.detail)}</code></div>
+        <div class="acts"><button data-permit="deny">Deny</button><button data-permit="always">Always allow in this chat</button><button class="primary" data-permit="allow">Allow</button></div></div>`;
+    }
+  }
+  return "";
+}
+
+function bindEv(el, e) {
+  if (e.k === "question" && e.status === "waiting") {
+    $$(".opt", el).forEach((o) => o.addEventListener("click", () => {
+      const q = o.closest(".q"), qd = e.questions[Number(q.dataset.qi)];
+      if (!qd.multiSelect) $$(".opt", q).forEach((x) => x.classList.toggle("on", x === o)); else o.classList.toggle("on");
+      $$(".opt.on .mk", q).forEach((m) => { m.innerHTML = ic("check", 12); }); $$(".opt:not(.on) .mk", q).forEach((m) => { m.innerHTML = ""; });
+    }));
+    $("[data-answer]", el).addEventListener("click", async (b) => {
+      const answers = {};
+      for (const q of $$(".q", el)) {
+        const qd = e.questions[Number(q.dataset.qi)];
+        const picked = $$(".opt.on", q).map((o) => qd.options[Number(o.dataset.oi)].label);
+        const other = $("[data-other]", q).value.trim();
+        if (other) picked.push(other);
+        if (!picked.length) return toast("Choose an answer for each question");
+        answers[qd.question] = picked.join(", ");
+      }
+      b.target.disabled = true;
+      try { await post(`/api/create/${cr.meta.id}/answer`, { event: e.id, answers }); } catch (err) { toast(err.message); b.target.disabled = false; }
+    });
+  }
+  if (e.k === "permission" && e.status === "waiting") {
+    $$("[data-permit]", el).forEach((b) => b.addEventListener("click", async () => {
+      const v = b.dataset.permit;
+      try { await post(`/api/create/${cr.meta.id}/permit`, { event: e.id, allow: v !== "deny", always: v === "always" }); } catch (err) { toast(err.message); }
+    }));
+  }
+}
+
+function paintEv(e) {
+  const box = $("#cr-events"); if (!box) return;
+  const old = $(`[data-ev="${e.id}"]`, box);
+  const tmp = document.createElement("div"); tmp.innerHTML = evHtml(e);
+  const el = tmp.firstElementChild; if (!el) return;
+  // Keep a step that the owner opened open while it updates.
+  const wasOpen = old?.querySelector("details")?.open;
+  if (old) old.replaceWith(el); else box.appendChild(el);
+  if (wasOpen) el.querySelector("details").open = true;
+  bindEv(el, e);
+  paintTyping();
+  if (!old || e.k === "text") stickToBottom();
+}
+function paintTyping() {
+  const t = $("#cr-typing"); if (!t) return;
+  const last = cr.events.at(-1);
+  t.hidden = !(cr.meta?.status === "running" && !(last?.k === "text" && !last.done));
+}
+function stickToBottom() { if (window.innerHeight + window.scrollY > document.body.scrollHeight - 320) window.scrollTo(0, document.body.scrollHeight); }
+
+function paintMeta() {
+  const m = cr.meta; if (!m || !$("#cr-meter")) return;
+  const st = { running: ["Working", "running"], waiting: ["Waiting for you", "warn"], done: ["Done", "ok"], failed: ["Stopped with an error", "bad"], stopped: ["Stopped", ""], idle: ["Ready", ""] }[m.status] || [m.status, ""];
+  const live = m.status === "running" || m.status === "waiting";
+  const secs = live && m.runStartedAt ? (Date.now() - Date.parse(m.runStartedAt)) / 1000 + m.usage.ms / 1000 : m.usage.ms / 1000;
+  const tok = m.usage.inputTokens + m.usage.outputTokens;
+  const plan = m.usage.plan?.utilization != null ? `${Math.round(m.usage.plan.utilization * (m.usage.plan.utilization <= 1 ? 100 : 1))}% of your ${m.usage.plan.window === "seven_day" ? "week" : "5-hour"} limit` : "";
+  $("#cr-meter").innerHTML = `<span class="badge ${st[1]}">${st[0]}</span><span>${Math.floor(secs / 60)}:${String(Math.floor(secs % 60)).padStart(2, "0")}</span>${tok ? `<span>${tok > 999 ? (tok / 1000).toFixed(tok > 99999 ? 0 : 1) + "k" : tok} tokens</span>` : ""}${plan ? `<span>${plan}</span>` : ""}`;
+  const send = $("#cr-send");
+  if (send) { send.classList.toggle("stop", live); send.innerHTML = ic(live && !$("#cr-text").value.trim() ? "stop" : "up", 18); send.title = live && !$("#cr-text").value.trim() ? "Stop" : "Send"; }
+  $$(".composer .chips select").forEach((x) => { x.disabled = cr.events.length > 0; });
+  paintTyping();
+}
+
+function notify(title, body) {
+  if (!document.hidden || !("Notification" in window) || Notification.permission !== "granted") return;
+  try { const n = new Notification(title, { body, tag: `reelcut-${cr.meta?.id}` }); n.onclick = () => { window.focus(); n.close(); }; } catch { /* not allowed here */ }
+}
+
+function openStream(id) {
+  cr.es?.close();
+  const es = new EventSource(`/api/create/${id}/events`); cr.es = es;
+  es.onmessage = (msg) => {
+    const e = JSON.parse(msg.data);
+    if (e.k === "meta") {
+      const before = cr.meta?.status; cr.meta = e.meta; paintMeta();
+      if (before !== "done" && e.meta.status === "done") notify("Your reel is ready", cr.meta.title);
+      if (e.meta.reel) refreshReel();
+      return;
+    }
+    const i = cr.byId.get(e.id);
+    if (i == null) { cr.byId.set(e.id, cr.events.length); cr.events.push(e); } else cr.events[i] = e;
+    if (e.k === "question" && e.status === "waiting") notify("Claude has a question", e.questions[0]?.question || "");
+    if (e.k === "permission" && e.status === "waiting") notify("Claude needs your permission", `${e.tool}: ${e.reason}`);
+    if (e.k === "tool" && e.status !== "running" && /render|measure|reel\.json/i.test(e.input)) refreshReel();
+    // Streaming text arrives many times a second: paint it once a frame.
+    if (e.k === "text" && !e.done) { cr.pendingPaint = e; if (!cr.raf) cr.raf = requestAnimationFrame(() => { cr.raf = null; paintEv(cr.pendingPaint); }); }
+    else paintEv(e);
+  };
+}
+
+const refreshReel = debounce(async () => {
+  if (!cr.meta || !$("#cr-panel")) return;
+  const r = (await api(`/api/create/${cr.meta.id}/reel`)).reel;
+  const p = $("#cr-panel");
+  if (!r) { p.innerHTML = `<h3>Reel</h3><p class="note">The reel appears here as Claude plans it: beats first, then frames, then the clips as they render.</p>`; return; }
+  const live = cr.meta.status === "running" || cr.meta.status === "waiting";
+  p.innerHTML = `<h3>Reel <span class="note" style="font-weight:400">${r.beats.length} beat${r.beats.length === 1 ? "" : "s"} · ${Math.round(r.seconds)} s${r.format ? ` · ${esc(r.format)}` : ""}</span></h3>
+    ${r.master ? `<video class="master" src="${media(r.master)}" ${r.poster ? `poster="${media(r.poster)}"` : ""} controls playsinline></video>` : ""}
+    <div class="cr-beats">${r.beats.map((b, i) => `<div class="cr-beat">${b.clip ? `<video src="${media(b.clip)}" muted loop playsinline autoplay></video>` : b.frame ? `<img src="${media(b.frame)}">` : live ? `<span class="st run" style="width:16px;height:16px;border-radius:50%;border:2px solid var(--label-3);border-top-color:var(--accent);animation:spin 900ms linear infinite"></span>` : "—"}<b>${i + 1} · ${esc(b.id)}</b></div>`).join("")}</div>
+    ${r.contact ? `<a href="${media(r.contact)}" target="_blank"><img class="sheet" src="${media(r.contact)}"></a>` : r.sheet ? `<a href="${media(r.sheet)}" target="_blank"><img class="sheet" src="${media(r.sheet)}"></a>` : ""}
+    ${r.plan ? `<details><summary class="note" style="cursor:pointer">Plan</summary><div class="ev-text" style="font-size:13px;margin-top:8px">${md(r.plan)}</div></details>` : ""}
+    <p class="foot-note">${esc(r.dir)}</p>`;
+  if (live) { clearTimeout(cr.reelTimer); cr.reelTimer = setTimeout(refreshReel, 5000); }
+}, 300);
+
+function composerHtml(first) {
+  const pers = (cr.list?.personalities || []);
+  const def = pers.find((p) => p.isDefault);
+  const d = cr.draft;
+  if (d.settings.personality === undefined && def) d.settings.personality = def.id;
+  const sel = (id, opts, v, label) => `<select id="${id}" aria-label="${label}">${opts.map(([k, l]) => `<option value="${esc(k)}" ${k === (v ?? "") ? "selected" : ""}>${esc(l)}</option>`).join("")}</select>`;
+  return `<div class="composer liquid-glass liquid-glass-milky ${first ? "land" : ""}" id="cr-composer">
+    ${first ? `<div class="chips">${sel("cr-pers", [["", "No personality"], ...pers.map((p) => [p.id, p.name])], d.settings.personality, "Personality")}
+      ${sel("cr-format", [["", "Format: ask"], ["9:16", "9:16"], ["1:1", "1:1"], ["4:5", "4:5"], ["16:9", "16:9"]], d.settings.format, "Format")}
+      ${sel("cr-length", [["", "Length: ask"], ["full", "Whole script"], ["short", "Short cut"]], d.settings.length, "Length")}
+      ${sel("cr-res", [["", "Quality: ask"], ["hd", "HD"], ["4k", "4K"]], d.settings.resolution, "Quality")}</div>` : ""}
+    <div class="files" id="cr-files">${cr.files.map((f, i) => `<span class="chip" data-rmfile="${i}">${ic("attach", 12)} ${esc(f.name)} <span style="color:var(--label-2)">${f.kind}</span> ${ic("x", 11)}</span>`).join("")}</div>
+    <div class="row"><button class="icon" id="cr-attach" title="Add a script, a voiceover or assets" aria-label="Attach">${ic("attach", 18)}</button>
+      <textarea id="cr-text" rows="1" placeholder="${first ? "Paste a script, or say what the reel should be about…" : "Reply, or ask for a change…"}"></textarea>
+      <button class="send" id="cr-send" title="Send" aria-label="Send">${ic("up", 18)}</button></div>
+    <div class="meta"><button class="plain sm" id="cr-model">${esc((cr.list?.models || []).find(([k]) => k === (cr.meta?.model ?? d.model))?.[1] || "Default model")} · ${esc((cr.list?.efforts || []).find(([k]) => k === (cr.meta?.effort ?? d.effort))?.[1] || "default")} effort</button><span class="grow"></span><span>Runs on your Claude login</span></div>
+    <input type="file" id="cr-file" multiple hidden></div>`;
+}
+
+function bindComposer(first) {
+  const ta = $("#cr-text"), d = cr.draft;
+  const grow = () => { ta.style.height = "auto"; ta.style.height = Math.min(240, ta.scrollHeight) + "px"; paintMeta(); };
+  ta.addEventListener("input", grow);
+  ta.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); crSend(first); } });
+  $("#cr-send").addEventListener("click", () => {
+    const live = cr.meta && (cr.meta.status === "running" || cr.meta.status === "waiting");
+    if (live && !ta.value.trim() && !cr.files.length) return post(`/api/create/${cr.meta.id}/stop`).catch((e) => toast(e.message));
+    crSend(first);
+  });
+  if (first) {
+    $("#cr-pers").addEventListener("change", (e) => { d.settings.personality = e.target.value; });
+    $("#cr-format").addEventListener("change", (e) => { d.settings.format = e.target.value || undefined; });
+    $("#cr-length").addEventListener("change", (e) => { d.settings.length = e.target.value || undefined; });
+    $("#cr-res").addEventListener("change", (e) => { d.settings.resolution = e.target.value || undefined; });
+  }
+  const pick = (kind, accept) => { const inp = $("#cr-file"); inp.accept = accept; inp.dataset.kind = kind; inp.click(); };
+  $("#cr-attach").addEventListener("click", (e) => openMenu(e.currentTarget, [
+    { label: "Script (.txt or .srt)", act: () => pick("script", ".txt,.srt,.md,text/plain") },
+    { label: "Voiceover (audio)", act: () => pick("voiceover", "audio/*,.wav,.mp3,.m4a") },
+    { label: "Assets or footage", act: () => pick("asset", "image/*,video/*,.svg,.pdf") },
+  ]));
+  $("#cr-file").addEventListener("change", (e) => {
+    const kind = e.target.dataset.kind;
+    for (const f of e.target.files) cr.files.push({ name: f.name, kind, file: f });
+    e.target.value = ""; repaintFiles();
+  });
+  $("#cr-model").addEventListener("click", (e) => openMenu(e.currentTarget, [
+    { cap: "Model" }, ...(cr.list?.models || []).map(([k, l]) => ({ label: l, check: (cr.meta?.model ?? d.model) === k, act: () => setModel("model", k) })),
+    { sep: true }, { cap: "Effort" }, ...(cr.list?.efforts || []).map(([k, l]) => ({ label: l, check: (cr.meta?.effort ?? d.effort) === k, act: () => setModel("effort", k) })),
+  ]));
+  // Drop files anywhere on the composer.
+  const comp = $("#cr-composer");
+  comp.addEventListener("dragover", (e) => { e.preventDefault(); e.stopPropagation(); });
+  comp.addEventListener("drop", (e) => {
+    e.preventDefault(); e.stopPropagation();
+    for (const f of e.dataTransfer.files) cr.files.push({ name: f.name, kind: /\.(txt|srt|md)$/i.test(f.name) ? "script" : /^audio\//.test(f.type) ? "voiceover" : "asset", file: f });
+    repaintFiles();
+  });
+  repaintFiles();
+  setTimeout(() => ta.focus({ preventScroll: true }), 50);
+}
+function setModel(k, v) { if (cr.meta) toast("The model applies to new chats; this one keeps its own."); else { cr.draft[k] = v; $("#cr-model").textContent = `${(cr.list.models.find(([x]) => x === cr.draft.model) || [, "Default model"])[1]} · ${(cr.list.efforts.find(([x]) => x === cr.draft.effort) || [, "default"])[1]} effort`; } }
+function repaintFiles() {
+  const box = $("#cr-files"); if (!box) return;
+  box.innerHTML = cr.files.map((f, i) => `<span class="chip" data-rmfile="${i}">${ic("attach", 12)} ${esc(f.name)} <span style="color:var(--label-2)">${f.kind}</span> ${ic("x", 11)}</span>`).join("");
+  $$("[data-rmfile]", box).forEach((c) => c.addEventListener("click", () => { cr.files.splice(Number(c.dataset.rmfile), 1); repaintFiles(); }));
+}
+
+async function uploadFile(id, f) {
+  const r = await fetch(`/api/create/${id}/files`, { method: "POST", body: f.file, headers: { "x-reelcut-name": encodeURIComponent(f.name), "x-reelcut-kind": f.kind } });
+  const j = await r.json(); if (!r.ok) throw new Error(j.error || r.statusText);
+  return j.file;
+}
+
+async function crSend(first) {
+  const ta = $("#cr-text"), text = ta.value;
+  if (!text.trim() && !cr.files.length) return;
+  if ("Notification" in window && Notification.permission === "default") Notification.requestPermission().catch(() => {});
+  const btn = $("#cr-send"); btn.disabled = true;
+  try {
+    let id = cr.meta?.id;
+    if (!id) { const r = await post("/api/create", { settings: Object.fromEntries(Object.entries(cr.draft.settings).filter(([, v]) => v)), model: cr.draft.model, effort: cr.draft.effort }); id = r.session.id; }
+    const files = [];
+    for (const f of cr.files) files.push(await uploadFile(id, f));
+    await post(`/api/create/${id}/${cr.meta ? "message" : "start"}`, { text, files });
+    ta.value = ""; cr.files = []; cr.draft = { settings: {}, model: "", effort: "" };
+    if (!cr.meta) { location.hash = `#create/${id}`; return; }
+    repaintFiles(); ta.style.height = "auto";
+  } catch (e) { toast(e.message); }
+  btn.disabled = false;
+}
+
+async function renderCreate(id) {
+  cr.list = await api("/api/create");
+  setCount("create", cr.list.sessions.filter((s) => s.status === "waiting").length ? "●" : "");
+  clearInterval(cr.tick); cr.es?.close(); cr.es = null;
+  if (!id) {
+    cr.meta = null; cr.events = []; cr.byId = new Map();
+    const list = cr.list.sessions;
+    $("#main").innerHTML = `${pageHead("Create")}
+      <div class="cr-land"><h2>What should the reel say?</h2><p class="lede" style="margin:0 auto 24px">Paste your script or drop a .txt or .srt, add a voiceover or assets, and say how it should feel. Claude makes the reel with /reelcut, asks you what it needs to know right here, and shows every beat as it renders.</p></div>
+      ${list.length ? `<div class="cap" style="max-width:720px;margin:32px auto 8px">Recent</div><div class="group cr-list" style="max-width:720px;margin:0 auto 260px">${list.map((s) => `<a class="row-i" href="#create/${s.id}" style="color:var(--label);text-decoration:none"><span class="col"><span class="t">${esc(s.title)}</span><span class="s">${esc(when(s.updatedAt))}</span></span><span class="badge ${s.status === "done" ? "ok" : s.status === "waiting" ? "warn" : s.status === "running" ? "running" : s.status === "failed" ? "bad" : ""}">${{ done: "Done", waiting: "Waiting for you", running: "Working", failed: "Error", stopped: "Stopped", idle: "Draft" }[s.status] || s.status}</span></a>`).join("")}</div>` : ""}
+      ${composerHtml(true)}`;
+    bindComposer(true); paintIcons();
+    return;
+  }
+  const r = await api(`/api/create/${id}`);
+  cr.meta = r.session; cr.events = r.events; cr.byId = new Map(r.events.map((e, i) => [e.id, i]));
+  $("#main").innerHTML = `${pageHead(esc(cr.meta.title), { back: `<a class="back" href="#create">${ic("back", 18)}Create</a>`, actions: `<span class="cr-meter" id="cr-meter"></span><button class="sm" id="cr-rename">Rename</button>` })}
+    <div class="cr-tabs">${segHtml("cr-view", [["chat", "Chat"], ["reel", "Reel"]], cr.view)}</div>
+    <div class="cr" data-view="${cr.view}"><section class="cr-chat"><div id="cr-events" style="display:flex;flex-direction:column;gap:14px"></div><div id="cr-typing" hidden><span class="typing"><i></i><i></i><i></i></span></div></section>
+      <aside class="cr-panel" id="cr-panel"></aside></div>
+    ${composerHtml(false)}`;
+  for (const e of cr.events) paintEv(e);
+  bindComposer(false); bindSeg("cr-view", (v) => { cr.view = v; $(".cr").dataset.view = v; });
+  $("#cr-rename").addEventListener("click", async () => { const v = await askText({ title: "Rename", value: cr.meta.title }); if (v) { await patch(`/api/create/${id}`, { title: v }); $(".phead h1").textContent = v; } });
+  paintMeta(); refreshReel(); openStream(id);
+  cr.tick = setInterval(paintMeta, 1000);
+  window.scrollTo(0, document.body.scrollHeight);
+}
 
 // ---------- personality: the design crafter
 const PZ_STEPS = [
@@ -2057,7 +2427,7 @@ async function updateBadges() {
   setCount("jobs", state.jobs.filter((j) => j.status === "running").length ? "●" : "");
   setCount("more", (state.counts.pending || 0) + waiting || "");
 }
-const TAB_INDEX = { library: 0, footage: 1, reels: 2 };
+const TAB_INDEX = { create: 0, library: 1, reels: 2 };
 function skeleton(title) { $("#main").innerHTML = `${pageHead(title)}<div class="grid" aria-busy="true">${Array.from({ length: 8 }, () => `<div class="skel card"></div>`).join("")}</div>`; }
 async function route() {
   const [tab, id, sub] = (location.hash.slice(1) || "library").split("/");
@@ -2065,6 +2435,7 @@ async function route() {
   const changed = tab !== state.tab;
   state.tab = tab;
   closeMenu(); closeSheet();
+  if (tab !== "create") { cr.es?.close(); cr.es = null; clearInterval(cr.tick); clearTimeout(cr.reelTimer); }
   $$("[data-tab]").forEach((a) => { const on = a.dataset.tab === tab; a.classList.toggle("on", on); if (on) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
   $("#tabbar").style.setProperty("--i", TAB_INDEX[tab] ?? 3);
   clearTimeout(poll);
@@ -2083,6 +2454,7 @@ async function route() {
     else if (tab === "patterns") { await loadPatterns(); renderPatterns(); }
     else if (tab === "sounds") { await loadPackSounds(); renderSounds(); }
     else if (tab === "personality") await renderPersonality(id, sub);
+    else if (tab === "create") await renderCreate(id);
     else { await loadLibrary(); renderLibrary(); }
   } catch (e) { $("#main").innerHTML = `${pageHead("Something went wrong")}${emptyState("x", "This page could not load", esc(e.message), `<button class="primary" id="retry">Retry</button>`)}`; $("#retry")?.addEventListener("click", route); }
   clearTimeout(slow);

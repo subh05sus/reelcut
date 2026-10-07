@@ -1,5 +1,5 @@
 import { spawn, type ChildProcess } from "node:child_process";
-import { createReadStream, existsSync, readFileSync, rmSync, statSync } from "node:fs";
+import { createReadStream, existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import http, { type IncomingMessage, type ServerResponse } from "node:http";
 import { createRequire } from "node:module";
 import path from "node:path";
@@ -35,6 +35,7 @@ import { addMoment, findMoments, patchFootage, refreshFootageAnalysis, removeMom
 import { PLATFORMS } from "../library/schema.js";
 import { HIGGSFIELD_SETTINGS, loadSettings, setHiggsfieldSetting, type HiggsfieldSetting } from "../library/settings.js";
 import { readGeneration } from "../generate/log.js";
+import { CreateManager, filesDir as createFilesDir, insideAllowed, reelState } from "../create/manager.js";
 import { FAMILIES, PAIRINGS, fontFaceCss, loadFontLibrary } from "../fonts/index.js";
 import { reelcutHome } from "../library/store.js";
 import {
@@ -117,6 +118,11 @@ function defaultSpawnRender(manifest: string, beat: string): ChildProcess {
   const tsx = createRequire(import.meta.url).resolve("tsx/cli");
   const script = path.join(REPO, "skills", "reelcut", "scripts", "render.ts");
   return spawn(process.execPath, [tsx, script, manifest, "--only", beat, "--clips-only"], { cwd: REPO, windowsHide: true });
+}
+
+function writeFileSyncSafe(file: string, text: string): void {
+  mkdirSync(path.dirname(file), { recursive: true });
+  writeFileSync(file, text);
 }
 
 /** Where the twenty style previews are rendered to, once (`npm run personality -- previews`). */
@@ -415,6 +421,8 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
   };
   const jobs: Job[] = [];
   let jobSeq = 0;
+  /** Create conversations: made on first use, so a studio that never opens Create never touches them. */
+  let create: CreateManager | undefined;
   const page = () => readFileSync(path.join(HERE, "index.html"), "utf8");
 
   const server = http.createServer((req, res) => {
@@ -892,6 +900,91 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
       }
     }
 
+    // ---- create: a reel made from the dashboard, Claude Code driving /reelcut, the conversation streamed here
+    if (parts[0] === "api" && parts[1] === "create") {
+      const cm = (create ??= new CreateManager());
+      if (read && parts.length === 2) {
+        return sendJson(res, 200, {
+          sessions: cm.list(),
+          personalities: loadPersonalities().map((pp) => ({ id: pp.id, name: pp.name, isDefault: pp.isDefault })),
+          models: [["", "Default"], ["opus", "Opus"], ["sonnet", "Sonnet"], ["haiku", "Haiku"]],
+          efforts: [["", "Default"], ["low", "Low"], ["medium", "Medium"], ["high", "High"], ["xhigh", "Extra high"], ["max", "Max"]],
+        });
+      }
+      if (method === "POST" && parts.length === 2) {
+        const b = (await readBody(req)) as { title?: string; settings?: Record<string, string>; model?: string; effort?: string };
+        const sess = cm.create(String(b.title ?? "New reel"), b.settings ?? {}, b.model || undefined, b.effort || undefined);
+        return sendJson(res, 201, { session: { ...sess, events: undefined } });
+      }
+      const id = parts[2] ?? "";
+      const sess = cm.get(id);
+      if (!sess) throw new HttpError(404, "no such conversation");
+      if (read && parts.length === 3) return sendJson(res, 200, { session: { ...sess, events: undefined }, events: sess.events });
+      // The live stream: every event and every change to one, as server-sent events.
+      if (read && parts[3] === "events" && parts.length === 4) {
+        res.writeHead(200, { "Content-Type": "text/event-stream", "Cache-Control": "no-store", Connection: "keep-alive" });
+        res.write(": open\n\n");
+        const off = cm.subscribe(id, (e) => res.write(`data: ${JSON.stringify(e)}\n\n`));
+        const beat = setInterval(() => res.write(": beat\n\n"), 20000);
+        req.on("close", () => { off(); clearInterval(beat); });
+        return;
+      }
+      if (read && parts[3] === "reel" && parts.length === 4) return sendJson(res, 200, { reel: reelState(sess.reel) });
+      if (method === "PATCH" && parts.length === 3) {
+        const b = (await readBody(req)) as { title?: string };
+        if (typeof b.title === "string") cm.rename(id, b.title);
+        return sendJson(res, 200, { ok: true });
+      }
+      // Attachments: the script, the voiceover, assets. Saved with the conversation; assets also go into the library.
+      if (method === "POST" && parts[3] === "files" && parts.length === 4) {
+        const name = cleanName(decodeURIComponent(String(req.headers["x-reelcut-name"] ?? "file")));
+        const kind = String(req.headers["x-reelcut-kind"] ?? "asset");
+        let stored;
+        try { stored = await streamToTemp(req); } catch (error) { if (error instanceof IngestError) throw new HttpError(413, error.message); throw error; }
+        const dir = kind === "asset" ? path.join(createFilesDir(id), "assets") : createFilesDir(id);
+        mkdirSync(dir, { recursive: true });
+        const dest = path.join(dir, name);
+        renameSync(stored.temp, dest);
+        if (kind === "asset") {
+          safely(() => void (async () => {
+            const copy = await streamToTemp(createReadStream(dest));
+            await ingestBatch([{ file: name, name, source: { kind: "upload", origin: "upload", assetKind: "generic", trusted: false, private: false }, stored: copy }]);
+          })().catch(() => undefined));
+        }
+        return sendJson(res, 201, { file: { name, path: dest, kind } });
+      }
+      if (method === "POST" && (parts[3] === "start" || parts[3] === "message") && parts.length === 4) {
+        const b = (await readBody(req, 512 * 1024)) as { text?: string; files?: { name: string; path: string; kind: string }[] };
+        const files = (b.files ?? []).filter((f) => typeof f.path === "string" && f.path.startsWith(createFilesDir(id)));
+        const text = String(b.text ?? "");
+        if (!text.trim() && !files.length) throw new HttpError(400, "write something, or add a script");
+        if (parts[3] === "start") {
+          const script = files.find((f) => f.kind === "script");
+          const vo = files.find((f) => f.kind === "voiceover");
+          const assets = files.some((f) => f.kind === "asset") ? path.join(createFilesDir(id), "assets") : undefined;
+          const pers = sess.settings.personality ? getPersonality(sess.settings.personality) : undefined;
+          // A pasted script becomes a file, so /reelcut gets a path like any other script.
+          let scriptPath = script?.path;
+          if (!scriptPath && text.trim().split(/\s+/).length > 25) { scriptPath = path.join(createFilesDir(id), "script.txt"); writeFileSyncSafe(scriptPath, text.trim()); }
+          const prompt = cm.firstPrompt(sess, { text: scriptPath && !script ? "" : text, scriptPath, voiceoverPath: vo?.path, assetsDir: assets, settings: sess.settings, personalityName: pers?.name });
+          if (sess.title === "New reel") cm.rename(id, text.trim().split("\n")[0]!.slice(0, 60) || script?.name || "New reel");
+          cm.send(id, text, files, prompt);
+        } else cm.send(id, text, files);
+        return sendJson(res, 202, { ok: true });
+      }
+      if (method === "POST" && parts[3] === "answer" && parts.length === 4) {
+        const b = (await readBody(req)) as { event?: string; answers?: Record<string, string> };
+        try { cm.answer(id, String(b.event), b.answers ?? {}); } catch (error) { throw new HttpError(409, (error as Error).message); }
+        return sendJson(res, 200, { ok: true });
+      }
+      if (method === "POST" && parts[3] === "permit" && parts.length === 4) {
+        const b = (await readBody(req)) as { event?: string; allow?: boolean; always?: boolean };
+        try { cm.permit(id, String(b.event), !!b.allow, !!b.always); } catch (error) { throw new HttpError(409, (error as Error).message); }
+        return sendJson(res, 200, { ok: true });
+      }
+      if (method === "POST" && parts[3] === "stop" && parts.length === 4) { cm.stop(id); return sendJson(res, 200, { ok: true }); }
+    }
+
     // ---- runs
     if (parts[0] === "api" && parts[1] === "runs") {
       if (read && parts.length === 2) return sendJson(res, 200, { runs: listRuns() });
@@ -1026,6 +1119,12 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
         const thumb = asset ? thumbBlobPath(asset) : undefined;
         if (!thumb) throw new HttpError(404, "no preview");
         return sendFile(req, res, thumb);
+      }
+      // Frames, sheets and clips a Create conversation produced: only inside the project or the studio's home.
+      if (parts[1] === "create-media" && parts.length === 2) {
+        const p = url.searchParams.get("path") ?? "";
+        if (!/\.(png|jpe?g|mp4|webm|gif)$/i.test(p) || !path.isAbsolute(p) || !insideAllowed(p) || !existsSync(p)) throw new HttpError(404, "not available");
+        return sendFile(req, res, p);
       }
       // The bundled type, so the Personality page shows every pairing in its real faces.
       if (parts[1] === "font" && parts.length === 3) {

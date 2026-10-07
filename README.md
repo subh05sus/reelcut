@@ -303,6 +303,15 @@ npm run studio          # http://localhost:5198
 A local page, and the place everything you keep lives. It listens on 127.0.0.1 only, and only serves
 files from the library or from a recorded reel's folder.
 
+- **Create** — make a reel by talking to Claude. Paste or drop a script (.txt / .srt), add a voiceover or
+  assets, set personality, format, length and quality as chips, and send: Claude Code runs `/reelcut` with
+  **your own Claude login** (the Agent SDK; never an API key) and the chat shows its replies as they stream,
+  its steps (collapsed), frames and clips as they appear, and its questions as cards you answer right there.
+  Edits and commands inside the project run freely; anything outside, or outward-facing, asks you first.
+  Conversations are saved and resume the same session ("make beat 3 calmer"); runs keep going if you close
+  the tab, with a notification when Claude needs you or the reel is done.
+- **Personality** — how every reel looks, moves and sounds: up to three of twenty styles with their colours
+  and type, motion, texture, signature moves, voice, sound, pacing and guardrails.
 - **Library** — every asset, filterable by type (images, vectors, video, sounds) and tag, with its
   source, preview, measurements and editable name, tags, kind and status. **Drop files or whole folders
   on the page** and each one is checked (by its bytes, never its extension), previewed, measured and
