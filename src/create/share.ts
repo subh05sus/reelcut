@@ -1,6 +1,8 @@
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { createReadStream, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { createReadStream, existsSync, mkdirSync, openSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
+import { fileURLToPath } from "node:url";
 import http from "node:http";
 import path from "node:path";
 import { reelcutHome } from "../library/store.js";
@@ -55,7 +57,7 @@ export function cloudflaredPath(): string | undefined {
 export const tunnelUrl = (): string | undefined => tunnel?.url;
 
 /** Starts a quick tunnel to the review port (once), and resolves with its public https address. */
-export function ensureTunnel(port = REVIEW_PORT): Promise<string> {
+export function ensureTunnel(port = REVIEW_PORT, onExit?: () => void): Promise<string> {
   if (tunnel && tunnel.proc.exitCode === null) return tunnel.waiting;
   const bin = cloudflaredPath();
   if (!bin) return Promise.reject(new Error("cloudflared is not installed: run `brew install cloudflared`, then share again"));
@@ -73,13 +75,52 @@ export function ensureTunnel(port = REVIEW_PORT): Promise<string> {
       if (found && registered && !t.url) { t.url = found; clearTimeout(timer); setTimeout(() => resolve(found!), 1500); }
     };
     proc.stdout?.on("data", look); proc.stderr?.on("data", look);
-    proc.on("exit", () => { clearTimeout(timer); if (!t.url) reject(new Error("cloudflared stopped before the tunnel was up")); if (tunnel === t) tunnel = undefined; });
+    proc.on("exit", () => { clearTimeout(timer); if (!t.url) reject(new Error("cloudflared stopped before the tunnel was up")); if (tunnel === t) tunnel = undefined; onExit?.(); });
   });
   tunnel = t;
   return t.waiting;
 }
 export function stopTunnel(): void { tunnel?.proc.kill(); tunnel = undefined; }
 process.on("exit", () => tunnel?.proc.kill());
+
+// ---- the review daemon
+//
+// The review server and its tunnel run in their own background process, not inside the studio: restarting the studio
+// (or closing its terminal) must not take a link down that a client is about to open. The daemon keeps cloudflared up
+// (starting it again if it stops, which gives a new address), and quits by itself once no link is live.
+
+export interface DaemonState { pid: number; port: number; startedAt: string; key: string; url?: string; urlSince?: string }
+const daemonFile = () => path.join(reelcutHome(), "create", "review-daemon.json");
+const alive = (pid: number) => { try { process.kill(pid, 0); return true; } catch { return false; } };
+export function daemonState(): DaemonState | undefined {
+  try { const d = JSON.parse(readFileSync(daemonFile(), "utf8")) as DaemonState; return alive(d.pid) ? d : undefined; } catch { return undefined; }
+}
+export function writeDaemonState(d: DaemonState | undefined): void {
+  if (!d) { rmSync(daemonFile(), { force: true }); return; }
+  mkdirSync(path.dirname(daemonFile()), { recursive: true }); writeFileSync(daemonFile(), JSON.stringify(d));
+}
+/** The public address of the review pages right now, if the daemon has a tunnel up. */
+export const reviewUrl = (): string | undefined => daemonState()?.url;
+
+/** Starts the daemon when it is not running, and waits until its tunnel has an address. */
+export async function ensureReviewDaemon(timeoutMs = 60_000): Promise<string> {
+  if (!cloudflaredPath()) throw new Error("cloudflared is not installed: run `brew install cloudflared`, then share again");
+  if (!daemonState()) {
+    const tsx = createRequire(import.meta.url).resolve("tsx/cli");
+    const script = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "skills", "reelcut", "scripts", "review-daemon.ts");
+    mkdirSync(path.dirname(daemonFile()), { recursive: true });
+    const log = openSync(path.join(path.dirname(daemonFile()), "review-daemon.log"), "a");
+    spawn(process.execPath, [tsx, script], { detached: true, stdio: ["ignore", log, log], env: { ...process.env, REELCUT_HOME: reelcutHome() } }).unref();
+  }
+  const until = Date.now() + timeoutMs;
+  while (Date.now() < until) {
+    const d = daemonState();
+    if (d?.url) return d.url;
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  throw new Error("the review tunnel did not come up within a minute; check your connection and try again");
+}
+export function stopReviewDaemon(): void { const d = daemonState(); if (d) try { process.kill(d.pid, "SIGTERM"); } catch { /* already gone */ } }
 
 // ---- the review server
 

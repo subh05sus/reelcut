@@ -53,3 +53,15 @@ describe("share for review", () => {
     expect(findShare(sh.token, Date.now() + 2 * 86_400_000)).toBeUndefined();
   });
 });
+
+describe("review daemon state", () => {
+  it("is only believed while its process is alive", async () => {
+    const { daemonState, writeDaemonState, reviewUrl } = await import("../src/create/share.js");
+    writeDaemonState({ pid: process.pid, port: 1, startedAt: "", key: "k", url: "https://a.trycloudflare.com" });
+    expect(reviewUrl()).toBe("https://a.trycloudflare.com");
+    writeDaemonState({ pid: 999_999, port: 1, startedAt: "", key: "k", url: "https://b.trycloudflare.com" });
+    expect(daemonState()).toBeUndefined();
+    expect(reviewUrl()).toBeUndefined();
+    writeDaemonState(undefined);
+  });
+});

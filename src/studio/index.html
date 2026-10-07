@@ -600,6 +600,7 @@
   .intpill .dot { width: 7px; height: 7px; }
   .intpill .s { color: var(--label-2); font-weight: 400; }
   .dot.st-connected { background: var(--green); } .dot.st-needs-auth, .dot.st-pending { background: var(--orange); } .dot.st-failed { background: var(--red); }
+  .dot.st-offline { background: var(--orange); } .dot.st-off { background: var(--label-3); }
   .dot.st-not-added { background: var(--label-3); } .dot.st-planned { background: transparent; box-shadow: inset 0 0 0 1.5px var(--label-3); }
   @media (max-width: 899px) { .intpill { height: 32px; } }
   .cr-sec { max-width: 720px; margin: 0 auto 24px; }
@@ -1534,12 +1535,14 @@ function bindMaster(r) {
 async function openShare() {
   let st;
   try { st = await api(`/api/create/${cr.meta.id}/shares`); } catch (err) { toast(err.message); return; }
-  const rows = st.shares.map((x) => `<div class="row-i"><span class="col grow"><span class="t" style="overflow-wrap:anywhere">${x.url ? esc(x.url) : "Link paused (the tunnel is off)"}</span><span class="s">Until ${esc(new Date(x.expiresAt).toLocaleDateString([], { weekday: "short", day: "numeric", month: "short" }))}</span></span>${x.url ? `<button class="sm" data-copy-url="${esc(x.url)}">Copy</button>` : ""}<button class="sm" data-off="${esc(x.token)}" style="color:var(--red)">Turn off</button></div>`).join("");
+  const rows = st.shares.map((x) => `<div class="row-i"><span class="col grow"><span class="t" style="overflow-wrap:anywhere">${x.url ? esc(x.url) : "Reconnecting the tunnel…"}</span><span class="s">Until ${esc(new Date(x.expiresAt).toLocaleDateString([], { weekday: "short", day: "numeric", month: "short" }))}</span></span>${x.url ? `<button class="sm" data-copy-url="${esc(x.url)}">Copy</button>` : ""}<button class="sm" data-off="${esc(x.token)}" style="color:var(--red)">Turn off</button></div>`).join("");
+  if (st.shares.some((x) => !x.url)) setTimeout(() => { if ($(".sheet h2")?.textContent === "Share for review") { closeSheet(); openShare(); } }, 3000);
   openSheet({
     title: "Share for review",
     sub: "Anyone with the link can watch this reel and leave comments on its frames, while your studio is running. Nothing else in the studio is reachable through it.",
     body: `${!st.cloudflared ? `<div class="group"><div class="row-i"><span class="col grow"><span class="t">One thing to install first</span><span class="s">The link runs through a free Cloudflare tunnel. In a terminal: <code>brew install cloudflared</code></span></span></div></div>` : ""}
-      ${rows ? `<div class="cap">Links</div><div class="group">${rows}</div>` : ""}
+      ${rows ? `<div class="cap">Links</div><div class="group">${rows}</div>
+        <p class="foot-note">The link keeps working when the studio restarts. If your Mac sleeps or changes network, the tunnel comes back with a new address${st.since ? ` (this one since ${esc(new Date(st.since).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }))})` : ""}: copy it again from here.</p>` : ""}
       <div class="acts"><select id="sh-days" aria-label="How long"><option value="1">For a day</option><option value="7" selected>For a week</option><option value="30">For a month</option></select><button data-sclose>Close</button><button class="primary" id="sh-new" ${st.cloudflared ? "" : "disabled"}>${rows ? "New link" : "Create link"}</button></div>`,
     bind: (sh) => {
       $$("[data-copy-url]", sh).forEach((b) => b.addEventListener("click", async () => { try { await navigator.clipboard.writeText(b.dataset.copyUrl); b.textContent = "Copied"; } catch { toast("Could not copy"); } }));
@@ -1844,7 +1847,7 @@ async function crSend(first) {
 }
 
 /** The integrations bar: Claude Code itself, then each MCP server reels are orchestrated with. */
-const INT_WORD = { connected: "Connected", "needs-auth": "Needs sign-in", pending: "Needs approval", failed: "Not reachable", "not-added": "Not added", planned: "Coming" };
+const INT_WORD = { connected: "Connected", "needs-auth": "Needs sign-in", pending: "Needs approval", failed: "Not reachable", "not-added": "Not added", planned: "Coming", offline: "Chrome closed", off: "Turned off" };
 async function paintIntegrations(force) {
   const bar = $("#intbar"); if (!bar) return;
   if (!cr.ints || force) { if (!cr.ints) bar.innerHTML = `<span class="intpill"><span class="dot st-planned"></span>Checking tools…</span>`; try { cr.ints = await api(`/api/integrations${force ? "?refresh" : ""}`); } catch { return; } }
@@ -1858,6 +1861,9 @@ async function paintIntegrations(force) {
       return pill(x.id, x.name, state, INT_WORD[state] || state);
     }).join("");
   $$("[data-int]", bar).forEach((p) => p.addEventListener("click", () => openIntegration(p.dataset.int)));
+  // Chrome comes and goes with the browser: look again now and then while the bar is on screen.
+  clearTimeout(cr.intTimer);
+  cr.intTimer = setTimeout(async () => { if (!$("#intbar")) return; try { cr.ints = await api("/api/integrations"); } catch { return; } paintIntegrations(); }, 20000);
 }
 function openIntegration(k) {
   const i = cr.ints; if (!i) return;

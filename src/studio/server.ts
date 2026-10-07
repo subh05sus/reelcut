@@ -39,7 +39,7 @@ import { CreateManager, filesDir as createFilesDir, insideAllowed, reelState } f
 import { readIntegrations } from "../create/integrations.js";
 import { drawPrompt } from "../create/draw.js";
 import { addPerformance, analysisPrompt, importPrompt, insights, latest, readPerformance, reelFacts, type PerfRow } from "../create/performance.js";
-import { cloudflaredPath, createShare, ensureTunnel, revokeShare, sharesFor, startReviewServer, stopTunnel, tunnelUrl, REVIEW_PORT, loadShares, liveShare } from "../create/share.js";
+import { cloudflaredPath, createShare, daemonState, ensureReviewDaemon, liveShare, loadShares, reviewUrl, revokeShare, sharesFor, stopReviewDaemon } from "../create/share.js";
 import { writeCaptions } from "../create/captions.js";
 import { coverFrames, LIMITS, makeCover, postKitPrompt, readCovers, readPostKit, PLATFORMS as POST_PLATFORMS, type Platform } from "../create/postkit.js";
 import { getRecipe, listRecipes, recipePrompt, removeRecipe, saveRecipe } from "../create/recipes.js";
@@ -434,11 +434,9 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
   let jobSeq = 0;
   /** Create conversations: made on first use, so a studio that never opens Create never touches them. */
   let create: CreateManager | undefined;
-  // The review server: a separate port with nothing on it but review pages, started the first time a reel is shared.
-  let review: Promise<unknown> | undefined;
-  const ensureReview = () => (review ??= startReviewServer(REVIEW_PORT, {
-    onComment: (sh, text, author, t) => create?.note(sh.conversation, `${author} left a review comment at ${Math.floor(t / 60)}:${(t % 60).toFixed(1).padStart(4, "0")}: “${text.slice(0, 140)}”`),
-  }).catch((error) => { review = undefined; throw error; }));
+  // Shared review links live in their own background process (the review daemon), so restarting the studio never takes
+  // one down. When the studio starts and links are live but the daemon is not, it is started again.
+  if (loadShares().some((x) => liveShare(x)) && !daemonState() && cloudflaredPath()) void ensureReviewDaemon().catch(() => undefined);
   const page = () => readFileSync(path.join(HERE, "index.html"), "utf8");
 
   const server = http.createServer((req, res) => {
@@ -1127,40 +1125,35 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
       }
       // Share for review: a link to a review page for this reel, through a quick tunnel to the review port only.
       if (parts[3] === "shares") {
-        const pub = (x: { token: string; expiresAt: string; createdAt: string }) => ({ token: x.token, createdAt: x.createdAt, expiresAt: x.expiresAt, url: tunnelUrl() ? `${tunnelUrl()}/r/${x.token}` : undefined });
-        if (read && parts.length === 4) return sendJson(res, 200, { shares: sharesFor(id).map(pub), cloudflared: !!cloudflaredPath(), tunnel: tunnelUrl() ?? null });
+        const pub = (x: { token: string; expiresAt: string; createdAt: string }) => { const u = reviewUrl(); return { token: x.token, createdAt: x.createdAt, expiresAt: x.expiresAt, url: u ? `${u}/r/${x.token}` : undefined }; };
+        if (read && parts.length === 4) {
+          // A live link with no tunnel (the Mac slept, the network changed): bring it back; the page asks again shortly.
+          const live = sharesFor(id);
+          if (live.length && !reviewUrl() && cloudflaredPath()) void ensureReviewDaemon().catch(() => undefined);
+          return sendJson(res, 200, { shares: live.map(pub), cloudflared: !!cloudflaredPath(), tunnel: reviewUrl() ?? null, since: daemonState()?.urlSince ?? null });
+        }
         if (method === "POST" && parts.length === 4) {
           const b = (await readBody(req)) as { days?: number };
           const rp = reelPath();
           if (!existsSync(path.join(path.dirname(rp), "master.mp4"))) throw new HttpError(409, "the reel has no master yet");
-          try { await ensureReview(); await ensureTunnel(REVIEW_PORT); } catch (error) { throw new HttpError(409, (error as Error).message); }
+          // The link is saved first, so the daemon (which quits when no link is live) has a reason to stay.
           const sh = createShare(id, sess.title, rp, Math.min(30, Math.max(1, Number(b.days) || 7)));
+          try { await ensureReviewDaemon(); } catch (error) { revokeShare(sh.token); throw new HttpError(409, (error as Error).message); }
           return sendJson(res, 201, { share: pub(sh) });
         }
         if (method === "DELETE" && parts.length === 5) {
           revokeShare(parts[4]!);
-          if (!loadShares().some((x) => liveShare(x))) stopTunnel();
+          if (!loadShares().some((x) => liveShare(x))) stopReviewDaemon();
           return sendJson(res, 200, { ok: true });
         }
       }
-      if (method === "POST" && parts[3] === "performance" && parts.length === 4) {
-        const b = (await readBody(req)) as Record<string, unknown> & { platform?: string };
-        return sendJson(res, 201, { entry: addPerformance(reelPath(), { ...b, platform: String(b.platform ?? "other"), source: "typed" }) });
-      }
-      if (method === "POST" && parts[3] === "performance" && parts[4] === "import" && parts.length === 5) {
-        const b = (await readBody(req)) as { files?: { name: string; path: string }[]; platform?: string };
-        const files = (b.files ?? []).filter((f) => typeof f.path === "string" && f.path.startsWith(createFilesDir(id)));
-        if (!files.length) throw new HttpError(400, "add a screenshot or a CSV");
-        cm.send(id, `Read the results from ${files.map((f) => f.name).join(", ")}`, files.map((f) => ({ ...f, kind: "results" })), importPrompt(reelPath(), files, b.platform || "any"));
-        return sendJson(res, 202, { ok: true });
-      }
-      if (method === "POST" && parts[3] === "draw" && parts.length === 4) {
-        const b = (await readBody(req)) as { what?: string; beat?: string };
-        const what = String(b.what ?? "").trim().slice(0, 500);
-        if (!what) throw new HttpError(400, "say what to draw");
-        const rp = cm.findReel(id);
-        cm.send(id, `Draw: ${what}${b.beat ? ` (for ${b.beat})` : ""}`, [], drawPrompt({ what, ...(b.beat && rp ? { beat: b.beat, reelPath: rp } : rp ? { reelPath: rp } : {}), personality: sess.settings.personality }));
-        return sendJson(res, 202, { ok: true });
+      // A line from the review daemon: a reviewer commented. Only with the daemon's key.
+      if (method === "POST" && parts[3] === "review-note" && parts.length === 4) {
+        const d = daemonState();
+        if (!d || req.headers["x-reelcut-key"] !== d.key) throw new HttpError(403, "not the review daemon");
+        const b = (await readBody(req)) as { text?: string };
+        cm.note(id, String(b.text ?? "").slice(0, 300));
+        return sendJson(res, 200, { ok: true });
       }
       if (parts[3] === "comments") {
         if (read && parts.length === 4) return sendJson(res, 200, { comments: loadComments(id) });

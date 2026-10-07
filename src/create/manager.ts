@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { query, type CanUseTool, type Query, type SDKMessage, type SDKUserMessage } from "@anthropic-ai/claude-agent-sdk";
 import { reelcutHome } from "../library/store.js";
+import { chromeStatus } from "./integrations.js";
 
 /**
  * Create: a reel made from the dashboard. Each conversation drives the real /reelcut skill through Claude Code (the
@@ -90,6 +91,12 @@ const OUTWARD = /\bgit\s+push\b|\bnpm\s+publish\b|\bgh\s+(pr|release|repo)\s+(cr
 export function needsPermission(tool: string, input: Record<string, unknown>, blockedPath?: string): string | null {
   if (blockedPath) return `reaches ${blockedPath}, outside the project`;
   if (tool === "AskUserQuestion") return null;
+  if (/^mcp__claude-in-chrome__/.test(tool)) {
+    const act = tool.replace(/^mcp__claude-in-chrome__/, "");
+    if (act === "navigate") return `opens ${String(input.url ?? "a page")} in your Chrome`;
+    if (act === "computer" || act === "form_input" || act === "javascript_tool") return "clicks, types or runs script in your Chrome";
+    return `uses your Chrome (${act.replace(/_/g, " ")})`;
+  }
   if (/^mcp__/.test(tool)) return "uses a connected service";
   if (["Edit", "Write", "NotebookEdit", "MultiEdit"].includes(tool)) {
     const f = String(input.file_path ?? input.notebook_path ?? "");
@@ -250,6 +257,11 @@ export class CreateManager {
       "This run is driven from the reelcut studio's Create page: the owner is in the studio now, watching this chat.",
       "- Ask your questions with the AskUserQuestion tool; the owner answers them there as cards.",
       "- Never ask whether to open the studio: it is already open, and the page shows the reel as it is made.",
+      ...(chromeStatus().live ? [
+        "- Claude in Chrome is connected (the owner's own browser). For a real product's UI the script needs, you may capture",
+        "  screenshots or a short recording there instead of rebuilding it: say which pages first, never type passwords, never",
+        "  submit, post or buy anything, and mask personal data; each browser action asks the owner in the studio.",
+      ] : []),
       `- Already settled on the page, so never ask about them: ${settled.join("; ")}.`,
       "- Ask only what is still open and what only this script raises (a step with no recording, a figure with no source…).",
       "- Start your first reply with one line `Title: <a short name for this reel, 2 to 6 words>`; the chat is named after it.",
@@ -363,6 +375,8 @@ export class CreateManager {
       options: {
         cwd: REPO, abortController: abort, includePartialMessages: true, canUseTool, env,
         settingSources: ["user", "project", "local"], permissionMode: "default", additionalDirectories: [reelcutHome()],
+        // Claude in Chrome, when it is set up: real screenshots of a product's UI from the owner's own browser.
+        ...(this.opts.queryFn ? {} : chromeStatus().installed && chromeStatus().enabled ? { extraArgs: { chrome: null } } : {}),
         ...(s.claudeSession ? { resume: s.claudeSession } : {}),
         ...(s.model ? { model: s.model } : {}),
         ...(s.effort ? { effort: s.effort as never } : {}),

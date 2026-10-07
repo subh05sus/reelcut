@@ -118,3 +118,30 @@ broken: node x.js - ✗ Failed to connect`);
     expect(integrationStatus([]).find((x) => x.id === "higgsfield")!.state).toBe("not-added");
   });
 });
+
+describe("Claude in Chrome", () => {
+  it("reads whether it is set up, turned on and connected, without talking to the browser", async () => {
+    const { mkdirSync, writeFileSync } = await import("node:fs");
+    const { chromeStatus, integrationStatus } = await import("../src/create/integrations.js");
+    const fake = path.join(home, "mac"), tmp = path.join(home, "tmp");
+    expect(chromeStatus(fake, tmp, "me")).toMatchObject({ installed: false, live: false });
+    expect(integrationStatus([], chromeStatus(fake, tmp, "me"))[0]).toMatchObject({ id: "chrome", state: "not-added" });
+    const hosts = path.join(fake, "Library", "Application Support", "Google", "Chrome", "NativeMessagingHosts");
+    mkdirSync(hosts, { recursive: true }); writeFileSync(path.join(hosts, "com.anthropic.claude_code_browser_extension.json"), "{}");
+    expect(integrationStatus([], chromeStatus(fake, tmp, "me"))[0]).toMatchObject({ state: "offline" });
+    mkdirSync(path.join(tmp, "claude-mcp-browser-bridge-me"), { recursive: true });
+    writeFileSync(path.join(tmp, "claude-mcp-browser-bridge-me", "999999.sock"), "");
+    expect(chromeStatus(fake, tmp, "me").live).toBe(false);
+    writeFileSync(path.join(tmp, "claude-mcp-browser-bridge-me", `${process.pid}.sock`), "");
+    writeFileSync(path.join(fake, ".claude.json"), JSON.stringify({ chromeExtension: { pairedDeviceName: "Browser 1" } }));
+    expect(integrationStatus([], chromeStatus(fake, tmp, "me"))[0]).toMatchObject({ state: "connected", detail: "connected (Browser 1)" });
+    writeFileSync(path.join(fake, ".claude.json"), JSON.stringify({ claudeInChromeDefaultEnabled: false }));
+    expect(integrationStatus([], chromeStatus(fake, tmp, "me"))[0]).toMatchObject({ state: "off" });
+  });
+  it("asks before each browser action, saying what it does", async () => {
+    const { needsPermission } = await import("../src/create/manager.js");
+    expect(needsPermission("mcp__claude-in-chrome__navigate", { url: "https://app.example.com" })).toBe("opens https://app.example.com in your Chrome");
+    expect(needsPermission("mcp__claude-in-chrome__computer", {})).toMatch(/clicks, types/);
+    expect(needsPermission("mcp__claude-in-chrome__read_page", {})).toBe("uses your Chrome (read page)");
+  });
+});
