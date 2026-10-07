@@ -42,12 +42,17 @@ would pick first, marked `(Recommended)`, and make every option's description sa
 
 ### Round 1 — the edit
 
+**The personality comes first.** Run `npm run personality -- brief`. When there is a default personality, confirm it in
+one line ("Using the gptmarlon personality: Claymation, Swiss and UI / Product") and do not ask Text on screen, Look and
+palette, Motion, Type, Format, Sound effects or Music: it answers them. Write `"personality": "<id>"` into `reel.json`.
+An answer the user volunteers still wins for this reel. See [personality.md](personality.md).
+
 | Question | Ask when | Options — tailored to the script |
 |---|---|---|
 | **Text on screen** | no `--text` | `full` · `key-lines` · `minimal` · `none`. Recommend by voiceover: an `.srt` → `key-lines`, a `.txt` → `full`. Name the count: "key-lines puts about 5 of the 14 lines on screen". |
 | **Length** | no `--short`, and the full script runs over ~30s | The whole script (say its length) · a 15–25s short cut (say which beats it keeps). |
 | **Look and palette** | no `--palette` and no `--look` | 2–3 of the kit's looks (`paper`, `ink`, `flood`, `sky`, `cinema`, `poster` — see [design-system.md](design-system.md#grounds--commit-to-one-per-reel)), each with the accent it would use and a one-line register tied to this script. If the script names a product or brand, the first option uses *its* colour as the accent. Use `preview` to show ground, ink and accent side by side. "Other" lets the user type their own. |
-| **Motion** | no `--motion` | `restrained` · `default` · `energetic`, each described against this script ("energetic suits the list in beats 4–7"). |
+| **Motion** | no `--motion` | `restrained` · `default` · `energetic`, each described against this script ("energetic suits the list in beats 4–7"). All three move on Apple's springs; the level changes how quick they are (see [direction.md](direction.md)). |
 | **Type** | no `--type` | Three of the 18 pairings (`npm run fonts -- pairings`) that suit this brand and look, each described in a line ("poster: tall condensed caps for the hook"). A learned `type` rule goes first. Show them: `npm run fonts -- sheet --pairings a,b,c --text "<the hook line>" --out out/type.png`, then read the image and describe it. If the brand has its own font and it is bundled, offer it by name. The answer goes in `reel.json` as `"type"`. |
 
 ### Round 2 — production
@@ -58,7 +63,7 @@ would pick first, marked `(Recommended)`, and make every option's description sa
 | **Visual register** | no `--visuals`, and the script names a real product or states figures | "Real product screens" · "Data-forward" · "Typographic" — only the ones this script could actually support. |
 | **Sound effects** | always, unless `--sfx` was given | With effects · Silent (default). |
 | **Music** | always, unless `--music` was given | **Music bed, fits the cut** (the voiceover's timing stays exact; the track is placed so its beats land on cuts) · **Music bed, cuts snap to the beat** (each cut moves up to 0.15 s onto a beat; for music-led reels) · **No music**. Say what `npm run music -- find` already has that fits ("a 118 BPM upbeat track in your library"). The answer goes in `reel.json` as `"music": { "sync": … }`; the track itself is found in Step 2. |
-| **Motion blur** | always, unless `--blur` or `--no-blur` was given | **On**: each frame is rendered as 4 sub-frames and blended like a camera's 180° shutter, so fast moves (fly-ins, whip pans, counters) smear along their path and still frames stay sharp. Costs about twice the render time. **Off**: every frame sharp. Recommend On for `energetic` motion or many fast moves, Off for `restrained`. The answer goes in `reel.json` as `"render": { "motionBlur": true }`. |
+| **Motion blur** | always, unless `--blur` or `--no-blur` was given | **On**: each frame is rendered as 4 sub-frames and blended like a camera's 180° shutter, so fast moves (fly-ins, whip pans, counters) smear along their path and still frames stay sharp. Costs about twice the render time. **Off**: every frame sharp. Reels render at 60 fps by default, which already makes motion smooth, so recommend Off unless the reel has whip pans or very fast fly-ins. The answer goes in `reel.json` as `"render": { "motionBlur": true }`. |
 | **Resolution** | always, unless `--4k` or `--hd` was given | **HD** (1080 on the short side; what the platforms play) · **4K** (the same layout at twice the pixels, sharper type on big screens; about 2–3× the render time and file size). Not offered for `4:5`: HyperFrames has no 4K preset for it. The answer goes in `reel.json` as `"render": { "resolution": "4k" }`. |
 | **Studio** | always | See below. |
 

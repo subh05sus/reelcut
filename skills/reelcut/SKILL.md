@@ -30,7 +30,7 @@ on a quarter of the frame and read as generic. **You compose each beat**, on the
 | `--format` | `1:1`, `9:16`, `16:9`, `4:5` | `1:1` |
 | `--short` | flag — cut to 15–25s | whole script |
 | `--assets <dir>` | where to look for files already provided | `assets/in/` |
-| `--fps` | | 30 |
+| `--fps` | 60 makes every spring smooth; 30 halves the render time | 60 |
 | `--no-data` | skip data sourcing and charts | data on |
 | `--text` | `full`, `key-lines`, `minimal`, `none` | **depends on voiceover** |
 | `--motion` | `restrained`, `default`, `energetic` | `default` |
@@ -76,7 +76,9 @@ skill". Don't guess it — a plugin install, a `~/.claude/skills/` copy and this
 
 **Read:** [references/step-0-ask.md](references/step-0-ask.md)
 
-Run `npm run beats` on the script first, then read what the studio has learned
+Run `npm run beats` on the script first, then read the owner's personality (`npm run personality -- brief`, see
+[references/personality.md](references/personality.md)): when there is a default one, confirm it in one line and skip every
+question it answers. Then read what the studio has learned
 (`npm run learnings -- brief --script <script>`, see [references/learnings.md](references/learnings.md)),
 then ask the user — with the AskUserQuestion tool, at most
 two rounds — about everything the invocation left open: how much text goes on screen, the length,
@@ -185,6 +187,17 @@ and [references/step-4-compose.md](references/step-4-compose.md). Compose on the
 ([references/kit.md](references/kit.md): `data-look` on the root injects looks, UI pieces and
 motion helpers) and open the nearest pattern ([references/patterns.md](references/patterns.md))
 before you start a beat of its kind.
+
+**Move like Apple, and use Apple's UI.** Every tween names one of the kit's springs (`spring.gentle` arrivals,
+`spring.default` state changes, `spring.snappy` presses, `apple.exit` exits, `apple.glide` a hand) — never `expo`,
+`back` or `power` eases — and at most one `spring.reward` overshoot per reel ([kit.md](references/kit.md#motion--apples-springs)).
+When a beat shows an iPhone, a Mac, an app or a confirmation, build it from the Apple UI kit — controls, sheets,
+the Dynamic Island, Messages, Calendar, Maps, the Dock, a check that draws — and start from its pattern in
+`assets/patterns/apple/` ([apple-ui.md](references/apple-ui.md)).
+
+**Make each beat in its personality style.** With a personality in `reel.json`, a beat's kind picks its style, and the
+style its colours, type, look, moves and motion; signature moves, copy rules and guardrails hold in every beat
+([references/personality.md](references/personality.md)).
 
 **Start from the user's own patterns.** `npm run patterns -- list` lists the beats they rated "Works", best-rated
 first, before the built-in patterns; `npm run patterns -- show <id>` gives the file and the slots to replace.

@@ -27,7 +27,8 @@
     "fonts": "tsx skills/reelcut/scripts/fonts.ts",
     "patterns": "tsx skills/reelcut/scripts/patterns.ts",
     "music": "tsx skills/reelcut/scripts/music.ts",
-    "sfx-pack": "tsx skills/reelcut/scripts/sfx-pack.ts"
+    "sfx-pack": "tsx skills/reelcut/scripts/sfx-pack.ts",
+    "personality": "tsx skills/reelcut/scripts/personality.ts"
   },
   "dependencies": {
     "zod": "^3.23.8",

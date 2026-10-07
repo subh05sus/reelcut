@@ -35,6 +35,12 @@ import { addMoment, findMoments, patchFootage, refreshFootageAnalysis, removeMom
 import { PLATFORMS } from "../library/schema.js";
 import { HIGGSFIELD_SETTINGS, loadSettings, setHiggsfieldSetting, type HiggsfieldSetting } from "../library/settings.js";
 import { readGeneration } from "../generate/log.js";
+import { FAMILIES, PAIRINGS, fontFaceCss, loadFontLibrary } from "../fonts/index.js";
+import { reelcutHome } from "../library/store.js";
+import {
+  STYLES, STYLE_TENSIONS, brandPalette, checkPersonality, deletePersonality, fromTaste, getPersonality, importBrand, loadPersonalities,
+  PersonalitySchema, savePersonality, setDefaultPersonality, styleById, surprise, type Locks,
+} from "../personality/index.js";
 import { acceptAnnotation, annotateReference, buildReferenceBrief, ingestReferenceUpload, loadReferences, referenceBlobPath, referenceSheetPath, referenceThumbPath, removeReference, studyQueue, updateReference, type Reference } from "../references/index.js";
 import type { LibraryAsset } from "../library/schema.js";
 import { filterByTags } from "../library/match.js";
@@ -112,6 +118,9 @@ function defaultSpawnRender(manifest: string, beat: string): ChildProcess {
   const script = path.join(REPO, "skills", "reelcut", "scripts", "render.ts");
   return spawn(process.execPath, [tsx, script, manifest, "--only", beat, "--clips-only"], { cwd: REPO, windowsHide: true });
 }
+
+/** Where the twenty style previews are rendered to, once (`npm run personality -- previews`). */
+export const stylePreviewDir = (): string => path.join(reelcutHome(), "style-previews");
 
 class HttpError extends Error {
   constructor(readonly status: number, message: string, readonly body?: unknown) {
@@ -797,6 +806,92 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
       }
     }
 
+    // ---- personality: the design crafter. Styles, colour, type and everything else that makes reels recognisably yours.
+    if (parts[0] === "api" && parts[1] === "personality") {
+      if (read && parts[2] === "catalog" && parts.length === 3) {
+        const previews = Object.fromEntries(STYLES.map((st) => [st.id, Object.fromEntries((["sample", "showcase"] as const).map((k) => [k, existsSync(path.join(stylePreviewDir(), `${st.id}-${k}.mp4`))]))]));
+        return sendJson(res, 200, { styles: STYLES, tensions: STYLE_TENSIONS, pairings: PAIRINGS, families: FAMILIES.map((f) => ({ family: f.family, kind: f.kind })), previews });
+      }
+      if (read && parts[2] === "taste" && parts.length === 3) {
+        return sendJson(res, 200, { suggestions: fromTaste(loadReferences().references, loadPatterns()) });
+      }
+      if (method === "POST" && parts[2] === "check" && parts.length === 3) {
+        const parsed = PersonalitySchema.safeParse(await readBody(req, 256 * 1024));
+        if (!parsed.success) throw new HttpError(400, parsed.error.issues[0]?.message ?? "not a personality");
+        return sendJson(res, 200, { findings: checkPersonality(parsed.data) });
+      }
+      if (method === "POST" && parts[2] === "surprise" && parts.length === 3) {
+        const b = (await readBody(req)) as { seed?: unknown; locks?: Locks };
+        const seed = typeof b.seed === "number" ? b.seed : Math.floor(Math.random() * 1e9);
+        return sendJson(res, 200, { seed, roll: surprise(seed, b.locks ?? {}) });
+      }
+      if (method === "POST" && parts[2] === "brand" && parts.length === 3) {
+        const b = (await readBody(req)) as { url?: unknown; colors?: unknown };
+        if (Array.isArray(b.colors)) {
+          const colors = b.colors.filter((c): c is string => typeof c === "string" && /^#[0-9a-f]{6}$/i.test(c));
+          return sendJson(res, 200, { palettes: Object.fromEntries(STYLES.map((st) => [st.id, brandPalette(st, colors) ?? null])) });
+        }
+        if (typeof b.url !== "string" || !b.url.trim()) throw new HttpError(400, "give a website address");
+        try { return sendJson(res, 200, { brand: await importBrand(b.url) }); }
+        catch (error) { throw new HttpError(422, `could not read that site: ${(error as Error).message}`); }
+      }
+    }
+    if (parts[0] === "api" && parts[1] === "personalities") {
+      const withFindings = (pp: ReturnType<typeof loadPersonalities>[number]) => ({ ...pp, findings: checkPersonality(pp) });
+      if (read && parts.length === 2) return sendJson(res, 200, { personalities: loadPersonalities().map(withFindings) });
+      if (method === "POST" && parts.length === 2) {
+        const b = (await readBody(req, 256 * 1024)) as Record<string, unknown>;
+        const saved = savePersonality({ ...(b as object), name: typeof b.name === "string" && b.name.trim() ? b.name.trim() : "My personality" } as never);
+        return sendJson(res, 201, { personality: withFindings(saved) });
+      }
+      const id = parts[2] ?? "";
+      const current = getPersonality(id);
+      if (!current) throw new HttpError(404, "no such personality");
+      if (read && parts.length === 3) return sendJson(res, 200, { personality: withFindings(current) });
+      if (method === "PUT" && parts.length === 3) {
+        // Autosave: drafts are kept whatever their findings; finishing is what errors block.
+        const parsed = PersonalitySchema.safeParse({ ...current, ...((await readBody(req, 256 * 1024)) as object), id, createdAt: current.createdAt, updatedAt: current.updatedAt });
+        if (!parsed.success) throw new HttpError(400, parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; "));
+        for (const st of parsed.data.styles) if (!styleById(st.id)) throw new HttpError(400, `no style ${st.id}`);
+        return sendJson(res, 200, { personality: withFindings(savePersonality(parsed.data)) });
+      }
+      if (method === "POST" && parts[3] === "finish" && parts.length === 4) {
+        const errors = checkPersonality(current).filter((f) => f.level === "error");
+        if (errors.length) return sendJson(res, 409, { error: "fix the red findings first", findings: errors });
+        const done = [...new Set([...current.done, "review"])];
+        return sendJson(res, 200, { personality: withFindings(savePersonality({ ...current, done })) });
+      }
+      // Mini beats: one 4-second beat per chosen style in this personality's colours, type and motion, rendered and saved.
+      if (read && parts[3] === "renders" && parts.length === 4) {
+        const dir = path.join(reelcutHome(), "personality-renders", id);
+        const renders = current.styles.filter((st) => existsSync(path.join(dir, `${st.id}.mp4`))).map((st) => ({ style: st.id, video: `/files/mini/${id}/${st.id}.mp4`, poster: `/files/mini/${id}/${st.id}.jpg`, at: statSync(path.join(dir, `${st.id}.mp4`)).mtime.toISOString() }));
+        return sendJson(res, 200, { renders, job: jobs.find((j) => j.runId === `personality:${id}`) ?? null });
+      }
+      if (method === "POST" && parts[3] === "render" && parts.length === 4) {
+        if (checkPersonality(current).some((f) => f.level === "error")) throw new HttpError(409, "fix the red findings first");
+        if (!current.styles.length) throw new HttpError(409, "choose a style first");
+        const running = jobs.find((j) => j.status === "running");
+        if (running) throw new HttpError(409, `a render is already running (${running.beat})`, { job: running.id });
+        const job: Job = { id: String(++jobSeq), runId: `personality:${id}`, beat: `mini beats: ${current.name}`, status: "running", startedAt: new Date().toISOString(), log: [] };
+        jobs.unshift(job);
+        const tsx = createRequire(import.meta.url).resolve("tsx/cli");
+        const child = spawn(process.execPath, [tsx, path.join(REPO, "skills", "reelcut", "scripts", "personality.ts"), "mini", id], { cwd: REPO, windowsHide: true });
+        const append = (chunk: Buffer) => { job.log.push(...chunk.toString("utf8").split(/\r?\n/).filter(Boolean)); if (job.log.length > 300) job.log.splice(0, job.log.length - 300); };
+        child.stdout?.on("data", append); child.stderr?.on("data", append);
+        child.on("error", (error) => { job.log.push(String(error)); job.status = "failed"; job.endedAt = new Date().toISOString(); });
+        child.on("close", (code) => { if (job.status === "running") job.status = code === 0 ? "ok" : "failed"; job.exitCode = code; job.endedAt = new Date().toISOString(); });
+        return sendJson(res, 202, { job });
+      }
+      if (method === "POST" && parts[3] === "default" && parts.length === 4) {
+        setDefaultPersonality(id);
+        return sendJson(res, 200, { ok: true });
+      }
+      if (method === "DELETE" && parts.length === 3) {
+        deletePersonality(id);
+        return sendJson(res, 200, { ok: true });
+      }
+    }
+
     // ---- runs
     if (parts[0] === "api" && parts[1] === "runs") {
       if (read && parts.length === 2) return sendJson(res, 200, { runs: listRuns() });
@@ -931,6 +1026,30 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
         const thumb = asset ? thumbBlobPath(asset) : undefined;
         if (!thumb) throw new HttpError(404, "no preview");
         return sendFile(req, res, thumb);
+      }
+      // The bundled type, so the Personality page shows every pairing in its real faces.
+      if (parts[1] === "font" && parts.length === 3) {
+        const lib = loadFontLibrary();
+        const file = lib ? containedPath(lib.dir, parts[2]!) : undefined;
+        if (!file) throw new HttpError(404, "no such font");
+        return sendFile(req, res, file);
+      }
+      if (parts[1] === "fonts.css" && parts.length === 2) {
+        const lib = loadFontLibrary();
+        const css = lib ? fontFaceCss(FAMILIES.map((f) => f.family), lib, (file) => `/files/font/${encodeURIComponent(file)}`) : "";
+        res.writeHead(200, { "Content-Type": "text/css; charset=utf-8", "Cache-Control": "max-age=3600" });
+        return void res.end(css);
+      }
+      if (parts[1] === "mini" && parts.length === 4 && /^p_[0-9a-f]+$/.test(parts[2]!) && /^[a-z0-9-]+\.(mp4|jpg)$/.test(parts[3]!)) {
+        const file = path.join(reelcutHome(), "personality-renders", parts[2]!, parts[3]!);
+        if (!existsSync(file)) throw new HttpError(404, "not rendered yet");
+        return sendFile(req, res, file);
+      }
+      // The saved style previews: <style>-<sample|showcase>.mp4 and .jpg.
+      if (parts[1] === "style-preview" && parts.length === 3 && /^[a-z0-9-]+-(sample|showcase)\.(mp4|jpg)$/.test(parts[2]!)) {
+        const file = path.join(stylePreviewDir(), parts[2]!);
+        if (!existsSync(file)) throw new HttpError(404, "not rendered yet");
+        return sendFile(req, res, file);
       }
       if (parts[1] === "run" && parts.length >= 4) {
         const run = findRun(parts[2]!);

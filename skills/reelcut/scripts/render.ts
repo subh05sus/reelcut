@@ -5,6 +5,10 @@ import { fileURLToPath } from "node:url";
 import { frameSizeFor, isOutputFormat } from "../../../src/core/constants.js";
 import { assertComposition, buildProject, ProjectError, SFX_DEFAULT_VOLUME, type ProjectBeat, type ProjectFile, type SfxCue } from "../../../src/render/project.js";
 import { loadKit, PROJECT_FONT_DIR } from "../../../src/render/kit.js";
+import { applyDefaultMotion } from "../../../src/render/motion.js";
+import { getPersonality } from "../../../src/personality/store.js";
+import { styleById } from "../../../src/personality/styles.js";
+import { DEFAULT_FPS } from "../../../src/core/constants.js";
 import { recordPatternUses } from "../../../src/patterns/mine.js";
 import { resolveMusic, type MusicSpec, type ResolvedMusic } from "../../../src/render/music.js";
 import { durationsFromCuts, planMusic, type MusicPlan } from "../../../src/library/music.js";
@@ -33,7 +37,7 @@ import { voiceForReel, type ReelVoice, type VoiceoverSpec } from "../../../src/v
  * `reel.json`, written by the agent after composing:
  *
  *   {
- *     "format": "1:1", "fps": 30, "ground": "#ede9e3",
+ *     "format": "1:1", "fps": 60, "ground": "#ede9e3",
  *     "beats": [
  *       { "id": "beat-00", "durationSeconds": 6.67, "composition": "compositions/beat-00.html",
  *         "sfx": [{ "source": "sfx/whoosh.ogg", "at": 0.2 }, { "source": "library:3f2a9c1d5e7b8a40", "at": 1.4 }] }
@@ -92,6 +96,9 @@ interface Manifest {
   appliedLearnings?: string[];
   /** The type pairing every beat uses unless it sets `data-type` itself (`npm run fonts -- pairings`). */
   type?: string;
+  /** The personality this reel is made in (Step 0 confirms the default and writes its id). Its lead style's type pairing
+   * and its motion energy are the defaults when "type" and direction.motion are not given. */
+  personality?: string;
   /** What happened to each beat that could have been generated with Higgsfield. Written by `npm run generate -- record`; the render leaves it as it is. */
   generation?: { beat: string; outcome: string; reason?: string; assetId?: string }[];
   beats: ManifestBeat[];
@@ -119,6 +126,8 @@ interface Args {
   blur?: number;
   /** "4k" or "hd"; left out, reel.json decides. */
   resolution?: "4k" | "hd";
+  /** False for renders that are not reels (the style previews): nothing is recorded for the studio or its learnings. */
+  record: boolean;
 }
 
 function parseArgs(argv: readonly string[]): Args | undefined {
@@ -129,6 +138,7 @@ function parseArgs(argv: readonly string[]): Args | undefined {
   let master = true;
   let quality: Args["quality"] = "looks";
   let preflight = false;
+  let record = true;
   let jobs: number | undefined;
   let blur: number | undefined;
   let resolution: Args["resolution"];
@@ -141,6 +151,7 @@ function parseArgs(argv: readonly string[]): Args | undefined {
     else if (arg === "--only") only.push(...(argv[++i] ?? "").split(",").filter(Boolean));
     else if (arg === "--quality") quality = (argv[++i] ?? "looks") as Args["quality"];
     else if (arg === "--preflight") preflight = true;
+    else if (arg === "--no-record") record = false;
     else if (arg === "--jobs") jobs = Number(argv[++i]) || undefined;
     else if (arg === "--blur") blur = /^\d+$/.test(argv[i + 1] ?? "") ? Number(argv[++i]) : 4;
     else if (arg === "--no-blur") blur = 0;
@@ -148,7 +159,7 @@ function parseArgs(argv: readonly string[]): Args | undefined {
     else if (arg === "--hd") resolution = "hd";
     else if (!arg.startsWith("--")) manifest = path.resolve(cwd, arg);
   }
-  return manifest ? { manifest, sfx, clips, master, only, quality, preflight, ...(jobs ? { jobs } : {}), ...(blur !== undefined ? { blur } : {}), ...(resolution ? { resolution } : {}) } : undefined;
+  return manifest ? { manifest, sfx, clips, master, only, quality, preflight, record, ...(jobs ? { jobs } : {}), ...(blur !== undefined ? { blur } : {}), ...(resolution ? { resolution } : {}) } : undefined;
 }
 
 /** Sound effects need a duration on the element; probe it rather than trusting the manifest. */
@@ -331,7 +342,7 @@ async function main(): Promise<void> {
   const format = manifest.format ?? "1:1";
   if (!isOutputFormat(format)) throw new Error(`unknown format ${format}`);
   const { width, height } = frameSizeFor(format);
-  const fps = manifest.fps ?? 30;
+  const fps = manifest.fps ?? DEFAULT_FPS;
 
   // Motion blur and 4K, as chosen in Step 0 (reel.json), or for this render (--blur, --4k).
   const blurSetting = args.blur ?? (manifest.render?.motionBlur === true ? 4 : typeof manifest.render?.motionBlur === "number" ? manifest.render.motionBlur : 0);
@@ -449,13 +460,19 @@ async function main(): Promise<void> {
   const footageUses: FootageUse[] = [];
   const footageByBeat = new Map<string, { uses: FootageUse[]; holds: HoldFrame[] }>();
   const index = loadIndex();
+  // The personality's defaults, for whatever the reel itself does not say.
+  const persona = manifest.personality ? getPersonality(manifest.personality) : undefined;
+  if (manifest.personality && !persona) console.warn(`  warning: reel.json names personality "${manifest.personality}", which does not exist; using no personality`);
+  const lead = persona?.styles[0]?.id;
+  const reelType = manifest.type ?? (persona && lead ? persona.fonts[lead] ?? styleById(lead)?.fonts.best[0] : undefined);
+  const reelMotion = manifest.direction?.motion ?? persona?.motion.energy;
   const beats: ProjectBeat[] = manifest.beats.map((b) => {
     const compositionPath = path.resolve(base, b.composition);
     if (!existsSync(compositionPath)) {
       block(b.id, `composition not found at ${compositionPath}`);
       return { id: b.id, durationSeconds: b.durationSeconds, compositionHtml: "", sfx: [] };
     }
-    const html = applyDefaultPairing(readFileSync(compositionPath, "utf8"), manifest.type);
+    const html = applyDefaultMotion(applyDefaultPairing(readFileSync(compositionPath, "utf8"), reelType), reelMotion);
     let sfx: SfxCue[] = [];
     if (args.sfx) {
       try {
@@ -673,7 +690,7 @@ async function main(): Promise<void> {
     console.warn(`  (no reel contact sheet: ${error instanceof Error ? error.message : String(error)})`);
   }
 
-  recordForStudio(base, args.manifest, beats.map((b) => b.id), outcomes, args.sfx ? [...new Set([...allRefs, ...sfxLibraryIds])] : allRefs, {
+  if (args.record) recordForStudio(base, args.manifest, beats.map((b) => b.id), outcomes, args.sfx ? [...new Set([...allRefs, ...sfxLibraryIds])] : allRefs, {
     ...(manifest.brand ? { brand: manifest.brand } : {}),
     applied: manifest.appliedLearnings ?? [],
     choices: {

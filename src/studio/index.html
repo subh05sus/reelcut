@@ -4,6 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>reelcut studio</title>
+<link rel="stylesheet" href="/files/fonts.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23ff9230'/%3E%3Cpath d='M13 10.5v11l9-5.5z' fill='%232a1300'/%3E%3C/svg%3E" />
 <script>
   // Theme before first paint: System (default), Light or Dark, kept in this browser. Settings › Appearance changes it.
@@ -500,6 +501,108 @@
   .skel { background: var(--fill-4); border-radius: var(--r-card); }
   .skel.card { aspect-ratio: 1 / 1.2; }
 
+  /* ================================================================ personality
+     The design crafter: a steps rail, the step's choices, a live summary of the personality. On a phone the rail is a
+     progress bar on top and the summary opens as a bottom sheet. Everything here is content (solid); glass is only the
+     floating footer with Back and Next. */
+  .pz { display: grid; grid-template-columns: 196px minmax(0, 1fr) 300px; gap: 24px; align-items: start; }
+  .pz-rail { position: sticky; top: 72px; display: flex; flex-direction: column; gap: 2px; }
+  .pz-step { display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: 8px; color: var(--label); font-size: 14px; text-decoration: none !important; transition: background-color 120ms var(--ease); }
+  .pz-step:hover { background: var(--fill-4); }
+  .pz-step.on { background: var(--fill-2); font-weight: 600; }
+  .pz-step .k { width: 18px; height: 18px; border-radius: 50%; flex: none; display: grid; place-items: center; box-shadow: inset 0 0 0 1.5px var(--label-3); color: var(--on-accent); }
+  .pz-step.done .k { background: var(--green); box-shadow: none; color: #fff; }
+  .pz-step .w { margin-left: auto; width: 7px; height: 7px; border-radius: 50%; background: var(--orange); }
+  .pz-step .w.err { background: var(--red); }
+  .pz-main { min-width: 0; }
+  .pz-main h2 { margin: 0 0 4px; font-size: var(--fs-t); line-height: var(--lh-t); font-weight: 700; }
+  .pz-main > .lede { margin-bottom: 16px; }
+  .pz-side { position: sticky; top: 72px; background: var(--cell); border-radius: var(--r-group); padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+  .pz-side h3 { margin: 0; font-size: 15px; line-height: 20px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .pz-side .row { display: flex; align-items: center; gap: 8px; font-size: 13px; line-height: 18px; }
+  .pz-side .lbl { font-size: 11px; line-height: 14px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: 0.02em; }
+  .pz-foot { position: sticky; bottom: 16px; z-index: 10; display: flex; gap: 8px; align-items: center; justify-content: space-between; padding: 8px; margin-top: 24px; border-radius: 999px; }
+  .pz-prog { display: none; }
+  .pz-sumbtn { display: none !important; }
+  @media (max-width: 1199px) { .pz { grid-template-columns: 180px minmax(0, 1fr); } .pz-side { display: none; } .pz-sumbtn { display: inline-flex !important; } }
+  @media (max-width: 899px) {
+    .pz { display: block; } .pz-rail { display: none; }
+    .pz-prog { display: flex; gap: 4px; margin: 0 0 16px; }
+    .pz-prog i { flex: 1; height: 4px; border-radius: 99px; background: var(--fill-2); }
+    .pz-prog i.on { background: var(--accent); } .pz-prog i.done { background: var(--green); }
+    .pz-foot { bottom: calc(var(--tabbar-h) + max(env(safe-area-inset-bottom), 12px) + 12px); }
+  }
+
+  /* Style cards: the saved render plays in the card; until it exists, a specimen in the style's own colours and type. */
+  .st-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(178px, 1fr)); gap: 14px; }
+  @media (max-width: 899px) { .st-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; } }
+  .st-card { position: relative; border-radius: var(--r-card); overflow: hidden; background: var(--cell); cursor: pointer; transition: transform 160ms var(--ease), box-shadow 160ms var(--ease); }
+  .st-card:active { transform: scale(0.98); }
+  .st-card.on { box-shadow: 0 0 0 2.5px var(--accent); }
+  .st-card .n { position: absolute; top: 8px; right: 8px; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: var(--on-accent); font: 700 13px/24px var(--font); text-align: center; }
+  .st-card .meta { padding: 8px 10px 10px; }
+  .st-card .meta .name { font-size: 14px; }
+  .st-card .meta .sub { margin-top: 2px; }
+  .spec { position: relative; aspect-ratio: 1; display: flex; flex-direction: column; justify-content: flex-end; padding: 12%; overflow: hidden; background: var(--g); color: var(--i); }
+  .spec video, .spec img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .spec .aa { font-size: clamp(30px, 4.2vw, 46px); line-height: 0.95; letter-spacing: -0.02em; }
+  .spec .aa em { color: var(--a); font-style: italic; }
+  .spec .dots { position: absolute; top: 12%; left: 12%; display: flex; gap: 6px; }
+  .spec .dots i { width: 14px; height: 14px; border-radius: 50%; background: var(--a); }
+  .spec .dots i + i { background: var(--a2); }
+  .spec .badge { position: absolute; left: 8px; bottom: 8px; }
+  .spec.tx-paper::after, .spec.tx-grain::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .5; mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .45 0 0 0 0 .4 0 0 0 .35 0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  .spec.tx-scan::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(transparent 0 3px, rgb(0 0 0 / .22) 3px 4px); }
+
+  /* Palette cards: the scheme drawn as a little frame — ground, a headline in ink, the accent word, the second accent. */
+  .pal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .pal { position: relative; border-radius: var(--r-card); overflow: hidden; background: var(--cell); cursor: pointer; transition: transform 160ms var(--ease); }
+  .pal:active { transform: scale(0.98); }
+  .pal.on { box-shadow: 0 0 0 2.5px var(--accent); }
+  .pal .fr { aspect-ratio: 4 / 3; background: var(--g); color: var(--i); padding: 12px; display: flex; flex-direction: column; justify-content: space-between; }
+  .pal .fr b { font: 700 19px/1.05 var(--pf, var(--font)); letter-spacing: -0.02em; }
+  .pal .fr b em { color: var(--a); font-style: normal; }
+  .pal .fr .sw { display: flex; gap: 4px; }
+  .pal .fr .sw i { height: 8px; flex: 1; border-radius: 4px; background: var(--a); }
+  .pal .fr .sw i + i { background: var(--a2); }
+  .pal .meta { padding: 8px 10px 10px; display: flex; align-items: center; gap: 6px; }
+  .pal .meta .name { font-size: 13px; font-weight: 600; }
+  .pal .flag { position: absolute; top: 8px; right: 8px; }
+
+  /* Findings: amber warnings with their reason and a one-click fix; red blocks finishing. */
+  .finding { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: color-mix(in srgb, var(--orange) 12%, transparent); font-size: 13px; line-height: 18px; }
+  .finding.error { background: color-mix(in srgb, var(--red) 12%, transparent); }
+  .finding.info { background: var(--fill-4); color: var(--label-2); }
+  .finding .ico { flex: none; width: 18px; height: 18px; border-radius: 50%; background: var(--orange); color: #fff; font: 700 12px/18px var(--font); text-align: center; }
+  .finding.error .ico { background: var(--red-fill); }
+  .finding.info .ico { background: var(--label-3); }
+  .finding .grow { min-width: 0; }
+  .finding button { flex: none; }
+  .findings { display: flex; flex-direction: column; gap: 8px; margin: 0 0 16px; }
+  @media (max-width: 899px) { .finding { flex-wrap: wrap; font-size: 15px; line-height: 20px; } .finding .grow { flex-basis: calc(100% - 28px); } .finding button { margin-left: 28px; } .phead .back { width: 100%; } }
+
+  /* Font cards: each pairing set in its own faces. */
+  .font-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  .fcard { background: var(--cell); border-radius: var(--r-card); padding: 14px; cursor: pointer; transition: transform 160ms var(--ease); }
+  .fcard:active { transform: scale(0.98); }
+  .fcard.on { box-shadow: 0 0 0 2.5px var(--accent); }
+  .fcard .h { font-size: 30px; line-height: 1; margin-bottom: 8px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .fcard .b { font-size: 14px; line-height: 19px; color: var(--label-2); }
+  .fcard .m { margin-top: 10px; display: flex; gap: 6px; align-items: center; font-size: 12px; color: var(--label-2); }
+  .fcard.avoid { opacity: 0.7; }
+
+  .pz-sec { margin-top: 24px; }
+  .pz-sec:first-child { margin-top: 0; }
+  .pz-field { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .pz-field .t { min-width: 150px; font-size: var(--fs-b); }
+  .swatch-in { display: inline-flex; align-items: center; gap: 6px; font: 12px var(--mono); color: var(--label-2); }
+  .swatch-in input[type=color] { width: 32px; height: 32px; padding: 0; border: 0; border-radius: 8px; background: none; cursor: pointer; }
+  .swatch-in input[type=color]::-webkit-color-swatch-wrapper { padding: 0; } .swatch-in input[type=color]::-webkit-color-swatch { border: 0; border-radius: 8px; box-shadow: inset 0 0 0 1px var(--sep); }
+  .pcard-strip { display: flex; height: 64px; }
+  .pcard-strip > span { flex: 1; display: flex; }
+  .pcard-strip > span > i { flex: 1; }
+
   @media (prefers-reduced-motion: reduce) {
     *, ::before, ::after { animation-duration: 1ms !important; animation-delay: 0ms !important; transition-property: opacity, background-color, color, border-color !important; }
     button:active, .card:active, .chip:active, .tabbar a:active { transform: none !important; }
@@ -514,6 +617,7 @@
       <a class="nav-i" href="#library" data-tab="library" title="Library"><span data-ic="library"></span><span class="lab">Library</span><span class="n" data-count="library"></span></a>
       <a class="nav-i" href="#footage" data-tab="footage" title="Footage"><span data-ic="footage"></span><span class="lab">Footage</span><span class="n" data-count="footage"></span></a>
       <a class="nav-i" href="#reels" data-tab="reels" title="Reels"><span data-ic="reels"></span><span class="lab">Reels</span><span class="n" data-count="reels"></span></a>
+      <a class="nav-i" href="#personality" data-tab="personality" title="Personality"><span data-ic="personality"></span><span class="lab">Personality</span><span class="n" data-count="personality"></span></a>
       <div class="cap">Manage</div>
       <a class="nav-i" href="#review" data-tab="review" title="Review"><span data-ic="review"></span><span class="lab">Review</span><span class="n" data-count="review"></span></a>
       <a class="nav-i" href="#folders" data-tab="folders" title="Folders"><span data-ic="folders"></span><span class="lab">Folders</span><span class="n" data-count="folders"></span></a>
@@ -576,6 +680,11 @@ const ICONS = {
   rail: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/>',
   tag: '<path d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z"/><circle cx="7.5" cy="7.5" r="1" fill="currentColor"/>',
   upload: '<path d="M12 15V3m-5 5 5-5 5 5M5 21h14"/>',
+  personality: '<path d="M12 2a10 10 0 0 0 0 20c.9 0 1.6-.7 1.6-1.7 0-.4-.2-.8-.4-1.1-.3-.3-.5-.7-.5-1.1 0-.9.8-1.7 1.7-1.7h2c3 0 5.6-2.5 5.6-5.5C22 6 17.5 2 12 2Z"/><circle cx="13.5" cy="6.5" r="1.2" fill="currentColor"/><circle cx="17.5" cy="10.5" r="1.2" fill="currentColor"/><circle cx="8.5" cy="7.5" r="1.2" fill="currentColor"/><circle cx="6.5" cy="12.5" r="1.2" fill="currentColor"/>',
+  dice: '<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.2" fill="currentColor"/><circle cx="16" cy="16" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/>',
+  lock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+  unlock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.8-1.2"/>',
+  wand: '<path d="m15 4 5 5M4 20 15 9M17 3v2M21 7h-2M19 11v1M11 3h1"/>',
 };
 function ic(name, size = 18) { return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ""}</svg>`; }
 function paintIcons(root = document) { $$("[data-ic]", root).forEach((el) => { el.outerHTML = ic(el.dataset.ic, Number(el.dataset.sz) || 18); }); }
@@ -766,13 +875,392 @@ $("#rail").addEventListener("click", () => setRail(document.documentElement.data
 function openMore() {
   const c = (n) => (n ? `<span class="badge">${n}</span>` : "");
   const s = state.ingest?.status;
-  openSheet({ title: "More", body: `<div class="group">${[["review", "Review", state.counts.pending], ["sounds", "Sounds", state.packSounds.length], ["patterns", "Patterns", state.patterns.length], ["folders", "Folders", state.folders.length], ["references", "References", state.rcounts.all], ["learnings", "Learnings", (state.learn?.rules || []).filter((r) => r.status === "proposed" && !r.conflictWith.length).length], ["jobs", "Jobs", state.jobs.filter((j) => j.status === "running").length]]
+  openSheet({ title: "More", body: `<div class="group">${[["personality", "Personality", 0], ["review", "Review", state.counts.pending], ["sounds", "Sounds", state.packSounds.length], ["patterns", "Patterns", state.patterns.length], ["folders", "Folders", state.folders.length], ["references", "References", state.rcounts.all], ["learnings", "Learnings", (state.learn?.rules || []).filter((r) => r.status === "proposed" && !r.conflictWith.length).length], ["jobs", "Jobs", state.jobs.filter((j) => j.status === "running").length]]
       .map(([k, l, n]) => `<a class="row-i" href="#${k}" data-sclose style="color:var(--label);text-decoration:none"><span class="tile" style="background:var(--fill-1);color:var(--label)">${ic(k, 17)}</span><span class="t grow">${l}</span>${c(n)}<span style="color:var(--label-3)">${ic("back", 14).replace("m15 18-6-6 6-6", "m9 18 6-6-6-6")}</span></a>`).join("")}</div>
     <div class="group"><button class="row-i" id="more-set" style="width:100%;border-radius:0;justify-content:flex-start;height:auto;font-size:var(--fs-b);font-weight:400"><span class="tile" style="background:#8e8e93">${ic("settings", 17)}</span><span class="t grow" style="text-align:left">Settings</span></button>
       <div class="row-i"><span class="dot ${s?.paused ? "off" : s?.scanning ? "busy" : ""}"></span><span class="s grow">${esc($("#sync-text").textContent)}</span><button class="sm" id="more-pause">${s?.paused ? "Resume" : "Pause"}</button></div></div>`,
     bind: (sh) => { $("#more-set", sh).addEventListener("click", () => { closeSheet(); openSettings(); }); $("#more-pause", sh).addEventListener("click", async () => { await togglePause(); closeSheet(); }); } });
 }
 $("#more-tab").addEventListener("click", (e) => { e.preventDefault(); openMore(); });
+
+// ---------- personality: the design crafter
+const PZ_STEPS = [
+  ["start", "Start"], ["styles", "Styles"], ["mixer", "Mixer"], ["colours", "Colours"], ["fonts", "Fonts"], ["motion", "Motion"], ["texture", "Texture"],
+  ["signature", "Signature moves"], ["copy", "Copy & voice"], ["sound", "Sound"], ["pacing", "Pacing"], ["guardrails", "Guardrails"], ["review", "Review"],
+];
+const BEATS = [["hook", "Hook"], ["statement", "Statement"], ["data", "Data"], ["product", "Product"], ["quote", "Quote"], ["cta", "Call to action"]];
+const pz = { cat: null, p: null, findings: [], saving: null, seed: 0, locks: { styles: false, palettes: false, fonts: false }, style: null };
+const pzStyle = (id) => pz.cat.styles.find((s) => s.id === id);
+const pzPairing = (id) => pz.cat.pairings.find((p) => p.id === id);
+const fam = (f) => `'${f}', var(--font)`;
+const pzChosen = () => pz.p.styles.map((s) => pzStyle(s.id)).filter(Boolean);
+const pzPalette = (s) => pz.p.palettes[s.id] || s.palettes[0];
+const pzFont = (s) => pzPairing(pz.p.fonts[s.id] || s.fonts.best[0]);
+
+async function loadPzCatalog() { if (!pz.cat) pz.cat = await api("/api/personality/catalog"); }
+
+function specimen(s, pal = pzPalette(s) || s.palettes[0], pair = pzPairing(s.fonts.best[0]), kind = "sample") {
+  const prev = pz.cat.previews[s.id]?.[kind];
+  const tx = s.texture.scanlines > 0.3 ? "tx-scan" : s.texture.paper > 0.3 ? "tx-paper" : s.texture.grain > 0.25 ? "tx-grain" : "";
+  const head = pair ? `font-family:${fam(pair.head)};font-weight:${pair.headWeight};text-transform:${pair.headCase || "none"}` : "";
+  return `<div class="spec ${tx}" style="--g:${pal.ground};--i:${pal.ink};--a:${pal.accent};--a2:${pal.accent2}">
+    ${prev ? `<video src="/files/style-preview/${s.id}-${kind}.mp4" poster="/files/style-preview/${s.id}-${kind}.jpg" muted loop playsinline autoplay preload="metadata"></video>` : `<div class="dots"><i></i><i></i></div>
+    <div class="aa" style="${head}">Make it <em style="font-family:${pair ? fam(pair.accent) : "inherit"}">yours.</em></div>`}
+  </div>`;
+}
+
+function pzFindings(step, style) {
+  const list = pz.findings.filter((f) => f.step === step && (!style || !f.style || f.style === style));
+  if (!list.length) return "";
+  return `<div class="findings">${list.map((f, i) => `<div class="finding ${f.level}"><span class="ico">${f.level === "info" ? "i" : "!"}</span><div class="grow">${esc(f.message)}</div>${f.fix ? `<button class="sm" data-fix="${pz.findings.indexOf(f)}">${esc(f.fix.label)}</button>` : ""}</div>`).join("")}</div>`;
+}
+function bindFixes(root = $("#main")) {
+  $$("[data-fix]", root).forEach((b) => b.addEventListener("click", () => {
+    const f = pz.findings[Number(b.dataset.fix)]; if (!f?.fix) return;
+    const { palette, font, styles } = f.fix.patch;
+    if (palette) pz.p.palettes[palette.style] = palette.value;
+    if (font) pz.p.fonts[font.style] = font.value;
+    if (styles) setStyles(styles);
+    pzChange(true);
+  }));
+}
+
+function setStyles(ids) {
+  const w = ids.length <= 1 ? [100] : ids.length === 2 ? [65, 35] : [55, 30, 15];
+  pz.p.styles = ids.map((id, i) => ({ id, weight: pz.p.styles.find((s) => s.id === id && ids.length === pz.p.styles.length)?.weight ?? w[i] }));
+  // Each beat kind to the chosen style that suits it best (the same rule the server uses).
+  const beats = {};
+  for (const [k] of BEATS) {
+    let best, rank = 99;
+    ids.forEach((id, o) => { const r = pzStyle(id).beats.indexOf(k); const sc = (r < 0 ? 10 : r) + o * 0.5; if (sc < rank) { rank = sc; best = id; } });
+    if (best) beats[k] = best;
+  }
+  pz.p.beatStyles = beats;
+  for (const k of Object.keys(pz.p.palettes)) if (!ids.includes(k)) delete pz.p.palettes[k];
+  for (const k of Object.keys(pz.p.fonts)) if (!ids.includes(k)) delete pz.p.fonts[k];
+}
+
+/** Every change: the screen first, then a save in the background that brings back the findings. */
+const pzSave = debounce(async () => {
+  try {
+    const r = await api(`/api/personalities/${pz.p.id}`, { method: "PUT", body: JSON.stringify(pz.p) });
+    pz.findings = r.personality.findings;
+    paintPzMeta();
+  } catch (e) { toast(`Not saved: ${e.message}`); }
+}, 350);
+function pzChange(rerender) { if (rerender) renderPzStep(); else paintPzSummary(); pzSave(); }
+
+function paintPzMeta() {
+  // Warnings on the rail, the findings of this step, the summary.
+  for (const [k] of PZ_STEPS) {
+    const el = $(`.pz-step[data-step="${k}"] .w`); if (!el) continue;
+    const fs = pz.findings.filter((f) => f.step === k && f.level !== "info");
+    el.hidden = !fs.length; el.classList.toggle("err", fs.some((f) => f.level === "error"));
+  }
+  const box = $("#pz-findings"); if (box) { box.innerHTML = pzFindings(pz.step, pz.step === "colours" || pz.step === "fonts" ? pz.style : null); bindFixes(box); }
+  paintPzSummary();
+}
+
+function pzSummaryHtml() {
+  const p = pz.p, ch = pzChosen();
+  const warn = pz.findings.filter((f) => f.level === "warn").length, err = pz.findings.filter((f) => f.level === "error").length;
+  return `<h3>${esc(p.name)} ${p.isDefault ? `<span class="badge identity">Default</span>` : ""}</h3>
+    <div><div class="lbl">Styles</div>${ch.length ? ch.map((s) => `<div class="row"><span class="grow">${esc(s.name)}</span><span class="tnum" style="color:var(--label-2)">${p.styles.find((x) => x.id === s.id).weight}%</span></div>`).join("") : `<div class="row" style="color:var(--label-2)">None yet</div>`}</div>
+    ${ch.map((s) => { const pal = pzPalette(s), f = pzFont(s); return `<div><div class="lbl">${esc(s.name)}</div>
+      <div class="row" style="margin-top:4px">${[pal.ground, pal.ink, pal.accent, pal.accent2].map((c) => `<i style="width:18px;height:18px;border-radius:50%;background:${c};box-shadow:inset 0 0 0 1px var(--sep)"></i>`).join("")}<span style="color:var(--label-2)">${esc(pal.name)}</span></div>
+      ${f ? `<div class="row" style="font-family:${fam(f.head)};font-weight:${f.headWeight};font-size:17px">${esc(f.name)} <span style="font-family:${fam(f.accent)};font-style:italic;font-weight:400">Aa</span></div>` : ""}</div>`; }).join("")}
+    <div><div class="lbl">Motion</div><div class="row">${esc(p.motion.energy)} · ${esc(p.motion.camera)} · ${esc(p.motion.overshoot)} overshoot</div></div>
+    <div><div class="lbl">Checks</div><div class="row">${err ? `<span class="badge bad">${err} to fix</span>` : ""}${warn ? `<span class="badge warn">${warn} warning${warn > 1 ? "s" : ""}</span>` : ""}${!err && !warn ? `<span class="badge ok">All good</span>` : ""}</div></div>`;
+}
+function paintPzSummary() { const s = $("#pz-side"); if (s) s.innerHTML = pzSummaryHtml(); }
+
+async function renderPersonality(id, step) {
+  await loadPzCatalog();
+  if (!id) return renderPzList();
+  const r = await api(`/api/personalities/${id}`);
+  pz.p = r.personality; pz.findings = r.personality.findings; delete pz.p.findings;
+  pz.step = PZ_STEPS.some(([k]) => k === step) ? step : pz.p.styles.length ? "review" : "start";
+  if (!pz.style || !pz.p.styles.some((s) => s.id === pz.style)) pz.style = pz.p.styles[0]?.id || null;
+  const i = PZ_STEPS.findIndex(([k]) => k === pz.step);
+  $("#main").innerHTML = `${pageHead(esc(pz.p.name), { back: `<a class="back" href="#personality">${ic("back", 18)}Personalities</a>`,
+      actions: `<button class="pz-sumbtn" id="pz-sum">Summary</button><button id="pz-rename">Rename</button>${pz.p.isDefault ? "" : `<button id="pz-def">Make default</button>`}` })}
+    <div class="pz">
+      <nav class="pz-rail" aria-label="Steps">${PZ_STEPS.map(([k, l], n) => `<a class="pz-step ${k === pz.step ? "on" : ""} ${pz.p.done.includes(k) ? "done" : ""}" data-step="${k}" href="#personality/${id}/${k}"><span class="k">${pz.p.done.includes(k) ? ic("check", 11) : ""}</span><span>${l}</span><span class="w" hidden></span></a>`).join("")}</nav>
+      <section class="pz-main"><div class="pz-prog">${PZ_STEPS.map(([k], n) => `<i class="${n === i ? "on" : pz.p.done.includes(k) ? "done" : ""}"></i>`).join("")}</div>
+        <div id="pz-step"></div>
+        <div class="pz-foot liquid-glass liquid-glass-milky">${i > 0 ? `<button id="pz-back">Back</button>` : `<span></span>`}<span class="note">${i + 1} of ${PZ_STEPS.length}</span>${i < PZ_STEPS.length - 1 ? `<button class="primary" id="pz-next">Next</button>` : `<button class="primary" id="pz-finish">Finish</button>`}</div></section>
+      <aside class="pz-side" id="pz-side"></aside>
+    </div>`;
+  const go = (k) => { location.hash = `#personality/${id}/${k}`; };
+  $("#pz-back")?.addEventListener("click", () => go(PZ_STEPS[i - 1][0]));
+  $("#pz-next")?.addEventListener("click", () => { if (!pz.p.done.includes(pz.step)) { pz.p.done.push(pz.step); pzSave(); } go(PZ_STEPS[i + 1][0]); });
+  $("#pz-finish")?.addEventListener("click", finishPz);
+  $("#pz-sum").addEventListener("click", () => openSheet({ title: "Summary", body: `<div class="pz-side" style="position:static;padding:0">${pzSummaryHtml()}</div>` }));
+  $("#pz-rename").addEventListener("click", async () => { const v = await askText({ title: "Rename", value: pz.p.name }); if (v) { pz.p.name = v; pzSave(); $(".phead h1").textContent = v; } });
+  $("#pz-def")?.addEventListener("click", async () => { await post(`/api/personalities/${id}/default`); toast("This personality is now used for every new reel."); route(); });
+  renderPzStep();
+}
+
+async function finishPz() {
+  await new Promise((r) => setTimeout(r, 400));
+  try {
+    const r = await post(`/api/personalities/${pz.p.id}/finish`);
+    pz.p = r.personality; pz.findings = r.personality.findings; delete pz.p.findings;
+    toast(pz.p.isDefault ? "Saved. Every new reel uses it." : "Saved. Make it the default to use it for every reel.");
+    location.hash = "#personality";
+  } catch (e) { toast("Fix the red findings first"); location.hash = `#personality/${pz.p.id}/colours`; }
+}
+
+function renderPzStep() {
+  const el = $("#pz-step"); if (!el) return;
+  const p = pz.p, ch = pzChosen();
+  const styleTabs = () => ch.length > 1 ? `<div class="bar">${segHtml("pz-st", ch.map((s) => [s.id, esc(s.name)]), pz.style)}</div>` : "";
+  const cur = pzStyle(pz.style) || ch[0];
+  const seg = (key, path, opts) => `<div class="pz-field" style="margin-bottom:14px"><span class="t">${key}</span>${segHtml(`pz-${path.replace(".", "-")}`, opts, path.split(".").reduce((o, k) => o?.[k], p))}</div>`;
+  const bindSegs = () => $$(".seg[id^='pz-']", el).forEach((sg) => {
+    if (sg.id === "pz-st") return bindSeg("pz-st", (v) => { pz.style = v; renderPzStep(); });
+    const path = sg.id.slice(3).split("-"); const [a, b] = [path[0], path.slice(1).join("-")];
+    bindSeg(sg.id, (v) => { const val = v === "true" ? true : v === "false" ? false : v; if (b) p[a][b] = val; else p[a] = val; pzChange(false); });
+  });
+  let h = "";
+  switch (pz.step) {
+    case "start":
+      h = `<h2>Start</h2><p class="lede">Name this personality, then start from your brand, from your taste, or from a surprise. Everything can be changed in the steps that follow.</p>
+        <div class="group"><div class="row-i"><span class="t grow">Name</span><input id="pz-name" value="${esc(p.name)}" style="max-width:260px"></div>
+          <div class="row-i"><span class="t grow">Brand name</span><input id="pz-bname" value="${esc(p.brand.name)}" placeholder="optional" style="max-width:260px"></div></div>
+        <div class="cap">Brand import</div>
+        <div class="group"><div class="row-i wrap"><input id="pz-url" placeholder="yourbrand.com" value="${esc(p.brand.url)}" class="grow"><button id="pz-import">Read the site</button></div>
+          <div class="row-i wrap"><span class="s grow">Brand colours</span>${p.brand.colors.map((c, n) => `<span class="swatch-in"><input type="color" value="${c}" data-bc="${n}">${c}</span>`).join("")}<button class="sm" id="pz-addc">Add colour</button></div>
+          ${p.brand.fonts.length ? `<div class="row-i"><span class="s grow">Brand fonts</span><span>${p.brand.fonts.map(esc).join(", ")}</span></div>` : ""}</div>
+        <p class="foot-note">Your brand colours are adapted to every style you choose (their hue kept, their strength fitted to the style) and offered first in Colours.</p>
+        <div class="cap">Or start from…</div>
+        <div class="group"><button class="row-i" id="pz-taste" style="width:100%;border-radius:0;justify-content:flex-start;height:auto;font-weight:400">${ic("learnings", 17)}<span class="col"><span class="t">Learn from my taste</span><span class="s">Styles suggested by your References and the beats you rated Works</span></span></button>
+          <button class="row-i" id="pz-roll" style="width:100%;border-radius:0;justify-content:flex-start;height:auto;font-weight:400">${ic("dice", 17)}<span class="col"><span class="t">Surprise me</span><span class="s">A combination that passes every check; lock what you like and roll again</span></span></button></div>
+        <div id="pz-sugg"></div>`;
+      break;
+    case "styles":
+      h = `<h2>Styles</h2><p class="lede">Choose up to three. The first leads; the others take the beats they are best at. Each card plays the same sample in that style, so you can compare.</p>
+        <div id="pz-findings"></div>
+        <div class="st-grid">${pz.cat.styles.map((s) => { const n = p.styles.findIndex((x) => x.id === s.id); return `<div class="st-card ${n >= 0 ? "on" : ""}" data-style="${s.id}" role="button" tabindex="0" aria-pressed="${n >= 0}">
+          ${specimen(s, s.palettes[0], pzPairing(s.fonts.best[0]))}${n >= 0 ? `<span class="n">${n + 1}</span>` : ""}
+          <div class="meta"><div class="name">${esc(s.name)}</div><div class="sub">${esc(s.blurb)}</div>${s.render === "direction" ? `<div class="sub"><span class="badge">Directed</span></div>` : `<div class="sub"><span class="badge ok">Rendered</span></div>`}</div></div>`; }).join("")}</div>
+        <p class="foot-note"><span class="badge ok">Rendered</span> the kit draws this style itself. <span class="badge">Directed</span> reels in this style are composed on the existing kit, steered by its colours, type, motion and moves; its own look arrives in a later wave.</p>`;
+      break;
+    case "mixer":
+      h = `<h2>Mixer</h2><p class="lede">How much of the reel each style carries, and which style each kind of beat is made in.</p><div id="pz-findings"></div>
+        ${ch.length ? `<div class="group">${p.styles.map((st) => `<div class="row-i"><span class="t" style="min-width:140px">${esc(pzStyle(st.id).name)}</span><input type="range" min="0" max="100" value="${st.weight}" data-w="${st.id}" class="grow"><span class="tnum" style="width:44px;text-align:right" id="w-${st.id}">${st.weight}%</span></div>`).join("")}</div>
+        <div class="cap">Which style each beat is made in</div>
+        <div class="group">${BEATS.map(([k, l]) => `<div class="row-i wrap"><span class="t" style="min-width:140px">${l}</span>${segHtml(`pzb-${k}`, ch.map((s) => [s.id, esc(s.name)]), p.beatStyles[k] || ch[0].id)}</div>`).join("")}</div>` : emptyState("personality", "Choose a style first", "The mixer shares the reel between the styles you choose.")}`;
+      break;
+    case "colours": {
+      if (!cur) { h = emptyState("personality", "Choose a style first", "Colour schemes are made for each style."); break; }
+      const pal = pzPalette(cur), brand = pz.brandPals?.[cur.id];
+      const card = (pl, tag = "") => `<div class="pal ${pal && pl.ground === pal.ground && pl.accent === pal.accent && pl.ink === pal.ink ? "on" : ""}" data-pal='${esc(JSON.stringify(pl))}' style="--g:${pl.ground};--i:${pl.ink};--a:${pl.accent};--a2:${pl.accent2};--pf:${fam(pzFont(cur)?.head || "Inter")}">
+        <div class="fr"><b>Make it <em>yours.</em></b><div class="sw"><i></i><i></i></div></div><div class="meta"><span class="name grow">${esc(pl.name)}</span>${tag}</div></div>`;
+      h = `<h2>Colours</h2><p class="lede">A scheme for each style. Curated ones are tuned to the style and pass contrast; yours are checked as you change them.</p>${styleTabs()}
+        <div id="pz-findings"></div>
+        ${brand ? `<div class="cap">Your brand, fitted to ${esc(cur.name)}</div><div class="pal-grid">${card(brand, `<span class="badge identity">Brand</span>`)}</div>` : ""}
+        <div class="cap">Curated for ${esc(cur.name)}</div><div class="pal-grid">${cur.palettes.map((pl) => card(pl)).join("")}</div>
+        <div class="cap">Custom</div>
+        <div class="group"><div class="row-i wrap">${["ground", "ink", "accent", "accent2"].map((k) => `<span class="swatch-in"><input type="color" value="${pal[k]}" data-pk="${k}">${k === "accent2" ? "second" : k}</span>`).join("")}</div></div>`;
+      break;
+    }
+    case "fonts": {
+      if (!cur) { h = emptyState("personality", "Choose a style first", "Type pairings are ranked for each style."); break; }
+      const cho = p.fonts[cur.id] || cur.fonts.best[0];
+      const order = [...cur.fonts.best, ...pz.cat.pairings.map((x) => x.id).filter((x) => !cur.fonts.best.includes(x) && !cur.fonts.avoid.includes(x)), ...cur.fonts.avoid];
+      h = `<h2>Fonts</h2><p class="lede">Type pairings for ${esc(cur.name)}, best first. The headline, the body and the accent word are each set in their real faces.</p>${styleTabs()}
+        <div id="pz-findings"></div>
+        <div class="font-grid">${order.map((id) => { const f = pzPairing(id); if (!f) return ""; const avoid = cur.fonts.avoid.includes(id), best = cur.fonts.best.includes(id);
+          return `<div class="fcard ${id === cho ? "on" : ""} ${avoid ? "avoid" : ""}" data-font="${id}" role="button" tabindex="0">
+            <div class="h" style="font-family:${fam(f.head)};font-weight:${f.headWeight};letter-spacing:${f.headTracking}em;text-transform:${f.headCase || "none"}">Make it <span style="font-family:${fam(f.accent)};font-style:italic;font-weight:400;text-transform:none">yours</span></div>
+            <div class="b" style="font-family:${fam(f.body)}">${esc(f.mood)}</div>
+            <div class="m"><b style="color:var(--label)">${esc(f.name)}</b><span class="grow">${esc(f.head)} · ${esc(f.body)}</span>${best ? `<span class="badge ok">Suits it</span>` : avoid ? `<span class="badge warn">Fights it</span>` : ""}</div></div>`; }).join("")}</div>`;
+      break;
+    }
+    case "motion":
+      h = `<h2>Motion</h2><p class="lede">How everything moves. All of it stays on Apple's springs; this sets the temperament.</p>
+        ${seg("Energy", "motion.energy", [["restrained", "Calm"], ["default", "Balanced"], ["energetic", "Punchy"]])}
+        ${seg("Camera", "motion.camera", [["still", "Still"], ["slow-push", "Slow push"], ["drift", "Drift"], ["handheld", "Handheld"]])}
+        ${seg("Overshoot", "motion.overshoot", [["never", "Never"], ["earned", "Earned moments"], ["playful", "Playful"]])}
+        ${seg("Between beats", "motion.transitions", [["hard-cut", "Hard cut"], ["match-cut", "Match cut"], ["whip", "Whip"]])}
+        ${seg("Cadence", "motion.cadence", [["style", "As the style"], ["smooth", "Smooth 60"], ["stepped", "Stepped"]])}
+        <p class="foot-note">Cadence "As the style" lets Claymation and Stop Motion step on held frames while UI and Liquid stay smooth.</p>`;
+      break;
+    case "texture": {
+      const base = ch.reduce((acc, s) => { for (const k in s.texture) acc[k] = Math.max(acc[k] || 0, s.texture[k]); return acc; }, {});
+      const keys = [["grain", "Film grain"], ["paper", "Paper fibre"], ["halftone", "Halftone"], ["leaks", "Light leaks"], ["vignette", "Vignette"], ["glow", "Glow"], ["chroma", "Chromatic edge"], ["scanlines", "Scanlines"]];
+      h = `<h2>Texture & finish</h2><p class="lede">What sits on top of every frame. Use your styles' own finish, or set your own.</p>
+        <div class="group"><div class="row-i"><span class="t grow">Use each style's finish</span><input type="checkbox" class="switch" id="pz-tx-style" ${p.texture.useStyle !== false ? "checked" : ""}></div></div>
+        <div class="group" style="margin-top:16px;${p.texture.useStyle !== false ? "opacity:.5;pointer-events:none" : ""}">${keys.map(([k, l]) => { const v = p.texture[k] ?? base[k] ?? 0; return `<div class="row-i"><span class="t" style="min-width:140px">${l}</span><input type="range" min="0" max="100" value="${Math.round(v * 100)}" data-tx="${k}" class="grow"><span class="tnum" style="width:44px;text-align:right">${Math.round(v * 100)}</span></div>`; }).join("")}</div>`;
+      break;
+    }
+    case "signature":
+      h = `<h2>Signature moves</h2><p class="lede">The recurring touches that make every reel recognisably yours.</p>
+        ${seg("Intro", "signature.intro", [["none", "None"], ["logo-sting", "Logo sting"], ["word-slam", "Word slam"], ["iris", "Iris"], ["title-card", "Title card"]])}
+        ${seg("Logo reveal", "signature.logoReveal", [["draw", "Draws"], ["assemble", "Assembles"], ["flood", "Floods"], ["fade", "Fades"], ["none", "None"]])}
+        ${seg("Lower third", "signature.lowerThird", [["pill", "Pill"], ["bar", "Bar"], ["glass", "Glass"], ["plain", "Plain"], ["none", "None"]])}
+        ${seg("End card", "signature.endCard", [["mark-url", "Mark + URL"], ["big-cta", "Big CTA"], ["quote", "Quote"], ["none", "None"]])}
+        ${seg("Key word", "signature.emphasis", [["serif-italic", "Serif italic"], ["highlighter", "Highlighter"], ["box", "Box"], ["underline", "Underline"], ["colour", "Colour"], ["circle", "Circled"]])}
+        ${seg("Captions", "signature.captions", [["none", "None"], ["key-words", "Key words"], ["karaoke", "Karaoke"], ["full", "Full"]])}
+        <div class="group"><div class="row-i"><span class="t grow">Tagline on the end card</span><input id="pz-tag" value="${esc(p.signature.tagline)}" placeholder="optional" style="max-width:300px"></div></div>`;
+      break;
+    case "copy":
+      h = `<h2>Copy & voice</h2><p class="lede">How on-screen words are written.</p>
+        ${seg("Case", "copy.case", [["sentence", "Sentence"], ["title", "Title Case"], ["upper", "CAPS"], ["lower", "lower"]])}
+        ${seg("Full stops", "copy.punctuation", [["as-written", "As written"], ["full-stops", "Always"], ["none", "Never"]])}
+        ${seg("Quotes", "copy.quotes", [["german", "„German“"], ["english", "“English”"], ["guillemets", "«Guillemets»"]])}
+        ${seg("Numbers", "copy.numbers", [["digits", "12"], ["words", "twelve"]])}
+        ${seg("Voice", "copy.voice", [["calm", "Calm"], ["confident", "Confident"], ["playful", "Playful"], ["provocative", "Provocative"]])}
+        ${seg("Emoji", "copy.emoji", [["false", "No"], ["true", "Yes"]])}`;
+      break;
+    case "sound":
+      h = `<h2>Sound</h2><p class="lede">What the reel sounds like under the voice.</p>
+        ${seg("Effects", "sound.effects", [["style", "As the style"], ["soft-ui", "Soft UI"], ["paper", "Paper"], ["retro", "Retro"], ["cinematic", "Cinematic"], ["punchy", "Punchy"], ["off", "Off"]])}
+        ${seg("Loudness", "sound.effectsLevel", [["subtle", "Subtle"], ["present", "Present"], ["loud", "Loud"]])}
+        ${seg("Music", "sound.music", [["none", "None"], ["ambient", "Ambient"], ["lofi", "Lo-fi"], ["upbeat", "Upbeat"], ["cinematic", "Cinematic"], ["electronic", "Electronic"]])}
+        <div class="group"><div class="row-i"><span class="t" style="min-width:140px">Tempo</span><input type="number" class="num" id="pz-bpm0" value="${p.sound.bpm[0]}" min="40" max="200"> to <input type="number" class="num" id="pz-bpm1" value="${p.sound.bpm[1]}" min="40" max="200"><span class="s">BPM</span></div></div>`;
+      break;
+    case "pacing":
+      h = `<h2>Pacing & density</h2><p class="lede">How much is said on screen, and how fast it moves.</p>
+        ${seg("Text on screen", "pacing.text", [["auto", "By voiceover"], ["full", "Full"], ["key-lines", "Key lines"], ["minimal", "Minimal"], ["none", "None"]])}
+        ${seg("Format", "pacing.format", [["9:16", "9:16"], ["1:1", "1:1"], ["4:5", "4:5"], ["16:9", "16:9"]])}
+        <div class="group"><div class="row-i"><span class="t" style="min-width:140px">Beat length</span><input type="number" class="num" step="0.5" id="pz-b0" value="${p.pacing.beatSeconds[0]}" min="1" max="12"> to <input type="number" class="num" step="0.5" id="pz-b1" value="${p.pacing.beatSeconds[1]}" min="1" max="12"><span class="s">seconds</span></div>
+          <div class="row-i"><span class="t" style="min-width:140px">Payoff holds</span><input type="range" min="8" max="40" value="${Math.round(p.pacing.payoffHold * 10)}" id="pz-hold" class="grow"><span class="tnum" style="width:52px;text-align:right" id="pz-hold-v">${p.pacing.payoffHold.toFixed(1)} s</span></div></div>
+        <p class="foot-note">The reading floor still applies: a line is never on screen for less time than it takes to read.</p>`;
+      break;
+    case "guardrails":
+      h = `<h2>Guardrails</h2><p class="lede">What your reels never do.</p><div id="pz-findings"></div>
+        <div class="group">
+          <div class="row-i wrap"><span class="t" style="min-width:160px">Banned colours</span>${p.guardrails.bannedColors.map((c, n) => `<span class="chip" data-unban="${n}"><i style="width:12px;height:12px;border-radius:50%;background:${c}"></i>${c} ${ic("x", 12)}</span>`).join("")}<span class="swatch-in"><input type="color" id="pz-ban" value="#ff00ff">Add</span></div>
+          <div class="row-i wrap"><span class="t" style="min-width:160px">Banned fonts</span><select id="pz-banf"><option value="">Add a family…</option>${pz.cat.families.map((f) => `<option>${esc(f.family)}</option>`).join("")}</select>${p.guardrails.bannedFonts.map((f, n) => `<span class="chip" data-unbanf="${n}">${esc(f)} ${ic("x", 12)}</span>`).join("")}</div>
+          <div class="row-i"><span class="t grow">Most type families in one reel</span><input type="number" class="num" id="pz-maxf" min="1" max="4" value="${p.guardrails.maxFonts}"></div>
+          <div class="row-i"><span class="t grow">Contrast for text</span>${segHtml("pz-guardrails-contrast", [["4.5", "4.5:1 (AA)"], ["7", "7:1 (AAA)"]], String(p.guardrails.contrast))}</div>
+          <div class="row-i"><span class="t grow">Never use glass</span><input type="checkbox" class="switch" data-g="noGlass" ${p.guardrails.noGlass ? "checked" : ""}></div>
+          <div class="row-i"><span class="t grow">Never use confetti</span><input type="checkbox" class="switch" data-g="noConfetti" ${p.guardrails.noConfetti ? "checked" : ""}></div>
+        </div>
+        <div class="cap">Anything else</div><textarea id="pz-notes" rows="3" style="width:100%" placeholder="e.g. never show prices; no stock photos">${esc(p.guardrails.notes)}</textarea>`;
+      break;
+    case "review": {
+      const errs = pz.findings.filter((f) => f.level === "error");
+      h = `<h2>Review</h2><p class="lede">${ch.length ? "Your personality, style by style. Fix anything red, then finish." : "Choose at least one style to finish."}</p>
+        <div class="findings">${pz.findings.filter((f) => f.level !== "info").map((f) => `<div class="finding ${f.level}"><span class="ico">!</span><div class="grow">${esc(f.message)}</div>${f.fix ? `<button class="sm" data-fix="${pz.findings.indexOf(f)}">${esc(f.fix.label)}</button>` : ""}</div>`).join("") || `<div class="finding info"><span class="ico">✓</span><div class="grow">Everything fits together.</div></div>`}</div>
+        <div class="st-grid">${ch.map((s) => `<div class="st-card">${specimen(s, pzPalette(s), pzFont(s), "showcase")}<div class="meta"><div class="name">${esc(s.name)} · ${p.styles.find((x) => x.id === s.id).weight}%</div><div class="sub">${esc(pzPalette(s).name)} · ${esc(pzFont(s)?.name || "")}</div><div class="sub">Best at ${esc(s.bestAt)}</div></div></div>`).join("")}</div>
+        <div class="cap">Previews</div>
+        <div class="group"><div class="row-i"><span class="col"><span class="t">Render mini beats</span><span class="s">A 4-second beat per style in your colours, type and motion, rendered and saved here</span></span><button id="pz-mini" ${errs.length || !ch.length ? "disabled" : ""}>Render</button></div></div>
+        <div id="pz-minis"></div>`;
+      break;
+    }
+  }
+  el.innerHTML = h;
+  paintIcons(el);
+  bindSegs(); bindFixes(el); paintPzMeta();
+  // Step bindings.
+  const on = (sel, ev, fn) => $$(sel, el).forEach((x) => x.addEventListener(ev, fn));
+  on("#pz-name", "input", (e) => { p.name = e.target.value.trim() || "My personality"; $(".phead h1").textContent = p.name; pzChange(false); });
+  on("#pz-bname", "input", (e) => { p.brand.name = e.target.value; pzChange(false); });
+  on("#pz-import", "click", async (e) => {
+    const url = $("#pz-url").value.trim(); if (!url) return;
+    e.target.disabled = true; e.target.textContent = "Reading…";
+    try {
+      const r = await post("/api/personality/brand", { url });
+      Object.assign(p.brand, { url: r.brand.url, colors: r.brand.colors, fonts: r.brand.fonts, logo: r.brand.logo, name: p.brand.name || r.brand.name });
+      await refreshBrandPals(); toast(`Found ${r.brand.colors.length} colours and ${r.brand.fonts.length} fonts`); pzChange(true);
+    } catch (err) { toast(err.message); e.target.disabled = false; e.target.textContent = "Read the site"; }
+  });
+  on("[data-bc]", "change", async (e) => { p.brand.colors[Number(e.target.dataset.bc)] = e.target.value; await refreshBrandPals(); pzChange(true); });
+  on("#pz-addc", "click", async () => { p.brand.colors.push("#ff6a00"); await refreshBrandPals(); pzChange(true); });
+  on("#pz-taste", "click", async () => {
+    const r = await api("/api/personality/taste");
+    $("#pz-sugg").innerHTML = r.suggestions.length ? `<div class="cap">From your taste</div><div class="group">${r.suggestions.map((s) => `<div class="row-i"><span class="col"><span class="t">${esc(pzStyle(s.id).name)}</span><span class="s">${esc(s.because.join("; "))}</span></span><button class="sm" data-take="${s.id}">Use</button></div>`).join("")}</div>`
+      : `<p class="foot-note">Nothing to learn from yet: add films in References, or rate beats Works in your reels.</p>`;
+    $$("[data-take]", $("#pz-sugg")).forEach((b) => b.addEventListener("click", () => { const ids = [...new Set([...p.styles.map((x) => x.id), b.dataset.take])].slice(-3); setStyles(ids); pzChange(false); toast(`${pzStyle(b.dataset.take).name} added`); }));
+  });
+  on("#pz-roll", "click", () => pzRoll());
+  on(".st-card[data-style]", "click", (e) => {
+    const id = e.currentTarget.dataset.style, ids = p.styles.map((x) => x.id);
+    if (ids.includes(id)) setStyles(ids.filter((x) => x !== id));
+    else if (ids.length >= 3) return toast("Up to three styles. Remove one first.");
+    else setStyles([...ids, id]);
+    if (!pz.style || !p.styles.some((s) => s.id === pz.style)) pz.style = p.styles[0]?.id || null;
+    pzChange(true);
+  });
+  on("[data-w]", "input", (e) => { const st = p.styles.find((x) => x.id === e.target.dataset.w); st.weight = Number(e.target.value); $(`#w-${st.id}`).textContent = `${st.weight}%`; pzChange(false); });
+  BEATS.forEach(([k]) => bindSeg(`pzb-${k}`, (v) => { p.beatStyles[k] = v; pzChange(false); }));
+  on(".pal", "click", (e) => { p.palettes[cur.id] = JSON.parse(e.currentTarget.dataset.pal); pzChange(true); });
+  on("[data-pk]", "input", debounce((e) => { const base = { ...pzPalette(cur) }; p.palettes[cur.id] = { ...base, id: "custom", name: "Custom", [e.target.dataset.pk]: e.target.value }; pzChange(true); }, 120));
+  on(".fcard", "click", (e) => { p.fonts[cur.id] = e.currentTarget.dataset.font; pzChange(true); });
+  on("#pz-tx-style", "change", (e) => { p.texture.useStyle = e.target.checked; pzChange(true); });
+  on("[data-tx]", "input", (e) => { p.texture[e.target.dataset.tx] = Number(e.target.value) / 100; e.target.nextElementSibling.textContent = e.target.value; pzChange(false); });
+  on("#pz-tag", "input", (e) => { p.signature.tagline = e.target.value; pzChange(false); });
+  on("#pz-bpm0, #pz-bpm1", "change", () => { const a = Number($("#pz-bpm0").value), b = Number($("#pz-bpm1").value); p.sound.bpm = [Math.min(a, b), Math.max(a, b)]; pzChange(false); });
+  on("#pz-b0, #pz-b1", "change", () => { const a = Number($("#pz-b0").value), b = Number($("#pz-b1").value); p.pacing.beatSeconds = [Math.min(a, b), Math.max(a, b)]; pzChange(false); });
+  on("#pz-hold", "input", (e) => { p.pacing.payoffHold = Number(e.target.value) / 10; $("#pz-hold-v").textContent = `${p.pacing.payoffHold.toFixed(1)} s`; pzChange(false); });
+  on("#pz-ban", "change", (e) => { p.guardrails.bannedColors.push(e.target.value); pzChange(true); });
+  on("[data-unban]", "click", (e) => { p.guardrails.bannedColors.splice(Number(e.currentTarget.dataset.unban), 1); pzChange(true); });
+  on("#pz-banf", "change", (e) => { if (e.target.value && !p.guardrails.bannedFonts.includes(e.target.value)) p.guardrails.bannedFonts.push(e.target.value); pzChange(true); });
+  on("[data-unbanf]", "click", (e) => { p.guardrails.bannedFonts.splice(Number(e.currentTarget.dataset.unbanf), 1); pzChange(true); });
+  on("#pz-maxf", "change", (e) => { p.guardrails.maxFonts = Math.max(1, Math.min(4, Number(e.target.value) || 3)); pzChange(false); });
+  on("[data-g]", "change", (e) => { p.guardrails[e.target.dataset.g] = e.target.checked; pzChange(false); });
+  on("#pz-notes", "input", (e) => { p.guardrails.notes = e.target.value; pzChange(false); });
+  on("#pz-mini", "click", async (e) => {
+    e.target.disabled = true;
+    try { await post(`/api/personalities/${p.id}/render`); toast("Rendering your mini beats. They appear here when done."); pollMini(); }
+    catch (err) { toast(err.message); e.target.disabled = false; }
+  });
+  if (pz.step === "review") paintMini();
+  if (p.guardrails && $("#pz-guardrails-contrast", el)) bindSeg("pz-guardrails-contrast", (v) => { p.guardrails.contrast = Number(v); pzChange(false); });
+}
+
+/** The owner's own mini beats, on the Review step: what is rendered, and a running render's progress. */
+async function paintMini() {
+  const box = $("#pz-minis"); if (!box) return;
+  const r = await api(`/api/personalities/${pz.p.id}/renders`);
+  const running = r.job && r.job.status === "running";
+  box.innerHTML = r.renders.length ? `<div class="st-grid" style="margin-top:12px">${r.renders.map((x) => `<div class="st-card"><div class="spec"><video src="${x.video}?t=${Date.parse(x.at)}" poster="${x.poster}?t=${Date.parse(x.at)}" muted loop playsinline autoplay></video></div><div class="meta"><div class="name">${esc(pzStyle(x.style)?.name || x.style)}</div><div class="sub">Rendered ${esc(when(x.at))}</div></div></div>`).join("")}</div>` : "";
+  if (running) box.insertAdjacentHTML("afterbegin", `<p class="foot-note">Rendering… ${esc(r.job.log.at(-1) || "")}</p>`);
+  const btn = $("#pz-mini"); if (btn) btn.disabled = running || btn.disabled;
+  if (r.job?.status === "failed") box.insertAdjacentHTML("afterbegin", `<p class="foot-note" style="color:var(--red)">The last render failed: ${esc(r.job.log.slice(-2).join(" "))}</p>`);
+  return running;
+}
+async function pollMini() { clearTimeout(pollMini.t); if (await paintMini()) pollMini.t = setTimeout(pollMini, 2500); }
+
+async function refreshBrandPals() {
+  pz.brandPals = pz.p.brand.colors.length ? (await post("/api/personality/brand", { colors: pz.p.brand.colors })).palettes : null;
+}
+
+async function pzRoll() {
+  const p = pz.p;
+  const locks = {};
+  if (pz.locks.styles && p.styles.length) locks.styles = p.styles.map((s) => s.id);
+  if (pz.locks.palettes) locks.palettes = { ...p.palettes };
+  if (pz.locks.fonts) locks.fonts = { ...p.fonts };
+  if (locks.styles) locks.count = p.styles.length;
+  const r = await post("/api/personality/surprise", { locks });
+  p.styles = r.roll.styles; p.beatStyles = r.roll.beatStyles; p.palettes = r.roll.palettes; p.fonts = r.roll.fonts;
+  pz.style = p.styles[0]?.id || null;
+  pzChange(true);
+  openSheet({ title: "Surprise", sub: `${p.styles.map((s) => pzStyle(s.id).name).join(" + ")}. Lock what you like and roll again.`,
+    body: `<div class="st-grid" style="margin-bottom:12px">${pzChosen().map((s) => `<div class="st-card">${specimen(s, pzPalette(s), pzFont(s))}<div class="meta"><div class="name">${esc(s.name)}</div><div class="sub">${esc(pzPalette(s).name)} · ${esc(pzFont(s)?.name || "")}</div></div></div>`).join("")}</div>
+      <div class="group">${[["styles", "Styles"], ["palettes", "Colours"], ["fonts", "Fonts"]].map(([k, l]) => `<div class="row-i"><span class="t grow">Lock ${l.toLowerCase()}</span><input type="checkbox" class="switch" data-lock="${k}" ${pz.locks[k] ? "checked" : ""}></div>`).join("")}</div>
+      <div class="acts"><button data-sclose>Keep this</button><button class="primary" id="pz-again">${ic("dice", 16)} Roll again</button></div>`,
+    bind: (sh) => { $$("[data-lock]", sh).forEach((c) => c.addEventListener("change", () => { pz.locks[c.dataset.lock] = c.checked; })); $("#pz-again", sh).addEventListener("click", () => { closeSheet(); pzRoll(); }); } });
+}
+
+async function renderPzList() {
+  const list = (await api("/api/personalities")).personalities;
+  setCount("personality", list.length || "");
+  const strip = (p) => `<div class="pcard-strip">${(p.styles.length ? p.styles : [{ id: pz.cat.styles[0].id }]).map((st) => { const s = pzStyle(st.id), pal = p.palettes[st.id] || s.palettes[0]; return `<span>${[pal.ground, pal.ink, pal.accent, pal.accent2].map((c) => `<i style="background:${c}"></i>`).join("")}</span>`; }).join("")}</div>`;
+  $("#main").innerHTML = `${pageHead("Personality", { actions: `<button id="pz-new" class="primary">${ic("plus", 16)} New</button>` })}
+    <p class="lede">A personality is how every reel looks, moves and sounds: up to three styles, their colours and type, motion, texture, signature moves, voice, sound, pacing and guardrails. The default one is used for every new reel; Step 0 confirms it in one line.</p>
+    ${list.length ? `<div class="grid">${list.map((p) => { const err = p.findings.filter((f) => f.level === "error").length, warn = p.findings.filter((f) => f.level === "warn").length;
+      return `<a class="card" href="#personality/${p.id}">${strip(p)}<div class="meta"><div class="name">${esc(p.name)}</div><div class="sub">${p.isDefault ? `<span class="badge identity">Default</span>` : ""}${p.styles.map((s) => `<span>${esc(pzStyle(s.id)?.name || s.id)}</span>`).join(" · ") || "No styles yet"}</div>
+        <div class="sub">${err ? `<span class="badge bad">${err} to fix</span>` : ""}${warn ? `<span class="badge warn">${warn} warning${warn > 1 ? "s" : ""}</span>` : ""}${p.done.includes("review") ? `<span class="badge ok">Finished</span>` : `<span class="badge">Draft</span>`}</div></div></a>`; }).join("")}</div>`
+      : emptyState("personality", "Give your reels a personality", "Choose the styles, colours and type every reel is made in. Start from your brand, your taste or a surprise.", `<button class="primary" id="pz-new2">Create a personality</button>`)}`;
+  const create = async () => { const r = await post("/api/personalities", { name: list.length ? "New personality" : "My personality" }); location.hash = `#personality/${r.personality.id}/start`; };
+  $("#pz-new").addEventListener("click", create); $("#pz-new2")?.addEventListener("click", create);
+  paintIcons();
+}
 
 // ---------- library
 async function loadLibrary() {
@@ -1572,7 +2060,7 @@ async function updateBadges() {
 const TAB_INDEX = { library: 0, footage: 1, reels: 2 };
 function skeleton(title) { $("#main").innerHTML = `${pageHead(title)}<div class="grid" aria-busy="true">${Array.from({ length: 8 }, () => `<div class="skel card"></div>`).join("")}</div>`; }
 async function route() {
-  const [tab, id] = (location.hash.slice(1) || "library").split("/");
+  const [tab, id, sub] = (location.hash.slice(1) || "library").split("/");
   if (tab === "more") { history.replaceState(null, "", `#${state.tab}`); openMore(); return; }
   const changed = tab !== state.tab;
   state.tab = tab;
@@ -1594,6 +2082,7 @@ async function route() {
     else if (tab === "learnings") await renderLearnings();
     else if (tab === "patterns") { await loadPatterns(); renderPatterns(); }
     else if (tab === "sounds") { await loadPackSounds(); renderSounds(); }
+    else if (tab === "personality") await renderPersonality(id, sub);
     else { await loadLibrary(); renderLibrary(); }
   } catch (e) { $("#main").innerHTML = `${pageHead("Something went wrong")}${emptyState("x", "This page could not load", esc(e.message), `<button class="primary" id="retry">Retry</button>`)}`; $("#retry")?.addEventListener("click", route); }
   clearTimeout(slow);
