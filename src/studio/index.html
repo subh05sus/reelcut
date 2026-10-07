@@ -820,6 +820,7 @@
       <a class="nav-i" href="#references" data-tab="references" title="References"><span data-ic="references"></span><span class="lab">References</span><span class="n" data-count="references"></span></a>
       <a class="nav-i" href="#sounds" data-tab="sounds" title="Sound effects"><span data-ic="sounds"></span><span class="lab">Sounds</span><span class="n" data-count="sounds"></span></a>
       <a class="nav-i" href="#patterns" data-tab="patterns" title="Your patterns"><span data-ic="patterns"></span><span class="lab">Patterns</span><span class="n" data-count="patterns"></span></a>
+      <a class="nav-i" href="#performance" data-tab="performance" title="Performance"><span data-ic="chart"></span><span class="lab">Performance</span></a>
       <a class="nav-i" href="#learnings" data-tab="learnings" title="Learnings"><span data-ic="learnings"></span><span class="lab">Learnings</span><span class="n" data-count="learnings"></span></a>
       <a class="nav-i" href="#jobs" data-tab="jobs" title="Jobs"><span data-ic="jobs"></span><span class="lab">Jobs</span><span class="n" data-count="jobs"></span></a>
     </nav>
@@ -884,6 +885,7 @@ const ICONS = {
   dice: '<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.2" fill="currentColor"/><circle cx="16" cy="16" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/>',
   lock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
   unlock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.8-1.2"/>',
+  chart: '<path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 6-7"/>',
   wand: '<path d="m15 4 5 5M4 20 15 9M17 3v2M21 7h-2M19 11v1M11 3h1"/>',
 };
 function ic(name, size = 18) { return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ""}</svg>`; }
@@ -1075,7 +1077,7 @@ $("#rail").addEventListener("click", () => setRail(document.documentElement.data
 function openMore() {
   const c = (n) => (n ? `<span class="badge">${n}</span>` : "");
   const s = state.ingest?.status;
-  openSheet({ title: "More", body: `<div class="group">${[["footage", "Footage", state.counts.footage], ["personality", "Personality", 0], ["review", "Review", state.counts.pending], ["sounds", "Sounds", state.packSounds.length], ["patterns", "Patterns", state.patterns.length], ["folders", "Folders", state.folders.length], ["references", "References", state.rcounts.all], ["learnings", "Learnings", (state.learn?.rules || []).filter((r) => r.status === "proposed" && !r.conflictWith.length).length], ["jobs", "Jobs", state.jobs.filter((j) => j.status === "running").length]]
+  openSheet({ title: "More", body: `<div class="group">${[["footage", "Footage", state.counts.footage], ["personality", "Personality", 0], ["review", "Review", state.counts.pending], ["sounds", "Sounds", state.packSounds.length], ["patterns", "Patterns", state.patterns.length], ["folders", "Folders", state.folders.length], ["references", "References", state.rcounts.all], ["performance", "Performance", 0], ["learnings", "Learnings", (state.learn?.rules || []).filter((r) => r.status === "proposed" && !r.conflictWith.length).length], ["jobs", "Jobs", state.jobs.filter((j) => j.status === "running").length]]
       .map(([k, l, n]) => `<a class="row-i" href="#${k}" data-sclose style="color:var(--label);text-decoration:none"><span class="tile" style="background:var(--fill-1);color:var(--label)">${ic(k, 17)}</span><span class="t grow">${l}</span>${c(n)}<span style="color:var(--label-3)">${ic("back", 14).replace("m15 18-6-6 6-6", "m9 18 6-6-6-6")}</span></a>`).join("")}</div>
     <div class="group"><button class="row-i" id="more-set" style="width:100%;border-radius:0;justify-content:flex-start;height:auto;font-size:var(--fs-b);font-weight:400"><span class="tile" style="background:#8e8e93">${ic("settings", 17)}</span><span class="t grow" style="text-align:left">Settings</span></button>
       <div class="row-i"><span class="dot ${s?.paused ? "off" : s?.scanning ? "busy" : ""}"></span><span class="s grow">${esc($("#sync-text").textContent)}</span><button class="sm" id="more-pause">${s?.paused ? "Resume" : "Pause"}</button></div></div>`,
@@ -1292,6 +1294,42 @@ const refreshReel = debounce(async () => {
   if (view === "master") bindMaster(r); else if (view === "post") paintPost(); else bindBeats(r);
 }, 250);
 
+// ---- performance
+function perfLine(e, seconds) {
+  const n = (x) => x >= 10000 ? `${(x / 1000).toFixed(x >= 100000 ? 0 : 1)}K` : String(x);
+  const watched = e.avgWatchSeconds != null ? `${e.avgWatchSeconds} s watched${seconds ? ` (${Math.round(Math.min(1, e.avgWatchSeconds / seconds) * 100)}%)` : ""}` : e.completionRate != null ? `${Math.round(e.completionRate * 100)}% to the end` : e.retention3s != null ? `${Math.round(e.retention3s * 100)}% past 3 s` : "";
+  return [e.views != null && `${n(e.views)} views`, watched, e.likes != null && `${n(e.likes)} likes`, e.shares != null && `${n(e.shares)} shares`, e.saves != null && `${n(e.saves)} saves`].filter(Boolean).join(" · ");
+}
+function typeResults(id, done) {
+  const f = (k, label, hint = "") => `<label class="row-i"><span class="t" style="width:150px">${label}</span><input class="grow" inputmode="decimal" data-m="${k}" placeholder="${hint}"></label>`;
+  openSheet({
+    title: "Results", sub: "Type what the platform shows; leave out what it doesn't.",
+    body: `<div class="group"><label class="row-i"><span class="t" style="width:150px">Platform</span><select id="rs-pf" class="grow"><option value="instagram">Instagram</option><option value="tiktok">TikTok</option><option value="youtube">YouTube</option><option value="linkedin">LinkedIn</option><option value="other">Other</option></select></label></div>
+      <div class="group" style="margin-top:12px">${f("views", "Views")}${f("avgWatchSeconds", "Average watch time", "seconds")}${f("retention3s", "Still watching at 3 s", "%")}${f("completionRate", "Watched to the end", "%")}${f("likes", "Likes")}${f("comments", "Comments")}${f("shares", "Shares")}${f("saves", "Saves")}${f("follows", "Follows")}</div>
+      <div class="acts"><button data-sclose>Cancel</button><button class="primary" id="rs-ok">Save</button></div>`,
+    bind: (sh) => $("#rs-ok", sh).addEventListener("click", async () => {
+      const body = { platform: $("#rs-pf", sh).value };
+      $$("[data-m]", sh).forEach((i) => { const v = i.value.replace(/[,\s]/g, "").replace(/k$/i, "000"); if (v) body[i.dataset.m] = v; });
+      try { await post(`/api/create/${id}/performance`, body); closeSheet(); toast("Saved"); done?.(); } catch (err) { toast(err.message); }
+    }),
+  });
+}
+async function renderPerformance() {
+  const d = await api("/api/performance");
+  const pct = (x) => `${Math.round(x * 100)}%`;
+  const words = { length: "Reels", format: "Reels in", style: "Reels in", recipe: "Reels made with the recipe", voiceover: "Reels", music: "Reels", text: "Reels with text" };
+  const without = d.reels.filter((r) => !r.hasResults);
+  $("#main").innerHTML = `${pageHead("Performance", { actions: `<button class="primary" id="pf-ask" ${d.rows.length < 2 ? "disabled title=\"Add results for at least two reels\"" : ""}>Ask Claude what's working</button>` })}
+    <p class="lede" style="margin:0 0 20px;max-width:680px">How your posted reels did, from the analytics you add to each one (a screenshot, a CSV or typed in). With a few reels it shows what holds attention, and Claude turns that into rules you approve in Learnings.</p>
+    ${d.insights.length ? `<div class="cap">What differs</div><div class="group">${d.insights.slice(0, 6).map((i) => `<div class="row-i"><span class="col grow"><span class="t">${esc(words[i.by] || "Reels")} ${esc(i.value)}</span><span class="s">${pct(i.hold)} watched, ${Math.round(i.views)} views (median of ${i.reels}) · the other ${i.versus.reels}: ${pct(i.versus.hold)}, ${Math.round(i.versus.views)}</span></span><span class="badge ${i.hold > i.versus.hold ? "ok" : "bad"}">${i.hold > i.versus.hold ? "+" : "−"}${Math.abs(Math.round((i.hold - i.versus.hold) * 100))} pts</span></div>`).join("")}</div>
+      <p class="foot-note">From few reels, so read these as hints, not proof.</p>` : d.rows.length ? `<p class="foot-note">With results for a few more reels, differences between them appear here.</p>` : ""}
+    <div class="cap">Reels with results</div>
+    ${d.rows.length ? `<div class="group">${d.rows.map((r) => `<a class="row-i" href="#create/${r.conversation}/post" style="color:var(--label);text-decoration:none"><span class="col grow"><span class="t">${esc(r.title)}</span><span class="s">${r.facts.seconds} s · ${esc(r.facts.format)}${r.facts.style ? ` · ${esc(r.facts.style)}` : ""} — ${r.latest.map((e) => `${PF_NAME[e.platform] || "Other"}: ${esc(perfLine(e, r.facts.seconds))}`).join(" · ")}</span></span></a>`).join("")}</div>`
+      : emptyState("jobs", "No results yet", "Open a finished reel, go to its Post tab and add its analytics.")}
+    ${without.length ? `<div class="cap">Waiting for results</div><div class="group">${without.map((r) => `<a class="row-i" href="#create/${r.id}/post" style="color:var(--label);text-decoration:none"><span class="t grow">${esc(r.title)}</span><span class="s">Add results</span></a>`).join("")}</div>` : ""}`;
+  $("#pf-ask")?.addEventListener("click", async (e) => { e.target.disabled = true; try { const r = await post("/api/performance/analyze"); location.hash = `#create/${r.id}`; } catch (err) { toast(err.message); e.target.disabled = false; } });
+}
+
 // ---- post: captions, a cover, and the words for each platform
 const PF_NAME = { instagram: "Instagram", tiktok: "TikTok", youtube: "YouTube", linkedin: "LinkedIn" };
 async function paintPost() {
@@ -1333,7 +1371,10 @@ async function paintPost() {
       <div class="cr-pf">${pfBody}</div>
       <div style="display:flex;gap:8px;margin-top:12px"><input id="cp-note" style="flex:1" placeholder="Ask for changes, e.g. shorter, more playful"><button class="sm" id="cp-kit" style="height:var(--ctl)">Rewrite</button></div>`
     : `<p class="foot-note" style="margin:0 0 8px">Titles, captions, hashtags and a first comment for Instagram, TikTok, YouTube and LinkedIn, written by Claude in your voice from the script.</p>
-      <div style="display:flex;gap:8px"><input id="cp-note" style="flex:1" placeholder="Anything to know? (optional)"><button class="primary sm" id="cp-kit" style="height:var(--ctl)">Write the post kit</button></div>`}`;
+      <div style="display:flex;gap:8px"><input id="cp-note" style="flex:1" placeholder="Anything to know? (optional)"><button class="primary sm" id="cp-kit" style="height:var(--ctl)">Write the post kit</button></div>`}
+    <div class="cap" style="margin:16px 0 8px">Results <a class="note" href="#performance" style="margin-left:auto">All reels</a></div>
+    ${k.results.length ? `<div class="group">${k.results.map((e) => `<div class="row-i"><span class="col grow"><span class="t">${PF_NAME[e.platform] || "Other"}</span><span class="s">${esc(perfLine(e, Math.round(cr.reel?.seconds || 0)))}</span></span><span class="s">${esc(new Date(e.capturedAt).toLocaleDateString([], { day: "numeric", month: "short" }))}</span></div>`).join("")}</div>` : `<p class="foot-note" style="margin:0 0 8px">Once it is posted, add its analytics: a screenshot or a CSV export, which Claude reads, or the numbers typed in. The Performance page then shows what holds attention across your reels.</p>`}
+    <div class="acts" style="justify-content:flex-start;margin-top:8px"><button class="sm" id="cp-res-file">Add a screenshot or CSV</button><button class="sm" id="cp-res-type">Type them in</button><input type="file" id="cp-res-input" accept="image/*,.csv,text/csv" multiple hidden></div>`;
   $$("[data-copy]", box).forEach((b) => b.addEventListener("click", async () => { try { await navigator.clipboard.writeText(b.dataset.copy); const t = b.textContent; b.textContent = "Copied"; setTimeout(() => { b.textContent = t; }, 1200); } catch { toast("Could not copy"); } }));
   $("#cp-write")?.addEventListener("click", async () => { try { await post(`/api/create/${cr.meta.id}/captions`, {}); paintPost(); } catch (err) { toast(err.message); } });
   $("#cp-burn")?.addEventListener("click", async () => { try { await post(`/api/create/${cr.meta.id}/captions`, { burn: true, style: $("#cp-style").value }); toast("Burning captions in; this takes a few minutes"); paintPost(); } catch (err) { toast(err.message); } });
@@ -1347,6 +1388,16 @@ async function paintPost() {
     try { await post(`/api/create/${cr.meta.id}/postkit`, { note: $("#cp-note").value }); toast("Asked Claude for the post kit"); window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" }); } catch (err) { toast(err.message); }
   });
   if (kit) bindSeg("cr-pf", (v) => { cr.postPf = v; paintPost(); });
+  $("#cp-res-file").addEventListener("click", () => $("#cp-res-input").click());
+  $("#cp-res-input").addEventListener("change", async (e) => {
+    const picked = [...e.target.files]; if (!picked.length) return;
+    try {
+      const files = []; for (const f of picked) files.push(await uploadFile(cr.meta.id, { name: f.name, kind: "results", file: f }));
+      await post(`/api/create/${cr.meta.id}/performance/import`, { files, platform: "any" });
+      toast("Claude is reading the results"); window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+    } catch (err) { toast(err.message); }
+  });
+  $("#cp-res-type").addEventListener("click", () => typeResults(cr.meta.id, () => paintPost()));
   clearTimeout(cr.postTimer);
   if (burning) cr.postTimer = setTimeout(() => { if (cr.panelShown === "post") paintPost(); }, 4000);
 }
@@ -3041,11 +3092,13 @@ async function route() {
     else if (tab === "patterns") { await loadPatterns(); renderPatterns(); }
     else if (tab === "sounds") { await loadPackSounds(); renderSounds(); }
     else if (tab === "personality") await renderPersonality(id, sub);
-    else if (tab === "create") await renderCreate(id);
+    else if (tab === "create") { if (id && sub) cr.panelView = sub; await renderCreate(id); }
+    else if (tab === "performance") await renderPerformance();
     else { await loadLibrary(); renderLibrary(); }
   } catch (e) { $("#main").innerHTML = `${pageHead("Something went wrong")}${emptyState("x", "This page could not load", esc(e.message), `<button class="primary" id="retry">Retry</button>`)}`; $("#retry")?.addEventListener("click", route); }
   clearTimeout(slow);
-  if (changed) { const m = $("#main"); m.classList.remove("enter"); void m.offsetWidth; m.classList.add("enter"); window.scrollTo(0, 0); }
+  // A conversation opens at its latest message (pinToBottom); every other page opens at its top.
+  if (changed) { const m = $("#main"); m.classList.remove("enter"); void m.offsetWidth; m.classList.add("enter"); if (tab === "create" && id) pinToBottom(); else window.scrollTo(0, 0); }
   afterRender();
   if (tab === "jobs" && state.jobs.some((j) => j.status === "running")) poll = setTimeout(route, 2000);
 }

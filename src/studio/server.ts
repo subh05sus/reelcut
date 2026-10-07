@@ -37,6 +37,7 @@ import { HIGGSFIELD_SETTINGS, loadSettings, setHiggsfieldSetting, type Higgsfiel
 import { readGeneration } from "../generate/log.js";
 import { CreateManager, filesDir as createFilesDir, insideAllowed, reelState } from "../create/manager.js";
 import { readIntegrations } from "../create/integrations.js";
+import { addPerformance, analysisPrompt, importPrompt, insights, latest, readPerformance, reelFacts, type PerfRow } from "../create/performance.js";
 import { cloudflaredPath, createShare, ensureTunnel, revokeShare, sharesFor, startReviewServer, stopTunnel, tunnelUrl, REVIEW_PORT, loadShares, liveShare } from "../create/share.js";
 import { writeCaptions } from "../create/captions.js";
 import { coverFrames, LIMITS, makeCover, postKitPrompt, readCovers, readPostKit, PLATFORMS as POST_PLATFORMS, type Platform } from "../create/postkit.js";
@@ -933,6 +934,27 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
         return sendJson(res, 200, { ok: true });
       }
     }
+    // Performance: every reel with results, what differs between them, and a conversation to make sense of it.
+    if (parts[0] === "api" && parts[1] === "performance") {
+      const cm = (create ??= new CreateManager());
+      const rows = (): PerfRow[] => cm.list().flatMap((m) => {
+        const rp = cm.findReel(m.id);
+        if (!rp || !readPerformance(rp).length) return [];
+        try { return [{ conversation: m.id, title: m.title, reel: rp, facts: reelFacts(rp, m.settings), latest: latest(readPerformance(rp)) }]; } catch { return []; }
+      });
+      if (read && parts.length === 2) {
+        const r = rows();
+        const reels = cm.list().filter((m) => m.reel).map((m) => ({ id: m.id, title: m.title, hasResults: r.some((x) => x.conversation === m.id) }));
+        return sendJson(res, 200, { rows: r, insights: insights(r), reels });
+      }
+      if (method === "POST" && parts[2] === "analyze" && parts.length === 3) {
+        const r = rows();
+        if (r.length < 2) throw new HttpError(409, "add results for at least two reels first");
+        const sess = cm.create("What's working", {});
+        cm.send(sess.id, `What's working across my ${r.length} reels with results?`, [], analysisPrompt(r, insights(r)));
+        return sendJson(res, 201, { id: sess.id });
+      }
+    }
     if (parts[0] === "api" && parts[1] === "create") {
       const cm = (create ??= new CreateManager());
       if (read && parts.length === 2) {
@@ -1068,7 +1090,7 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
         const job = jobs.find((j) => j.runId === `captions:${id}`);
         return sendJson(res, 200, {
           captions: { ...captions, srt: at("captions.srt"), vtt: at("captions.vtt"), burned: at("master.captioned.mp4"), voiced, job: job && { id: job.id, status: job.status, log: job.log.slice(-4) } },
-          frames: coverFrames(rp), covers: readCovers(rp), kit: readPostKit(rp), limits: LIMITS, platforms: POST_PLATFORMS,
+          frames: coverFrames(rp), covers: readCovers(rp), kit: readPostKit(rp), limits: LIMITS, platforms: POST_PLATFORMS, results: latest(readPerformance(rp)),
         });
       }
       if (method === "POST" && parts[3] === "captions" && parts.length === 4) {
@@ -1119,6 +1141,17 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
           if (!loadShares().some((x) => liveShare(x))) stopTunnel();
           return sendJson(res, 200, { ok: true });
         }
+      }
+      if (method === "POST" && parts[3] === "performance" && parts.length === 4) {
+        const b = (await readBody(req)) as Record<string, unknown> & { platform?: string };
+        return sendJson(res, 201, { entry: addPerformance(reelPath(), { ...b, platform: String(b.platform ?? "other"), source: "typed" }) });
+      }
+      if (method === "POST" && parts[3] === "performance" && parts[4] === "import" && parts.length === 5) {
+        const b = (await readBody(req)) as { files?: { name: string; path: string }[]; platform?: string };
+        const files = (b.files ?? []).filter((f) => typeof f.path === "string" && f.path.startsWith(createFilesDir(id)));
+        if (!files.length) throw new HttpError(400, "add a screenshot or a CSV");
+        cm.send(id, `Read the results from ${files.map((f) => f.name).join(", ")}`, files.map((f) => ({ ...f, kind: "results" })), importPrompt(reelPath(), files, b.platform || "any"));
+        return sendJson(res, 202, { ok: true });
       }
       if (parts[3] === "comments") {
         if (read && parts.length === 4) return sendJson(res, 200, { comments: loadComments(id) });
