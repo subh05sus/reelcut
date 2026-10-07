@@ -31,13 +31,14 @@ motion energy.
 - **That style's colours:** set its scheme on the beat's root: `#root { --ground; --ink; --accent; --accent-2 }` from
   `palettes[style]` (or the style's first curated scheme). Never mix two styles' schemes in one beat.
 - **That style's type:** `data-type="<fonts[style]>"` on the root.
-- **That style's world:** its look (`look` in the catalog), its preferred moves (`moves.prefer`) and never its avoided
-  ones, its motion note, its texture. Its saved preview (`~/.reelcut/style-previews/<style>-sample.mp4` and
-  `-showcase.mp4`, and the composition generator in `src/personality/preview.ts`) shows how the kit draws it today:
+- **That style's world:** `data-style="<style>"` on the root draws the beat in it — its shape material, world, textures,
+  entrances and frame cadence ([kit.md](kit.md#styles--the-twenty-personality-styles)); open
+  `assets/patterns/styles/<style>.html` first. Also its look (`look` in the catalog), its preferred moves
+  (`moves.prefer`) and never its avoided ones, its motion note. Its saved preview (`~/.reelcut/style-previews/`) shows it:
   card shapes and layered shadows for Paper Cutout, matte bevelled clay with squash and stretch on held 12 fps frames,
   outlines that draw for Hand-Drawn and Linear, slabs for Isometric, gooey blobs for Liquid, a letterbox and grain for
   Cinematic, scanlines and a striped sunset for Retro / VHS, RGB split and slices for Glitch, a grid and one red block
-  for Swiss. Styles marked "directed" have no look of their own in the kit yet: compose them with these treatments.
+  for Swiss. All twenty are drawn by the kit.
 - **Signature moves:** the intro, logo reveal, lower third, end card, how a key word is emphasised, captions, the
   tagline: the same in every reel.
 - **Copy and voice:** case, full stops, quote marks, numbers, emoji, the voice. Apply them to every word on screen.
@@ -53,4 +54,5 @@ motion energy.
 |---|---|
 | `npm run personality -- brief [--json]` | the default personality for Step 0 |
 | `npm run personality -- previews [--only a,b] [--kind sample\|showcase\|both]` | render the 20 style previews the page shows (once; saved in `~/.reelcut/style-previews`) |
+| `npm run personality -- patterns` | rewrite `assets/patterns/styles/` from the generator |
 | `npm run personality -- mini <id>` | render a mini beat per chosen style in that personality's colours, type and motion (the page's "Render mini beats") |

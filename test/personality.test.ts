@@ -133,3 +133,30 @@ describe("the style previews", () => {
     }
   });
 });
+
+describe("the kit's style layer", () => {
+  it("draws all twenty styles, with the catalog's textures and frame cadence", async () => {
+    const { readKitSources } = await import("../src/render/kit.js");
+    const kit = readKitSources();
+    const win: Record<string, unknown> = { gsap: { registerEase: () => undefined, defaults: () => undefined } };
+    const doc = { querySelector: () => null, querySelectorAll: () => [], createElement: () => ({}), createElementNS: () => ({}) };
+    new Function("window", "document", kit.js)(win, doc);
+    const table = (win.RC as { STYLES_KIT: Record<string, { fps: number; texture: Record<string, number> }> }).STYLES_KIT;
+    for (const s of STYLES) {
+      expect(s.render, s.id).toBe("render");
+      const k = table[s.id]!;
+      expect(k, s.id).toBeDefined();
+      expect(k.texture, s.id).toEqual(s.texture);
+      expect(k.fps, s.id).toBe(s.motion.cadence === "stepped-12" ? 12 : s.motion.cadence === "stepped-8" ? 8 : 0);
+    }
+  });
+
+  it("keeps a style pattern for each style, as the generator makes it", async () => {
+    const { readFileSync } = await import("node:fs");
+    const { previewComposition } = await import("../src/personality/index.js");
+    for (const s of STYLES) {
+      const file = path.join(__dirname, "..", "skills", "reelcut", "assets", "patterns", "styles", `${s.id}.html`);
+      expect(readFileSync(file, "utf8"), `${s.id}: run npm run personality -- patterns`).toBe(previewComposition(s, "showcase", { id: `style-${s.id}`, palette: s.palettes[0]!, pairing: s.fonts.best[0]! }));
+    }
+  });
+});

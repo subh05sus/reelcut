@@ -17,6 +17,8 @@ import {
  *   npm run personality -- mini <personality id> [--quality draft|looks]
  *       Render a mini beat per chosen style in that personality's colours, type, motion and texture
  *       (~/.reelcut/personality-renders/<id>/<style>.mp4).
+ *   npm run personality -- patterns
+ *       Write each style's showcase to assets/patterns/styles/<style>.html (the reference to open before composing in it).
  *   npm run personality -- brief [--json]
  *       The default personality, for Step 0: what it answers and how a reel uses it.
  */
@@ -115,7 +117,19 @@ function brief(argv: string[]): number {
   return 0;
 }
 
+/** The style patterns: each style's showcase as a composition to open before composing a beat in it. */
+export const STYLE_PATTERN_DIR = path.join(REPO, "skills", "reelcut", "assets", "patterns", "styles");
+export function stylePatternHtml(s: StyleSpec): string {
+  return previewComposition(s, "showcase", { id: `style-${s.id}`, palette: s.palettes[0]!, pairing: s.fonts.best[0]! });
+}
+function patterns(): number {
+  mkdirSync(STYLE_PATTERN_DIR, { recursive: true });
+  for (const s of STYLES) writeFileSync(path.join(STYLE_PATTERN_DIR, `${s.id}.html`), stylePatternHtml(s));
+  console.log(`${STYLES.length} style patterns written to ${STYLE_PATTERN_DIR}`);
+  return 0;
+}
+
 const [cmd, ...rest] = process.argv.slice(2);
-const code = cmd === "previews" ? previews(rest) : cmd === "mini" ? mini(rest) : cmd === "brief" ? brief(rest)
-  : (console.error("usage: personality.ts previews [--only a,b] [--kind sample|showcase|both] | mini <id> | brief [--json]"), 2);
+const code = cmd === "previews" ? previews(rest) : cmd === "mini" ? mini(rest) : cmd === "brief" ? brief(rest) : cmd === "patterns" ? patterns()
+  : (console.error("usage: personality.ts previews [--only a,b] [--kind sample|showcase|both] | mini <id> | brief [--json] | patterns"), 2);
 process.exitCode = code;

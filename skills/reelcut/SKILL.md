@@ -196,7 +196,7 @@ the Dynamic Island, Messages, Calendar, Maps, the Dock, a check that draws — a
 `assets/patterns/apple/` ([apple-ui.md](references/apple-ui.md)).
 
 **Make each beat in its personality style.** With a personality in `reel.json`, a beat's kind picks its style, and the
-style its colours, type, look, moves and motion; signature moves, copy rules and guardrails hold in every beat
+style its colours, type, look, moves and motion (`data-style` on the root draws the beat in it); signature moves, copy rules and guardrails hold in every beat
 ([references/personality.md](references/personality.md)).
 
 **Start from the user's own patterns.** `npm run patterns -- list` lists the beats they rated "Works", best-rated

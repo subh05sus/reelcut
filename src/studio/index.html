@@ -1044,7 +1044,7 @@ function renderPzStep() {
         <div class="st-grid">${pz.cat.styles.map((s) => { const n = p.styles.findIndex((x) => x.id === s.id); return `<div class="st-card ${n >= 0 ? "on" : ""}" data-style="${s.id}" role="button" tabindex="0" aria-pressed="${n >= 0}">
           ${specimen(s, s.palettes[0], pzPairing(s.fonts.best[0]))}${n >= 0 ? `<span class="n">${n + 1}</span>` : ""}
           <div class="meta"><div class="name">${esc(s.name)}</div><div class="sub">${esc(s.blurb)}</div>${s.render === "direction" ? `<div class="sub"><span class="badge">Directed</span></div>` : `<div class="sub"><span class="badge ok">Rendered</span></div>`}</div></div>`; }).join("")}</div>
-        <p class="foot-note"><span class="badge ok">Rendered</span> the kit draws this style itself. <span class="badge">Directed</span> reels in this style are composed on the existing kit, steered by its colours, type, motion and moves; its own look arrives in a later wave.</p>`;
+        <p class="foot-note">Every style is drawn by the kit itself: its shapes, world, textures, entrances and frame cadence, in whatever colours and type you choose.</p>`;
       break;
     case "mixer":
       h = `<h2>Mixer</h2><p class="lede">How much of the reel each style carries, and which style each kind of beat is made in.</p><div id="pz-findings"></div>

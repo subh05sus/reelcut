@@ -1,0 +1,94 @@
+/*
+ * The twenty personality styles as kit looks. Put data-style="<id>" on a beat's root (beside data-look and data-type)
+ * and the pieces below take that style's material, world and finish. Colours come from the root's tokens (--ground,
+ * --ink, --accent, --accent-2), so the same style wears any scheme.
+ *
+ *   Shapes      .rc-shape (+ .rc-circle | .rc-square | .rc-pill) (+ .rc-c2 second colour | .rc-ink ink)
+ *               drawn in the style's material: cut card, clay, outline, brush, block, slab, blob, sphere, flat.
+ *               Blobs merge only inside .rc-goo (Liquid); slabs stack inside .rc-iso (Isometric).
+ *   Headline    .rc-hl > .ln (+ em) — the style's display treatment (sizes are the beat's to set).
+ *   World       RC.styleWorld(root) adds the style's decorations: grid, hairlines, letterbox, VHS sun and floor…
+ *   Finish      RC.styleFinish(root) lays the textures on top: paper, grain, halftone, leaks, vignette, scanlines.
+ *   Motion      RC.styleEnter / RC.styleWords / RC.cadence (see 70-styles.js).
+ */
+
+[data-look][data-style] { background: var(--ground); color: var(--ink); }
+[data-look] .rc-shape { position: absolute; display: block; background: var(--accent); }
+[data-look] .rc-shape.rc-c2 { background: var(--accent-2); }
+[data-look] .rc-shape.rc-ink { background: var(--ink); }
+[data-look] .rc-shape.rc-circle { border-radius: 50%; }
+[data-look] .rc-shape.rc-square { border-radius: 22px; }
+[data-look] .rc-shape.rc-pill { border-radius: 999px; }
+[data-look] .rc-hl { font-family: var(--font-display); font-weight: var(--display-weight); letter-spacing: var(--display-tracking); text-transform: var(--display-case); font-stretch: var(--display-stretch); line-height: .98; }
+[data-look] .rc-hl .ln { display: block; }
+[data-look] .rc-hl em { font-family: var(--font-serif); font-style: italic; font-weight: 400; color: var(--accent); text-transform: none; letter-spacing: -0.01em; }
+[data-look] .rc-tx { position: absolute; inset: 0; pointer-events: none; z-index: 40; }
+[data-look] .rc-world { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+
+/* ---- Paper Cutout · Stop Motion · Collage: cut card with layered shadows and a hand-torn edge. */
+[data-style="paper-cutout"] .rc-shape, [data-style="stop-motion"] .rc-shape, [data-style="collage"] .rc-shape {
+  box-shadow: 0 6px 0 rgba(0,0,0,.12), 0 22px 30px -8px rgba(0,0,0,.28); }
+[data-style="paper-cutout"] .rc-shape:not(.rc-circle), [data-style="stop-motion"] .rc-shape:not(.rc-circle), [data-style="collage"] .rc-shape:not(.rc-circle) {
+  border-radius: 0; clip-path: polygon(0 3%, 6% 0, 18% 2%, 33% 0, 51% 2%, 70% 0, 86% 3%, 100% 1%, 98% 22%, 100% 47%, 98% 70%, 100% 96%, 82% 100%, 60% 98%, 41% 100%, 20% 98%, 3% 100%, 0 78%, 2% 52%, 0 26%); }
+[data-style="collage"] .rc-shape { background-image: radial-gradient(circle, rgba(0,0,0,.22) 1.6px, transparent 1.8px); background-size: 10px 10px; }
+[data-style="collage"] .rc-taped::after { content: ""; position: absolute; left: 50%; top: -18px; width: 120px; height: 38px; margin-left: -60px; transform: rotate(-8deg);
+  background: color-mix(in oklab, #fff 72%, var(--ground)); opacity: .86; box-shadow: 0 2px 5px rgba(0,0,0,.15); }
+
+/* ---- Claymation: matte, bevelled, lit softly from the top left. */
+[data-style="claymation"] .rc-shape { box-shadow: inset -18px -22px 34px rgba(0,0,0,.22), inset 16px 16px 26px rgba(255,255,255,.45), 0 22px 26px -10px rgba(0,0,0,.35); }
+[data-style="claymation"] .rc-shape.rc-square { border-radius: 34px; }
+[data-style="claymation"] .rc-hl { text-shadow: 0 3px 0 color-mix(in oklab, var(--ink) 18%, transparent); }
+
+/* ---- Hand-Drawn · Linear: outlines. Hand-Drawn wobbles (the #rc-wobble filter RC.styleWorld adds); Linear is exact. */
+[data-style="hand-drawn"] .rc-shape, [data-style="linear"] .rc-shape { background: transparent !important; box-shadow: inset 0 0 0 var(--stroke, 9px) var(--accent); }
+[data-style="hand-drawn"] .rc-shape.rc-c2, [data-style="linear"] .rc-shape.rc-c2 { box-shadow: inset 0 0 0 var(--stroke, 9px) var(--accent-2); }
+[data-style="hand-drawn"] .rc-shape.rc-ink, [data-style="linear"] .rc-shape.rc-ink { box-shadow: inset 0 0 0 var(--stroke, 9px) var(--ink); }
+[data-style="hand-drawn"] .rc-shape { filter: url(#rc-wobble); }
+[data-style="linear"] .rc-shape { --stroke: 3px; }
+[data-style="linear"] .rc-shape.rc-square { border-radius: 4px; }
+
+/* ---- Ink / Paint: brush-edged, slightly transparent pigment. */
+[data-style="ink-paint"] .rc-shape { filter: url(#rc-rough); opacity: .9; }
+[data-style="ink-paint"] .rc-shape.rc-pill { height: auto; }
+
+/* ---- Flat Vector · Minimal · UI / Product · Retro: flat colour, no shadow. */
+[data-style="flat-vector"] .rc-shape, [data-style="minimal"] .rc-shape, [data-style="ui-product"] .rc-shape, [data-style="retro-vhs"] .rc-shape { box-shadow: none; }
+
+/* ---- Brutalist · Swiss · Glitch · Editorial · Kinetic: hard blocks. Brutalist adds thick borders and hard offset shadows. */
+[data-style="brutalist"] .rc-shape, [data-style="swiss"] .rc-shape, [data-style="glitch"] .rc-shape, [data-style="editorial"] .rc-shape, [data-style="kinetic-type"] .rc-shape { border-radius: 0; }
+[data-style="brutalist"] .rc-shape.rc-circle, [data-style="swiss"] .rc-shape.rc-circle { border-radius: 50%; }
+[data-style="brutalist"] .rc-shape { border: 8px solid var(--ink); box-shadow: 12px 12px 0 var(--ink); }
+[data-style="brutalist"] .rc-hl { font-family: var(--font-mono); letter-spacing: -0.04em; }
+[data-style="editorial"] .rc-shape.rc-square { border-radius: 4px; background: linear-gradient(160deg, var(--accent-2), var(--accent)); }
+
+/* ---- Glitch · Retro / VHS: the RGB split on type. */
+[data-style="glitch"] .rc-hl, [data-style="retro-vhs"] .rc-hl { text-shadow: 4px 0 rgba(255,0,60,.75), -4px 0 rgba(0,229,255,.75); }
+
+/* ---- 3D: spheres lit from the top left, a soft floor shadow (.rc-floor-shadow). */
+[data-style="3d"] .rc-shape { background: radial-gradient(circle at 32% 28%, color-mix(in oklab, var(--accent) 35%, #fff), var(--accent) 42%, color-mix(in oklab, var(--accent) 55%, #000) 100%); border-radius: 50%; }
+[data-style="3d"] .rc-shape.rc-c2 { background: radial-gradient(circle at 32% 28%, color-mix(in oklab, var(--accent-2) 35%, #fff), var(--accent-2) 42%, color-mix(in oklab, var(--accent-2) 55%, #000) 100%); }
+[data-style="3d"] .rc-shape.rc-ink { background: radial-gradient(circle at 32% 28%, #fff, color-mix(in oklab, var(--ink) 40%, #fff) 50%, var(--ink) 100%); }
+[data-style="3d"] .rc-shape.rc-pill { border-radius: 999px; }
+[data-look] .rc-floor-shadow { position: absolute; height: 40px; border-radius: 50%; background: rgba(0,0,0,.28); filter: blur(14px); }
+
+/* ---- Isometric: slabs on a 30° grid. Stack them inside .rc-iso; each slab's side is its colour, darker. */
+[data-look] .rc-iso { position: absolute; }
+[data-style="isometric"] .rc-shape, [data-look] .rc-iso .rc-shape { border-radius: 0; transform: rotateX(60deg) rotateZ(45deg); box-shadow: 10px 10px 0 color-mix(in oklab, var(--accent) 65%, #000); }
+[data-style="isometric"] .rc-shape.rc-c2 { box-shadow: 10px 10px 0 color-mix(in oklab, var(--accent-2) 65%, #000); }
+[data-style="isometric"] .rc-shape.rc-ink { background: var(--card, #fff); box-shadow: 10px 10px 0 color-mix(in oklab, var(--ink) 30%, var(--card, #fff)); }
+
+/* ---- Liquid: blobs that merge. Put them in .rc-goo. */
+[data-look] .rc-goo { position: absolute; filter: url(#rc-goo); }
+[data-style="liquid"] .rc-shape { border-radius: 50%; box-shadow: none; }
+
+/* ---- World: the decorations RC.styleWorld builds. */
+[data-look] .rc-w-grid i { position: absolute; top: 0; bottom: 0; width: 1px; background: color-mix(in oklab, var(--ink) 12%, transparent); }
+[data-look] .rc-w-hair i { position: absolute; left: 0; right: 0; height: 1px; background: color-mix(in oklab, var(--ink) 10%, transparent); }
+[data-look] .rc-w-bars i { position: absolute; left: 0; right: 0; height: 11.1%; background: #000; z-index: 39; }
+[data-look] .rc-w-bars i:first-child { top: 0; } [data-look] .rc-w-bars i:last-child { bottom: 0; }
+[data-look] .rc-w-sun { position: absolute; right: 7.4%; top: 23%; width: 33%; aspect-ratio: 1; border-radius: 50%; background: linear-gradient(var(--accent-2), var(--accent));
+  -webkit-mask: repeating-linear-gradient(#000 0 26px, transparent 26px 34px); mask: repeating-linear-gradient(#000 0 26px, transparent 26px 34px); }
+[data-look] .rc-w-floor { position: absolute; left: -20%; right: -20%; bottom: -6%; height: 39%; transform: perspective(500px) rotateX(62deg);
+  background: repeating-linear-gradient(90deg, color-mix(in oklab, var(--accent) 60%, transparent) 0 2px, transparent 2px 80px), repeating-linear-gradient(color-mix(in oklab, var(--accent) 60%, transparent) 0 2px, transparent 2px 60px); }
+[data-look] .rc-w-osd { position: absolute; right: 84px; top: 90px; font: 700 34px/1 var(--font-mono); color: var(--ink); letter-spacing: .05em; z-index: 38; }
+[data-look] .rc-w-slices i { position: absolute; left: 0; right: 0; height: 22px; background: color-mix(in oklab, var(--accent) 40%, transparent); mix-blend-mode: screen; opacity: 0; z-index: 38; }

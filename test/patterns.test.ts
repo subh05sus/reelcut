@@ -97,6 +97,10 @@ describe("the design kit", () => {
     expect(kit.js).toContain("feDisplacementMap");
   });
 
+  it("never registers a timeline itself, not even in a comment: HyperFrames' lint reads every one in the page", () => {
+    expect(kit.js).not.toMatch(/__timelines\s*\[\s*["']/);
+  });
+
   it("is deterministic: no clock, no random numbers, no infinite repeats", () => {
     expect(code(kit.js)).not.toMatch(/Math\.random|Date\.now|new Date|performance\.now|repeat:\s*-1|setInterval|setTimeout/);
   });

@@ -67,6 +67,26 @@ pops overshoot ~2%. Reels render at **60 fps** by default (`DEFAULT_FPS`); a 0.4
 iPhone controls and surfaces, the Dynamic Island, the Mac, app mockups (Messages, Calendar, Maps, Music, the home
 screen) and feedback moments live in `assets/kit/ui/` and load with the kit: [apple-ui.md](apple-ui.md).
 
+## Styles — the twenty personality styles
+
+`data-style="<id>"` on the root (beside `data-look` and `data-type`) draws a beat in one of the twenty styles of
+[personality.md](personality.md): Paper Cutout, Claymation, Stop Motion, Hand-Drawn, Flat Vector, Linear, Kinetic
+Typography, Editorial, Collage, Brutalist, Swiss, Minimal, 3D, Isometric, Liquid, Ink / Paint, UI / Product,
+Retro / VHS, Glitch, Cinematic (`assets/kit/ui/70-styles.*`). Set the scheme as `--ground --ink --accent --accent-2`.
+
+| | |
+|---|---|
+| `.rc-shape` (+ `.rc-circle` `.rc-square` `.rc-pill`, `.rc-c2` `.rc-ink`) | a shape in the style's material: cut card, clay, outline, brush, block, sphere, slab (in `.rc-iso`), blob (in `.rc-goo`) |
+| `.rc-hl > .ln + em` | the style's headline treatment (RGB split on Glitch and VHS, mono on Brutalist…) |
+| `RC.styleWorld(root)` | its world: Swiss grid, Linear hairlines, Cinematic letterbox, VHS sun, floor and OSD, Glitch slices; the wobble, rough and goo filters |
+| `RC.styleFinish(root, { texture })` | its textures on top: paper, grain, halftone, light leaks, vignette, scanlines |
+| `RC.styleWords(tl, el, at)` · `RC.styleEnter(tl, els, at)` | its entrances: slam, bounce and squash, slide, trace, float, glitch, rise |
+| `RC.styleGlitch(tl, root, at)` | a glitch burst |
+| `RC.cadence(tl, "#root")`, registered as the beat's timeline | held frames for the stepped styles (12 fps; Stop Motion 8 with a jitter), the timeline as it is for the rest |
+
+`assets/patterns/styles/<id>.html` is each style's showcase, made by the same generator as the Personality page's
+previews (`npm run personality -- patterns` rewrites them). Open it before composing a beat in that style.
+
 ## Looks and tokens
 
 `data-look`: `paper` · `ink` · `flood` · `sky` · `cinema` · `poster` · `cool` — what each is for is in

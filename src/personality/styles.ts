@@ -3,9 +3,10 @@
  * moves, the textures it wears, six curated colour schemes (every one contrast-checked by the tests) and the type
  * pairings that suit it, best first.
  *
- * `render` says how far the kit draws the style itself: "direction" means a reel in this style is composed on the
- * existing looks, steered by everything below; "render" means the kit has the style's own look (textures, shapes,
- * motion grammar). Styles move from direction to render in waves.
+ * `render` says how far the kit draws the style itself: "render" means the kit has the style's own look
+ * (assets/kit/ui/70-styles.*: its shape material, world, textures, entrances and frame cadence, switched on with
+ * data-style="<id>"); "direction" would mean a reel in it is composed on the existing looks, steered by the rest.
+ * All twenty are rendered.
  */
 
 export type StyleId =
@@ -82,7 +83,7 @@ const P = (id: string, name: string, ground: string, ink: string, accent: string
 export const STYLES: readonly StyleSpec[] = [
   {
     id: "paper-cutout", name: "Paper Cutout", blurb: "Layered card shapes with soft cast shadows and torn edges, moved like pieces on a desk.",
-    bestAt: "explainers and stories told with simple shapes", beats: ["statement", "hook", "quote"], render: "direction", look: "paper",
+    bestAt: "explainers and stories told with simple shapes", beats: ["statement", "hook", "quote"], render: "render", look: "paper",
     ground: "any", chroma: "soft", neon: false, hues: 4,
     why: { chroma: "paper is dyed, not lit: very strong colour reads as plastic, not card", neon: "card cannot glow; neon breaks the physical illusion" },
     motion: { energy: "default", cadence: "stepped-12", camera: "still", overshoot: true, note: "pieces slide and settle on held frames, a little overshoot like a hand placing them" },
@@ -95,7 +96,7 @@ export const STYLES: readonly StyleSpec[] = [
   },
   {
     id: "claymation", name: "Claymation", blurb: "Soft, bevelled, matte shapes with fingerprints of light; squash and stretch on held frames.",
-    bestAt: "characters and playful product moments", beats: ["hook", "product", "cta"], render: "direction", look: "paper",
+    bestAt: "characters and playful product moments", beats: ["hook", "product", "cta"], render: "render", look: "paper",
     ground: "any", chroma: "soft", neon: false, hues: 4,
     why: { chroma: "plasticine is matte: soft, chalky colour, never electric", neon: "neon glows fight clay's soft matte light" },
     motion: { energy: "energetic", cadence: "stepped-12", camera: "still", overshoot: true, note: "squash and stretch, a bounce on landing, held frames at 12 per second" },
@@ -108,7 +109,7 @@ export const STYLES: readonly StyleSpec[] = [
   },
   {
     id: "stop-motion", name: "Stop Motion", blurb: "Real-looking objects moved a frame at a time, with the tiny jitter of a hand between frames.",
-    bestAt: "tactile product stories and making-of moments", beats: ["product", "statement", "hook"], render: "direction", look: "paper",
+    bestAt: "tactile product stories and making-of moments", beats: ["product", "statement", "hook"], render: "render", look: "paper",
     ground: "any", chroma: "soft", neon: false, hues: 3,
     why: { chroma: "objects under real light have natural, slightly dusty colour", neon: "nothing on a real desk glows like neon" },
     motion: { energy: "default", cadence: "stepped-8", camera: "still", overshoot: false, note: "8 to 12 frames a second, a half-pixel jitter on every held frame, objects arrive in a few steps" },
@@ -121,7 +122,7 @@ export const STYLES: readonly StyleSpec[] = [
   },
   {
     id: "hand-drawn", name: "Hand-Drawn", blurb: "Marker and pencil lines that draw themselves, wobbling slightly, arrows and circles around what matters.",
-    bestAt: "tutorials, annotations, pointing at the one thing", beats: ["statement", "data", "quote"], render: "direction", look: "paper",
+    bestAt: "tutorials, annotations, pointing at the one thing", beats: ["statement", "data", "quote"], render: "render", look: "paper",
     ground: "any", chroma: "any", neon: false, hues: 3,
     why: { neon: "ink and marker are pigment on paper; they cannot glow" },
     motion: { energy: "default", cadence: "stepped-12", camera: "still", overshoot: false, note: "strokes draw at hand speed (apple.glide), lines boil gently on held frames" },
@@ -134,7 +135,7 @@ export const STYLES: readonly StyleSpec[] = [
   },
   {
     id: "flat-vector", name: "Flat Vector", blurb: "Clean geometric shapes in bold flat colour, no texture, smooth confident motion.",
-    bestAt: "explaining a product simply, icons and diagrams", beats: ["statement", "product", "data"], render: "direction", look: "paper",
+    bestAt: "explaining a product simply, icons and diagrams", beats: ["statement", "product", "data"], render: "render", look: "paper",
     ground: "any", chroma: "vivid", neon: false, hues: 4,
     why: { chroma: "flat illustration lives on clear, saturated colour; greyed tones turn it dull", neon: "flat colour is printed, not lit; neon reads as a different style" },
     motion: { energy: "default", cadence: "smooth", camera: "slow-push", overshoot: false, note: "shapes morph and slide on springs, everything lands exactly" },
@@ -147,7 +148,7 @@ export const STYLES: readonly StyleSpec[] = [
   },
   {
     id: "linear", name: "Linear / Hairline", blurb: "Thin precise strokes, outlines and wireframes; restraint, one accent, lots of air.",
-    bestAt: "tech and developer products, systems and diagrams", beats: ["product", "data", "statement"], render: "direction", look: "ink",
+    bestAt: "tech and developer products, systems and diagrams", beats: ["product", "data", "statement"], render: "render", look: "ink",
     ground: "any", chroma: "soft", neon: true, hues: 2,
     why: { chroma: "hairlines carry little ink; strong fills overpower the drawing", hues: "a line drawing holds one accent, two at most" },
     motion: { energy: "restrained", cadence: "smooth", camera: "slow-push", overshoot: false, note: "lines draw on, outlines resolve, calm springs, nothing bounces" },
@@ -160,7 +161,7 @@ export const STYLES: readonly StyleSpec[] = [
   },
   {
     id: "kinetic-type", name: "Kinetic Typography", blurb: "The words are the picture: huge type that slams, rolls, splits and stacks to the rhythm.",
-    bestAt: "hooks, claims and anything said with conviction", beats: ["hook", "statement", "cta"], render: "direction", look: "flood",
+    bestAt: "hooks, claims and anything said with conviction", beats: ["hook", "statement", "cta"], render: "render", look: "flood",
     ground: "any", chroma: "any", neon: true, hues: 2,
     why: { hues: "the type is the image; more than two colours turns a sentence into confetti" },
     motion: { energy: "energetic", cadence: "smooth", camera: "still", overshoot: true, note: "fast entrances, hard holds, words land on the beat; snappy springs" },
@@ -173,7 +174,7 @@ export const STYLES: readonly StyleSpec[] = [
   },
   {
     id: "editorial", name: "Editorial", blurb: "Magazine pages: a confident serif, generous margins, photographs and a strict column grid.",
-    bestAt: "stories, quotes, founders and considered launches", beats: ["quote", "statement", "hook"], render: "direction", look: "paper",
+    bestAt: "stories, quotes, founders and considered launches", beats: ["quote", "statement", "hook"], render: "render", look: "paper",
     ground: "any", chroma: "soft", neon: false, hues: 2,
     why: { chroma: "print inks are deep and calm; bright colour cheapens the page", neon: "a magazine page cannot glow", hues: "one ink colour and black is the editorial habit" },
     motion: { energy: "restrained", cadence: "smooth", camera: "slow-push", overshoot: false, note: "lines rise out of their masks, slow pushes, long holds on the line that matters" },
@@ -186,7 +187,7 @@ export const STYLES: readonly StyleSpec[] = [
   },
   {
     id: "collage", name: "Collage", blurb: "Cut photos, tape, halftone, torn paper and stickers layered with attitude.",
-    bestAt: "campaigns, manifestos, culture and community", beats: ["hook", "statement", "cta"], render: "direction", look: "poster",
+    bestAt: "campaigns, manifestos, culture and community", beats: ["hook", "statement", "cta"], render: "render", look: "poster",
     ground: "any", chroma: "vivid", neon: false, hues: 4,
     why: { chroma: "collage borrows the loud inks of posters and riso prints", neon: "printed scraps don't glow; neon reads as a screen, not a cut-out" },
     motion: { energy: "energetic", cadence: "stepped-12", camera: "still", overshoot: true, note: "pieces stamp in on held frames, slight rotations, a sticker lands last" },
@@ -199,7 +200,7 @@ export const STYLES: readonly StyleSpec[] = [
   },
   {
     id: "brutalist", name: "Brutalist", blurb: "Raw and blunt: system fonts, hard borders, full-strength colour, no polish on purpose.",
-    bestAt: "developer tools, bold opinions, anti-marketing", beats: ["hook", "statement", "data"], render: "direction", look: "poster",
+    bestAt: "developer tools, bold opinions, anti-marketing", beats: ["hook", "statement", "data"], render: "render", look: "poster",
     ground: "any", chroma: "any", neon: true, hues: 3,
     why: {},
     motion: { energy: "energetic", cadence: "smooth", camera: "still", overshoot: false, note: "hard cuts inside the beat, instant states, no easing showcase" },
@@ -212,7 +213,7 @@ export const STYLES: readonly StyleSpec[] = [
   },
   {
     id: "swiss", name: "Swiss", blurb: "The international style: a strict grid, asymmetric layouts, a grotesk and one red.",
-    bestAt: "data, systems, anything that should feel exact", beats: ["data", "statement", "product"], render: "direction", look: "paper",
+    bestAt: "data, systems, anything that should feel exact", beats: ["data", "statement", "product"], render: "render", look: "paper",
     ground: "any", chroma: "any", neon: false, hues: 2,
     why: { neon: "Swiss design is ink on paper, objective; neon is emotional", hues: "the Swiss grid carries black, white and one colour" },
     motion: { energy: "default", cadence: "smooth", camera: "still", overshoot: false, note: "elements slide along the grid on exact springs, no camera drama" },
@@ -225,7 +226,7 @@ export const STYLES: readonly StyleSpec[] = [
   },
   {
     id: "minimal", name: "Minimal", blurb: "Almost nothing on screen: one idea, one accent, lots of space and slow, soft motion.",
-    bestAt: "premium products, calm brands, one strong line", beats: ["statement", "quote", "cta"], render: "direction", look: "paper",
+    bestAt: "premium products, calm brands, one strong line", beats: ["statement", "quote", "cta"], render: "render", look: "paper",
     ground: "any", chroma: "muted", neon: false, hues: 1,
     why: { chroma: "minimal lets space speak; strong colour shouts over it", neon: "neon is never quiet", hues: "minimal holds one accent; a second colour already feels busy" },
     motion: { energy: "restrained", cadence: "smooth", camera: "slow-push", overshoot: false, note: "gentle springs, long holds, one thing moves at a time" },
@@ -238,7 +239,7 @@ export const STYLES: readonly StyleSpec[] = [
   },
   {
     id: "3d", name: "3D", blurb: "Rendered objects with soft studio light, glossy materials, depth of field and real perspective.",
-    bestAt: "hardware, hero products, premium launches", beats: ["product", "hook", "cta"], render: "direction", look: "ink",
+    bestAt: "hardware, hero products, premium launches", beats: ["product", "hook", "cta"], render: "render", look: "ink",
     ground: "any", chroma: "any", neon: true, hues: 3,
     why: {},
     motion: { energy: "default", cadence: "smooth", camera: "drift", overshoot: false, note: "objects turn and float, the camera orbits slowly, depth of field shifts" },
@@ -251,7 +252,7 @@ export const STYLES: readonly StyleSpec[] = [
   },
   {
     id: "isometric", name: "Isometric", blurb: "30° worlds: stacked slabs, little buildings, systems drawn as tidy diagrams.",
-    bestAt: "architecture, infrastructure, how things fit together", beats: ["data", "product", "statement"], render: "direction", look: "cool",
+    bestAt: "architecture, infrastructure, how things fit together", beats: ["data", "product", "statement"], render: "render", look: "cool",
     ground: "any", chroma: "any", neon: true, hues: 3,
     why: { hues: "more than three hues and the layers stop reading as one system" },
     motion: { energy: "default", cadence: "smooth", camera: "still", overshoot: false, note: "slabs rise and separate on springs, leader lines draw" },
@@ -264,7 +265,7 @@ export const STYLES: readonly StyleSpec[] = [
   },
   {
     id: "liquid", name: "Liquid", blurb: "Blobs, metaballs and flowing gradients that morph and melt into one another.",
-    bestAt: "AI, wellness, anything fluid or transformative", beats: ["hook", "statement", "cta"], render: "direction", look: "sky",
+    bestAt: "AI, wellness, anything fluid or transformative", beats: ["hook", "statement", "cta"], render: "render", look: "sky",
     ground: "any", chroma: "vivid", neon: true, hues: 3,
     why: { chroma: "liquid gradients need saturated colour to glow as they blend" },
     motion: { energy: "default", cadence: "smooth", camera: "drift", overshoot: true, note: "shapes morph on soft springs, a gentle wobble, colours flow" },
@@ -277,7 +278,7 @@ export const STYLES: readonly StyleSpec[] = [
   },
   {
     id: "ink-paint", name: "Ink / Paint", blurb: "Brush strokes, sumi ink and watercolour bleeding into paper; organic reveals.",
-    bestAt: "culture, craft, food, anything with soul", beats: ["quote", "statement", "hook"], render: "direction", look: "paper",
+    bestAt: "culture, craft, food, anything with soul", beats: ["quote", "statement", "hook"], render: "render", look: "paper",
     ground: "light", chroma: "soft", neon: false, hues: 2,
     why: { ground: "ink and watercolour need paper to bleed into", chroma: "pigment on paper is soft and transparent", neon: "paint cannot glow", hues: "brush work reads best with an ink and one colour" },
     motion: { energy: "restrained", cadence: "smooth", camera: "slow-push", overshoot: false, note: "strokes draw at brush speed, colour bleeds outward, slow reveals" },
@@ -303,7 +304,7 @@ export const STYLES: readonly StyleSpec[] = [
   },
   {
     id: "retro-vhs", name: "Retro / VHS", blurb: "Tape: scanlines, chroma bleed, tracking wobble, sunsets and chrome type from the 80s and 90s.",
-    bestAt: "nostalgia, music, playful launches", beats: ["hook", "cta", "statement"], render: "direction", look: "cinema",
+    bestAt: "nostalgia, music, playful launches", beats: ["hook", "cta", "statement"], render: "render", look: "cinema",
     ground: "dark", chroma: "vivid", neon: true, hues: 3,
     why: { ground: "VHS glows out of a dark CRT; a light ground washes the scanlines out", chroma: "tape colour bleeds strong and warm" },
     motion: { energy: "energetic", cadence: "smooth", camera: "handheld", overshoot: false, note: "tracking jumps, a little wobble, a rewind blur between states" },
@@ -316,7 +317,7 @@ export const STYLES: readonly StyleSpec[] = [
   },
   {
     id: "glitch", name: "Glitch", blurb: "Datamosh, RGB split, slices and noise: the screen breaking on purpose.",
-    bestAt: "security, AI, disruption, a twist", beats: ["hook", "statement", "data"], render: "direction", look: "ink",
+    bestAt: "security, AI, disruption, a twist", beats: ["hook", "statement", "data"], render: "render", look: "ink",
     ground: "dark", chroma: "vivid", neon: true, hues: 3,
     why: { ground: "glitches are light breaking out of a dark screen", chroma: "RGB split needs pure, strong channels" },
     motion: { energy: "energetic", cadence: "smooth", camera: "handheld", overshoot: false, note: "hard slices, channel offsets, frames that stutter then snap clean" },
@@ -329,7 +330,7 @@ export const STYLES: readonly StyleSpec[] = [
   },
   {
     id: "cinematic", name: "Cinematic", blurb: "Film: letterbox, grain, light leaks, a slow camera and a serif line that lands like a title card.",
-    bestAt: "the emotional turn, brand films, trailers", beats: ["quote", "hook", "statement"], render: "direction", look: "cinema",
+    bestAt: "the emotional turn, brand films, trailers", beats: ["quote", "hook", "statement"], render: "render", look: "cinema",
     ground: "dark", chroma: "muted", neon: false, hues: 2,
     why: { ground: "film lives in the dark of a cinema", chroma: "film is graded: colour is muted, never raw", neon: "neon breaks the grade", hues: "a grade carries two tones, a warm and a cool" },
     motion: { energy: "restrained", cadence: "smooth", camera: "slow-push", overshoot: false, note: "slow dolly pushes, long dissolves inside a beat, type fades up from black" },
