@@ -62,10 +62,15 @@ export function ensureTunnel(port = REVIEW_PORT): Promise<string> {
   const proc = spawn(bin, ["tunnel", "--no-autoupdate", "--url", `http://127.0.0.1:${port}`], { stdio: ["ignore", "pipe", "pipe"] });
   const t: NonNullable<typeof tunnel> = { proc, waiting: Promise.resolve("") };
   t.waiting = new Promise<string>((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error("the tunnel did not start within 30 s")), 30_000);
+    const timer = setTimeout(() => reject(new Error("the tunnel did not start within 45 s")), 45_000);
+    // cloudflared prints the address before its connection to Cloudflare is up. Hand it out only once a connection is
+    // registered: a lookup made before the name exists is remembered as "no such host" by the Mac for a minute or more.
+    let found: string | undefined, registered = false;
     const look = (d: Buffer) => {
-      const m = /https:\/\/[a-z0-9-]+\.trycloudflare\.com/.exec(d.toString());
-      if (m && !t.url) { t.url = m[0]; clearTimeout(timer); resolve(m[0]); }
+      const text = d.toString();
+      found ??= /https:\/\/[a-z0-9-]+\.trycloudflare\.com/.exec(text)?.[0];
+      registered ||= /Registered tunnel connection/i.test(text);
+      if (found && registered && !t.url) { t.url = found; clearTimeout(timer); setTimeout(() => resolve(found!), 1500); }
     };
     proc.stdout?.on("data", look); proc.stderr?.on("data", look);
     proc.on("exit", () => { clearTimeout(timer); if (!t.url) reject(new Error("cloudflared stopped before the tunnel was up")); if (tunnel === t) tunnel = undefined; });

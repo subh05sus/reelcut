@@ -1533,7 +1533,7 @@ async function openShare() {
       $$("[data-off]", sh).forEach((b) => b.addEventListener("click", async () => { await api(`/api/create/${cr.meta.id}/shares/${b.dataset.off}`, { method: "DELETE" }); closeSheet(); openShare(); }));
       $("#sh-new", sh).addEventListener("click", async (e) => {
         e.target.disabled = true; e.target.textContent = "Starting the tunnel…";
-        try { const r = await post(`/api/create/${cr.meta.id}/shares`, { days: Number($("#sh-days", sh).value) }); try { await navigator.clipboard.writeText(r.share.url); toast("Link copied"); } catch { /* shown in the list */ } closeSheet(); openShare(); }
+        try { const r = await post(`/api/create/${cr.meta.id}/shares`, { days: Number($("#sh-days", sh).value) }); try { await navigator.clipboard.writeText(r.share.url); toast("Link copied. A brand-new link can take a minute to open everywhere."); } catch { /* shown in the list */ } closeSheet(); openShare(); }
         catch (err) { toast(err.message); e.target.disabled = false; e.target.textContent = "Create link"; }
       });
     },
