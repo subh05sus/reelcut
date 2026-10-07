@@ -591,6 +591,30 @@
   .dot.st-connected { background: var(--green); } .dot.st-needs-auth, .dot.st-pending { background: var(--orange); } .dot.st-failed { background: var(--red); }
   .dot.st-not-added { background: var(--label-3); } .dot.st-planned { background: transparent; box-shadow: inset 0 0 0 1.5px var(--label-3); }
   @media (max-width: 899px) { .intpill { height: 32px; } }
+  .cr-sec { max-width: 720px; margin: 0 auto 24px; }
+  .cr-sec .cap { margin: 0 0 8px; }
+  .cr-recipes { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+  .cr-recipe { height: auto; min-height: 72px; padding: 12px 14px; border-radius: 14px; background: var(--cell); display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; position: relative; transition: transform 150ms var(--ease), box-shadow 150ms var(--ease); }
+  .cr-recipe:active { transform: scale(0.98); }
+  .cr-recipe .t { font-size: 15px; font-weight: 600; color: var(--label); display: inline-flex; align-items: center; gap: 4px; }
+  .cr-recipe .s { font-size: 12px; line-height: 16px; color: var(--label-2); font-weight: 400; white-space: normal; width: 100%; }
+  .cr-recipe { white-space: normal; justify-content: flex-start; }
+  @media (max-width: 899px) {
+    .cr-recipes { grid-template-columns: 1fr 1fr; padding: 0 16px; }
+    .cr-recipe { min-height: 64px; padding: 10px 12px; }
+    /* On a phone the composer's chips scroll sideways in one row, so the composer stays short. */
+    .composer .chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -10px; padding: 0 10px; -webkit-mask: linear-gradient(90deg, transparent, #000 10px, #000 calc(100% - 16px), transparent); mask: linear-gradient(90deg, transparent, #000 10px, #000 calc(100% - 16px), transparent); }
+    .composer .chips::-webkit-scrollbar { display: none; }
+    .composer .chips select { flex: none; height: 32px; }
+    .composer .meta > span:last-child { display: none; }
+  }
+  .cr-recipe .own { position: absolute; top: 10px; right: 10px; font-size: 11px; color: var(--label-3); }
+  .cr-recipe.on { box-shadow: inset 0 0 0 2px var(--accent); }
+  .cr-recipe.add { background: transparent; box-shadow: inset 0 0 0 1px var(--sep); }
+  .cr-recipe.add .t { color: var(--accent-text); }
+  .composer .cr-batch { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; padding: 4px 6px; color: var(--label-2); }
+  .composer .cr-batch b { color: var(--label); }
+  .composer .cr-batch select { height: 28px; font-size: 13px; border-radius: 999px; padding: 0 26px 0 10px; background-color: var(--fill-3); border-color: transparent; margin-left: auto; }
   .cr-land { max-width: 720px; margin: 8vh auto 0; text-align: center; }
   .cr-land h2 { font-size: 30px; line-height: 36px; margin: 0 0 8px; letter-spacing: -0.01em; }
   .cr-beats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
@@ -1147,9 +1171,20 @@ function paintTyping() {
 }
 function stickToBottom() { if (window.innerHeight + window.scrollY > document.body.scrollHeight - 320) window.scrollTo(0, document.body.scrollHeight); }
 
+/** A batch reel waiting its turn: say when it starts, and let the owner take it out. */
+function paintQueued() {
+  const box = $("#cr-events"), m = cr.meta; if (!box || !m) return;
+  const card = $("#cr-queued");
+  if (m.status !== "queued") { card?.remove(); return; }
+  if (card) return;
+  const at = m.queued?.startAt ? new Date(m.queued.startAt) : null;
+  box.insertAdjacentHTML("beforeend", `<div class="qcard" id="cr-queued"><b>Waiting its turn in the batch</b><p class="note" style="margin:4px 0 12px">${at && at > new Date() ? `Starts ${esc(at.toLocaleString([], { weekday: "long", hour: "numeric", minute: "2-digit" }))}, or after the reel before it.` : "Starts when the reel before it finishes."} It runs unattended: Claude takes its recommended option for every question and lists what it decided at the end.</p><div class="acts" style="justify-content:flex-start;margin:0"><button class="sm" id="cr-unqueue">Take out of the batch</button></div></div>`);
+  $("#cr-unqueue").addEventListener("click", async () => { try { await post(`/api/create/${m.id}/unqueue`); } catch (err) { toast(err.message); } });
+}
 function paintMeta() {
   const m = cr.meta; if (!m || !$("#cr-meter")) return;
-  const st = { running: ["Working", "running"], waiting: ["Waiting for you", "warn"], done: ["Done", "ok"], failed: ["Stopped with an error", "bad"], stopped: ["Stopped", ""], idle: ["Ready", ""] }[m.status] || [m.status, ""];
+  paintQueued();
+  const st = { running: ["Working", "running"], waiting: ["Waiting for you", "warn"], done: ["Done", "ok"], failed: ["Stopped with an error", "bad"], stopped: ["Stopped", ""], idle: ["Ready", ""], queued: ["Queued", ""] }[m.status] || [m.status, ""];
   const live = m.status === "running" || m.status === "waiting";
   const secs = live && m.runStartedAt ? (Date.now() - Date.parse(m.runStartedAt)) / 1000 + m.usage.ms / 1000 : m.usage.ms / 1000;
   const tok = m.usage.inputTokens + m.usage.outputTokens;
@@ -1405,6 +1440,99 @@ function paintPins() {
   box.innerHTML = near.map((c) => `<span class="cr-pin ${c.status}" style="left:${c.x * 100}%;top:${c.y * 100}%" title="${esc(c.text)}"></span>`).join("");
 }
 
+// ---------- Create: the landing (how to start, recipes, recent reels) and its composer
+const STATUS_WORD = { done: "Done", waiting: "Waiting for you", running: "Working", failed: "Error", stopped: "Stopped", idle: "Draft", queued: "Queued" };
+const STATUS_TONE = { done: "ok", waiting: "warn", running: "running", failed: "bad", queued: "" };
+function sessionRow(s) {
+  const series = s.episode && (cr.list.series || []).find((x) => x.id === s.episode.series);
+  const sub = [when(s.updatedAt), series && `${series.name} · episode ${s.episode.n}`, s.status === "queued" && s.queued?.startAt && `starts ${new Date(s.queued.startAt).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" })}`].filter(Boolean).map(esc).join(" · ");
+  return `<a class="row-i" href="#create/${s.id}" style="color:var(--label);text-decoration:none"><span class="col"><span class="t">${esc(s.title)}</span><span class="s">${sub}</span></span><span class="badge ${STATUS_TONE[s.status] || ""}">${STATUS_WORD[s.status] || s.status}</span></a>`;
+}
+function renderLanding() {
+  const d = cr.draft, list = cr.list.sessions, recipes = cr.list.recipes || [];
+  const mode = d.settings.mode || "script";
+  const queued = list.filter((s) => s.status === "queued");
+  $("#main").innerHTML = `${pageHead("Create")}<div class="intbar" id="intbar"></div>
+    <div class="cr-land"><h2>${mode === "write" ? "What should the reel be about?" : "What should the reel say?"}</h2>
+      <p class="lede" style="margin:0 auto 16px">${mode === "write"
+        ? "Give Claude a topic, a link or your notes. It offers three hooks, writes the script in your voice and, once you approve it, makes the reel."
+        : "Paste your script or drop a .txt or .srt (drop several to make a batch), add a voiceover or assets, and say how it should feel. Claude makes the reel with /reelcut and asks what it needs right here."}</p>
+      <div style="display:flex;justify-content:center;margin-bottom:24px">${segHtml("cr-mode", [["script", "I have a script"], ["write", "Write it with Claude"]], mode)}</div></div>
+    <div class="cr-sec"><div class="cap">Start from a recipe</div>
+      <div class="cr-recipes">${recipes.map((r) => `<button type="button" class="cr-recipe ${d.settings.recipe === r.id ? "on" : ""}" data-recipe="${esc(r.id)}" aria-pressed="${d.settings.recipe === r.id}"><span class="t">${esc(r.name)}</span><span class="s">${esc(r.line || r.structure.slice(0, 3).join(", "))}</span>${r.builtIn ? "" : `<span class="own">Yours</span>`}</button>`).join("")}
+        <button type="button" class="cr-recipe add" id="cr-recipe-save"><span class="t">${ic("plus", 14)} Save as a recipe</span><span class="s">The chips and instructions you have now</span></button></div></div>
+    ${queued.length ? `<div class="cr-sec"><div class="cap">Batch <span class="note">${queued.length} waiting · one at a time</span></div><div class="group cr-list">${queued.map(sessionRow).join("")}</div></div>` : ""}
+    ${list.filter((s) => s.status !== "queued").length ? `<div class="cr-sec" style="margin-bottom:300px"><div class="cap">Recent</div><div class="group cr-list">${list.filter((s) => s.status !== "queued").map(sessionRow).join("")}</div></div>` : `<div style="height:300px"></div>`}
+    ${composerHtml(true)}`;
+  bindSeg("cr-mode", (v) => { d.settings.mode = v === "write" ? "write" : undefined; const keep = $("#cr-text").value; renderLanding(); $("#cr-text").value = keep; });
+  $$("[data-recipe]").forEach((b) => {
+    b.addEventListener("click", () => applyRecipe(b.dataset.recipe));
+    const r = recipes.find((x) => x.id === b.dataset.recipe);
+    if (r && !r.builtIn) b.addEventListener("contextmenu", (e) => { e.preventDefault(); openMenu({ x: e.clientX, y: e.clientY }, [{ label: "Delete recipe", danger: true, act: async () => { await api(`/api/recipes/${r.id}`, { method: "DELETE" }); await reloadCreateList(); renderLanding(); } }]); });
+  });
+  $("#cr-recipe-save").addEventListener("click", saveAsRecipe);
+  bindComposer(true); paintIcons(); paintIntegrations();
+}
+async function reloadCreateList() { cr.list = await api("/api/create"); }
+function applyRecipe(rid) {
+  const d = cr.draft, r = (cr.list.recipes || []).find((x) => x.id === rid);
+  const keep = $("#cr-text")?.value || "";
+  if (!r || d.settings.recipe === rid) { delete d.settings.recipe; renderLanding(); $("#cr-text").value = keep; return; }
+  d.settings = { ...d.settings, ...r.settings, recipe: rid, ...(r.mode === "write" ? { mode: "write" } : {}) };
+  renderLanding(); $("#cr-text").value = keep;
+  toast(`${r.name}: ${r.structure.length} beats to follow. Its chips are set; change any of them.`);
+}
+async function saveAsRecipe() {
+  const d = cr.draft, text = $("#cr-text").value.trim();
+  openSheet({
+    title: "Save as a recipe", sub: "The chips you have set now, plus the instructions and shape below.",
+    body: `<div class="group"><label class="row-i"><span class="t" style="width:96px">Name</span><input id="rc-name" class="grow" placeholder="e.g. Weekly product tip"></label>
+      <label class="row-i"><span class="t" style="width:96px">One line</span><input id="rc-line" class="grow" placeholder="What it makes"></label></div>
+      <div class="cap">Instructions for Claude</div><textarea id="rc-ins" rows="3" style="width:100%" placeholder="How these reels should feel and be treated">${esc(text.length < 600 ? text : "")}</textarea>
+      <div class="cap">Beats, one per line (optional)</div><textarea id="rc-str" rows="4" style="width:100%" placeholder="Hook&#10;The problem&#10;The fix&#10;Call to action"></textarea>
+      <div class="acts"><button data-sclose>Cancel</button><button class="primary" id="rc-ok" disabled>Save recipe</button></div>`,
+    bind: (sh) => {
+      const name = $("#rc-name", sh), ok = $("#rc-ok", sh);
+      name.addEventListener("input", () => { ok.disabled = !name.value.trim(); });
+      ok.addEventListener("click", async () => {
+        ok.disabled = true;
+        const { recipe, mode, series, ...settings } = d.settings;
+        try {
+          const r = await post("/api/recipes", { name: name.value, line: $("#rc-line", sh).value, instructions: $("#rc-ins", sh).value, structure: $("#rc-str", sh).value.split("\n"), settings, mode });
+          await reloadCreateList(); closeSheet(); d.settings.recipe = r.recipe.id; renderLanding(); toast(`Saved "${r.recipe.name}"`);
+        } catch (err) { toast(err.message); ok.disabled = false; }
+      });
+    },
+  });
+}
+async function newSeries() {
+  const d = cr.draft;
+  return new Promise((resolve) => {
+    openSheet({
+      title: "New series", sub: "Episodes share an intro, an outro and a look. Episode 1 makes them; every later episode copies them.",
+      body: `<div class="group"><label class="row-i"><span class="t" style="width:72px">Name</span><input id="se-name" class="grow" placeholder="e.g. Reelcut tips"></label></div>
+        <div class="cap">Intro</div><textarea id="se-intro" rows="2" style="width:100%" placeholder="The series name, then “Episode N: title”, 1.5 s"></textarea>
+        <div class="cap">Outro</div><textarea id="se-outro" rows="2" style="width:100%" placeholder="“Follow for part N+1” with the logo, 2 s"></textarea>
+        <p class="foot-note">The chips you have set now (personality, format, sound…) become the series' settings.</p>
+        <div class="acts"><button data-sclose>Cancel</button><button class="primary" id="se-ok" disabled>Create series</button></div>`,
+      bind: (sh) => {
+        const name = $("#se-name", sh), ok = $("#se-ok", sh);
+        name.addEventListener("input", () => { ok.disabled = !name.value.trim(); });
+        ok.addEventListener("click", async () => {
+          ok.disabled = true;
+          const { recipe, mode, series, ...settings } = d.settings;
+          try { const r = await post("/api/series", { name: name.value, intro: $("#se-intro", sh).value, outro: $("#se-outro", sh).value, settings }); await reloadCreateList(); closeSheet(); resolve(r.series); }
+          catch (err) { toast(err.message); ok.disabled = false; }
+        });
+      },
+    });
+    const prev = sheetClose; sheetClose = () => { prev(); resolve(null); };
+  });
+}
+/** Several scripts in the first composer make a batch: one reel each, one after another, now or tonight. */
+function batchScripts() { return cr.meta ? [] : cr.files.filter((f) => f.kind === "script"); }
+function tonightAt1() { const t = new Date(); t.setHours(25, 0, 0, 0); return t.toISOString(); }
+
 function composerHtml(first) {
   const pers = (cr.list?.personalities || []);
   const def = pers.find((p) => p.isDefault);
@@ -1419,10 +1547,13 @@ function composerHtml(first) {
       ${sel("cr-text-on", [["", "Text: ask"], ["full", "Full text"], ["key-lines", "Key lines"], ["minimal", "Minimal text"], ["none", "No text"]], d.settings.text, "Text on screen")}
       ${sel("cr-sfx", [["", "Sound: ask"], ["on", "Sound effects"], ["off", "No effects"]], d.settings.sfx, "Sound effects")}
       ${sel("cr-music", [["", "Music: ask"], ["fits", "Music, fitted"], ["snap", "Music, on the beat"], ["none", "No music"]], d.settings.music, "Music")}
-      ${sel("cr-blur", [["", "Blur: off"], ["on", "Motion blur"]], d.settings.blur, "Motion blur")}</div>` : ""}
+      ${sel("cr-blur", [["", "Blur: off"], ["on", "Motion blur"]], d.settings.blur, "Motion blur")}
+      ${d.settings.mode === "write" ? sel("cr-target", [["", "About 45 s"], ["15", "About 15 s"], ["30", "About 30 s"], ["60", "About 60 s"], ["90", "About 90 s"]], d.settings.target, "Target length") : ""}
+      ${sel("cr-series", [["", "No series"], ...(cr.list?.series || []).map((x) => [x.id, `Series: ${x.name}`]), ["+new", "New series…"]], d.settings.series, "Series")}</div>` : ""}
+    ${first ? `<div class="cr-batch" id="cr-batch" hidden></div>` : ""}
     <div class="files" id="cr-files">${cr.files.map((f, i) => `<span class="chip" data-rmfile="${i}">${ic("attach", 12)} ${esc(f.name)} <span style="color:var(--label-2)">${f.kind}</span> ${ic("x", 11)}</span>`).join("")}</div>
     <div class="row"><button class="icon" id="cr-attach" title="Add a script, a voiceover or assets" aria-label="Attach">${ic("attach", 18)}</button>
-      <textarea id="cr-text" rows="1" placeholder="${first ? "Paste a script, or say what the reel should be about…" : "Reply, or ask for a change…"}"></textarea>
+      <textarea id="cr-text" rows="1" placeholder="${!first ? "Reply, or ask for a change…" : d.settings.mode === "write" ? "A topic, a link or your notes…" : "Paste a script, or say what the reel should be about…"}"></textarea>
       <button class="send" id="cr-send" title="Send" aria-label="Send">${ic("up", 18)}</button></div>
     <div class="meta"><button class="plain sm" id="cr-model">${esc((cr.list?.models || []).find(([k]) => k === (cr.meta?.model ?? d.model))?.[1] || "Default model")} · ${esc((cr.list?.efforts || []).find(([k]) => k === (cr.meta?.effort ?? d.effort))?.[1] || "default")} effort</button><span class="grow"></span><span>Runs on your Claude login</span></div>
     <input type="file" id="cr-file" multiple hidden></div>`;
@@ -1447,6 +1578,14 @@ function bindComposer(first) {
     $("#cr-sfx").addEventListener("change", (e) => { d.settings.sfx = e.target.value || undefined; });
     $("#cr-music").addEventListener("change", (e) => { d.settings.music = e.target.value || undefined; });
     $("#cr-blur").addEventListener("change", (e) => { d.settings.blur = e.target.value || undefined; });
+    $("#cr-target")?.addEventListener("change", (e) => { d.settings.target = e.target.value || undefined; });
+    $("#cr-series").addEventListener("change", async (e) => {
+      if (e.target.value !== "+new") { d.settings.series = e.target.value || undefined; const sr = (cr.list.series || []).find((x) => x.id === d.settings.series); if (sr) { Object.assign(d.settings, sr.settings); const keep = $("#cr-text").value; renderLanding(); $("#cr-text").value = keep; } return; }
+      const keep = $("#cr-text").value;
+      const sr = await newSeries();
+      if (sr) d.settings.series = sr.id;
+      renderLanding(); $("#cr-text").value = keep;
+    });
   }
   const pick = (kind, accept) => { const inp = $("#cr-file"); inp.accept = accept; inp.dataset.kind = kind; inp.click(); };
   $("#cr-attach").addEventListener("click", (e) => openMenu(e.currentTarget, [
@@ -1479,6 +1618,14 @@ function repaintFiles() {
   const box = $("#cr-files"); if (!box) return;
   box.innerHTML = cr.files.map((f, i) => `<span class="chip" data-rmfile="${i}">${ic("attach", 12)} ${esc(f.name)} <span style="color:var(--label-2)">${f.kind}</span> ${ic("x", 11)}</span>`).join("");
   $$("[data-rmfile]", box).forEach((c) => c.addEventListener("click", () => { cr.files.splice(Number(c.dataset.rmfile), 1); repaintFiles(); }));
+  const strip = $("#cr-batch"), n = batchScripts().length;
+  if (!strip) return;
+  strip.hidden = n < 2;
+  if (n < 2) return;
+  const at = cr.draft.startAt || "";
+  strip.innerHTML = `<span><b>${n} scripts → ${n} reels</b>, one after another, without stopping to ask</span>
+    <select id="cr-when" aria-label="When"><option value="" ${!at ? "selected" : ""}>Start now</option><option value="tonight" ${at === "tonight" ? "selected" : ""}>Tonight at 1 AM</option></select>`;
+  $("#cr-when").addEventListener("change", (e) => { cr.draft.startAt = e.target.value || undefined; });
 }
 
 async function uploadFile(id, f) {
@@ -1492,6 +1639,25 @@ async function crSend(first) {
   if (!text.trim() && !cr.files.length) return;
   if ("Notification" in window && Notification.permission === "default") Notification.requestPermission().catch(() => {});
   const btn = $("#cr-send"); btn.disabled = true;
+  const scripts = batchScripts();
+  if (scripts.length >= 2) {
+    try {
+      const batch = `b_${Date.now().toString(36)}`;
+      const startAt = cr.draft.startAt === "tonight" ? tonightAt1() : undefined;
+      const others = cr.files.filter((f) => f.kind !== "script");
+      const settings = Object.fromEntries(Object.entries(cr.draft.settings).filter(([, v]) => v));
+      for (const sc of scripts) {
+        const r = await post("/api/create", { title: sc.name.replace(/\.[a-z0-9]+$/i, ""), settings, model: cr.draft.model, effort: cr.draft.effort });
+        const files = [await uploadFile(r.session.id, sc)];
+        for (const f of others) files.push(await uploadFile(r.session.id, f));
+        await post(`/api/create/${r.session.id}/queue`, { text, files, batch, startAt });
+      }
+      cr.files = []; cr.draft = { settings: {}, model: "", effort: "" };
+      toast(`${scripts.length} reels queued${startAt ? " for tonight" : ""}`);
+      await reloadCreateList(); renderLanding();
+    } catch (e) { toast(e.message); btn.disabled = false; }
+    return;
+  }
   try {
     let id = cr.meta?.id;
     if (!id) { const r = await post("/api/create", { settings: Object.fromEntries(Object.entries(cr.draft.settings).filter(([, v]) => v)), model: cr.draft.model, effort: cr.draft.effort }); id = r.session.id; }
@@ -1541,12 +1707,7 @@ async function renderCreate(id) {
   clearInterval(cr.tick); cr.es?.close(); cr.es = null;
   if (!id) {
     cr.meta = null; cr.events = []; cr.byId = new Map();
-    const list = cr.list.sessions;
-    $("#main").innerHTML = `${pageHead("Create")}<div class="intbar" id="intbar"></div>
-      <div class="cr-land"><h2>What should the reel say?</h2><p class="lede" style="margin:0 auto 24px">Paste your script or drop a .txt or .srt, add a voiceover or assets, and say how it should feel. Claude makes the reel with /reelcut, asks you what it needs to know right here, and shows every beat as it renders.</p></div>
-      ${list.length ? `<div class="cap" style="max-width:720px;margin:32px auto 8px">Recent</div><div class="group cr-list" style="max-width:720px;margin:0 auto 260px">${list.map((s) => `<a class="row-i" href="#create/${s.id}" style="color:var(--label);text-decoration:none"><span class="col"><span class="t">${esc(s.title)}</span><span class="s">${esc(when(s.updatedAt))}</span></span><span class="badge ${s.status === "done" ? "ok" : s.status === "waiting" ? "warn" : s.status === "running" ? "running" : s.status === "failed" ? "bad" : ""}">${{ done: "Done", waiting: "Waiting for you", running: "Working", failed: "Error", stopped: "Stopped", idle: "Draft" }[s.status] || s.status}</span></a>`).join("")}</div>` : ""}
-      ${composerHtml(true)}`;
-    bindComposer(true); paintIcons(); paintIntegrations();
+    renderLanding();
     return;
   }
   const r = await api(`/api/create/${id}`);

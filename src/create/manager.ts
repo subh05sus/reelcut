@@ -26,13 +26,25 @@ export interface Question { question: string; header?: string; multiSelect?: boo
 export interface Settings {
   personality?: string; format?: string; length?: "full" | "short"; resolution?: "hd" | "4k";
   text?: "full" | "key-lines" | "minimal" | "none"; sfx?: "on" | "off"; music?: "fits" | "snap" | "none"; blur?: "on" | "off";
+  /** "write": the owner gave a topic, a link or notes, and Claude writes the script first. */
+  mode?: "script" | "write";
+  /** Target length in seconds for a script Claude writes. */
+  target?: string;
+  recipe?: string;
+  series?: string;
 }
 export interface SessionMeta {
   id: string;
   title: string;
   createdAt: string;
   updatedAt: string;
-  status: "idle" | "running" | "waiting" | "done" | "failed" | "stopped";
+  status: "idle" | "queued" | "running" | "waiting" | "done" | "failed" | "stopped";
+  /** One of a batch: runs unattended, one after another, and never stops to ask. */
+  batch?: string;
+  /** Waiting its turn in a batch: what to send when it starts, and not before when. */
+  queued?: { text: string; files: { name: string; path: string; kind: string }[]; prompt: string; startAt?: string };
+  /** The series this reel is an episode of, and which episode. */
+  episode?: { series: string; n: number };
   claudeSession?: string;
   model?: string;
   effort?: string;
@@ -128,7 +140,14 @@ function inputQueue(): { iter: AsyncIterable<SDKUserMessage>; push: (m: SDKUserM
   };
 }
 
-export interface StartInput { text: string; scriptPath?: string; voiceoverPath?: string; assetsDir?: string; files?: { name: string; path: string; kind: string }[]; settings?: Settings; model?: string; effort?: string; personalityName?: string }
+export interface StartInput {
+  text: string; scriptPath?: string; voiceoverPath?: string; assetsDir?: string; files?: { name: string; path: string; kind: string }[];
+  settings?: Settings; model?: string; effort?: string; personalityName?: string;
+  /** Lines from the recipe and the series, already worded. */
+  recipeLines?: string[]; seriesLines?: string[];
+  /** Nobody is watching (a batch): decide instead of asking. */
+  unattended?: boolean;
+}
 
 export class CreateManager {
   private sessions = new Map<string, Session>();
@@ -137,16 +156,23 @@ export class CreateManager {
   private saveTimers = new Map<string, NodeJS.Timeout>();
 
   constructor(private readonly opts: { idleMs?: number; queryFn?: typeof query } = {}) {
+    // Batch reels wait for their time; look once every half minute.
+    setInterval(() => this.pump(), 30_000).unref();
     if (!existsSync(createDir())) return;
     for (const id of readdirSync(createDir())) {
       try {
         const s = JSON.parse(readFileSync(sessionFile(id), "utf8")) as Session;
         // A run that was going when the studio stopped is not going any more.
-        if (s.status === "running" || s.status === "waiting") s.status = "stopped";
+        if (s.status === "running" || s.status === "waiting") {
+          // A batch reel that was cut off goes back in line and picks up where it was.
+          if (s.batch) { s.status = "queued"; s.queued = { text: "Continue", files: [], prompt: "The studio restarted while you were working. Continue this reel from where you left off, to the end; nobody is watching, so never ask questions." }; }
+          else s.status = "stopped";
+        }
         for (const e of s.events) if ((e.k === "question" || e.k === "permission") && e.status === "waiting") e.status = "cancelled";
         this.sessions.set(id, s);
       } catch { /* not a conversation */ }
     }
+    setTimeout(() => this.pump(), 2000).unref();
   }
 
   list(): SessionMeta[] { return [...this.sessions.values()].map(meta).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)); }
@@ -177,11 +203,32 @@ export class CreateManager {
     if (i.settings?.blur === "on") flags.push("--blur"); else flags.push("--no-blur");
     if (i.voiceoverPath) flags.push(`--voiceover ${i.voiceoverPath}`);
     if (i.assetsDir) flags.push(`--assets ${i.assetsDir}`);
+    const write = i.settings?.mode === "write" && !i.scriptPath;
     const head = `/reelcut ${i.scriptPath ?? ""} ${flags.join(" ")}`.replace(/\s+/g, " ").trim();
-    const lines = [head, ""];
-    if (i.text.trim()) lines.push("Instructions from the owner:", i.text.trim(), "");
+    const lines = write ? [] : [head, ""];
+    if (write) {
+      const secs = Number(i.settings?.target) || 45;
+      const scriptOut = path.join(filesDir(s.id), "script.txt");
+      lines.push(
+        "Write the script for a reel first, then make the reel from it.",
+        "",
+        "What the owner gave you (a topic, notes or links; read any link with WebFetch first):",
+        i.text.trim(), "",
+        `- Length: about ${secs} seconds, so about ${Math.round(secs * 2.5)} spoken words.`,
+        "- Voice: the default personality's copy and voice (`npm run personality -- brief`), or plain and direct without one.",
+        "- 1. Offer three hooks with AskUserQuestion: one question (header \"Hook\"), each option's label the hook's first words and",
+        "     its description the whole hook line; your favourite first, marked (Recommended).",
+        `- 2. Write the full script on the chosen hook, save it to ${scriptOut}, and show it in your reply as a quote block.`,
+        "- 3. Ask with AskUserQuestion: \"Make the reel from this script?\" with options \"Make the reel (Recommended)\", \"Tighten it\"",
+        "     and \"Another angle\". Revise and ask again until the owner picks Make the reel.",
+        `- 4. Then make the reel: invoke the reelcut skill (Skill tool) with the arguments \`${`${scriptOut} ${flags.join(" ")}`.trim()}\`, and`,
+        "     follow it as usual.", "",
+      );
+    } else if (i.text.trim()) lines.push("Instructions from the owner:", i.text.trim(), "");
+    if (i.recipeLines?.length) lines.push(...i.recipeLines);
+    if (i.seriesLines?.length) lines.push(...i.seriesLines);
     if (i.settings?.personality) lines.push(`Use the personality "${i.personalityName ?? i.settings.personality}" (${i.settings.personality}); write it into reel.json.`, "");
-    if (!i.scriptPath) lines.push("There is no script file: the script is in the instructions above.", "");
+    if (!i.scriptPath && !write) lines.push("There is no script file: the script is in the instructions above.", "");
     const st = i.settings ?? {};
     const settled = [
       st.format && `format ${st.format}`, st.length && (st.length === "short" ? "a short cut" : "the whole script"), st.resolution && st.resolution.toUpperCase(),
@@ -189,6 +236,16 @@ export class CreateManager {
       st.music && (st.music === "none" ? "no music" : `a music bed, ${st.music === "snap" ? "cuts snapped to its beat" : "fitted to the cut"}`),
       `motion blur ${st.blur === "on" ? "on" : "off"}`, st.personality && "the look, palette, type and motion (the personality)",
     ].filter(Boolean);
+    if (i.unattended) {
+      lines.push(
+        "This run is one of a batch running unattended: nobody is watching, so never call AskUserQuestion. For every open",
+        "question take the option you would recommend, and end your final reply with a section \"Decisions I made\" listing each one.",
+        `- Already settled, so follow them: ${settled.join("; ")}.`,
+        "- Start your first reply with one line `Title: <a short name for this reel, 2 to 6 words>`.",
+        `- Write the reel to a new out-<timestamp>/ folder in ${REPO}, say its path when you write reel.json, and render it to the end.`,
+      );
+      return lines.join("\n");
+    }
     lines.push(
       "This run is driven from the reelcut studio's Create page: the owner is in the studio now, watching this chat.",
       "- Ask your questions with the AskUserQuestion tool; the owner answers them there as cards.",
@@ -200,6 +257,34 @@ export class CreateManager {
       "  ready; the page shows frames and clips as they appear.",
     );
     return lines.join("\n");
+  }
+
+  /** Puts a batch reel in line: it starts when no other batch reel is running and its time has come. */
+  enqueue(id: string, text: string, files: { name: string; path: string; kind: string }[], prompt: string, startAt?: string): void {
+    const s = this.sessions.get(id); if (!s) throw new Error("no such conversation");
+    s.queued = { text, files, prompt, ...(startAt ? { startAt } : {}) };
+    this.setStatus(s, "queued");
+    this.pump();
+  }
+
+  /** Starts the next batch reel when the line is free. Called on a timer, when a reel finishes, and when one is queued. */
+  pump(): void {
+    const busy = [...this.sessions.values()].some((x) => x.batch && this.live.has(x.id) && (x.status === "running" || x.status === "waiting"));
+    if (busy) return;
+    const now = Date.now();
+    const next = [...this.sessions.values()]
+      .filter((x) => x.status === "queued" && x.queued && (!x.queued.startAt || Date.parse(x.queued.startAt) <= now))
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt))[0];
+    if (!next?.queued) return;
+    const q = next.queued; delete next.queued;
+    this.send(next.id, q.text, q.files, q.prompt);
+  }
+
+  /** Takes a reel out of the line before it starts. */
+  unqueue(id: string): void {
+    const s = this.sessions.get(id);
+    if (!s || s.status !== "queued") return;
+    delete s.queued; this.push(s, { k: "status", text: "Taken out of the batch", tone: "info" }); this.setStatus(s, "stopped");
   }
 
   /** Send a message: starts (or resumes) Claude when it is not running, or reaches it at its next turn when it is. */
@@ -292,6 +377,7 @@ export class CreateManager {
       } finally {
         if (this.live.get(s.id) === live) this.live.delete(s.id);
         if (s.status === "running" || s.status === "waiting") this.setStatus(s, "done");
+        if (s.batch) this.pump();
       }
     })();
   }
@@ -365,7 +451,8 @@ export class CreateManager {
       this.setStatus(s, any.subtype === "success" ? "done" : "failed");
       // Keep the session open a while for a quick follow-up; then let it go (the next message resumes it).
       clearTimeout(live.idleTimer);
-      live.idleTimer = setTimeout(() => { live.input.close(); }, this.opts.idleMs ?? 10 * 60_000);
+      // A batch reel lets go at once, so the next one in line can start.
+      live.idleTimer = setTimeout(() => { live.input.close(); }, s.batch ? 0 : this.opts.idleMs ?? 10 * 60_000);
     }
   }
 

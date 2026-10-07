@@ -37,6 +37,8 @@ import { HIGGSFIELD_SETTINGS, loadSettings, setHiggsfieldSetting, type Higgsfiel
 import { readGeneration } from "../generate/log.js";
 import { CreateManager, filesDir as createFilesDir, insideAllowed, reelState } from "../create/manager.js";
 import { readIntegrations } from "../create/integrations.js";
+import { getRecipe, listRecipes, recipePrompt, removeRecipe, saveRecipe } from "../create/recipes.js";
+import { addEpisode, getSeries, listSeries, removeSeries, saveSeries, seriesPrompt } from "../create/series.js";
 import { addComment, beatText, commentsPrompt, editPrompt, loadComments, readReel, removeComment, updateComment, type EditAction } from "../create/edits.js";
 import { FAMILIES, PAIRINGS, fontFaceCss, loadFontLibrary } from "../fonts/index.js";
 import { reelcutHome } from "../library/store.js";
@@ -907,12 +909,27 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
     if (read && parts[0] === "api" && parts[1] === "integrations" && parts.length === 2) {
       return sendJson(res, 200, await readIntegrations(REPO, 60_000, url.searchParams.has("refresh")));
     }
+    // Recipes (starting points) and series (episodes that share an intro and an outro).
+    if (parts[0] === "api" && (parts[1] === "recipes" || parts[1] === "series")) {
+      const recipes = parts[1] === "recipes";
+      if (read && parts.length === 2) return sendJson(res, 200, recipes ? { recipes: listRecipes() } : { series: listSeries() });
+      if (method === "POST" && parts.length === 2) {
+        const b = (await readBody(req)) as Record<string, unknown> & { name?: string };
+        if (!String(b.name ?? "").trim()) throw new HttpError(400, "give it a name");
+        return sendJson(res, 201, recipes ? { recipe: saveRecipe(b as never) } : { series: saveSeries(b as never) });
+      }
+      if (method === "DELETE" && parts.length === 3) {
+        try { if (recipes) removeRecipe(parts[2]!); else removeSeries(parts[2]!); } catch (error) { throw new HttpError(409, (error as Error).message); }
+        return sendJson(res, 200, { ok: true });
+      }
+    }
     if (parts[0] === "api" && parts[1] === "create") {
       const cm = (create ??= new CreateManager());
       if (read && parts.length === 2) {
         return sendJson(res, 200, {
           sessions: cm.list(),
           personalities: loadPersonalities().map((pp) => ({ id: pp.id, name: pp.name, isDefault: pp.isDefault })),
+          recipes: listRecipes(), series: listSeries(),
           models: [["", "Default"], ["opus", "Opus"], ["sonnet", "Sonnet"], ["haiku", "Haiku"]],
           efforts: [["", "Default"], ["low", "Low"], ["medium", "Medium"], ["high", "High"], ["xhigh", "Extra high"], ["max", "Max"]],
         });
@@ -959,29 +976,43 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
         }
         return sendJson(res, 201, { file: { name, path: dest, kind } });
       }
-      if (method === "POST" && (parts[3] === "start" || parts[3] === "message") && parts.length === 4) {
-        const b = (await readBody(req, 512 * 1024)) as { text?: string; files?: { name: string; path: string; kind: string }[] };
+      if (method === "POST" && (parts[3] === "start" || parts[3] === "message" || parts[3] === "queue") && parts.length === 4) {
+        const b = (await readBody(req, 512 * 1024)) as { text?: string; files?: { name: string; path: string; kind: string }[]; batch?: string; startAt?: string };
         const files = (b.files ?? []).filter((f) => typeof f.path === "string" && f.path.startsWith(createFilesDir(id)));
         const text = String(b.text ?? "");
         if (!text.trim() && !files.length) throw new HttpError(400, "write something, or add a script");
-        if (parts[3] === "start") {
-          const script = files.find((f) => f.kind === "script");
-          const vo = files.find((f) => f.kind === "voiceover");
-          const assets = files.some((f) => f.kind === "asset") ? path.join(createFilesDir(id), "assets") : undefined;
-          const pers = sess.settings.personality ? getPersonality(sess.settings.personality) : undefined;
-          // A pasted script becomes a file, so /reelcut gets a path like any other script.
-          let scriptPath = script?.path;
-          if (!scriptPath && text.trim().split(/\s+/).length > 25) { scriptPath = path.join(createFilesDir(id), "script.txt"); writeFileSyncSafe(scriptPath, text.trim()); }
-          const prompt = cm.firstPrompt(sess, { text: scriptPath && !script ? "" : text, scriptPath, voiceoverPath: vo?.path, assetsDir: assets, settings: sess.settings, personalityName: pers?.name });
-          // A placeholder until Claude names the reel: the script's first sentence, without markdown.
-          if (!sess.named) {
-            const first = (scriptPath && !script ? text : text).replace(/^[#>*\s-]+/gm, "").split(/(?<=[.!?])\s|\n/).map((x) => x.trim()).find((x) => x.length > 3);
-            cm.rename(id, first ? first.split(/\s+/).slice(0, 6).join(" ") : script?.name.replace(/\.[a-z0-9]+$/i, "") || "New reel", false);
-          }
-          cm.send(id, text, files, prompt);
-        } else cm.send(id, text, files);
+        if (parts[3] === "message") { cm.send(id, text, files); return sendJson(res, 202, { ok: true }); }
+        const unattended = parts[3] === "queue";
+        if (unattended) sess.batch = /^b_[0-9a-z]+$/.test(String(b.batch)) ? String(b.batch) : `b_${Date.now().toString(36)}`;
+        const script = files.find((f) => f.kind === "script");
+        const vo = files.find((f) => f.kind === "voiceover");
+        const assets = files.some((f) => f.kind === "asset") ? path.join(createFilesDir(id), "assets") : undefined;
+        const pers = sess.settings.personality ? getPersonality(sess.settings.personality) : undefined;
+        const write = sess.settings.mode === "write" && !script;
+        // A pasted script becomes a file, so /reelcut gets a path like any other script.
+        let scriptPath = script?.path;
+        if (!write && !scriptPath && text.trim().split(/\s+/).length > 25) { scriptPath = path.join(createFilesDir(id), "script.txt"); writeFileSyncSafe(scriptPath, text.trim()); }
+        const recipe = sess.settings.recipe ? getRecipe(sess.settings.recipe) : undefined;
+        let seriesLines: string[] | undefined;
+        const series = sess.settings.series ? getSeries(sess.settings.series) : undefined;
+        if (series) {
+          const n = addEpisode(series.id, id);
+          const prev = n > 1 ? series.episodes[n - 2] : undefined;
+          seriesLines = seriesPrompt(series, n, prev ? cm.findReel(prev) : undefined);
+          sess.episode = { series: series.id, n };
+        }
+        const prompt = cm.firstPrompt(sess, { text: scriptPath && !script ? "" : text, scriptPath, voiceoverPath: vo?.path, assetsDir: assets, settings: sess.settings, personalityName: pers?.name, recipeLines: recipe ? recipePrompt(recipe) : undefined, seriesLines, unattended });
+        // A placeholder until Claude names the reel: the script's first sentence, without markdown.
+        if (!sess.named) {
+          const first = text.replace(/^[#>*\s-]+/gm, "").split(/(?<=[.!?])\s|\n/).map((x) => x.trim()).find((x) => x.length > 3);
+          const name = first ? first.split(/\s+/).slice(0, 6).join(" ") : script?.name.replace(/\.[a-z0-9]+$/i, "") || "New reel";
+          cm.rename(id, series ? `${series.name} ${sess.episode!.n}: ${name}` : name, false);
+        }
+        if (unattended) cm.enqueue(id, text, files, prompt, b.startAt && !Number.isNaN(Date.parse(b.startAt)) ? new Date(b.startAt).toISOString() : undefined);
+        else cm.send(id, text, files, prompt);
         return sendJson(res, 202, { ok: true });
       }
+      if (method === "POST" && parts[3] === "unqueue" && parts.length === 4) { cm.unqueue(id); return sendJson(res, 200, { ok: true }); }
       if (method === "POST" && parts[3] === "answer" && parts.length === 4) {
         const b = (await readBody(req)) as { event?: string; answers?: Record<string, string> };
         try { cm.answer(id, String(b.event), b.answers ?? {}); } catch (error) { throw new HttpError(409, (error as Error).message); }
