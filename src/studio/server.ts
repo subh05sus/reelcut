@@ -36,6 +36,7 @@ import { PLATFORMS } from "../library/schema.js";
 import { HIGGSFIELD_SETTINGS, loadSettings, setHiggsfieldSetting, type HiggsfieldSetting } from "../library/settings.js";
 import { readGeneration } from "../generate/log.js";
 import { CreateManager, filesDir as createFilesDir, insideAllowed, reelState } from "../create/manager.js";
+import { readIntegrations } from "../create/integrations.js";
 import { FAMILIES, PAIRINGS, fontFaceCss, loadFontLibrary } from "../fonts/index.js";
 import { reelcutHome } from "../library/store.js";
 import {
@@ -901,6 +902,10 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
     }
 
     // ---- create: a reel made from the dashboard, Claude Code driving /reelcut, the conversation streamed here
+    // The tools reels are orchestrated with (MCP servers): connected or not, read from Claude Code itself.
+    if (read && parts[0] === "api" && parts[1] === "integrations" && parts.length === 2) {
+      return sendJson(res, 200, await readIntegrations(REPO, 60_000, url.searchParams.has("refresh")));
+    }
     if (parts[0] === "api" && parts[1] === "create") {
       const cm = (create ??= new CreateManager());
       if (read && parts.length === 2) {

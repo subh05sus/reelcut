@@ -101,3 +101,20 @@ describe("titles", () => {
     expect(cm.get(s.id)!.events.find((e) => e.k === "text")).toMatchObject({ text: "Using gptmarlon." });
   });
 });
+
+describe("integrations", () => {
+  it("reads `claude mcp list` and maps Higgsfield, Premiere Pro and Resolve onto it", async () => {
+    const { parseMcpList, integrationStatus } = await import("../src/create/integrations.js");
+    const servers = parseMcpList(`Checking MCP server health…
+
+notion: https://mcp.notion.com/mcp (HTTP) - ✔ Connected
+higgsfield: https://mcp.higgsfield.ai/mcp (HTTP) - ! Needs authentication
+code-review-graph: python3 -m code_review_graph serve - ⏸ Pending approval (run \`claude\` to approve)
+broken: node x.js - ✗ Failed to connect`);
+    expect(servers.map((s) => [s.name, s.state])).toEqual([["notion", "connected"], ["higgsfield", "needs-auth"], ["code-review-graph", "pending"], ["broken", "failed"]]);
+    const st = integrationStatus(servers);
+    expect(st.find((x) => x.id === "higgsfield")).toMatchObject({ state: "needs-auth", server: "higgsfield" });
+    expect(st.find((x) => x.id === "premiere")).toMatchObject({ state: "planned" });
+    expect(integrationStatus([]).find((x) => x.id === "higgsfield")!.state).toBe("not-added");
+  });
+});

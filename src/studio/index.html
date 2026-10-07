@@ -512,6 +512,9 @@
   .cr-tabs { display: none; }
   @media (max-width: 1099px) { .cr { grid-template-columns: minmax(0, 1fr); } .cr-panel { display: none; position: static; max-height: none; } .cr[data-view="reel"] .cr-panel { display: flex; } .cr[data-view="reel"] .cr-chat { display: none; } .cr-tabs { display: block; margin-bottom: 12px; } }
   .ev-user { align-self: flex-end; max-width: 82%; background: var(--fill-2); border-radius: 20px 20px 6px 20px; padding: 10px 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .ev-user.long .ut { max-height: 176px; overflow: hidden; -webkit-mask: linear-gradient(#000 60%, transparent); mask: linear-gradient(#000 60%, transparent); }
+  .ev-user.open .ut { max-height: none; -webkit-mask: none; mask: none; }
+  .ev-user [data-more-user] { margin: 4px 0 0 -8px; }
   .ev-user .files { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
   .ev-text { line-height: 1.55; overflow-wrap: anywhere; }
   .ev-text p { margin: 0 0 10px; } .ev-text p:last-child { margin-bottom: 0; }
@@ -579,13 +582,22 @@
   .composer .meta { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--label-2); padding: 0 6px; }
   .cr-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .cr-meter { display: inline-flex; gap: 10px; align-items: center; font-size: 12px; color: var(--label-2); font-variant-numeric: tabular-nums; }
+  /* Integrations: the tools a reel is orchestrated with, and whether each is reachable. Content capsules, not glass. */
+  .intbar { display: flex; flex-wrap: wrap; gap: 8px; margin: -4px 0 16px; }
+  .intpill { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px; border-radius: 999px; background: var(--fill-4); color: var(--label); font-size: 12px; font-weight: 500; cursor: pointer; transition: background-color 120ms var(--ease), transform 150ms var(--ease); }
+  .intpill:hover { background: var(--fill-3); } .intpill:active { transform: scale(0.97); }
+  .intpill .dot { width: 7px; height: 7px; }
+  .intpill .s { color: var(--label-2); font-weight: 400; }
+  .dot.st-connected { background: var(--green); } .dot.st-needs-auth, .dot.st-pending { background: var(--orange); } .dot.st-failed { background: var(--red); }
+  .dot.st-not-added { background: var(--label-3); } .dot.st-planned { background: transparent; box-shadow: inset 0 0 0 1.5px var(--label-3); }
+  @media (max-width: 899px) { .intpill { height: 32px; } }
   .cr-land { max-width: 720px; margin: 8vh auto 0; text-align: center; }
   .cr-land h2 { font-size: 30px; line-height: 36px; margin: 0 0 8px; letter-spacing: -0.01em; }
   .cr-beats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
   .cr-beat { border-radius: 10px; overflow: hidden; background: var(--fill-4); aspect-ratio: 1; position: relative; display: grid; place-items: center; font-size: 11px; color: var(--label-2); }
   .cr-beat img, .cr-beat video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .cr-beat b { position: absolute; left: 6px; bottom: 6px; z-index: 2; background: rgb(0 0 0 / .55); color: #fff; padding: 1px 6px; border-radius: 6px; font-size: 11px; }
-  .cr-panel video.master, .cr-panel img.sheet { width: 100%; border-radius: 12px; background: #000; }
+  .cr-panel video.master, .cr-panel img.cr-sheet { display: block; width: 100%; height: auto; border-radius: 12px; background: #000; }
   .cr-list .row-i { cursor: pointer; }
 
   /* ================================================================ personality
@@ -1003,7 +1015,7 @@ function md(src) {
 
 function evHtml(e) {
   switch (e.k) {
-    case "user": return `<div class="ev-user" data-ev="${e.id}">${esc(e.text)}${e.files?.length ? `<div class="files">${e.files.map((f) => `<span class="chip">${ic("attach", 12)} ${esc(f.name)}</span>`).join("")}</div>` : ""}</div>`;
+    case "user": return `<div class="ev-user ${e.text.split("\n").length > 8 || e.text.length > 600 ? "long" : ""}" data-ev="${e.id}"><div class="ut">${esc(e.text)}</div>${e.text.split("\n").length > 8 || e.text.length > 600 ? `<button class="plain sm" data-more-user>Show all</button>` : ""}${e.files?.length ? `<div class="files">${e.files.map((f) => `<span class="chip">${ic("attach", 12)} ${esc(f.name)}</span>`).join("")}</div>` : ""}</div>`;
     case "text": { const t = e.done ? e.text : e.text.replace(/^\s*Title:[^\n]*$/, ""); return `<div class="ev-text" data-ev="${e.id}">${md(t) || `<span class="typing"><i></i><i></i><i></i></span>`}</div>`; }
     case "status": return `<div class="ev-status ${e.tone}" data-ev="${e.id}">${esc(e.text)}</div>`;
     case "tool": {
@@ -1028,6 +1040,7 @@ function evHtml(e) {
 }
 
 function bindEv(el, e) {
+  $("[data-more-user]", el)?.addEventListener("click", (b) => { const open = el.classList.toggle("open"); b.target.textContent = open ? "Show less" : "Show all"; });
   if (e.k === "question" && e.status === "waiting") {
     $$(".opt", el).forEach((o) => o.addEventListener("click", () => {
       const q = o.closest(".q"), qd = e.questions[Number(q.dataset.qi)];
@@ -1101,7 +1114,8 @@ function openStream(id) {
   es.onmessage = (msg) => {
     const e = JSON.parse(msg.data);
     if (e.k === "meta") {
-      const before = cr.meta?.status; cr.meta = e.meta; paintMeta();
+      const before = cr.meta?.status; const hadMcp = !!cr.meta?.mcp; cr.meta = e.meta; paintMeta();
+      if (!hadMcp && e.meta.mcp) paintIntegrations();
       if (before !== "done" && e.meta.status === "done") { notify("Your reel is ready", cr.meta.title); refreshReel(); }
       if (e.meta.reel) refreshReel();
       return;
@@ -1123,12 +1137,20 @@ const refreshReel = debounce(async () => {
   const p = $("#cr-panel");
   if (!r) { p.innerHTML = `<h3>Reel</h3><p class="note">The reel appears here as Claude plans it: beats first, then frames, then the clips as they render.</p>`; return; }
   const live = cr.meta.status === "running" || cr.meta.status === "waiting";
+  // Master or beats: the finished reel when it exists, the beats while it is being made (the owner can switch).
+  const view = r.master ? (cr.panelView || "master") : "beats";
+  const playing = $("video.master", p);
+  if (playing && !playing.paused && view === "master" && cr.panelShown === "master") return; // don't restart what is playing
+  cr.panelShown = view;
   p.innerHTML = `<h3>Reel <span class="note" style="font-weight:400">${r.beats.length} beat${r.beats.length === 1 ? "" : "s"} · ${Math.round(r.seconds)} s${r.format ? ` · ${esc(r.format)}` : ""}</span></h3>
-    ${r.master ? `<video class="master" src="${media(r.master)}" ${r.poster ? `poster="${media(r.poster)}"` : ""} controls playsinline></video>` : ""}
+    ${r.master ? segHtml("cr-pv", [["master", "Master"], ["beats", "Beats"]], view, "full") : ""}
+    ${view === "master" ? `<video class="master" src="${media(r.master)}" ${r.poster ? `poster="${media(r.poster)}"` : ""} controls playsinline preload="metadata" style="aspect-ratio:${({ "9:16": "9 / 16", "4:5": "4 / 5", "16:9": "16 / 9" })[r.format] || "1 / 1"};object-fit:contain"></video>
+      <div class="row-i" style="padding:0;min-height:0;background:none"><a class="plain" href="${media(r.master)}" download>Download master.mp4</a></div>` : `
     <div class="cr-beats">${r.beats.map((b, i) => `<div class="cr-beat">${b.clip ? `<video src="${media(b.clip)}" muted loop playsinline autoplay></video>` : b.frame ? `<img src="${media(b.frame)}">` : live ? `<span class="st run" style="width:16px;height:16px;border-radius:50%;border:2px solid var(--label-3);border-top-color:var(--accent);animation:spin 900ms linear infinite"></span>` : "—"}<b>${i + 1} · ${esc(b.id)}</b></div>`).join("")}</div>
-    ${r.contact ? `<a href="${media(r.contact)}" target="_blank"><img class="sheet" src="${media(r.contact)}"></a>` : r.sheet ? `<a href="${media(r.sheet)}" target="_blank"><img class="sheet" src="${media(r.sheet)}"></a>` : ""}
+    ${r.contact ? `<a href="${media(r.contact)}" target="_blank"><img class="cr-sheet" src="${media(r.contact)}"></a>` : r.sheet ? `<a href="${media(r.sheet)}" target="_blank"><img class="cr-sheet" src="${media(r.sheet)}"></a>` : ""}`}
     ${r.plan ? `<details><summary class="note" style="cursor:pointer">Plan</summary><div class="ev-text" style="font-size:13px;margin-top:8px">${md(r.plan)}</div></details>` : ""}
     <p class="foot-note">${esc(r.dir)}</p>`;
+  if (r.master) bindSeg("cr-pv", (v) => { cr.panelView = v; cr.panelShown = null; refreshReel(); });
   if (live) { clearTimeout(cr.reelTimer); cr.reelTimer = setTimeout(refreshReel, 5000); }
 }, 300);
 
@@ -1232,6 +1254,36 @@ async function crSend(first) {
   btn.disabled = false;
 }
 
+/** The integrations bar: Claude Code itself, then each MCP server reels are orchestrated with. */
+const INT_WORD = { connected: "Connected", "needs-auth": "Needs sign-in", pending: "Needs approval", failed: "Not reachable", "not-added": "Not added", planned: "Coming" };
+async function paintIntegrations(force) {
+  const bar = $("#intbar"); if (!bar) return;
+  if (!cr.ints || force) { if (!cr.ints) bar.innerHTML = `<span class="intpill"><span class="dot st-planned"></span>Checking tools…</span>`; try { cr.ints = await api(`/api/integrations${force ? "?refresh" : ""}`); } catch { return; } }
+  const i = cr.ints, live = cr.meta?.mcp;
+  const pill = (k, name, state, word) => `<span class="intpill" role="button" tabindex="0" data-int="${k}"><span class="dot st-${state}"></span>${esc(name)} <span class="s">${esc(word)}</span></span>`;
+  bar.innerHTML = pill("claude", "Claude Code", i.claude ? "connected" : "failed", i.claude ? i.claude.replace(/\s*\(Claude Code\)/, "") : "not found")
+    + i.integrations.map((x) => {
+      // During a run, what that run could actually reach wins over the general check.
+      const l = live?.find((m) => x.server && m.name === x.server);
+      const state = l ? (l.status === "connected" ? "connected" : /auth/.test(l.status) ? "needs-auth" : "failed") : x.state;
+      return pill(x.id, x.name, state, INT_WORD[state] || state);
+    }).join("");
+  $$("[data-int]", bar).forEach((p) => p.addEventListener("click", () => openIntegration(p.dataset.int)));
+}
+function openIntegration(k) {
+  const i = cr.ints; if (!i) return;
+  const x = i.integrations.find((y) => y.id === k);
+  const others = i.servers.filter((sv) => !i.integrations.some((y) => y.server === sv.name));
+  const body = k === "claude"
+    ? `<div class="group"><div class="row-i"><span class="t grow">Version</span><span class="s">${esc(i.claude || "not found")}</span></div><div class="row-i"><span class="t grow">Signed in as</span><span class="s">your Claude login (no API key)</span></div></div>
+       ${others.length ? `<div class="cap">Other tools Claude Code has</div><div class="group">${others.map((sv) => `<div class="row-i"><span class="dot st-${sv.state}"></span><span class="t grow">${esc(sv.name)}</span><span class="s">${esc(sv.detail)}</span></div>`).join("")}</div>` : ""}`
+    : `<p class="note" style="margin:0 0 12px">${esc(x.role)}.</p>
+       <div class="group"><div class="row-i"><span class="dot st-${x.state}"></span><span class="t grow">${esc(INT_WORD[x.state] || x.state)}</span><span class="s">${esc(x.server || "")}</span></div></div>
+       ${x.howTo ? `<p class="foot-note">${esc(x.howTo).replace(/`([^`]+)`/g, "<code>$1</code>")}</p>` : ""}`;
+  openSheet({ title: k === "claude" ? "Claude Code" : x.name, sub: `Checked ${esc(when(i.checkedAt))}`, body: `${body}<div class="acts"><button data-sclose>Close</button><button class="primary" id="int-refresh">Check again</button></div>`,
+    bind: (sh) => $("#int-refresh", sh).addEventListener("click", async (e) => { e.target.disabled = true; e.target.textContent = "Checking…"; await paintIntegrations(true); closeSheet(); openIntegration(k); }) });
+}
+
 async function renderCreate(id) {
   cr.list = await api("/api/create");
   setCount("create", cr.list.sessions.filter((s) => s.status === "waiting").length ? "●" : "");
@@ -1239,16 +1291,17 @@ async function renderCreate(id) {
   if (!id) {
     cr.meta = null; cr.events = []; cr.byId = new Map();
     const list = cr.list.sessions;
-    $("#main").innerHTML = `${pageHead("Create")}
+    $("#main").innerHTML = `${pageHead("Create")}<div class="intbar" id="intbar"></div>
       <div class="cr-land"><h2>What should the reel say?</h2><p class="lede" style="margin:0 auto 24px">Paste your script or drop a .txt or .srt, add a voiceover or assets, and say how it should feel. Claude makes the reel with /reelcut, asks you what it needs to know right here, and shows every beat as it renders.</p></div>
       ${list.length ? `<div class="cap" style="max-width:720px;margin:32px auto 8px">Recent</div><div class="group cr-list" style="max-width:720px;margin:0 auto 260px">${list.map((s) => `<a class="row-i" href="#create/${s.id}" style="color:var(--label);text-decoration:none"><span class="col"><span class="t">${esc(s.title)}</span><span class="s">${esc(when(s.updatedAt))}</span></span><span class="badge ${s.status === "done" ? "ok" : s.status === "waiting" ? "warn" : s.status === "running" ? "running" : s.status === "failed" ? "bad" : ""}">${{ done: "Done", waiting: "Waiting for you", running: "Working", failed: "Error", stopped: "Stopped", idle: "Draft" }[s.status] || s.status}</span></a>`).join("")}</div>` : ""}
       ${composerHtml(true)}`;
-    bindComposer(true); paintIcons();
+    bindComposer(true); paintIcons(); paintIntegrations();
     return;
   }
   const r = await api(`/api/create/${id}`);
   cr.meta = r.session; cr.events = r.events; cr.byId = new Map(r.events.map((e, i) => [e.id, i]));
   $("#main").innerHTML = `${pageHead(esc(cr.meta.title), { back: `<a class="back" href="#create">${ic("back", 18)}Create</a>`, actions: `<span class="cr-meter" id="cr-meter"></span><button class="sm" id="cr-rename">Rename</button>` })}
+    <div class="intbar" id="intbar"></div>
     <div class="cr-tabs">${segHtml("cr-view", [["chat", "Chat"], ["reel", "Reel"]], cr.view)}</div>
     <div class="cr" data-view="${cr.view}"><section class="cr-chat"><div id="cr-events" style="display:flex;flex-direction:column;gap:14px"></div><div id="cr-typing" hidden><span class="typing"><i></i><i></i><i></i></span></div></section>
       <aside class="cr-panel" id="cr-panel"></aside></div>
@@ -1256,7 +1309,7 @@ async function renderCreate(id) {
   for (const e of cr.events) paintEv(e);
   bindComposer(false); bindSeg("cr-view", (v) => { cr.view = v; $(".cr").dataset.view = v; });
   $("#cr-rename").addEventListener("click", async () => { const v = await askText({ title: "Rename", value: cr.meta.title }); if (v) { await patch(`/api/create/${id}`, { title: v }); $(".phead h1").textContent = v; } });
-  paintMeta(); refreshReel(); openStream(id);
+  paintMeta(); refreshReel(); openStream(id); paintIntegrations();
   cr.tick = setInterval(paintMeta, 1000);
   window.scrollTo(0, document.body.scrollHeight);
 }

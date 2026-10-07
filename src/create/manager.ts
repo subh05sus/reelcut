@@ -39,6 +39,8 @@ export interface SessionMeta {
   settings: Settings;
   /** Claude named it (or the owner did): the title is no longer a placeholder. */
   named?: boolean;
+  /** The MCP servers this run could reach when it started. */
+  mcp?: { name: string; status: string }[];
   /** The reel.json this conversation is making, once Claude has written it. */
   reel?: string;
   usage: { costUsd: number; inputTokens: number; outputTokens: number; turns: number; ms: number; plan?: { utilization?: number; resetsAt?: number; window?: string; status?: string } };
@@ -296,7 +298,12 @@ export class CreateManager {
 
   private onMessage(s: Session, live: Live, m: SDKMessage): void {
     const any = m as Record<string, any>;
-    if (m.type === "system" && any.subtype === "init") { s.claudeSession = any.session_id; this.save(s); return; }
+    if (m.type === "system" && any.subtype === "init") {
+      s.claudeSession = any.session_id;
+      // What this run can reach: the MCP servers as Claude Code saw them when it started.
+      s.mcp = (any.mcp_servers ?? []).map((x: { name: string; status: string }) => ({ name: x.name, status: x.status }));
+      this.emitMeta(s); return;
+    }
     if (m.type === "rate_limit_event") {
       const r = any.rate_limit_info ?? {};
       s.usage.plan = { utilization: r.utilization, resetsAt: r.resetsAt, window: r.rateLimitType, status: r.status };
