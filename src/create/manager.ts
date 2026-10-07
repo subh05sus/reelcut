@@ -579,9 +579,11 @@ export function progressOf(s: Pick<Session, "status" | "runStartedAt" | "events"
     { id: "render", label: "Render", state: state(planned && clips === of, clips > 0), n: clips, of },
     { id: "master", label: "Master", state: master ? "done" : clips === of && planned ? "now" : "todo" },
   ];
-  // Only one stage is "now": the furthest one started; anything before it that is unfinished reads as done enough.
-  const nowAt = st.map((x) => x.state).lastIndexOf("now");
-  st.forEach((x, i) => { if (x.state === "now" && i !== nowAt) x.state = "done"; });
+  // Stages run in order: anything before the furthest stage started reads as done (Claude may check only some beats'
+  // frames), and only that furthest stage can be "now". A reel with its master is finished.
+  const furthest = Math.max(st.map((x) => x.state).lastIndexOf("now"), st.map((x) => x.state).lastIndexOf("done"));
+  st.forEach((x, i) => { if (i < furthest) x.state = "done"; });
+  if (master) st.forEach((x) => { x.state = "done"; });
   if (!live && !master) st.forEach((x) => { if (x.state === "now") x.state = "todo"; });
   const cur = st.find((x) => x.state === "now");
   const line = master && !live ? "Finished" : waiting ? "Waiting for your answer"

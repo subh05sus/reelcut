@@ -96,3 +96,17 @@ describe("progress", () => {
     expect(progressOf(sess("running", since), reelPath).line).toBe("Re-rendering the changed beat");
   });
 });
+
+describe("progress, finished", () => {
+  it("reads a reel with its master as finished, even when only some beats were measured", async () => {
+    const { progressOf } = await import("../src/create/manager.js");
+    for (const b of beats) writeFileSync(path.join(reelDir, b.composition), "<div></div>");
+    mkdirSync(path.join(reelDir, "clips")); mkdirSync(path.join(reelDir, "measure"));
+    writeFileSync(path.join(reelDir, "measure", "beat-00-0.05.png"), "");
+    for (const b of beats) writeFileSync(path.join(reelDir, "clips", `${b.id}.mp4`), "");
+    const rendering = progressOf({ status: "running", events: [] } as never, reelPath);
+    expect(rendering.stages.find((s) => s.id === "check")!.state).toBe("done");
+    writeFileSync(path.join(reelDir, "master.mp4"), "");
+    expect(progressOf({ status: "done", events: [] } as never, reelPath)).toMatchObject({ pct: 100, line: "Finished" });
+  });
+});
