@@ -37,6 +37,8 @@ import { HIGGSFIELD_SETTINGS, loadSettings, setHiggsfieldSetting, type Higgsfiel
 import { readGeneration } from "../generate/log.js";
 import { CreateManager, filesDir as createFilesDir, insideAllowed, reelState } from "../create/manager.js";
 import { readIntegrations } from "../create/integrations.js";
+import { writeCaptions } from "../create/captions.js";
+import { coverFrames, LIMITS, makeCover, postKitPrompt, readCovers, readPostKit, PLATFORMS as POST_PLATFORMS, type Platform } from "../create/postkit.js";
 import { getRecipe, listRecipes, recipePrompt, removeRecipe, saveRecipe } from "../create/recipes.js";
 import { addEpisode, getSeries, listSeries, removeSeries, saveSeries, seriesPrompt } from "../create/series.js";
 import { addComment, beatText, commentsPrompt, editPrompt, loadComments, readReel, removeComment, updateComment, type EditAction } from "../create/edits.js";
@@ -80,6 +82,8 @@ const TYPES: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
   ".json": "application/json; charset=utf-8",
   ".md": "text/markdown; charset=utf-8",
+  ".srt": "application/x-subrip; charset=utf-8",
+  ".vtt": "text/vtt; charset=utf-8",
   ".txt": "text/plain; charset=utf-8",
   ".png": "image/png",
   ".jpg": "image/jpeg",
@@ -1048,6 +1052,50 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
         cm.send(id, msg.shown, [], msg.prompt);
         return sendJson(res, 202, { ok: true, shown: msg.shown });
       }
+      // Posting: captions (files now, burned in as a job), covers from the reel's frames, and the words Claude writes.
+      if (read && parts[3] === "post" && parts.length === 4) {
+        const rp = reelPath(), dir = path.dirname(rp);
+        const at = (f: string) => (existsSync(path.join(dir, f)) ? path.join(dir, f) : undefined);
+        let captions: { source?: string; lines?: number } = {};
+        try { const j = JSON.parse(readFileSync(path.join(dir, "captions.json"), "utf8")) as { source: string; chunks: unknown[] }; captions = { source: j.source, lines: j.chunks.length }; } catch { /* not written yet */ }
+        const voiced = existsSync(path.join(dir, "voice.json"));
+        const job = jobs.find((j) => j.runId === `captions:${id}`);
+        return sendJson(res, 200, {
+          captions: { ...captions, srt: at("captions.srt"), vtt: at("captions.vtt"), burned: at("master.captioned.mp4"), voiced, job: job && { id: job.id, status: job.status, log: job.log.slice(-4) } },
+          frames: coverFrames(rp), covers: readCovers(rp), kit: readPostKit(rp), limits: LIMITS, platforms: POST_PLATFORMS,
+        });
+      }
+      if (method === "POST" && parts[3] === "captions" && parts.length === 4) {
+        const b = (await readBody(req)) as { burn?: boolean; style?: string };
+        const rp = reelPath();
+        const files = writeCaptions(rp);
+        if (!b.burn) return sendJson(res, 200, { files });
+        if (files.source !== "voice") throw new HttpError(409, "this reel has no voiceover: its words are already on screen, so captions stay as files");
+        const running = jobs.find((j) => j.status === "running");
+        if (running) throw new HttpError(409, `a render is already running (${running.beat})`, { job: running.id });
+        const style = ["karaoke", "key-words", "full"].includes(String(b.style)) ? String(b.style) : "key-words";
+        const job: Job = { id: String(++jobSeq), runId: `captions:${id}`, beat: `captions: ${sess.title}`, status: "running", startedAt: new Date().toISOString(), log: [] };
+        jobs.unshift(job);
+        const tsx = createRequire(import.meta.url).resolve("tsx/cli");
+        const child = spawn(process.execPath, [tsx, path.join(REPO, "skills", "reelcut", "scripts", "captions.ts"), rp, "--burn", "--style", style], { cwd: REPO, windowsHide: true });
+        const append = (chunk: Buffer) => { job.log.push(...chunk.toString("utf8").split(/\r?\n/).filter(Boolean)); if (job.log.length > 300) job.log.splice(0, job.log.length - 300); };
+        child.stdout?.on("data", append); child.stderr?.on("data", append);
+        child.on("error", (error) => { job.log.push(String(error)); job.status = "failed"; job.endedAt = new Date().toISOString(); });
+        child.on("close", (code) => { if (job.status === "running") job.status = code === 0 ? "ok" : "failed"; job.exitCode = code; job.endedAt = new Date().toISOString(); });
+        return sendJson(res, 202, { files, job });
+      }
+      if (method === "POST" && parts[3] === "cover" && parts.length === 4) {
+        const b = (await readBody(req)) as { t?: number; title?: string };
+        if (typeof b.t !== "number") throw new HttpError(400, "pick a frame");
+        try { return sendJson(res, 200, { covers: await makeCover(reelPath(), b.t, String(b.title ?? "").slice(0, 120)) }); }
+        catch (error) { throw new HttpError(500, (error as Error).message); }
+      }
+      if (method === "POST" && parts[3] === "postkit" && parts.length === 4) {
+        const b = (await readBody(req)) as { platforms?: string[]; note?: string };
+        const pf = (b.platforms ?? []).filter((x): x is Platform => (POST_PLATFORMS as readonly string[]).includes(x));
+        cm.send(id, `Write the post kit${pf.length && pf.length < POST_PLATFORMS.length ? ` for ${pf.join(", ")}` : ""}${b.note?.trim() ? `: ${b.note.trim()}` : ""}`, [], postKitPrompt(reelPath(), pf.length ? pf : POST_PLATFORMS, b.note ?? ""));
+        return sendJson(res, 202, { ok: true });
+      }
       if (parts[3] === "comments") {
         if (read && parts.length === 4) return sendJson(res, 200, { comments: loadComments(id) });
         if (method === "POST" && parts.length === 4) {
@@ -1208,7 +1256,7 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
       // Frames, sheets and clips a Create conversation produced: only inside the project or the studio's home.
       if (parts[1] === "create-media" && parts.length === 2) {
         const p = url.searchParams.get("path") ?? "";
-        if (!/\.(png|jpe?g|mp4|webm|gif)$/i.test(p) || !path.isAbsolute(p) || !insideAllowed(p) || !existsSync(p)) throw new HttpError(404, "not available");
+        if (!/\.(png|jpe?g|mp4|webm|gif|srt|vtt)$/i.test(p) || !path.isAbsolute(p) || !insideAllowed(p) || !existsSync(p)) throw new HttpError(404, "not available");
         return sendFile(req, res, p);
       }
       // The bundled type, so the Personality page shows every pairing in its real faces.

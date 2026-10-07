@@ -672,6 +672,20 @@
   .cr-cmts .row-i { gap: 10px; }
   .cr-tc { height: 24px; padding: 0 8px; border-radius: 999px; background: var(--fill-3); color: var(--label); font-size: 12px; font-variant-numeric: tabular-nums; flex: none; }
   .cr-cmts .t { white-space: normal; }
+  .cr-covers { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .cr-covers a { display: block; border-radius: 10px; overflow: hidden; background: #000; } .cr-covers a.wide { grid-column: 1 / -1; }
+  .cr-covers img { display: block; width: 100%; height: 100%; object-fit: contain; aspect-ratio: auto; }
+  .cr-frames { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .cr-frames button { position: relative; padding: 0; height: auto; aspect-ratio: 1; border-radius: 8px; overflow: hidden; background: var(--fill-4); }
+  .cr-frames button.on { box-shadow: 0 0 0 2px var(--accent); }
+  .cr-frames img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cr-frames b { position: absolute; left: 4px; bottom: 4px; font-size: 10px; background: rgb(0 0 0 / .55); color: #fff; padding: 0 5px; border-radius: 5px; }
+  .cr-pf { display: flex; flex-direction: column; gap: 10px; }
+  .cr-pf-f { background: var(--fill-4); border-radius: 12px; padding: 10px 12px; }
+  .cr-pf-f .h { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--label-2); margin-bottom: 4px; }
+  .cr-pf-f .h span:first-child { flex: 1; font-weight: 600; }
+  .cr-pf-f .n { font-variant-numeric: tabular-nums; } .cr-pf-f .n.over { color: var(--red); }
+  .cr-pf-f .v { font-size: 14px; line-height: 20px; white-space: normal; overflow-wrap: anywhere; }
   .cr-acts3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
   .cr-beat-pv { display: block; max-width: 100%; margin-inline: auto; max-height: 40vh; object-fit: contain; border-radius: 12px; margin-bottom: 12px; }
   .cr-pick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; max-height: 50vh; overflow: auto; }
@@ -1219,6 +1233,7 @@ function openStream(id) {
     if (e.k === "question" && e.status === "waiting") notify("Claude has a question", e.questions[0]?.question || "");
     if (e.k === "permission" && e.status === "waiting") notify("Claude needs your permission", `${e.tool}: ${e.reason}`);
     if (e.k === "tool" && e.status !== "running" && /render|measure|reel\.json/i.test(e.input)) refreshReel();
+    if (e.k === "tool" && e.status !== "running" && /post-kit\.json/i.test(e.input) && cr.panelShown === "post") paintPost();
     // Streaming text arrives many times a second: paint it once a frame.
     if (e.k === "text" && !e.done) { cr.pendingPaint = e; if (!cr.raf) cr.raf = requestAnimationFrame(() => { cr.raf = null; paintEv(cr.pendingPaint); }); }
     else paintEv(e);
@@ -1267,14 +1282,73 @@ const refreshReel = debounce(async () => {
   cr.panelShown = view;
   p.innerHTML = `<div id="cr-prog-slot"></div>
     <h3>Reel <span class="note" style="font-weight:400">${r.beats.length} beat${r.beats.length === 1 ? "" : "s"} · ${Math.round(r.seconds)} s${r.format ? ` · ${esc(r.format)}` : ""}</span></h3>
-    ${r.master ? segHtml("cr-pv", [["master", "Master"], ["beats", "Beats"]], view, "full") : ""}
-    ${view === "master" ? masterHtml(r) : beatsHtml(r, live)}
+    ${r.master ? segHtml("cr-pv", [["master", "Master"], ["beats", "Beats"], ["post", "Post"]], view, "full") : ""}
+    ${view === "master" ? masterHtml(r) : view === "post" ? `<div id="cr-post"><p class="note">Loading…</p></div>` : beatsHtml(r, live)}
     ${r.plan ? `<details><summary class="note" style="cursor:pointer">Plan</summary><div class="ev-text" style="font-size:13px;margin-top:8px">${md(r.plan)}</div></details>` : ""}
     <p class="foot-note">${esc(r.dir)}</p>`;
   paintProgress(progress);
   if (r.master) bindSeg("cr-pv", (v) => { cr.panelView = v; cr.panelShown = null; refreshReel(); });
-  if (view === "master") bindMaster(r); else bindBeats(r);
+  if (view === "master") bindMaster(r); else if (view === "post") paintPost(); else bindBeats(r);
 }, 250);
+
+// ---- post: captions, a cover, and the words for each platform
+const PF_NAME = { instagram: "Instagram", tiktok: "TikTok", youtube: "YouTube", linkedin: "LinkedIn" };
+async function paintPost() {
+  const box = $("#cr-post"); if (!box || !cr.meta) return;
+  let k;
+  try { k = await api(`/api/create/${cr.meta.id}/post`); } catch (err) { box.innerHTML = `<p class="note">${esc(err.message)}</p>`; return; }
+  cr.post = k;
+  const c = k.captions, job = c.job, burning = job?.status === "running";
+  const pf = cr.postPf || "instagram", kit = k.kit;
+  const copyBtn = (text, label = "Copy") => `<button class="sm" data-copy="${esc(text)}">${label}</button>`;
+  const field = (label, text, limit) => `<div class="cr-pf-f"><div class="h"><span>${label}</span>${limit ? `<span class="n ${text.length > limit ? "over" : ""}">${text.length}/${limit}</span>` : ""}${copyBtn(text)}</div><div class="v">${esc(text).replace(/\n/g, "<br>")}</div></div>`;
+  const tags = (arr) => (arr || []).map((t) => "#" + String(t).replace(/^#/, "").replace(/\s+/g, "")).join(" ");
+  let pfBody = "";
+  if (kit) {
+    const x = kit[pf];
+    pfBody = !x ? `<p class="note">No ${PF_NAME[pf]} text in this kit.</p>`
+      : pf === "instagram" ? field("Caption", x.caption, k.limits.instagram.caption) + field(`Hashtags · ${(x.hashtags || []).length}`, tags(x.hashtags)) + (x.firstComment ? field("First comment", x.firstComment) : "") + `<div class="acts" style="margin-top:4px">${copyBtn(`${x.caption}\n\n${tags(x.hashtags)}`, "Copy caption and hashtags")}</div>`
+      : pf === "tiktok" ? field("Caption", x.caption, 150) + field("Hashtags", tags(x.hashtags)) + `<div class="acts" style="margin-top:4px">${copyBtn(`${x.caption} ${tags(x.hashtags)}`, "Copy all")}</div>`
+      : pf === "youtube" ? field("Title", x.title, k.limits.youtube.title) + field("Description", x.description, k.limits.youtube.description) + field("Tags", (x.tags || []).join(", "))
+      : field("Post", x.post, k.limits.linkedin.post);
+  }
+  const cv = k.covers;
+  box.innerHTML = `
+    <div class="cap" style="margin:0 0 8px">Captions</div>
+    <div class="group">
+      <div class="row-i"><span class="col grow"><span class="t">${c.lines ? `${c.lines} lines` : "Not written yet"}</span><span class="s">${c.voiced ? "Timed to the voiceover, word by word" : "No voiceover: they follow the words on screen"}</span></span>
+        ${c.srt ? `<a class="plain sm-link" href="${media(c.srt)}" download>.srt</a><a class="plain sm-link" href="${media(c.vtt)}" download>.vtt</a>` : `<button class="sm" id="cp-write">Write files</button>`}</div>
+      ${c.voiced ? `<div class="row-i"><span class="t grow">Burn in</span>${burning ? `<span class="s">Rendering… ${esc(job.log.at(-1) || "")}</span>` : `<select id="cp-style" class="sm-select"><option value="key-words">Key words</option><option value="karaoke">Karaoke</option><option value="full">Plain</option></select><button class="sm" id="cp-burn">${c.burned ? "Burn again" : "Burn in"}</button>`}</div>
+        ${job?.status === "failed" ? `<div class="row-i"><span class="s" style="color:var(--red)">${esc(job.log.slice(-2).join(" "))}</span></div>` : ""}
+        ${c.burned ? `<div class="row-i"><span class="t grow">master.captioned.mp4</span><a class="plain sm-link" href="${media(c.burned)}" target="_blank">Play</a><a class="plain sm-link" href="${media(c.burned)}" download>Download</a></div>` : ""}` : ""}
+    </div>
+    <div class="cap" style="margin:16px 0 8px">Cover</div>
+    ${cv.reel ? `<div class="cr-covers"><a href="${media(cv.reel)}" target="_blank"><img src="${media(cv.reel)}&t=${Date.now()}" alt="Cover"></a><a href="${media(cv.square)}" target="_blank"><img src="${media(cv.square)}&t=${Date.now()}" alt="Square cover"></a><a href="${media(cv.wide)}" target="_blank" class="wide"><img src="${media(cv.wide)}&t=${Date.now()}" alt="Wide cover"></a></div>` : ""}
+    <div class="cr-frames">${k.frames.map((f) => `<button type="button" data-t="${f.t}" class="${cv.t === f.t || (!cv.t && f.index === 0) ? "on" : ""}" aria-label="Beat ${f.index + 1}"><img src="${media(f.file)}" alt="" loading="lazy"><b>${f.index + 1}</b></button>`).join("")}</div>
+    <div style="display:flex;gap:8px;margin-top:8px"><input id="cp-title" style="flex:1" placeholder="Words on the cover" value="${esc(cv.title || kit?.coverText || kit?.titles?.[0] || cr.meta.title)}"><button class="sm" id="cp-cover" style="height:var(--ctl)">${cv.reel ? "Remake" : "Make cover"}</button></div>
+    <div class="cap" style="margin:16px 0 8px">Words for posting</div>
+    ${kit ? `${kit.titles?.length ? `<div class="group">${kit.titles.map((t) => `<div class="row-i"><span class="t grow">${esc(t)}</span>${copyBtn(t)}</div>`).join("")}</div>` : ""}
+      <div style="margin:12px 0 8px">${segHtml("cr-pf", k.platforms.map((p) => [p, PF_NAME[p]]), pf, "full")}</div>
+      <div class="cr-pf">${pfBody}</div>
+      <div style="display:flex;gap:8px;margin-top:12px"><input id="cp-note" style="flex:1" placeholder="Ask for changes, e.g. shorter, more playful"><button class="sm" id="cp-kit" style="height:var(--ctl)">Rewrite</button></div>`
+    : `<p class="foot-note" style="margin:0 0 8px">Titles, captions, hashtags and a first comment for Instagram, TikTok, YouTube and LinkedIn, written by Claude in your voice from the script.</p>
+      <div style="display:flex;gap:8px"><input id="cp-note" style="flex:1" placeholder="Anything to know? (optional)"><button class="primary sm" id="cp-kit" style="height:var(--ctl)">Write the post kit</button></div>`}`;
+  $$("[data-copy]", box).forEach((b) => b.addEventListener("click", async () => { try { await navigator.clipboard.writeText(b.dataset.copy); const t = b.textContent; b.textContent = "Copied"; setTimeout(() => { b.textContent = t; }, 1200); } catch { toast("Could not copy"); } }));
+  $("#cp-write")?.addEventListener("click", async () => { try { await post(`/api/create/${cr.meta.id}/captions`, {}); paintPost(); } catch (err) { toast(err.message); } });
+  $("#cp-burn")?.addEventListener("click", async () => { try { await post(`/api/create/${cr.meta.id}/captions`, { burn: true, style: $("#cp-style").value }); toast("Burning captions in; this takes a few minutes"); paintPost(); } catch (err) { toast(err.message); } });
+  let t = cv.t ?? k.frames[0]?.t;
+  $$(".cr-frames [data-t]", box).forEach((b) => b.addEventListener("click", () => { t = Number(b.dataset.t); $$(".cr-frames [data-t]", box).forEach((x) => x.classList.toggle("on", x === b)); }));
+  $("#cp-cover").addEventListener("click", async (e) => {
+    if (t == null) return; e.target.disabled = true; e.target.textContent = "Making…";
+    try { await post(`/api/create/${cr.meta.id}/cover`, { t, title: $("#cp-title").value }); paintPost(); } catch (err) { toast(err.message); e.target.disabled = false; e.target.textContent = "Make cover"; }
+  });
+  $("#cp-kit").addEventListener("click", async () => {
+    try { await post(`/api/create/${cr.meta.id}/postkit`, { note: $("#cp-note").value }); toast("Asked Claude for the post kit"); window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" }); } catch (err) { toast(err.message); }
+  });
+  if (kit) bindSeg("cr-pf", (v) => { cr.postPf = v; paintPost(); });
+  clearTimeout(cr.postTimer);
+  if (burning) cr.postTimer = setTimeout(() => { if (cr.panelShown === "post") paintPost(); }, 4000);
+}
 
 // ---- beats: tap one to change it, drag to reorder
 function beatsHtml(r, live) {

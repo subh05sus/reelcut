@@ -37,7 +37,17 @@ export function beatText(reelPath: string, beat: ReelBeat): string[] {
   const html = readFileSync(file, "utf8").replace(/<script[\s\S]*?<\/script>/gi, "").replace(/<style[\s\S]*?<\/style>/gi, "").replace(/<svg[\s\S]*?<\/svg>/gi, "");
   const lines = html.replace(/<br\s*\/?>/gi, "\n").replace(/<\/(div|p|h\d|li|span class="ln")>/gi, "\n").replace(/<[^>]+>/g, " ")
     .split("\n").map((l) => l.replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/\s+/g, " ").trim()).filter((l) => l && l.length < 200);
-  return [...new Set(lines)].slice(0, 20);
+  // A word set letter by letter (tiles, a typewriter) is one word: merge runs of single characters, on a line or
+  // one per line.
+  for (let i = 0; i < lines.length; i++) lines[i] = lines[i]!.replace(/(?<!\S)(?:\p{L}\p{N}?|\p{N}) (?:(?:\p{L}|\p{N}) ){1,}(?:\p{L}|\p{N})(?!\S)/gu, (m) => m.replace(/ /g, ""));
+  const merged: string[] & { lastRun?: boolean } = [];
+  for (const l of lines) {
+    const prev = merged.at(-1);
+    if (l.length === 1 && prev !== undefined && /^\S+$/.test(prev) && (prev.length === 1 || merged.lastRun)) { merged[merged.length - 1] = prev + l; merged.lastRun = true; continue; }
+    merged.lastRun = l.length === 1;
+    merged.push(l);
+  }
+  return [...new Set(merged)].slice(0, 20);
 }
 
 export type EditAction =
