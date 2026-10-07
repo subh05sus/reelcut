@@ -23,3 +23,12 @@ as Claude does. Answers from the owner, dated. Each question is asked once.
 - **Model:** a picker in the composer (model and effort), defaulting to what Claude Code uses.
 - **Background:** the run lives in the studio server, not the tab; reopening catches up; a browser notification when a
   question is waiting or the reel is done.
+
+## Round 3 (2026-10-08), after the first real run
+
+- **Skip:** Claude never asks what the page settles: the studio question (it is already open), anything a chip or the
+  personality answered, and motion blur (off unless asked: reels are 60 fps). It still asks what only the script raises.
+- **Title:** Claude names the reel after reading the script; the chat takes that name (the owner can rename it).
+- **Question cards:** unchanged ("(Recommended)" stays in the label).
+- **Chips:** text on screen, sound effects, music and motion blur join personality, format, length and quality. A chip
+  left on "ask" is asked by Claude; a chip that is set is never asked.

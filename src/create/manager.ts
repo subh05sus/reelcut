@@ -23,7 +23,10 @@ export type Body =
 export type Ev = { seq: number; id: string; at: string } & Body;
 export interface Question { question: string; header?: string; multiSelect?: boolean; options: { label: string; description?: string; preview?: string }[] }
 
-export interface Settings { personality?: string; format?: string; length?: "full" | "short"; resolution?: "hd" | "4k" }
+export interface Settings {
+  personality?: string; format?: string; length?: "full" | "short"; resolution?: "hd" | "4k";
+  text?: "full" | "key-lines" | "minimal" | "none"; sfx?: "on" | "off"; music?: "fits" | "snap" | "none"; blur?: "on" | "off";
+}
 export interface SessionMeta {
   id: string;
   title: string;
@@ -34,6 +37,8 @@ export interface SessionMeta {
   model?: string;
   effort?: string;
   settings: Settings;
+  /** Claude named it (or the owner did): the title is no longer a placeholder. */
+  named?: boolean;
   /** The reel.json this conversation is making, once Claude has written it. */
   reel?: string;
   usage: { costUsd: number; inputTokens: number; outputTokens: number; turns: number; ms: number; plan?: { utilization?: number; resetsAt?: number; window?: string; status?: string } };
@@ -166,6 +171,8 @@ export class CreateManager {
     if (i.settings?.format) flags.push(`--format ${i.settings.format}`);
     if (i.settings?.length === "short") flags.push("--short");
     if (i.settings?.resolution === "4k") flags.push("--4k"); else if (i.settings?.resolution === "hd") flags.push("--hd");
+    if (i.settings?.text) flags.push(`--text ${i.settings.text}`);
+    if (i.settings?.blur === "on") flags.push("--blur"); else flags.push("--no-blur");
     if (i.voiceoverPath) flags.push(`--voiceover ${i.voiceoverPath}`);
     if (i.assetsDir) flags.push(`--assets ${i.assetsDir}`);
     const head = `/reelcut ${i.scriptPath ?? ""} ${flags.join(" ")}`.replace(/\s+/g, " ").trim();
@@ -173,11 +180,22 @@ export class CreateManager {
     if (i.text.trim()) lines.push("Instructions from the owner:", i.text.trim(), "");
     if (i.settings?.personality) lines.push(`Use the personality "${i.personalityName ?? i.settings.personality}" (${i.settings.personality}); write it into reel.json.`, "");
     if (!i.scriptPath) lines.push("There is no script file: the script is in the instructions above.", "");
+    const st = i.settings ?? {};
+    const settled = [
+      st.format && `format ${st.format}`, st.length && (st.length === "short" ? "a short cut" : "the whole script"), st.resolution && st.resolution.toUpperCase(),
+      st.text && `text on screen: ${st.text}`, st.sfx && `sound effects ${st.sfx === "on" ? "on (render with --sfx)" : "off"}`,
+      st.music && (st.music === "none" ? "no music" : `a music bed, ${st.music === "snap" ? "cuts snapped to its beat" : "fitted to the cut"}`),
+      `motion blur ${st.blur === "on" ? "on" : "off"}`, st.personality && "the look, palette, type and motion (the personality)",
+    ].filter(Boolean);
     lines.push(
-      "This run is driven from the reelcut studio's Create page. Ask your Step 0 questions with the AskUserQuestion tool:",
-      "the owner answers them there as cards. Do not ask what the chips above already settled. Write the reel to a new",
-      `out-<timestamp>/ folder in ${REPO}, and say its path when you write reel.json. Render when you are ready; the page`,
-      "shows frames and clips as they appear.",
+      "This run is driven from the reelcut studio's Create page: the owner is in the studio now, watching this chat.",
+      "- Ask your questions with the AskUserQuestion tool; the owner answers them there as cards.",
+      "- Never ask whether to open the studio: it is already open, and the page shows the reel as it is made.",
+      `- Already settled on the page, so never ask about them: ${settled.join("; ")}.`,
+      "- Ask only what is still open and what only this script raises (a step with no recording, a figure with no source…).",
+      "- Start your first reply with one line `Title: <a short name for this reel, 2 to 6 words>`; the chat is named after it.",
+      `- Write the reel to a new out-<timestamp>/ folder in ${REPO}, and say its path when you write reel.json. Render when`,
+      "  ready; the page shows frames and clips as they appear.",
     );
     return lines.join("\n");
   }
@@ -228,7 +246,7 @@ export class CreateManager {
     this.setStatus(s, "stopped");
   }
 
-  rename(id: string, title: string): void { const s = this.sessions.get(id); if (s) { s.title = trim(title, 60); this.save(s); this.emitMeta(s); } }
+  rename(id: string, title: string, byOwner = true): void { const s = this.sessions.get(id); if (s) { s.title = trim(title, 60); if (byOwner) s.named = true; this.save(s); this.emitMeta(s); } }
 
   private run(s: Session, first: SDKUserMessage): void {
     const abort = new AbortController();
@@ -291,7 +309,7 @@ export class CreateManager {
         live.blocks.set(ev.index, e.id);
       } else if (ev?.type === "content_block_delta" && ev.delta?.type === "text_delta") {
         const id = live.blocks.get(ev.index); const e = id && s.events.find((x) => x.id === id);
-        if (e && e.k === "text") { e.text += ev.delta.text; this.emit(s, e, false); }
+        if (e && e.k === "text") { e.text += ev.delta.text; this.takeTitle(s, e); this.emit(s, e, false); }
       } else if (ev?.type === "message_start") live.blocks.clear();
       return;
     }
@@ -300,8 +318,8 @@ export class CreateManager {
         if (b.type === "text") {
           // The streamed block is final now; if streaming missed it, add it whole.
           const streamed = [...s.events].reverse().find((e) => e.k === "text" && !e.done);
-          if (streamed && streamed.k === "text") { streamed.text = b.text; streamed.done = true; this.emit(s, streamed); }
-          else this.push(s, { k: "text", text: b.text, done: true });
+          if (streamed && streamed.k === "text") { streamed.text = b.text; streamed.done = true; this.takeTitle(s, streamed); this.emit(s, streamed); }
+          else { const e = this.push(s, { k: "text", text: b.text, done: true }); if (e.k === "text") { this.takeTitle(s, e); this.emit(s, e); } }
         } else if (b.type === "tool_use" && b.name !== "AskUserQuestion") {
           const input = (b.input ?? {}) as Record<string, unknown>;
           const media = [...JSON.stringify(input).matchAll(MEDIA)].map((x) => x[0]).filter((p) => insideAllowed(p));
@@ -342,6 +360,15 @@ export class CreateManager {
       clearTimeout(live.idleTimer);
       live.idleTimer = setTimeout(() => { live.input.close(); }, this.opts.idleMs ?? 10 * 60_000);
     }
+  }
+
+  /** "Title: …" on the first line of a reply names the conversation, and is not shown. */
+  private takeTitle(s: Session, e: Ev): void {
+    if (e.k !== "text") return;
+    const m = /^\s*Title:\s*([^\n]+)\n+/.exec(e.text);
+    if (!m) return;
+    e.text = e.text.slice(m[0].length);
+    if (!s.named) { s.named = true; s.title = trim(m[1]!.replace(/[*_`#"“”]/g, "").trim(), 60); this.emitMeta(s); }
   }
 
   private push(s: Session, e: Body, id?: string): Ev {

@@ -75,9 +75,29 @@ describe("a conversation", () => {
     const cm = new CreateManager();
     const s = cm.create("x", {});
     const p = cm.firstPrompt(s, { text: "Calm and warm.", scriptPath: "/a/s.srt", voiceoverPath: "/a/vo.wav", assetsDir: "/a/assets", settings: { format: "9:16", length: "short", resolution: "4k", personality: "p_1" }, personalityName: "gptmarlon" });
-    expect(p.split("\n")[0]).toBe("/reelcut /a/s.srt --format 9:16 --short --4k --voiceover /a/vo.wav --assets /a/assets");
+    expect(p.split("\n")[0]).toBe("/reelcut /a/s.srt --format 9:16 --short --4k --no-blur --voiceover /a/vo.wav --assets /a/assets");
     expect(p).toContain("Calm and warm.");
     expect(p).toContain('personality "gptmarlon" (p_1)');
     expect(p).toContain("AskUserQuestion");
+    expect(p).toMatch(/Never ask whether to open the studio/);
+    expect(p).toMatch(/never ask about them: format 9:16; a short cut; 4K; motion blur off; the look/);
+  });
+});
+
+describe("titles", () => {
+  it("takes Claude's first-line title for the chat, and does not show the line", async () => {
+    const { CreateManager } = await import("../src/create/manager.js");
+    const fake = (() => (async function* () {
+      yield { type: "system", subtype: "init", session_id: "s2" };
+      yield { type: "assistant", parent_tool_use_id: null, message: { content: [{ type: "text", text: "Title: **Claude Code in 60 seconds**\n\nUsing gptmarlon." }] } };
+      yield { type: "result", subtype: "success", usage: {}, num_turns: 1, duration_ms: 1 };
+    })()) as never;
+    const cm = new CreateManager({ queryFn: fake, idleMs: 10 });
+    const s = cm.create("## Hook", {});
+    cm.rename(s.id, "Hook", false);
+    cm.send(s.id, "go");
+    for (let i = 0; i < 50 && cm.get(s.id)!.status !== "done"; i++) await tick();
+    expect(cm.get(s.id)!.title).toBe("Claude Code in 60 seconds");
+    expect(cm.get(s.id)!.events.find((e) => e.k === "text")).toMatchObject({ text: "Using gptmarlon." });
   });
 });

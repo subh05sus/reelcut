@@ -967,7 +967,11 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
           let scriptPath = script?.path;
           if (!scriptPath && text.trim().split(/\s+/).length > 25) { scriptPath = path.join(createFilesDir(id), "script.txt"); writeFileSyncSafe(scriptPath, text.trim()); }
           const prompt = cm.firstPrompt(sess, { text: scriptPath && !script ? "" : text, scriptPath, voiceoverPath: vo?.path, assetsDir: assets, settings: sess.settings, personalityName: pers?.name });
-          if (sess.title === "New reel") cm.rename(id, text.trim().split("\n")[0]!.slice(0, 60) || script?.name || "New reel");
+          // A placeholder until Claude names the reel: the script's first sentence, without markdown.
+          if (!sess.named) {
+            const first = (scriptPath && !script ? text : text).replace(/^[#>*\s-]+/gm, "").split(/(?<=[.!?])\s|\n/).map((x) => x.trim()).find((x) => x.length > 3);
+            cm.rename(id, first ? first.split(/\s+/).slice(0, 6).join(" ") : script?.name.replace(/\.[a-z0-9]+$/i, "") || "New reel", false);
+          }
           cm.send(id, text, files, prompt);
         } else cm.send(id, text, files);
         return sendJson(res, 202, { ok: true });

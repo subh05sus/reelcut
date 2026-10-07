@@ -1004,7 +1004,7 @@ function md(src) {
 function evHtml(e) {
   switch (e.k) {
     case "user": return `<div class="ev-user" data-ev="${e.id}">${esc(e.text)}${e.files?.length ? `<div class="files">${e.files.map((f) => `<span class="chip">${ic("attach", 12)} ${esc(f.name)}</span>`).join("")}</div>` : ""}</div>`;
-    case "text": return `<div class="ev-text" data-ev="${e.id}">${md(e.text) || `<span class="typing"><i></i><i></i><i></i></span>`}</div>`;
+    case "text": { const t = e.done ? e.text : e.text.replace(/^\s*Title:[^\n]*$/, ""); return `<div class="ev-text" data-ev="${e.id}">${md(t) || `<span class="typing"><i></i><i></i><i></i></span>`}</div>`; }
     case "status": return `<div class="ev-status ${e.tone}" data-ev="${e.id}">${esc(e.text)}</div>`;
     case "tool": {
       const st = e.status === "running" ? `<span class="st run"></span>` : e.status === "error" ? `<span class="st err">${ic("x", 12)}</span>` : `<span class="st">${ic("check", 12)}</span>`;
@@ -1142,7 +1142,11 @@ function composerHtml(first) {
     ${first ? `<div class="chips">${sel("cr-pers", [["", "No personality"], ...pers.map((p) => [p.id, p.name])], d.settings.personality, "Personality")}
       ${sel("cr-format", [["", "Format: ask"], ["9:16", "9:16"], ["1:1", "1:1"], ["4:5", "4:5"], ["16:9", "16:9"]], d.settings.format, "Format")}
       ${sel("cr-length", [["", "Length: ask"], ["full", "Whole script"], ["short", "Short cut"]], d.settings.length, "Length")}
-      ${sel("cr-res", [["", "Quality: ask"], ["hd", "HD"], ["4k", "4K"]], d.settings.resolution, "Quality")}</div>` : ""}
+      ${sel("cr-res", [["", "Quality: ask"], ["hd", "HD"], ["4k", "4K"]], d.settings.resolution, "Quality")}
+      ${sel("cr-text-on", [["", "Text: ask"], ["full", "Full text"], ["key-lines", "Key lines"], ["minimal", "Minimal text"], ["none", "No text"]], d.settings.text, "Text on screen")}
+      ${sel("cr-sfx", [["", "Sound: ask"], ["on", "Sound effects"], ["off", "No effects"]], d.settings.sfx, "Sound effects")}
+      ${sel("cr-music", [["", "Music: ask"], ["fits", "Music, fitted"], ["snap", "Music, on the beat"], ["none", "No music"]], d.settings.music, "Music")}
+      ${sel("cr-blur", [["", "Blur: off"], ["on", "Motion blur"]], d.settings.blur, "Motion blur")}</div>` : ""}
     <div class="files" id="cr-files">${cr.files.map((f, i) => `<span class="chip" data-rmfile="${i}">${ic("attach", 12)} ${esc(f.name)} <span style="color:var(--label-2)">${f.kind}</span> ${ic("x", 11)}</span>`).join("")}</div>
     <div class="row"><button class="icon" id="cr-attach" title="Add a script, a voiceover or assets" aria-label="Attach">${ic("attach", 18)}</button>
       <textarea id="cr-text" rows="1" placeholder="${first ? "Paste a script, or say what the reel should be about…" : "Reply, or ask for a change…"}"></textarea>
@@ -1166,6 +1170,10 @@ function bindComposer(first) {
     $("#cr-format").addEventListener("change", (e) => { d.settings.format = e.target.value || undefined; });
     $("#cr-length").addEventListener("change", (e) => { d.settings.length = e.target.value || undefined; });
     $("#cr-res").addEventListener("change", (e) => { d.settings.resolution = e.target.value || undefined; });
+    $("#cr-text-on").addEventListener("change", (e) => { d.settings.text = e.target.value || undefined; });
+    $("#cr-sfx").addEventListener("change", (e) => { d.settings.sfx = e.target.value || undefined; });
+    $("#cr-music").addEventListener("change", (e) => { d.settings.music = e.target.value || undefined; });
+    $("#cr-blur").addEventListener("change", (e) => { d.settings.blur = e.target.value || undefined; });
   }
   const pick = (kind, accept) => { const inp = $("#cr-file"); inp.accept = accept; inp.dataset.kind = kind; inp.click(); };
   $("#cr-attach").addEventListener("click", (e) => openMenu(e.currentTarget, [
