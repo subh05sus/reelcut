@@ -1234,6 +1234,7 @@ function openStream(id) {
     if (e.k === "permission" && e.status === "waiting") notify("Claude needs your permission", `${e.tool}: ${e.reason}`);
     if (e.k === "tool" && e.status !== "running" && /render|measure|reel\.json/i.test(e.input)) refreshReel();
     if (e.k === "tool" && e.status !== "running" && /post-kit\.json/i.test(e.input) && cr.panelShown === "post") paintPost();
+    if (e.k === "status" && /left a review comment/.test(e.text) && cr.panelShown === "master") paintComments(true);
     // Streaming text arrives many times a second: paint it once a frame.
     if (e.k === "text" && !e.done) { cr.pendingPaint = e; if (!cr.raf) cr.raf = requestAnimationFrame(() => { cr.raf = null; paintEv(cr.pendingPaint); }); }
     else paintEv(e);
@@ -1444,7 +1445,7 @@ function masterHtml(r) {
       <div class="cr-catch" id="cr-catch" hidden></div>
     </div>
     <div class="cr-tl" id="cr-tl" aria-label="Timeline: beats and comments">${r.beats.map((b, i) => `<span class="seg-b" style="flex:${b.seconds || 1}" title="Beat ${i + 1}" data-t="${b.start}"></span>`).join("")}<span class="ph" id="cr-ph"></span><span class="marks" id="cr-marks"></span></div>
-    <div class="cr-mbar"><button class="sm" id="cr-comment">${ic("plus", 14)} Comment on a frame</button><a class="plain sm-link" href="${media(r.master)}" download>Download</a></div>
+    <div class="cr-mbar"><button class="sm" id="cr-comment">${ic("plus", 14)} Comment on a frame</button><span class="grow"></span><button class="plain sm" id="cr-share">Share for review</button><a class="plain sm-link" href="${media(r.master)}" download>Download</a></div>
     <div id="cr-comments"></div>`;
 }
 function bindMaster(r) {
@@ -1453,7 +1454,30 @@ function bindMaster(r) {
   v.addEventListener("timeupdate", sync); v.addEventListener("seeked", sync);
   tl.addEventListener("click", (e) => { const rc = tl.getBoundingClientRect(); v.currentTime = Math.max(0, Math.min(total - 0.05, ((e.clientX - rc.left) / rc.width) * total)); });
   $("#cr-comment").addEventListener("click", () => startComment());
+  $("#cr-share").addEventListener("click", openShare);
   paintComments(true);
+}
+/** Share for review: confirm what a link exposes, make one, copy it, turn links off. */
+async function openShare() {
+  let st;
+  try { st = await api(`/api/create/${cr.meta.id}/shares`); } catch (err) { toast(err.message); return; }
+  const rows = st.shares.map((x) => `<div class="row-i"><span class="col grow"><span class="t" style="overflow-wrap:anywhere">${x.url ? esc(x.url) : "Link paused (the tunnel is off)"}</span><span class="s">Until ${esc(new Date(x.expiresAt).toLocaleDateString([], { weekday: "short", day: "numeric", month: "short" }))}</span></span>${x.url ? `<button class="sm" data-copy-url="${esc(x.url)}">Copy</button>` : ""}<button class="sm" data-off="${esc(x.token)}" style="color:var(--red)">Turn off</button></div>`).join("");
+  openSheet({
+    title: "Share for review",
+    sub: "Anyone with the link can watch this reel and leave comments on its frames, while your studio is running. Nothing else in the studio is reachable through it.",
+    body: `${!st.cloudflared ? `<div class="group"><div class="row-i"><span class="col grow"><span class="t">One thing to install first</span><span class="s">The link runs through a free Cloudflare tunnel. In a terminal: <code>brew install cloudflared</code></span></span></div></div>` : ""}
+      ${rows ? `<div class="cap">Links</div><div class="group">${rows}</div>` : ""}
+      <div class="acts"><select id="sh-days" aria-label="How long"><option value="1">For a day</option><option value="7" selected>For a week</option><option value="30">For a month</option></select><button data-sclose>Close</button><button class="primary" id="sh-new" ${st.cloudflared ? "" : "disabled"}>${rows ? "New link" : "Create link"}</button></div>`,
+    bind: (sh) => {
+      $$("[data-copy-url]", sh).forEach((b) => b.addEventListener("click", async () => { try { await navigator.clipboard.writeText(b.dataset.copyUrl); b.textContent = "Copied"; } catch { toast("Could not copy"); } }));
+      $$("[data-off]", sh).forEach((b) => b.addEventListener("click", async () => { await api(`/api/create/${cr.meta.id}/shares/${b.dataset.off}`, { method: "DELETE" }); closeSheet(); openShare(); }));
+      $("#sh-new", sh).addEventListener("click", async (e) => {
+        e.target.disabled = true; e.target.textContent = "Starting the tunnel…";
+        try { const r = await post(`/api/create/${cr.meta.id}/shares`, { days: Number($("#sh-days", sh).value) }); try { await navigator.clipboard.writeText(r.share.url); toast("Link copied"); } catch { /* shown in the list */ } closeSheet(); openShare(); }
+        catch (err) { toast(err.message); e.target.disabled = false; e.target.textContent = "Create link"; }
+      });
+    },
+  });
 }
 function startComment() {
   const v = $("#cr-master"), c = $("#cr-catch"); if (!v || !c) return;
@@ -1489,7 +1513,7 @@ async function paintComments(fetchNow) {
   const list = cr.comments.list, open = list.filter((c) => c.status === "open"), total = cr.reel?.seconds || 1;
   $("#cr-marks").innerHTML = list.map((c) => `<i class="${c.status}" style="left:${(c.t / total) * 100}%" title="${esc(clockOf(c.t))}: ${esc(c.text)}"></i>`).join("");
   box.innerHTML = list.length ? `<div class="cap" style="margin:4px 0 8px">Comments <span class="note">${open.length} open</span></div>
-    <div class="group cr-cmts">${list.map((c) => `<div class="row-i" data-c="${c.id}"><button class="cr-tc" data-seek="${c.t}">${clockOf(c.t)}</button><span class="col grow"><span class="t">${esc(c.text)}</span><span class="s">Beat ${c.beatIndex + 1}${c.x != null ? " · pinned" : ""}</span></span><span class="badge ${c.status === "resolved" ? "ok" : c.status === "sent" ? "running" : ""}">${{ open: "Open", sent: "With Claude", resolved: "Resolved" }[c.status]}</span><button class="icon sm-icon" data-more aria-label="More">${ic("more", 16)}</button></div>`).join("")}</div>
+    <div class="group cr-cmts">${list.map((c) => `<div class="row-i" data-c="${c.id}"><button class="cr-tc" data-seek="${c.t}">${clockOf(c.t)}</button><span class="col grow"><span class="t">${esc(c.text)}</span><span class="s">${c.author && c.author !== "you" ? `${esc(c.author)} · ` : ""}Beat ${c.beatIndex + 1}${c.x != null ? " · pinned" : ""}</span></span><span class="badge ${c.status === "resolved" ? "ok" : c.status === "sent" ? "running" : ""}">${{ open: "Open", sent: "With Claude", resolved: "Resolved" }[c.status]}</span><button class="icon sm-icon" data-more aria-label="More">${ic("more", 16)}</button></div>`).join("")}</div>
     ${open.length ? `<button class="primary" id="cr-send-cmts" style="width:100%;margin-top:12px">Send ${open.length} comment${open.length > 1 ? "s" : ""} to Claude</button>` : ""}` : `<p class="foot-note" style="margin:0">Pause on a frame and comment on what should change; Claude fixes each one in its beat.</p>`;
   $$("[data-seek]", box).forEach((b) => b.addEventListener("click", () => { const v = $("#cr-master"); if (v) { v.pause(); v.currentTime = Number(b.dataset.seek); } }));
   $$("[data-c]", box).forEach((row) => rowActions(row, () => {

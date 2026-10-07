@@ -37,6 +37,7 @@ import { HIGGSFIELD_SETTINGS, loadSettings, setHiggsfieldSetting, type Higgsfiel
 import { readGeneration } from "../generate/log.js";
 import { CreateManager, filesDir as createFilesDir, insideAllowed, reelState } from "../create/manager.js";
 import { readIntegrations } from "../create/integrations.js";
+import { cloudflaredPath, createShare, ensureTunnel, revokeShare, sharesFor, startReviewServer, stopTunnel, tunnelUrl, REVIEW_PORT, loadShares, liveShare } from "../create/share.js";
 import { writeCaptions } from "../create/captions.js";
 import { coverFrames, LIMITS, makeCover, postKitPrompt, readCovers, readPostKit, PLATFORMS as POST_PLATFORMS, type Platform } from "../create/postkit.js";
 import { getRecipe, listRecipes, recipePrompt, removeRecipe, saveRecipe } from "../create/recipes.js";
@@ -431,6 +432,11 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
   let jobSeq = 0;
   /** Create conversations: made on first use, so a studio that never opens Create never touches them. */
   let create: CreateManager | undefined;
+  // The review server: a separate port with nothing on it but review pages, started the first time a reel is shared.
+  let review: Promise<unknown> | undefined;
+  const ensureReview = () => (review ??= startReviewServer(REVIEW_PORT, {
+    onComment: (sh, text, author, t) => create?.note(sh.conversation, `${author} left a review comment at ${Math.floor(t / 60)}:${(t % 60).toFixed(1).padStart(4, "0")}: “${text.slice(0, 140)}”`),
+  }).catch((error) => { review = undefined; throw error; }));
   const page = () => readFileSync(path.join(HERE, "index.html"), "utf8");
 
   const server = http.createServer((req, res) => {
@@ -1095,6 +1101,24 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
         const pf = (b.platforms ?? []).filter((x): x is Platform => (POST_PLATFORMS as readonly string[]).includes(x));
         cm.send(id, `Write the post kit${pf.length && pf.length < POST_PLATFORMS.length ? ` for ${pf.join(", ")}` : ""}${b.note?.trim() ? `: ${b.note.trim()}` : ""}`, [], postKitPrompt(reelPath(), pf.length ? pf : POST_PLATFORMS, b.note ?? ""));
         return sendJson(res, 202, { ok: true });
+      }
+      // Share for review: a link to a review page for this reel, through a quick tunnel to the review port only.
+      if (parts[3] === "shares") {
+        const pub = (x: { token: string; expiresAt: string; createdAt: string }) => ({ token: x.token, createdAt: x.createdAt, expiresAt: x.expiresAt, url: tunnelUrl() ? `${tunnelUrl()}/r/${x.token}` : undefined });
+        if (read && parts.length === 4) return sendJson(res, 200, { shares: sharesFor(id).map(pub), cloudflared: !!cloudflaredPath(), tunnel: tunnelUrl() ?? null });
+        if (method === "POST" && parts.length === 4) {
+          const b = (await readBody(req)) as { days?: number };
+          const rp = reelPath();
+          if (!existsSync(path.join(path.dirname(rp), "master.mp4"))) throw new HttpError(409, "the reel has no master yet");
+          try { await ensureReview(); await ensureTunnel(REVIEW_PORT); } catch (error) { throw new HttpError(409, (error as Error).message); }
+          const sh = createShare(id, sess.title, rp, Math.min(30, Math.max(1, Number(b.days) || 7)));
+          return sendJson(res, 201, { share: pub(sh) });
+        }
+        if (method === "DELETE" && parts.length === 5) {
+          revokeShare(parts[4]!);
+          if (!loadShares().some((x) => liveShare(x))) stopTunnel();
+          return sendJson(res, 200, { ok: true });
+        }
       }
       if (parts[3] === "comments") {
         if (read && parts.length === 4) return sendJson(res, 200, { comments: loadComments(id) });

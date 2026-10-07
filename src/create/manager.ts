@@ -481,6 +481,9 @@ export class CreateManager {
     return best?.p;
   }
 
+  /** A line in the chat from outside Claude: a reviewer's comment, a finished job. */
+  note(id: string, text: string, tone: "info" | "ok" | "error" = "info"): void { const s = this.sessions.get(id); if (s) this.push(s, { k: "status", text, tone }); }
+
   progress(id: string): Progress | undefined { const s = this.sessions.get(id); return s ? progressOf(s, this.findReel(id)) : undefined; }
 
   /** "Title: …" on the first line of a reply names the conversation, and is not shown. */
