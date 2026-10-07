@@ -551,8 +551,9 @@ export function progressOf(s: Pick<Session, "status" | "runStartedAt" | "events"
   const masterAt = mtime(path.join(dir, "master.mp4"));
   const of = beats.length;
 
-  // An edit: the reel was finished before this run began.
-  if (masterAt && since && masterAt < since && live) {
+  // An edit: the reel had clips before this run began (its master may already be rejoined within the run).
+  const before = beats.some((b) => { const t = mtime(path.join(dir, "clips", `${b.id}.mp4`)); return t > 0 && t < since; });
+  if (masterAt && since && before && live) {
     const changed = beats.filter((b) => mtime(comp(b)) > since).length || (mtime(reelPath) > since ? 1 : 0);
     const rendered = beats.filter((b) => mtime(path.join(dir, "clips", `${b.id}.mp4`)) > since).length;
     const joined = masterAt > since;
@@ -562,7 +563,9 @@ export function progressOf(s: Pick<Session, "status" | "runStartedAt" | "events"
       { id: "master", label: "Rejoin", state: joined ? "done" : rendered ? "now" : "todo" },
     ];
     const line = waiting ? "Waiting for your answer" : !changed ? "Making the change" : !rendered ? "Re-rendering the changed beat" : !joined ? "Rejoining the master" : "Checking the result";
-    return mk(st, [0.4, 0.45, 0.15], line, "edit");
+    // Claude is still at work, so never a full bar: the last few percent are its checks and its reply.
+    const p = mk(st, [0.4, 0.45, 0.15], line, "edit");
+    return { ...p, pct: Math.min(p.pct, 95) };
   }
 
   const composed = beats.filter((b) => existsSync(comp(b))).length;
@@ -586,6 +589,7 @@ export function progressOf(s: Pick<Session, "status" | "runStartedAt" | "events"
   if (master) st.forEach((x) => { x.state = "done"; });
   if (!live && !master) st.forEach((x) => { if (x.state === "now") x.state = "todo"; });
   const cur = st.find((x) => x.state === "now");
+  if (master && live) return { ...mk(st, W, waiting ? "Waiting for your answer" : "Checking the result", "make"), pct: 95 };
   const line = master && !live ? "Finished" : waiting ? "Waiting for your answer"
     : !cur ? (live ? "Working" : "Paused")
     : cur.id === "plan" ? `Planned ${of} beat${of === 1 ? "" : "s"}; composing next`

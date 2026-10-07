@@ -506,7 +506,10 @@
      the functional layer); messages, steps, question and permission cards are content (solid). */
   .cr { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 24px; align-items: start; }
   .cr-chat { min-width: 0; display: flex; flex-direction: column; gap: 14px; padding-bottom: 220px; max-width: 760px; }
-  .cr-panel { position: sticky; top: 72px; max-height: calc(100vh - 96px); overflow: auto; background: var(--cell); border-radius: var(--r-group); padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+  /* Sticky under the header, and short enough to stay whole above the page's foot when the chat is scrolled to its end. */
+  .cr-panel { position: sticky; top: 72px; max-height: calc(100vh - 152px); overflow: auto; background: var(--cell); border-radius: var(--r-group); padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+  /* The panel scrolls; its parts keep their own height instead of being squeezed to fit (the tabs, the progress card). */
+  .cr-panel > * { flex-shrink: 0; }
   .cr-panel .note, .cr-panel .foot-note { margin: 0; }
   .cr-panel h3 { margin: 0; font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
   .cr-tabs { display: none; }
@@ -581,7 +584,15 @@
   .composer .files { display: flex; gap: 6px; flex-wrap: wrap; } .composer .files:empty { display: none; }
   .composer .meta { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--label-2); padding: 0 6px; }
   .cr-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .cr-meter { display: inline-flex; gap: 10px; align-items: center; font-size: 12px; color: var(--label-2); font-variant-numeric: tabular-nums; }
+  .cr-meter { display: inline-flex; gap: 10px; align-items: center; font-size: 12px; color: var(--label-2); font-variant-numeric: tabular-nums; min-width: 0; white-space: nowrap; }
+  /* A conversation's header stays one line: the title gives way first, then the meter's extras (the panel has them). */
+  .phead:has(#cr-meter) { flex-wrap: nowrap; }
+  .phead:has(#cr-meter) h1 { flex: 0 1 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .phead:has(#cr-meter) .acts { flex-wrap: nowrap; min-width: 0; flex-shrink: 0; }
+  @media (max-width: 1499px) { .cr-meter .opt { display: none; } }
+  @media (max-width: 1299px) { .cr-meter .prog { display: none; } }
+  @media (max-width: 1099px) { .cr-meter .prog { display: inline; max-width: 40vw; } }
+  @media (max-width: 599px) { .cr-meter .prog { display: none; } }
   /* Integrations: the tools a reel is orchestrated with, and whether each is reachable. Content capsules, not glass. */
   .intbar { display: flex; flex-wrap: wrap; gap: 8px; margin: -4px 0 16px; }
   .intpill { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px; border-radius: 999px; background: var(--fill-4); color: var(--label); font-size: 12px; font-weight: 500; cursor: pointer; transition: background-color 120ms var(--ease), transform 150ms var(--ease); }
@@ -1205,7 +1216,9 @@ function paintMeta() {
   const secs = live && m.runStartedAt ? (Date.now() - Date.parse(m.runStartedAt)) / 1000 + m.usage.ms / 1000 : m.usage.ms / 1000;
   const tok = m.usage.inputTokens + m.usage.outputTokens;
   const plan = m.usage.plan?.utilization != null ? `${Math.round(m.usage.plan.utilization * (m.usage.plan.utilization <= 1 ? 100 : 1))}% of your ${m.usage.plan.window === "seven_day" ? "week" : "5-hour"} limit` : "";
-  $("#cr-meter").innerHTML = `<span class="badge ${st[1]}">${st[0]}</span><span>${Math.floor(secs / 60)}:${String(Math.floor(secs % 60)).padStart(2, "0")}</span>${tok ? `<span title="Includes context Claude re-reads from its cache on every step">${tok >= 1e6 ? (tok / 1e6).toFixed(1) + "M" : tok >= 1000 ? Math.round(tok / 1000) + "k" : tok} tokens</span>` : ""}${plan ? `<span>${plan}</span>` : ""}`;
+  $("#cr-meter").innerHTML = `<span class="badge ${st[1]}">${st[0]}</span><span>${Math.floor(secs / 60)}:${String(Math.floor(secs % 60)).padStart(2, "0")}</span>${tok ? `<span class="opt" title="Includes context Claude re-reads from its cache on every step">${tok >= 1e6 ? (tok / 1e6).toFixed(1) + "M" : tok >= 1000 ? Math.round(tok / 1000) + "k" : tok} tokens</span>` : ""}${plan ? `<span class="opt">${plan}</span>` : ""}`;
+  // What the narrow header hides stays one hover away.
+  $("#cr-meter .badge")?.setAttribute("title", [cr.progress?.live && cr.progress.line && `${cr.progress.line} · ${cr.progress.pct}%`, tok && `${tok >= 1e6 ? (tok / 1e6).toFixed(1) + "M" : Math.round(tok / 1000) + "k"} tokens`, plan].filter(Boolean).join(" · "));
   if (live && cr.progress?.line) $("#cr-meter").insertAdjacentHTML("afterbegin", `<span class="prog" title="${esc(cr.progress.line)}">${esc(cr.progress.line)} · ${cr.progress.pct}%</span>`);
   const send = $("#cr-send");
   if (send) { send.classList.toggle("stop", live); send.innerHTML = ic(live && !$("#cr-text").value.trim() ? "stop" : "up", 18); send.title = live && !$("#cr-text").value.trim() ? "Stop" : "Send"; }

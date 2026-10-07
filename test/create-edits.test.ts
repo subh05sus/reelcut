@@ -88,7 +88,8 @@ describe("progress", () => {
     const { progressOf } = await import("../src/create/manager.js");
     const old = new Date(Date.now() - 60_000);
     writeFileSync(path.join(reelDir, "master.mp4"), ""); utimesSync(path.join(reelDir, "master.mp4"), old, old);
-    for (const b of beats) { const f = path.join(reelDir, b.composition); writeFileSync(f, "<div></div>"); utimesSync(f, old, old); }
+    mkdirSync(path.join(reelDir, "clips"), { recursive: true });
+    for (const b of beats) { const f = path.join(reelDir, b.composition); writeFileSync(f, "<div></div>"); utimesSync(f, old, old); const c = path.join(reelDir, "clips", `${b.id}.mp4`); writeFileSync(c, ""); utimesSync(c, old, old); }
     utimesSync(reelPath, old, old);
     const since = new Date(Date.now() - 1000).toISOString();
     expect(progressOf(sess("running", since), reelPath)).toMatchObject({ mode: "edit", line: "Making the change" });
@@ -108,5 +109,20 @@ describe("progress, finished", () => {
     expect(rendering.stages.find((s) => s.id === "check")!.state).toBe("done");
     writeFileSync(path.join(reelDir, "master.mp4"), "");
     expect(progressOf({ status: "done", events: [] } as never, reelPath)).toMatchObject({ pct: 100, line: "Finished" });
+  });
+});
+
+describe("progress while an edit finishes", () => {
+  it("stays an edit after the master is rejoined, and never reads 100% while Claude works", async () => {
+    const { progressOf } = await import("../src/create/manager.js");
+    const old = new Date(Date.now() - 60_000);
+    mkdirSync(path.join(reelDir, "clips"), { recursive: true });
+    for (const b of beats) { const c = path.join(reelDir, "clips", `${b.id}.mp4`); writeFileSync(c, ""); utimesSync(c, old, old); const f = path.join(reelDir, b.composition); writeFileSync(f, ""); utimesSync(f, old, old); }
+    const since = new Date(Date.now() - 1000).toISOString();
+    writeFileSync(path.join(reelDir, "compositions/beat-01.html"), "<div>new</div>");
+    writeFileSync(path.join(reelDir, "clips", "beat-01.mp4"), "new");
+    writeFileSync(path.join(reelDir, "master.mp4"), "new");
+    const p = progressOf({ status: "running", runStartedAt: since, events: [] } as never, reelPath);
+    expect(p).toMatchObject({ mode: "edit", line: "Checking the result", pct: 95 });
   });
 });
