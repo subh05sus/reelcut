@@ -1083,7 +1083,7 @@ function paintMeta() {
   const secs = live && m.runStartedAt ? (Date.now() - Date.parse(m.runStartedAt)) / 1000 + m.usage.ms / 1000 : m.usage.ms / 1000;
   const tok = m.usage.inputTokens + m.usage.outputTokens;
   const plan = m.usage.plan?.utilization != null ? `${Math.round(m.usage.plan.utilization * (m.usage.plan.utilization <= 1 ? 100 : 1))}% of your ${m.usage.plan.window === "seven_day" ? "week" : "5-hour"} limit` : "";
-  $("#cr-meter").innerHTML = `<span class="badge ${st[1]}">${st[0]}</span><span>${Math.floor(secs / 60)}:${String(Math.floor(secs % 60)).padStart(2, "0")}</span>${tok ? `<span>${tok > 999 ? (tok / 1000).toFixed(tok > 99999 ? 0 : 1) + "k" : tok} tokens</span>` : ""}${plan ? `<span>${plan}</span>` : ""}`;
+  $("#cr-meter").innerHTML = `<span class="badge ${st[1]}">${st[0]}</span><span>${Math.floor(secs / 60)}:${String(Math.floor(secs % 60)).padStart(2, "0")}</span>${tok ? `<span title="Includes context Claude re-reads from its cache on every step">${tok >= 1e6 ? (tok / 1e6).toFixed(1) + "M" : tok >= 1000 ? Math.round(tok / 1000) + "k" : tok} tokens</span>` : ""}${plan ? `<span>${plan}</span>` : ""}`;
   const send = $("#cr-send");
   if (send) { send.classList.toggle("stop", live); send.innerHTML = ic(live && !$("#cr-text").value.trim() ? "stop" : "up", 18); send.title = live && !$("#cr-text").value.trim() ? "Stop" : "Send"; }
   $$(".composer .chips select").forEach((x) => { x.disabled = cr.events.length > 0; });
@@ -1102,7 +1102,7 @@ function openStream(id) {
     const e = JSON.parse(msg.data);
     if (e.k === "meta") {
       const before = cr.meta?.status; cr.meta = e.meta; paintMeta();
-      if (before !== "done" && e.meta.status === "done") notify("Your reel is ready", cr.meta.title);
+      if (before !== "done" && e.meta.status === "done") { notify("Your reel is ready", cr.meta.title); refreshReel(); }
       if (e.meta.reel) refreshReel();
       return;
     }

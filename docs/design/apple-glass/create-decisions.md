@@ -32,3 +32,16 @@ as Claude does. Answers from the owner, dated. Each question is asked once.
 - **Question cards:** unchanged ("(Recommended)" stays in the label).
 - **Chips:** text on screen, sound effects, music and motion blur join personality, format, length and quality. A chip
   left on "ask" is asked by Claude; a chip that is set is never asked.
+
+## Round 4 (2026-10-08): what comes next
+
+- **Chosen:** edit beats in the reel panel · script writer · recipes · batch and series · captions · post kit ·
+  frame comments · performance loop · generated assets · share for review. (Voice features: not now.)
+- **Order:** edit beats and frame comments first.
+- **Generated assets:** Claude-drawn vectors (SVG in the personality's style) first; Higgsfield for video backdrops
+  when connected.
+- **Share for review:** a temporary Cloudflare tunnel to a read-only review page, live while the studio runs; comments
+  come back into the chat; revocable.
+- **Performance loop:** analytics screenshots or CSV exports, read by Claude; no platform logins.
+- **Integrations bar:** the Create page shows whether Higgsfield is connected, and later Adobe Premiere Pro and
+  DaVinci Resolve, which reels will be orchestrated with.

@@ -929,7 +929,7 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
         req.on("close", () => { off(); clearInterval(beat); });
         return;
       }
-      if (read && parts[3] === "reel" && parts.length === 4) return sendJson(res, 200, { reel: reelState(sess.reel) });
+      if (read && parts[3] === "reel" && parts.length === 4) return sendJson(res, 200, { reel: reelState(cm.findReel(id)) });
       if (method === "PATCH" && parts.length === 3) {
         const b = (await readBody(req)) as { title?: string };
         if (typeof b.title === "string") cm.rename(id, b.title);

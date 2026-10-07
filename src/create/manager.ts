@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { query, type CanUseTool, type Query, type SDKMessage, type SDKUserMessage } from "@anthropic-ai/claude-agent-sdk";
@@ -325,9 +325,9 @@ export class CreateManager {
           const media = [...JSON.stringify(input).matchAll(MEDIA)].map((x) => x[0]).filter((p) => insideAllowed(p));
           this.push(s, { k: "tool", name: b.name, summary: toolSummary(b.name, input), input: trim(b.name === "Bash" ? String(input.command ?? "") : JSON.stringify(input, null, 1), 2000), status: "running", media }, b.id);
           const f = String(input.file_path ?? "");
-          if (/reel\.json$/.test(f)) { s.reel = f; this.emitMeta(s); }
-          const fromCmd = /(\S+\/reel\.json)\b/.exec(String(input.command ?? ""))?.[1];
-          if (fromCmd && path.isAbsolute(fromCmd)) { s.reel = fromCmd; this.emitMeta(s); }
+          if (/reel\.json$/.test(f)) this.setReel(s, f);
+          const fromCmd = /([^\s'"]+\/reel\.json)\b/.exec(String(input.command ?? ""))?.[1];
+          if (fromCmd) this.setReel(s, fromCmd);
         }
       }
       return;
@@ -343,7 +343,7 @@ export class CreateManager {
         e.output = trim(text, 4000);
         for (const p of text.match(MEDIA) ?? []) if (insideAllowed(p) && !e.media.includes(p)) e.media.push(p);
         e.media = e.media.filter((p) => existsSync(p)).slice(0, 12);
-        if (!s.reel) { const r = /(\/\S+\/reel\.json)\b/.exec(text)?.[1]; if (r) { s.reel = r; this.emitMeta(s); } }
+        if (!s.reel) { const r = /([^\s'"`(]+\/reel\.json)\b/.exec(text)?.[1]; if (r) this.setReel(s, r); }
         this.emit(s, e);
       }
       return;
@@ -360,6 +360,31 @@ export class CreateManager {
       clearTimeout(live.idleTimer);
       live.idleTimer = setTimeout(() => { live.input.close(); }, this.opts.idleMs ?? 10 * 60_000);
     }
+  }
+
+  /** Claude writes paths relative to the project as often as absolute ones; either names the reel once it exists. */
+  setReel(s: Session, p: string): void {
+    const abs = path.isAbsolute(p) ? p : path.resolve(REPO, p.replace(/^\.\//, ""));
+    if (s.reel === abs || !insideAllowed(abs)) return;
+    s.reel = abs; this.emitMeta(s);
+  }
+
+  /**
+   * The reel a conversation made, when nothing in its messages named it: the newest out-*\/reel.json in the project
+   * written after the conversation began.
+   */
+  findReel(id: string): string | undefined {
+    const s = this.sessions.get(id); if (!s) return undefined;
+    if (s.reel && existsSync(s.reel)) return s.reel;
+    const since = Date.parse(s.createdAt);
+    let best: { p: string; t: number } | undefined;
+    for (const d of readdirSync(REPO)) {
+      if (!/^out(-|$)/.test(d)) continue;
+      const p = path.join(REPO, d, "reel.json");
+      try { const t = statSync(p).mtimeMs; if (t >= since && (!best || t > best.t)) best = { p, t }; } catch { /* no reel here */ }
+    }
+    if (best) this.setReel(s, best.p);
+    return best?.p;
   }
 
   /** "Title: …" on the first line of a reply names the conversation, and is not shown. */
