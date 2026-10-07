@@ -59,7 +59,7 @@
   const cur = RC.cursorEl(cam);
   RC.words(tl, "#root .rc-head", 0, { lead: true, stagger: 0.09, blur: 14, y: 20 });
   // The board settles out of a tilt; it is readable from the first frame.
-  tl.fromTo("#root .board", { rotationX: 20, y: 70, scale: 0.94, opacity: 0.7, transformPerspective: 1400 }, { rotationX: 0, y: 0, scale: 1, opacity: 1, duration: 1.25, ease: "expo.out" }, 0.05);
+  tl.fromTo("#root .board", { rotationX: 20, y: 70, scale: 0.94, opacity: 0.7, transformPerspective: 1400 }, { rotationX: 0, y: 0, scale: 1, opacity: 1, duration: 1.25, ease: "spring.gentle" }, 0.05);
   RC.blurIn(tl, "#root .sprint", 0.3, { blur: 8, y: 12, duration: 0.7 });
   gsap.set("#root .sprint .rc-progress > i", { scaleX: 0.64, transformOrigin: "0 50%" });
   // The cursor arrives and takes the second card.
@@ -67,30 +67,30 @@
   RC.cursor(tl, cur, 1.4, [[1040, 1050, 0], [264, 660, 1.0]]);
   const D = 0.95, GRAB = 2.5;                                     // the drag: when it starts, how long it takes
   // Pick up: the card lifts, tilts, its shadow deepens; the cursor closes its hand.
-  tl.to(cur, { scale: 0.85, duration: 0.14, ease: "power2.in", transformOrigin: "0 0" }, GRAB - 0.1);
+  tl.to(cur, { scale: 0.86, duration: 0.1, ease: "apple.out", transformOrigin: "0 0" }, GRAB - 0.1);
   tl.set("#root .kb", { zIndex: 6 }, GRAB);
-  tl.to("#root .kb", { scale: 1.05, rotation: 2.5, boxShadow: "0 1px 0 rgba(0,0,0,.04), 0 34px 40px -14px rgba(20,30,60,.4)", duration: 0.3, ease: "expo.out" }, GRAB);
+  tl.to("#root .kb", { scale: 1.05, rotation: 2.5, boxShadow: "0 1px 0 rgba(0,0,0,.04), 0 34px 40px -14px rgba(20,30,60,.4)", duration: 0.3, ease: "spring.gentle" }, GRAB);
   // Carry: the card and the cursor take the same path (same eases), so the hand never slips.
   RC.cursor(tl, cur, GRAB + 0.12, [[264, 660, 0], [556, 646, D]]);
-  tl.to("#root .kb", { x: 292, duration: D, ease: "power3.inOut" }, GRAB + 0.12);
+  tl.to("#root .kb", { x: 292, duration: D, ease: "spring.default" }, GRAB + 0.12);
   tl.to("#root .kb", { y: -14, duration: D, ease: "sine.inOut" }, GRAB + 0.12);
   tl.to("#root .kb", { rotation: -1.5, duration: D, ease: "sine.inOut" }, GRAB + 0.3);
   // The column it leaves closes the gap; the one it joins lights and marks the slot.
-  tl.to("#root .kc", { y: -176, duration: 0.7, ease: "expo.out" }, GRAB + 0.3);
-  tl.to("#root .c2 .hi", { opacity: 1, duration: 0.4, ease: "power2.out" }, GRAB + 0.6);
-  tl.to("#root .ph", { opacity: 0.85, duration: 0.35, ease: "power2.out" }, GRAB + 0.6);
+  tl.to("#root .kc", { y: -176, duration: 0.7, ease: "spring.gentle" }, GRAB + 0.3);
+  tl.to("#root .c2 .hi", { opacity: 1, duration: 0.4, ease: "apple.out" }, GRAB + 0.6);
+  tl.to("#root .ph", { opacity: 0.85, duration: 0.35, ease: "apple.out" }, GRAB + 0.6);
   // Let go: it settles into the slot.
   const DROP = GRAB + 0.12 + D;
-  tl.to(cur, { scale: 1, duration: 0.22, ease: "back.out(3)" }, DROP);
-  tl.to("#root .kb", { y: 0, scale: 1, rotation: 0, boxShadow: "0 1px 0 rgba(0,0,0,.04), 0 10px 20px -10px rgba(20,30,60,.3)", duration: 0.5, ease: "expo.out" }, DROP);
+  tl.to(cur, { scale: 1, duration: 0.22, ease: "spring.snappy" }, DROP);
+  tl.to("#root .kb", { y: 0, scale: 1, rotation: 0, boxShadow: "0 1px 0 rgba(0,0,0,.04), 0 10px 20px -10px rgba(20,30,60,.3)", duration: 0.5, ease: "spring.gentle" }, DROP);
   tl.to("#root .ph", { opacity: 0, duration: 0.3 }, DROP + 0.1);
   tl.to("#root .c2 .hi", { opacity: 0, duration: 0.6 }, DROP + 0.3);
-  tl.to(cur, { x: 650, y: 760, opacity: 0, duration: 0.8, ease: "power2.in" }, DROP + 0.45);
+  tl.to(cur, { x: 650, y: 760, opacity: 0, duration: 0.8, ease: "apple.exit" }, DROP + 0.45);
   // The consequences, a beat after the drop: two counts roll and the sprint ticks up.
   RC.roll(tl, "#root .c1 .cc", DROP + 0.2, { values: ["3", "2"], each: 0.5, duration: 0.4 });
   RC.roll(tl, "#root .c2 .cc", DROP + 0.2, { values: ["1", "2"], each: 0.5, duration: 0.4 });
-  RC.count(tl, "#root .sprint .pct", DROP + 0.3, { from: 64, to: 71, suffix: "%", duration: 0.9, ease: "expo.out" });
-  tl.to("#root .sprint .rc-progress > i", { scaleX: 0.71, duration: 0.9, ease: "expo.out" }, DROP + 0.3);
+  RC.count(tl, "#root .sprint .pct", DROP + 0.3, { from: 64, to: 71, suffix: "%", duration: 0.9, ease: "spring.gentle" });
+  tl.to("#root .sprint .rc-progress > i", { scaleX: 0.71, duration: 0.9, ease: "spring.gentle" }, DROP + 0.3);
   RC.camera(tl, "#root .cam", 0, { duration: 5.4, to: { scale: 1.03 } });
   RC.drift(tl, "#root .rc-mesh", 0, { duration: 5.4, x: 50, y: -30, scale: 1.08 });
   RC.hold(tl, 5.35);

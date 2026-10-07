@@ -1,0 +1,107 @@
+/*
+ * iOS controls (iOS 26), sized in points (`--pt`), coloured by the look. Glass only where Apple puts it: the floating
+ * tab bar, toolbar buttons, a slider thumb while it is held. The selection inside glass is a milky lens, never a
+ * second pane.
+ *
+ *   Tab bar     .rc-tabbar.rc-glass > .rc-lens > i  +  .rc-tab (svg + span) …          RC.lensTo, RC.tabbarMin
+ *   Segmented   .rc-segctl > .rc-lens > i  +  span …                                     RC.lensTo
+ *   Switch      .rc-sw > .rc-sw-fill + .rc-sw-knob                                       RC.toggle
+ *   Slider      .rc-slider > .rc-sl-track + .rc-sl-fill + .rc-sl-thumb + .rc-sl-bubble  RC.slide
+ *   Stepper     .rc-stepper > button.rc-minus + i + button.rc-plus                       RC.press + RC.numeric
+ *   Buttons     .rc-gbtn.rc-glass (44 pt circle), .rc-gbar.rc-glass > .rc-gbtn …        RC.press(…, { scale: .9 })
+ *   Search      .rc-search > svg + .rc-q + .rc-ph + .rc-x                               RC.searchFocus, RC.keyType
+ *   Keyboard    RC.keyboard(container) builds .rc-kb                                    RC.keyType
+ */
+
+/* ---- tab bar: a 62 pt floating glass capsule; the lens is the one selected tab. */
+[data-look] .rc-tabbar { position: absolute; display: flex; align-items: stretch; height: calc(var(--tbh, 62) * var(--pt)); padding: calc(4 * var(--pt));
+  border-radius: 999px; --glass-tint: color-mix(in oklab, var(--card) 62%, transparent); --glass-blur: 14; --glass-ink: var(--ui-label); color: var(--ui-label); }
+[data-look] .rc-tab { position: relative; z-index: 2; flex: 1; min-width: calc(76 * var(--pt)); display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: calc(2 * var(--pt)); color: var(--ui-label); }
+[data-look] .rc-tab svg { width: calc(26 * var(--pt)); height: calc(26 * var(--pt)); flex: none; }
+[data-look] .rc-tab span { font: 600 calc(10 * var(--pt)) / 1.1 var(--ui-font); letter-spacing: 0.01em; overflow: hidden; max-height: calc(var(--tbl, 13) * var(--pt)); opacity: var(--tblo, 1); }
+[data-look] .rc-tab.rc-on { color: var(--ui-tint); }
+/* The lens: one element that travels; its child swells. Milky, with a soft top highlight. */
+[data-look] .rc-lens { position: absolute; z-index: 1; left: 0; top: calc(4 * var(--pt)); bottom: calc(4 * var(--pt)); border-radius: 999px; }
+[data-look] .rc-lens > i { position: absolute; inset: 0; border-radius: inherit; display: block;
+  background: color-mix(in oklab, var(--ui-label) 10%, transparent);
+  box-shadow: inset 0 calc(0.8 * var(--pt)) 0 color-mix(in oklab, #fff 45%, transparent), inset 0 calc(-0.6 * var(--pt)) 0 color-mix(in oklab, #000 6%, transparent); }
+
+/* ---- segmented control: a capsule track; the selected segment is a raised milky lens. */
+[data-look] .rc-segctl { position: absolute; display: flex; height: calc(36 * var(--pt)); padding: calc(3 * var(--pt)); border-radius: 999px; background: var(--ui-fill);
+  font: 600 calc(15 * var(--pt)) / 1 var(--ui-font); letter-spacing: -0.015em; }
+[data-look] .rc-segctl > span { position: relative; z-index: 2; flex: 1; display: grid; place-items: center; padding: 0 calc(16 * var(--pt)); color: var(--ui-label); white-space: nowrap; }
+[data-look] .rc-segctl > .rc-lens { top: calc(3 * var(--pt)); bottom: calc(3 * var(--pt)); }
+[data-look] .rc-segctl > .rc-lens > i { background: var(--ui-raised); box-shadow: 0 calc(3 * var(--pt)) calc(8 * var(--pt)) rgba(0,0,0,.12), 0 0 0 0.5px rgba(0,0,0,.04); }
+[data-look="ink"] .rc-segctl > .rc-lens > i, [data-look="cinema"] .rc-segctl > .rc-lens > i { background: #636366; }
+
+/* ---- switch (iOS 26 proportions): a 64 × 28 track, a 38 × 24 capsule knob. */
+[data-look] .rc-sw { position: relative; width: calc(64 * var(--pt)); height: calc(28 * var(--pt)); border-radius: 999px; background: var(--ui-fill-2); flex: none; }
+[data-look] .rc-sw-fill { position: absolute; inset: 0; border-radius: inherit; background: var(--sw-on, var(--ui-green)); opacity: 0; }
+[data-look] .rc-sw-knob { position: absolute; left: calc((2 + var(--kx, 0)) * var(--pt)); top: calc(2 * var(--pt)); width: calc(var(--kw, 38) * var(--pt)); height: calc(24 * var(--pt)); border-radius: 999px;
+  background: #fff; box-shadow: 0 calc(2 * var(--pt)) calc(6 * var(--pt)) rgba(0,0,0,.16), 0 0 0 0.5px rgba(0,0,0,.04); }
+
+/* ---- slider: a 6 pt track, a capsule thumb that becomes clear glass while it is held. */
+[data-look] .rc-slider { position: absolute; height: calc(40 * var(--pt)); }
+[data-look] .rc-sl-track, [data-look] .rc-sl-fill { position: absolute; left: 0; right: 0; top: 50%; height: calc(6 * var(--pt)); margin-top: calc(-3 * var(--pt)); border-radius: 99px; }
+[data-look] .rc-sl-track { background: var(--ui-fill-2); }
+[data-look] .rc-sl-fill { background: var(--ui-tint); transform-origin: 0 50%; transform: scaleX(var(--v, .5)); }
+[data-look] .rc-sl-thumb { position: absolute; top: 50%; left: calc(var(--v, .5) * 100%); width: calc(38 * var(--pt)); height: calc(24 * var(--pt)); margin: calc(-12 * var(--pt)) 0 0 calc(-19 * var(--pt));
+  border-radius: 999px; background: rgba(255,255,255,var(--solid, 1)); box-shadow: 0 calc(2 * var(--pt)) calc(7 * var(--pt)) rgba(0,0,0,.18), 0 0 0 0.5px rgba(0,0,0,.05);
+  -webkit-backdrop-filter: blur(calc(2 * var(--pt))) saturate(1.6); backdrop-filter: blur(calc(2 * var(--pt))) saturate(1.6); }
+[data-look] .rc-sl-thumb::after { content: ""; position: absolute; inset: 0; border-radius: inherit; opacity: calc(1 - var(--solid, 1));
+  background: linear-gradient(160deg, rgba(255,255,255,.75), rgba(255,255,255,0) 35%, rgba(255,255,255,0) 70%, rgba(255,255,255,.35));
+  box-shadow: inset 0 0 0 calc(0.8 * var(--pt)) rgba(255,255,255,.6); }
+[data-look] .rc-sl-bubble { position: absolute; bottom: calc(100% + 8 * var(--pt)); left: calc(var(--v, .5) * 100%); transform-origin: 50% 100%; padding: calc(6 * var(--pt)) calc(10 * var(--pt));
+  margin-left: calc(-30 * var(--pt)); min-width: calc(60 * var(--pt)); text-align: center; border-radius: calc(10 * var(--pt)); background: var(--ui-raised); color: var(--ui-label);
+  box-shadow: var(--ui-menu-shadow); font: 600 calc(15 * var(--pt)) / 1 var(--ui-font); font-variant-numeric: tabular-nums; opacity: 0; }
+
+/* ---- stepper */
+[data-look] .rc-stepper { position: relative; display: inline-flex; align-items: center; height: calc(32 * var(--pt)); border-radius: 999px; background: var(--ui-fill); }
+[data-look] .rc-stepper > button { all: unset; width: calc(46 * var(--pt)); height: 100%; display: grid; place-items: center; color: var(--ui-label);
+  font: 500 calc(22 * var(--pt)) / 1 var(--ui-font); border-radius: 999px; }
+[data-look] .rc-stepper > i { width: 0.5px; height: calc(18 * var(--pt)); background: var(--ui-sep); }
+
+/* ---- glass toolbar buttons */
+[data-look] .rc-gbtn { position: relative; width: calc(44 * var(--pt)); height: calc(44 * var(--pt)); border-radius: 50%; display: grid; place-items: center; flex: none;
+  --glass-tint: color-mix(in oklab, var(--card) 55%, transparent); --glass-blur: 12; --glass-ink: var(--ui-label); color: var(--ui-label); }
+[data-look] .rc-gbtn svg { width: 46%; height: 46%; }
+[data-look] .rc-gbtn.rc-prime { --glass-tint: color-mix(in oklab, var(--ui-tint) 88%, transparent); color: var(--ui-tint-ink); }
+[data-look] .rc-gbar { position: relative; display: inline-flex; height: calc(44 * var(--pt)); border-radius: 999px; padding: 0 calc(4 * var(--pt));
+  --glass-tint: color-mix(in oklab, var(--card) 55%, transparent); --glass-blur: 12; color: var(--ui-label); }
+[data-look] .rc-gbar > .rc-gbtn { background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+[data-look] .rc-gbar > .rc-gbtn::after { display: none; }
+
+/* ---- search field: a 44 pt capsule. */
+[data-look] .rc-search { position: absolute; display: flex; align-items: center; gap: calc(8 * var(--pt)); height: calc(44 * var(--pt)); padding: 0 calc(12 * var(--pt)) 0 calc(14 * var(--pt));
+  border-radius: 999px; background: var(--ui-fill); color: var(--ui-label); font: 400 calc(17 * var(--pt)) / 1 var(--ui-font); letter-spacing: -0.02em;
+  box-shadow: 0 0 0 calc(var(--ring, 0) * 3 * var(--pt)) color-mix(in oklab, var(--ui-tint) 35%, transparent); }
+[data-look] .rc-search > svg { width: calc(19 * var(--pt)); height: calc(19 * var(--pt)); color: var(--ui-label-2); flex: none; }
+[data-look] .rc-search > .rc-q { white-space: pre; }
+[data-look] .rc-search > .rc-ph { position: absolute; left: calc(41 * var(--pt)); color: var(--ui-label-2); }
+[data-look] .rc-search > .rc-caret { width: calc(2 * var(--pt)); height: calc(22 * var(--pt)); border-radius: 2px; background: var(--ui-tint); margin-left: calc(-7 * var(--pt)); opacity: 0; }
+[data-look] .rc-search > .rc-x { margin-left: auto; width: calc(18 * var(--pt)); height: calc(18 * var(--pt)); border-radius: 50%; background: var(--ui-label-3); flex: none;
+  display: grid; place-items: center; color: var(--ui-bg); font: 700 calc(11 * var(--pt)) / 1 var(--ui-font); opacity: 0; transform: scale(.5); }
+
+/* ---- keyboard: Apple's light or dark keyboard, built by RC.keyboard. */
+[data-look] .rc-kb { position: absolute; left: 0; right: 0; bottom: 0; height: calc(var(--kbh, 291) * var(--pt)); padding: calc(8 * var(--pt)) calc(3 * var(--pt)) 0;
+  background: color-mix(in oklab, var(--ui-grouped) 86%, #c9ccd3); font-family: var(--ui-font); }
+[data-look="ink"] .rc-kb, [data-look="cinema"] .rc-kb { background: #2b2b2e; }
+[data-look] .rc-kb-row { display: flex; justify-content: center; gap: calc(6 * var(--pt)); margin-bottom: calc(11 * var(--pt)); }
+[data-look] .rc-key { position: relative; width: calc(33 * var(--pt)); height: calc(43 * var(--pt)); border-radius: calc(8 * var(--pt)); background: #fff; color: #000;
+  display: grid; place-items: center; font: 400 calc(23 * var(--pt)) / 1 var(--ui-font); box-shadow: 0 calc(1 * var(--pt)) 0 rgba(0,0,0,.3); }
+[data-look="ink"] .rc-key, [data-look="cinema"] .rc-key { background: #6b6b70; color: #fff; box-shadow: 0 calc(1 * var(--pt)) 0 rgba(0,0,0,.6); }
+[data-look] .rc-key.rc-fn { background: #abb0ba; font-size: calc(16 * var(--pt)); }
+[data-look="ink"] .rc-key.rc-fn, [data-look="cinema"] .rc-key.rc-fn { background: #464649; }
+[data-look] .rc-key.rc-space { width: calc(186 * var(--pt)); font-size: calc(16 * var(--pt)); }
+[data-look] .rc-key.rc-wide { width: calc(44 * var(--pt)); }
+[data-look] .rc-key.rc-go { width: calc(90 * var(--pt)); background: var(--ui-blue); color: #fff; font-size: calc(16 * var(--pt)); }
+/* The key callout: the pressed letter, big, in a balloon above the key. */
+[data-look] .rc-kpop { position: absolute; left: 50%; bottom: calc(-1 * var(--pt)); width: calc(52 * var(--pt)); height: calc(102 * var(--pt)); margin-left: calc(-26 * var(--pt));
+  border-radius: calc(10 * var(--pt)) calc(10 * var(--pt)) calc(8 * var(--pt)) calc(8 * var(--pt)); background: inherit; color: inherit; opacity: 0; transform-origin: 50% 100%;
+  font: 400 calc(36 * var(--pt)) / calc(60 * var(--pt)) var(--ui-font); text-align: center; box-shadow: 0 calc(2 * var(--pt)) calc(10 * var(--pt)) rgba(0,0,0,.25); z-index: 3; }
+
+/* ---- a touch: where a finger is, in a film (Apple's own demos show one). Move it with RC.cursor, press it with RC.press. */
+[data-look] .rc-touch { position: absolute; left: 0; top: 0; width: calc(44 * var(--pt)); height: calc(44 * var(--pt)); margin: calc(-22 * var(--pt)) 0 0 calc(-22 * var(--pt));
+  border-radius: 50%; z-index: 60; pointer-events: none; background: rgba(255,255,255,.42);
+  box-shadow: 0 0 0 calc(1.5 * var(--pt)) rgba(255,255,255,.7), 0 calc(4 * var(--pt)) calc(14 * var(--pt)) rgba(0,0,0,.22); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); }

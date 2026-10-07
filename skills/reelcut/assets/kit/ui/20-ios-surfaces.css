@@ -1,0 +1,84 @@
+/*
+ * iOS surfaces, in points (`--pt`), coloured by the look. All solid: menus, sheets, alerts and cards hold text over
+ * busy content, so they are elevated surfaces in Apple's shapes, never glass.
+ *
+ *   Notification   .rc-note > .rc-note-ico + .rc-note-tx (b, span) + time          RC.notify
+ *   Sheet          .rc-scrim + .rc-sheet > .rc-grabber …                           RC.sheet
+ *   Context menu   .rc-cm-back + .rc-cmenu > .rc-cm-row (span + svg) … .rc-cm-sep  RC.contextMenu, RC.menuPick
+ *   Alert          .rc-alert > b + p + .rc-alert-btns > span …                     RC.alertIn, RC.alertOut
+ *   Inset group    .rc-ghead + .rc-group > .rc-cell (.rc-ico-tile, span, .rc-val, .rc-chev)
+ *   Swipe row      .rc-swipe > .rc-acts > span … + .rc-cell                        RC.swipe
+ *   Navigation     .rc-view pages + .rc-navbar (back, inline title) + .rc-ltitle    RC.push, RC.pop
+ */
+
+/* ---- notification: a 24 pt rounded platter, app icon, title, time, body. */
+[data-look] .rc-note { position: absolute; display: flex; gap: calc(10 * var(--pt)); padding: calc(12 * var(--pt)) calc(14 * var(--pt)); border-radius: calc(24 * var(--pt));
+  background: color-mix(in oklab, var(--ui-raised) 88%, transparent); color: var(--ui-label); box-shadow: var(--ui-menu-shadow);
+  -webkit-backdrop-filter: blur(calc(18 * var(--pt))) saturate(1.6); backdrop-filter: blur(calc(18 * var(--pt))) saturate(1.6); font-family: var(--ui-font); }
+[data-look] .rc-note-ico { width: calc(38 * var(--pt)); height: calc(38 * var(--pt)); border-radius: calc(9 * var(--pt)); flex: none; background: var(--ui-tint); display: grid; place-items: center; color: #fff; }
+[data-look] .rc-note-ico svg { width: 58%; height: 58%; }
+[data-look] .rc-note-tx { flex: 1; min-width: 0; }
+[data-look] .rc-note-tx b { display: flex; justify-content: space-between; font: 600 calc(15 * var(--pt)) / calc(20 * var(--pt)) var(--ui-font); letter-spacing: -0.015em; }
+[data-look] .rc-note-tx b small { font: 400 calc(13 * var(--pt)) / calc(20 * var(--pt)) var(--ui-font); color: var(--ui-label-2); }
+[data-look] .rc-note-tx span { display: block; font: 400 calc(15 * var(--pt)) / calc(20 * var(--pt)) var(--ui-font); letter-spacing: -0.015em; }
+
+/* ---- sheet: 28 pt corners, a 36 × 5 grabber; the scrim under it; the page behind can step back. */
+[data-look] .rc-scrim { position: absolute; inset: 0; background: var(--ui-scrim); opacity: 0; }
+[data-look] .rc-sheet { position: absolute; left: 0; right: 0; top: 0; height: 100%; border-radius: calc(28 * var(--pt)) calc(28 * var(--pt)) 0 0; background: var(--ui-raised);
+  color: var(--ui-label); box-shadow: 0 calc(-2 * var(--pt)) calc(20 * var(--pt)) rgba(0,0,0,.12); transform: translateY(calc(var(--sy, 874) * var(--pt))); }
+[data-look] .rc-sheet.rc-grouped { background: var(--ui-grouped); }
+[data-look] .rc-grabber { position: absolute; left: 50%; top: calc(5 * var(--pt)); width: calc(36 * var(--pt)); height: calc(5 * var(--pt)); margin-left: calc(-18 * var(--pt));
+  border-radius: 99px; background: var(--ui-label-3); }
+
+/* ---- context menu: a blurred, dimmed backdrop; the lifted item; a solid menu, 250 pt wide, 13 pt corners. */
+[data-look] .rc-cm-back { position: absolute; inset: 0; opacity: 0; background: color-mix(in oklab, var(--ui-bg) 30%, rgba(0,0,0,.15));
+  -webkit-backdrop-filter: blur(calc(12 * var(--pt))); backdrop-filter: blur(calc(12 * var(--pt))); }
+[data-look] .rc-cmenu { position: absolute; width: calc(250 * var(--pt)); border-radius: calc(13 * var(--pt)); overflow: hidden; background: var(--ui-raised); color: var(--ui-label);
+  box-shadow: var(--ui-menu-shadow); opacity: 0; font-family: var(--ui-font); }
+[data-look] .rc-cm-row { position: relative; display: flex; align-items: center; justify-content: space-between; height: calc(44 * var(--pt)); padding: 0 calc(16 * var(--pt));
+  font: 400 calc(17 * var(--pt)) / 1 var(--ui-font); letter-spacing: -0.02em; }
+[data-look] .rc-cm-row + .rc-cm-row { box-shadow: inset 0 0.5px 0 var(--ui-sep); }
+[data-look] .rc-cm-row svg { width: calc(20 * var(--pt)); height: calc(20 * var(--pt)); flex: none; }
+[data-look] .rc-cm-row.rc-red { color: var(--ui-red); }
+[data-look] .rc-cm-sep { height: calc(8 * var(--pt)); background: var(--ui-fill); }
+[data-look] .rc-cm-row > i { position: absolute; inset: 0; background: var(--ui-fill-2); opacity: 0; }
+
+/* ---- alert (iOS 26): 300 pt, 34 pt corners, capsule buttons side by side. */
+[data-look] .rc-alert { position: absolute; width: calc(300 * var(--pt)); padding: calc(22 * var(--pt)) calc(18 * var(--pt)) calc(18 * var(--pt)); border-radius: calc(34 * var(--pt));
+  background: var(--ui-raised); color: var(--ui-label); text-align: center; box-shadow: var(--ui-menu-shadow); opacity: 0; font-family: var(--ui-font); }
+[data-look] .rc-alert > b { display: block; font: 600 calc(17 * var(--pt)) / calc(22 * var(--pt)) var(--ui-font); letter-spacing: -0.02em; }
+[data-look] .rc-alert > p { margin: calc(6 * var(--pt)) 0 0; font: 400 calc(15 * var(--pt)) / calc(20 * var(--pt)) var(--ui-font); color: var(--ui-label-2); letter-spacing: -0.015em; }
+[data-look] .rc-alert-btns { display: flex; gap: calc(10 * var(--pt)); margin-top: calc(18 * var(--pt)); }
+[data-look] .rc-alert-btns > span { flex: 1; height: calc(48 * var(--pt)); border-radius: 999px; display: grid; place-items: center; background: var(--ui-fill);
+  font: 600 calc(17 * var(--pt)) / 1 var(--ui-font); letter-spacing: -0.02em; }
+[data-look] .rc-alert-btns > span.rc-prime { background: var(--ui-tint); color: var(--ui-tint-ink); }
+[data-look] .rc-alert-btns > span.rc-red { color: var(--ui-red); }
+
+/* ---- inset grouped list: 52 pt rows, 26 pt corners (iOS 26), hairlines inset to the text. */
+[data-look] .rc-ghead { padding: 0 calc(20 * var(--pt)) calc(7 * var(--pt)); font: 400 calc(13 * var(--pt)) / calc(18 * var(--pt)) var(--ui-font); color: var(--ui-label-2); text-transform: uppercase; letter-spacing: 0.01em; }
+[data-look] .rc-group { position: relative; border-radius: calc(26 * var(--pt)); background: var(--ui-cell); overflow: hidden; }
+[data-look] .rc-cell { position: relative; display: flex; align-items: center; gap: calc(12 * var(--pt)); height: calc(52 * var(--pt)); padding: 0 calc(16 * var(--pt));
+  background: var(--ui-cell); color: var(--ui-label); font: 400 calc(17 * var(--pt)) / 1 var(--ui-font); letter-spacing: -0.02em; }
+[data-look] .rc-cell > span:not([class]) { flex: 1; white-space: nowrap; overflow: hidden; }
+[data-look] .rc-group > .rc-cell + .rc-cell::before, [data-look] .rc-group > .rc-swipe + .rc-swipe::before, [data-look] .rc-group > .rc-cell + .rc-swipe::before, [data-look] .rc-group > .rc-swipe + .rc-cell::before {
+  content: ""; position: absolute; z-index: 2; top: 0; right: 0; left: calc(var(--sep-l, 58) * var(--pt)); height: 0.5px; background: var(--ui-sep); }
+[data-look] .rc-ico-tile { width: calc(30 * var(--pt)); height: calc(30 * var(--pt)); border-radius: calc(7 * var(--pt)); flex: none; display: grid; place-items: center; background: var(--c, var(--ui-tint)); color: #fff; }
+[data-look] .rc-ico-tile svg { width: 64%; height: 64%; }
+[data-look] .rc-val { color: var(--ui-label-2); }
+[data-look] .rc-chev { width: calc(8 * var(--pt)); height: calc(8 * var(--pt)); border: solid var(--ui-label-3); border-width: calc(2 * var(--pt)) calc(2 * var(--pt)) 0 0; transform: rotate(45deg); flex: none; margin-left: calc(2 * var(--pt)); }
+/* swipe row: the actions sit under the row, flush right; the row slides over them. */
+[data-look] .rc-swipe { position: relative; height: calc(52 * var(--pt)); overflow: hidden; }
+[data-look] .rc-swipe > .rc-cell { position: absolute; inset: 0; z-index: 1; }
+[data-look] .rc-acts { position: absolute; top: 0; right: 0; bottom: 0; display: flex; }
+[data-look] .rc-acts > span { width: calc(76 * var(--pt)); display: grid; place-items: center; color: #fff; font: 600 calc(15 * var(--pt)) / 1 var(--ui-font); background: var(--c, var(--ui-gray)); }
+[data-look] .rc-acts > span.rc-red { background: var(--ui-red); }
+
+/* ---- navigation: a bar with a back chevron and an inline title that appears when the large title has scrolled away. */
+[data-look] .rc-navbar { position: absolute; left: 0; right: 0; top: calc(54 * var(--pt)); height: calc(44 * var(--pt)); z-index: 5; display: flex; align-items: center; justify-content: center;
+  font: 600 calc(17 * var(--pt)) / 1 var(--ui-font); letter-spacing: -0.02em; color: var(--ui-label); }
+[data-look] .rc-navbar > .rc-back { position: absolute; left: calc(8 * var(--pt)); display: flex; align-items: center; gap: calc(4 * var(--pt)); color: var(--ui-tint); font-weight: 400; }
+[data-look] .rc-navbar > .rc-back::before { content: ""; width: calc(11 * var(--pt)); height: calc(11 * var(--pt)); border: solid currentColor; border-width: 0 0 calc(2.6 * var(--pt)) calc(2.6 * var(--pt)); transform: rotate(45deg); margin-left: calc(6 * var(--pt)); }
+[data-look] .rc-navbar > .rc-inline { opacity: 0; }
+[data-look] .rc-ltitle { position: absolute; left: calc(20 * var(--pt)); top: calc(100 * var(--pt)); font: 700 calc(34 * var(--pt)) / calc(41 * var(--pt)) var(--ui-font); letter-spacing: 0.01em; transform-origin: 0 50%; }
+/* The dimming a page gets as another is pushed over it. */
+[data-look] .rc-view > .rc-dimmer { position: absolute; inset: 0; background: #000; opacity: 0; z-index: 30; pointer-events: none; }

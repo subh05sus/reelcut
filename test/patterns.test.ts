@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { assertComposition, buildProject, inspectComposition } from "../src/render/project.js";
 import { buildMeasurePage, formatMeasureReport, parseMeasureArgs } from "../src/verify/measure.js";
+import { readKitSources } from "../src/render/kit.js";
 
 /*
  * The pattern library is the product's reference for what a finished beat looks like, and it is
@@ -19,23 +20,61 @@ const root = path.resolve(here, "..");
 const patternsDir = path.join(root, "skills", "reelcut", "assets", "patterns");
 const kitDir = path.join(root, "skills", "reelcut", "assets", "kit");
 
-const kit = { css: readFileSync(path.join(kitDir, "kit.css"), "utf8"), js: readFileSync(path.join(kitDir, "kit.js"), "utf8") };
-const files = readdirSync(patternsDir).filter((f) => f.endsWith(".html")).sort();
-const patterns = files.map((f) => ({ id: f.replace(/\.html$/, ""), html: readFileSync(path.join(patternsDir, f), "utf8") }));
+/** The kit as a composition receives it: kit.css and kit.js, then every family in ui/. */
+const kit = readKitSources(kitDir);
+const core = { js: readFileSync(path.join(kitDir, "kit.js"), "utf8") };
+/** The built-in patterns: the moves at the top level, the Apple UI pieces in apple/. */
+const files = [
+  ...readdirSync(patternsDir).filter((f) => f.endsWith(".html")),
+  ...readdirSync(path.join(patternsDir, "apple")).filter((f) => f.endsWith(".html")).map((f) => `apple/${f}`),
+].sort();
+const patterns = files.map((f) => ({ id: path.basename(f, ".html"), file: f, html: readFileSync(path.join(patternsDir, f), "utf8") }));
 const reel = JSON.parse(readFileSync(path.join(root, "examples", "patterns", "reel.json"), "utf8")) as { beats: { id: string; composition: string; durationSeconds: number }[] };
 
 /** Source without its comments: the kit's header says "no Math.random", and that must not trip the check for it. */
 const code = (source: string): string => source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
 
-/** The names the kit exports on `window.RC`, read from its final object literal. */
+/** The names the kit exports on `window.RC`: kit.js's final object literal, and each ui/ family's `Object.assign(window.RC, { … })`. */
 function kitHelpers(): Set<string> {
-  const literal = /window\.RC\s*=\s*\{([\s\S]*?)\n\s*\};/.exec(kit.js)?.[1] ?? "";
-  return new Set(Array.from(literal.matchAll(/\b([a-zA-Z]+)\s*:/g)).map((m) => m[1]!));
+  const literals = [/window\.RC\s*=\s*\{([\s\S]*?)\n\s*\};/.exec(core.js)?.[1] ?? "", ...Array.from(kit.js.matchAll(/Object\.assign\(window\.RC,\s*\{([\s\S]*?)\}\);/g)).map((m) => m[1]!)];
+  return new Set(literals.flatMap((l) => Array.from(l.matchAll(/\b([a-zA-Z]+)\s*:/g)).map((m) => m[1]!)));
 }
 
 describe("the design kit", () => {
   it("parses as a script", () => {
     expect(() => new Function(kit.js)).not.toThrow();
+  });
+
+  it("never lets a ui/ family replace a helper another part of the kit already exports", () => {
+    const literals = [/window\.RC\s*=\s*\{([\s\S]*?)\n\s*\};/.exec(core.js)?.[1] ?? "", ...Array.from(kit.js.matchAll(/Object\.assign\(window\.RC,\s*\{([\s\S]*?)\}\);/g)).map((m) => m[1]!)];
+    const seen = new Map<string, number>();
+    literals.forEach((l, i) => {
+      for (const m of l.matchAll(/\b([a-zA-Z]+)\s*:/g)) {
+        expect(seen.has(m[1]!) ? `${m[1]} (exported by literal ${seen.get(m[1]!)} and ${i})` : "").toBe("");
+        seen.set(m[1]!, i);
+      }
+    });
+  });
+
+  it("moves on Apple's springs: computed, registered as eases, and never overshooting by default", () => {
+    const eases: Record<string, (p: number) => number> = {};
+    const win: Record<string, unknown> = { gsap: { registerEase: (n: string, f: (p: number) => number) => (eases[n] = f) } };
+    const doc = { querySelector: () => null, querySelectorAll: () => [], createElement: () => ({}) };
+    new Function("window", "document", kit.js)(win, doc);
+    const RC = win.RC as { spring: (n: string, e?: string) => { ease: (p: number) => number; duration: number; zeta: number } };
+    for (const n of ["snappy", "default", "page", "gentle", "soft", "reward", "apple.out", "apple.push", "apple.exit", "apple.glide"]) {
+      const f = eases[n.includes(".") ? n : `spring.${n}`]!;
+      expect(f, n).toBeTypeOf("function");
+      expect(f(0), n).toBe(0);
+      expect(f(1), n).toBe(1);
+    }
+    const peak = (f: (p: number) => number) => Math.max(...Array.from({ length: 401 }, (_, i) => f(i / 400)));
+    for (const n of ["default", "page", "gentle", "soft"]) expect(peak(RC.spring(n).ease), n).toBeLessThanOrEqual(1.0005);
+    expect(peak(RC.spring("reward").ease)).toBeGreaterThan(1.05);
+    // From rest: the first 1% of the time covers well under 1% of the way (expo.out covers 6.7%).
+    expect(RC.spring("gentle").ease(0.01)).toBeLessThan(0.01);
+    expect(RC.spring("default", "restrained").duration).toBeGreaterThan(RC.spring("default").duration);
+    expect(RC.spring("default", "energetic").duration).toBeLessThan(RC.spring("default").duration);
   });
 
   it("declares every look a pattern can ask for", () => {
@@ -122,7 +161,7 @@ describe("the patterns", () => {
       });
 
       it("is mounted in the example reel", () => {
-        expect(reel.beats.some((b) => b.id === p.id && b.composition.endsWith(`/${p.id}.html`))).toBe(true);
+        expect(reel.beats.some((b) => b.id === p.id && b.composition.endsWith(`/${p.file}`))).toBe(true);
       });
     });
   }
@@ -132,7 +171,7 @@ describe("the example reel", () => {
   it("mounts only patterns that exist, once each", () => {
     const ids = reel.beats.map((b) => b.id);
     expect(new Set(ids).size).toBe(ids.length);
-    for (const b of reel.beats) expect(files, b.id).toContain(`${b.id}.html`);
+    for (const b of reel.beats) expect(patterns.map((p) => p.id), b.id).toContain(b.id);
   });
 
   it("builds into a project with the kit in every clip", () => {

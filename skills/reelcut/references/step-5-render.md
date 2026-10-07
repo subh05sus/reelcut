@@ -32,7 +32,7 @@ After composing, write `reel.json` beside the compositions:
 ```json
 {
   "format": "1:1",
-  "fps": 30,
+  "fps": 60,
   "ground": "#121a2b",
   "beats": [
     { "id": "beat-00", "durationSeconds": 6.667, "composition": "compositions/beat-00.html" },

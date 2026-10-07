@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* APP CALENDAR. A three-day view (ink look) in Apple's Calendar style: hour lines with tabular times, tinted events
+     with a colour bar, today's date in a red disc, the red now-line. The events settle onto the grid one by one
+     (40 ms apart, from slightly smaller); a finger holds Design review, it lifts (1.04, a deeper shadow), is carried
+     like a hand to Thursday 11:00 and set down exactly on the grid; Moved to Thu confirms beside the title.
+     Grid: headline at (84, 96); the card on the margins (84 → 996, 336 → 996), --pt 2: hours 112 px apart. */
+  #root { --accent: #ff9230; --pt: 2px; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 540px 640px; }
+  #root .card { position: absolute; left: 84px; top: 336px; width: 912px; height: 660px; border-radius: 40px; background: var(--ui-cell); box-shadow: var(--shadow); overflow: hidden; }
+  #root .rc-cal { left: 28px; right: 28px; top: 28px; bottom: 0; }
+  #root .rc-cal-days { top: 0; }
+  #root .grid { position: absolute; left: 0; right: 0; top: 110px; }
+  #root .col { position: absolute; top: 110px; bottom: 0; width: 0.5px; background: var(--ui-sep); }
+  #root .moved { position: absolute; right: 36px; bottom: 26px; }
+  #root .rc-touch { --pt: 2px; }
+</style>
+<div id="root" data-look="ink" data-composition-id="app-calendar" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(255,146,48,.12); --mesh-2: rgba(109,124,255,.10)"></div>
+  <div class="cam">
+    <div class="rc-head"><span class="ln" style="--ox:-1.4px">Your week,</span><span class="ln" style="--ox:3px"><em class="rc">rearranged.</em></span></div>
+    <div class="card">
+      <div class="rc-cal">
+        <div class="rc-cal-days"><div>TUE<b>7</b></div><div class="rc-today">WED<b>8</b></div><div>THU<b>9</b></div></div>
+        <div class="grid"></div>
+      </div>
+      <div class="rc-saved moved"><span class="rc-check-d"></span><span>Moved to Thu</span></div>
+    </div>
+    <div class="rc-touch"></div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  const P = 2, HH = 56 * P, GUT = 50 * P, cal = document.querySelector("#root .rc-cal"), grid = document.querySelector("#root .grid");
+  const W = cal.offsetWidth, colW = (W - GUT) / 3;
+  // Hour lines 9:00 → 13:00 and the day columns.
+  [9, 10, 11, 12, 13].forEach((h, i) => {
+    const l = document.createElement("div"); l.className = "rc-cal-h"; l.style.top = i * HH + "px"; l.style.left = GUT - 6 * P + "px";
+    l.innerHTML = `<span style="left:${-(GUT - 6 * P)}px">${h}:00</span>`; grid.appendChild(l);
+  });
+  [0, 1, 2].forEach((d) => { const c = document.createElement("div"); c.className = "col"; c.style.left = GUT + d * colW + "px"; cal.appendChild(c); });
+  // Events: [day, start hour, hours, title, place, colour].
+  const EV = [[0, 9, 0.5, "Standup", "Room 2", "#6d7cff"], [1, 10, 1, "Design review", "Studio", "#ff9230"], [0, 10.5, 1.5, "Focus time", "", "#db34f2"],
+              [2, 12, 1, "Lunch with Ana", "Lume", "#30d158"], [1, 12.5, 0.5, "Call Jonas", "", "#0091ff"]];
+  const els = EV.map(([d, s, len, t, sub, c], i) => {
+    const e = document.createElement("div"); e.className = "rc-ev ev" + i; e.style.setProperty("--c", c);
+    e.style.left = GUT + d * colW + 3 * P + "px"; e.style.width = colW - 6 * P + "px"; e.style.top = 110 + (s - 9) * HH + 1 * P + "px"; e.style.height = len * HH - 2 * P + "px";
+    e.innerHTML = `<b>${t}</b>${sub ? `<span>${sub}</span>` : ""}`; cal.appendChild(e); return e;
+  });
+  const now = document.createElement("div"); now.className = "rc-now"; now.style.top = 110 + 0.66 * HH + "px"; now.style.left = GUT - 4 * P + "px"; cal.appendChild(now);
+  RC.words(tl, "#root .rc-head", 0, { lead: true, stagger: 0.08 });
+  RC.present(tl, els, 0.15, { scale: 0.94, y: 6, stagger: 0.05, spring: "default" });
+  // Hold Design review; carry it one day right and one hour down.
+  const dr = els[1], cx = 84 + 28 + GUT + colW + colW / 2, cy = 336 + 28 + 110 + 1 * HH + HH / 2;
+  tl.set("#root .rc-touch", { opacity: 0 }, 0);
+  RC.cursor(tl, "#root .rc-touch", 0.9, [[cx + 60, cy + 160, 0], [cx, cy, 0.5]]);
+  tl.to("#root .rc-touch", { opacity: 1, duration: 0.2, ease: "apple.out" }, 0.9);
+  RC.press(tl, "#root .rc-touch", 1.45, { scale: 0.85, release: false });
+  tl.to(dr, { scale: 0.97, duration: 0.3, ease: "apple.out" }, 1.45);
+  RC.evDrag(tl, dr, 1.8, { x: colW, y: HH, duration: 0.8 });
+  tl.to("#root .rc-touch", { x: cx + colW, y: cy + HH, duration: 0.8, ease: "apple.glide" }, 1.92);
+  RC.to(tl, "#root .rc-touch", 2.75, { scale: 1 }, "snappy");
+  tl.to("#root .rc-touch", { opacity: 0, duration: 0.2, ease: "apple.exit" }, 3.0);
+  RC.saved(tl, "#root .moved", 2.85, { hold: false });
+  RC.camera(tl, "#root .cam", 0, { duration: 4.8, to: { scale: 1.025 } });
+  RC.drift(tl, "#root .rc-mesh", 0, { duration: 4.8, x: 40, y: -20, scale: 1.06 });
+  RC.hold(tl, 4.8);
+  window.__timelines["app-calendar"] = tl;
+})();
+</script>
+</template>
+</body></html>

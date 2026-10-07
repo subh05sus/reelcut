@@ -73,19 +73,19 @@
   const tl = gsap.timeline({ paused: true });
   RC.words(tl, "#root .rc-head", 0, { lead: true, stagger: 0.09, blur: 14, y: 20 });
   // The drop zone is whole at frame 0; it settles and its call to action resolves.
-  tl.fromTo("#root .wrap", { y: 50, opacity: 0.75 }, { y: 0, opacity: 1, duration: 0.9, ease: "expo.out" }, 0.05);
+  tl.fromTo("#root .wrap", { y: 50, opacity: 0.75 }, { y: 0, opacity: 1, duration: 0.9, ease: "spring.gentle" }, 0.05);
   // Three files arrive from three sides, each out of soft focus, and take their rows.
   [["f1", -300, -140], ["f2", 320, -60], ["f3", 40, 240]].forEach(([f, dx, dy], i) => {
     const t = 0.8 + i * 0.2;
-    tl.fromTo("#root ." + f, { x: dx, y: dy, opacity: 0, scale: 0.9 }, { x: 0, y: 0, opacity: 1, scale: 1, duration: 0.85, ease: "expo.out" }, t);
-    tl.fromTo("#root ." + f, { filter: "blur(10px)" }, { filter: "blur(0px)", duration: 0.7, ease: "expo.out" }, t);
+    tl.fromTo("#root ." + f, { x: dx, y: dy, opacity: 0, scale: 0.9 }, { x: 0, y: 0, opacity: 1, scale: 1, duration: 0.85, ease: "spring.gentle" }, t);
+    tl.fromTo("#root ." + f, { filter: "blur(10px)" }, { filter: "blur(0px)", duration: 0.7, ease: "spring.gentle" }, t);
   });
-  tl.to("#root .pre", { opacity: 0, filter: "blur(8px)", duration: 0.3, ease: "power2.in" }, 0.5);
+  tl.to("#root .pre", { opacity: 0, filter: "blur(8px)", duration: 0.3, ease: "apple.exit" }, 0.5);
   // The ring appears where the call to action was, and starts when the last file lands.
   const ring = document.querySelector("#root .ringbox .v"), L = 2 * Math.PI * 130;
   ring.style.strokeDasharray = L + " " + L; ring.style.strokeDashoffset = L;
-  tl.fromTo("#root .ringbox", { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.7, ease: "expo.out" }, 1.15);
-  tl.fromTo("#root .ringbox", { filter: "blur(8px)" }, { filter: "blur(0px)", duration: 0.6, ease: "expo.out" }, 1.15);
+  tl.fromTo("#root .ringbox", { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.7, ease: "spring.gentle" }, 1.15);
+  tl.fromTo("#root .ringbox", { filter: "blur(8px)" }, { filter: "blur(0px)", duration: 0.6, ease: "spring.gentle" }, 1.15);
   // One state drives the lot: every bar is a window of it and the ring is the average of the bars.
   const T0 = 1.6, DUR = 2.0, win = [[0, 0.55], [0.15, 0.8], [0.3, 1]];
   const bars = ["f1", "f2", "f3"].map((f) => document.querySelector("#root ." + f + " .rc-progress > i"));
@@ -104,7 +104,7 @@
   // Each file ticks off the moment its own bar is full.
   ["f1", "f2", "f3"].forEach((f, i) => {
     const at = T0 + win[i][1] * DUR;
-    tl.fromTo("#root ." + f + " .dn", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.35, ease: "expo.out" }, at);
+    tl.fromTo("#root ." + f + " .dn", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.35, ease: "spring.gentle" }, at);
     RC.draw(tl, "#root ." + f + " .dn path", at + 0.05, { duration: 0.3 });
   });
   // The ring closes on a check.
@@ -114,9 +114,9 @@
   RC.draw(tl, "#root .ringbox .okk path", END + 0.25, { duration: 0.45 });
   // The collapse: the content clears, then the card closes on itself into a pill.
   const C = END + 0.85;
-  tl.to("#root .file, #root .ringbox, #root .dz", { opacity: 0, filter: "blur(6px)", duration: 0.3, ease: "power2.in" }, C);
-  tl.fromTo("#root .card", { clipPath: "inset(0px 0px 0px 0px round 36px)" }, { clipPath: "inset(278px 236px 278px 236px round 52px)", duration: 0.85, ease: "expo.inOut", immediateRender: false }, C + 0.15);
-  tl.to("#root .fin", { opacity: 1, duration: 0.4, ease: "power2.out" }, C + 0.7);
+  tl.to("#root .file, #root .ringbox, #root .dz", { opacity: 0, filter: "blur(6px)", duration: 0.3, ease: "apple.exit" }, C);
+  tl.fromTo("#root .card", { clipPath: "inset(0px 0px 0px 0px round 36px)" }, { clipPath: "inset(278px 236px 278px 236px round 52px)", duration: 0.85, ease: "spring.default", immediateRender: false }, C + 0.15);
+  tl.to("#root .fin", { opacity: 1, duration: 0.4, ease: "apple.out" }, C + 0.7);
   RC.draw(tl, "#root .fin .ck path", C + 0.8, { duration: 0.35 });
   RC.camera(tl, "#root .cam", 0, { duration: 6.3, to: { scale: 1.03 } });
   RC.drift(tl, "#root .rc-mesh", 0, { duration: 6.3, x: 50, y: -30, scale: 1.08 });

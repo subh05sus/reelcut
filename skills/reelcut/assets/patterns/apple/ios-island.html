@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* IOS ISLAND. The Dynamic Island carrying a Live Activity, to Apple's spec (HIG › Live Activities): a timer sits
+     in the compact presentation, snug against the camera (leading glyph, trailing time); a touch and hold opens the
+     expanded presentation (371 × 132 pt, 44 pt corners) with the time large and two round buttons; it settles back to
+     compact; then music starts, and the island splits into minimal: the timer's ring attached on the leading side and
+     the music's waveform in a detached circle that necks off to the right like a drop of liquid.
+     Motion: the black shape moves on spring.island (the one shape Apple lets overshoot, 1.7%); content follows 0.12 s
+     later out of a little blur; leaving content goes first; digits change with the numeric content transition, rolling
+     down as the timer falls. Grid: headline at (84, 96); the phone at --pt 2.1 from y 336, cropped by the frame's
+     bottom edge, so the island sits at the top of the content region. */
+  #root { --accent: #ff9230; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 540px 420px; }
+  #root .ph { left: 92px; top: 336px; --pt: 2.1px; }
+  #root .wall { position: absolute; inset: 0;
+    background: radial-gradient(70% 45% at 20% 30%, color-mix(in oklab, var(--accent) 45%, transparent), transparent 70%),
+                radial-gradient(60% 50% at 85% 60%, color-mix(in oklab, var(--ui-indigo) 55%, transparent), transparent 70%), #0b0b10; }
+  #root .apps { position: absolute; left: calc(27 * var(--pt)); top: calc(200 * var(--pt)); display: grid; grid-template-columns: repeat(4, calc(64 * var(--pt))); column-gap: calc(26 * var(--pt)); row-gap: calc(28 * var(--pt)); }
+  #root .app { width: calc(64 * var(--pt)); height: calc(64 * var(--pt)); border-radius: calc(15 * var(--pt)); position: relative; }
+  #root .app b { position: absolute; left: -20%; right: -20%; top: calc(70 * var(--pt)); text-align: center; color: #fff; font: 500 calc(12 * var(--pt)) / 1 var(--ui-font); }
+  #root .ti { display: flex; align-items: center; gap: calc(8 * var(--pt)); }
+  #root .exp .top { display: flex; justify-content: space-between; align-items: flex-start; }
+  #root .exp .who { display: flex; align-items: center; gap: calc(10 * var(--pt)); font-size: calc(17 * var(--pt)); font-weight: 600; }
+  #root .exp .who .rc-di-glyph { width: calc(30 * var(--pt)); height: calc(30 * var(--pt)); }
+  #root .exp .big { font-size: calc(46 * var(--pt)); font-weight: 600; letter-spacing: -0.02em; line-height: 1; color: var(--di-tint); margin-top: calc(-4 * var(--pt)); }
+  #root .exp .row { position: absolute; left: calc(22 * var(--pt)); right: calc(22 * var(--pt)); bottom: calc(18 * var(--pt)); display: flex; align-items: center; gap: calc(12 * var(--pt)); }
+  #root .exp .lbl { margin-left: auto; font-size: calc(15 * var(--pt)); }
+  #root .rc-di-bub { --di-tint: var(--ui-pink); }
+</style>
+<div id="root" data-look="ink" data-composition-id="ios-island" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(255,146,48,.14); --mesh-2: rgba(109,124,255,.12)"></div>
+  <div class="cam">
+    <div class="rc-head"><span class="ln" style="--ox:-1.6px">Live, right</span><span class="ln" style="--ox:3px"><em class="rc">at a glance.</em></span></div>
+    <div class="rc-iphone rc-dark ph">
+      <div class="rc-scr">
+        <div class="wall"></div>
+        <div class="rc-status"><b>9:41</b><span class="rc-sys"></span></div>
+        <div class="apps">
+          <div class="app" style="background: linear-gradient(160deg,#ffb54d,#ff7a1a)"><b>Clock</b></div>
+          <div class="app" style="background: linear-gradient(160deg,#ff5f8a,#ff2d55)"><b>Music</b></div>
+          <div class="app" style="background: linear-gradient(160deg,#7d8bff,#4b5bff)"><b>Notes</b></div>
+          <div class="app" style="background: linear-gradient(160deg,#5ee38a,#26b45a)"><b>Maps</b></div>
+          <div class="app" style="background: linear-gradient(160deg,#6fd6ff,#1f9bff)"></div>
+          <div class="app" style="background: linear-gradient(160deg,#c78bff,#8a3df0)"></div>
+          <div class="app" style="background: linear-gradient(160deg,#ffd75e,#f5b400)"></div>
+          <div class="app" style="background: linear-gradient(160deg,#9aa0ad,#5f6573)"></div>
+        </div>
+        <div class="rc-di">
+          <div class="rc-di-shape"><i class="rc-di-body"></i><i class="rc-di-bubble"></i></div>
+          <div class="rc-di-lead" data-di="compact"><span class="rc-di-glyph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 13V9M10 3h4"/></svg></span></div>
+          <div class="rc-di-trail rc-di-tint" data-di="compact"><span class="t1">4:59</span></div>
+          <div class="rc-di-min" data-di="minimal"><span class="rc-di-ring" style="--p:.62"></span></div>
+          <div class="rc-di-bub" data-di="minimal"><span class="rc-di-wave"><i></i><i></i><i></i><i></i><i></i></span></div>
+          <div class="rc-di-exp exp" data-di="expanded" style="--eh: 132">
+            <div class="top">
+              <div class="who"><span class="rc-di-glyph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 13V9M10 3h4"/></svg></span>Timer</div>
+              <div class="big t2">4:59</div>
+            </div>
+            <div class="row">
+              <span class="rc-di-btn"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1.4"/><rect x="14" y="4" width="4" height="16" rx="1.4"/></svg></span>
+              <span class="rc-di-btn rc-gray"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span>
+              <span class="lbl rc-di-2">Tea</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  const di = "#root .rc-di";
+  RC.words(tl, "#root .rc-head", 0, { lead: true, stagger: 0.08 });
+  // Frame 0: the timer is already running in the compact presentation.
+  RC.islandSet(di, "compact");
+  // The time falls once a second, in both places it is shown; only the digits that change roll.
+  const T = ["4:59", "4:58", "4:57", "4:56", "4:55", "4:54"];
+  RC.numeric(tl, "#root .t1", 0.55, { values: T, each: 1 });
+  RC.numeric(tl, "#root .t2", 0.55, { values: T, each: 1 });
+  // Touch and hold: the island answers with a small press, then pours open into the expanded presentation.
+  RC.press(tl, "#root .rc-di-body", 1.05, { scale: 1.04, hold: 0.12 });
+  RC.island(tl, di, 1.2, "expanded", { h: 132 });
+  // It settles back to compact.
+  RC.island(tl, di, 3.0, "compact");
+  // Music starts: two activities, so the island goes minimal and the second one splits off to the right.
+  RC.island(tl, di, 3.9, "minimal");
+  RC.islandWave(tl, "#root .rc-di-wave", 0, 6, { seed: 4 });
+  tl.to("#root .rc-di-ring", { "--p": 0.58, duration: 2, ease: "none" }, 3.9);
+  RC.camera(tl, "#root .cam", 0, { duration: 6, to: { scale: 1.03 } });
+  RC.drift(tl, "#root .rc-mesh", 0, { duration: 6, x: 40, y: -20, scale: 1.06 });
+  RC.hold(tl, 6);
+  window.__timelines["ios-island"] = tl;
+})();
+</script>
+</template>
+</body></html>

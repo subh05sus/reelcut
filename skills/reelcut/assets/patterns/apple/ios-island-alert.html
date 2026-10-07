@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* IOS ISLAND ALERT. The island as the system's alert surface, on a light lock screen. The Silent Mode switch is
+     flipped: the island stretches sideways to the compact width (it never covers the clock), the bell rings (a few decaying swings) and "On" is said in
+     red, then the island shrinks back to the camera. Then a Live Activity update alerts (HIG: alerts show the expanded
+     presentation): the island pours open to 371 × 96 pt with the order, its progress bar filling, and settles into the
+     compact presentation, the bag glyph leading and "2 min" trailing, snug against the camera.
+     Motion: spring.island for every change of shape; content follows out of blur; the bell's swing is damped keyframes,
+     not a loop. Grid: headline at (84, 96); the phone at --pt 2.1 from y 336, cropped by the bottom edge. */
+  #root { --accent: #1f9d55; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 540px 420px; }
+  #root .ph { left: 92px; top: 336px; --pt: 2.1px; }
+  #root .wall { position: absolute; inset: 0;
+    background: radial-gradient(80% 50% at 15% 85%, color-mix(in oklab, var(--accent) 30%, transparent), transparent 70%),
+                radial-gradient(70% 50% at 90% 40%, color-mix(in oklab, var(--ui-indigo) 18%, transparent), transparent 70%),
+                linear-gradient(#f6f3ee, #ece7df); }
+  #root .date { position: absolute; left: 0; right: 0; top: calc(118 * var(--pt)); text-align: center; color: var(--ui-label);
+    font: 600 calc(19 * var(--pt)) / 1 var(--ui-font); letter-spacing: -0.01em; opacity: .78; }
+  #root .clock { position: absolute; left: 0; right: 0; top: calc(140 * var(--pt)); text-align: center; color: var(--ui-label);
+    font: 700 calc(96 * var(--pt)) / 1 var(--font-display); letter-spacing: -0.04em; }
+  #root .rc-di { --di-tint: #30d158; }
+  #root .wide { --wl: 86; --ww: 230; }
+  #root .wide .bell { width: calc(26 * var(--pt)); height: calc(26 * var(--pt)); color: #ff4245; transform-origin: 50% 12%; }
+  #root .wide .lbl { flex: 1; margin-left: calc(8 * var(--pt)); font-size: calc(15 * var(--pt)); }
+  #root .wide .on { color: #ff4245; font-size: calc(15 * var(--pt)); }
+  #root .exp { --eh: 96; }
+  #root .exp .top { display: flex; align-items: center; gap: calc(10 * var(--pt)); }
+  #root .exp .ttl { font-size: calc(17 * var(--pt)); font-weight: 600; }
+  #root .exp .sub { font-size: calc(14 * var(--pt)); margin-top: calc(3 * var(--pt)); }
+  #root .exp .eta { margin-left: auto; font-size: calc(30 * var(--pt)); font-weight: 600; color: var(--di-tint); letter-spacing: -0.02em; }
+  #root .exp .rc-di-bar { margin-top: calc(14 * var(--pt)); }
+</style>
+<div id="root" data-look="paper" data-composition-id="ios-island-alert" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(31,157,85,.14); --mesh-2: rgba(18,18,18,.05)"></div>
+  <div class="cam">
+    <div class="rc-head"><span class="ln" style="--ox:-1.4px">Quiet, until</span><span class="ln" style="--ox:3px"><em class="rc">it matters.</em></span></div>
+    <div class="rc-iphone ph">
+      <div class="rc-scr">
+        <div class="wall"></div>
+        <div class="rc-status"><b>9:41</b><span class="rc-sys"></span></div>
+        <div class="date">Tuesday, 7 October</div>
+        <div class="clock">9:41</div>
+        <div class="rc-di">
+          <div class="rc-di-shape"><i class="rc-di-body"></i><i class="rc-di-bubble"></i></div>
+          <div class="rc-di-wide wide" data-di="silent">
+            <svg class="bell" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a6 6 0 0 0-6 6v4.2L4.4 16a1 1 0 0 0 .9 1.5h13.4a1 1 0 0 0 .9-1.5L18 13.2V9a6 6 0 0 0-6-6zm-2.4 16a2.5 2.5 0 0 0 4.8 0z"/><path d="M3.5 3.5l17 17" stroke="#000" stroke-width="4.2" stroke-linecap="round"/><path d="M3.5 3.5l17 17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <span class="lbl">Silent Mode</span><span class="on">On</span>
+          </div>
+          <div class="rc-di-lead" data-di="compact"><span class="rc-di-glyph"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 8.5h14l-1.1 10.6a2 2 0 0 1-2 1.9H8.1a2 2 0 0 1-2-1.9z"/><path d="M9 9V7a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></span></div>
+          <div class="rc-di-trail rc-di-tint" data-di="compact">2 min</div>
+          <div class="rc-di-exp exp" data-di="expanded">
+            <div class="top">
+              <span class="rc-di-glyph"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 8.5h14l-1.1 10.6a2 2 0 0 1-2 1.9H8.1a2 2 0 0 1-2-1.9z"/><path d="M9 9V7a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></span>
+              <div><div class="ttl">Arriving now</div><div class="sub rc-di-2">Your order is 2 streets away</div></div>
+              <div class="eta">2 min</div>
+            </div>
+            <div class="rc-di-bar" style="--p:.72"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  const di = "#root .rc-di";
+  RC.words(tl, "#root .rc-head", 0, { lead: true, stagger: 0.08 });
+  RC.islandSet(di, "idle");
+  // Silent Mode: a wide pill; the bell swings and settles (damped, finite).
+  RC.island(tl, di, 0.45, { name: "silent", l: 86, w: 230, h: 37 });
+  tl.to("#root .bell", { keyframes: [14, -11, 8, -5, 3, 0].map((r) => ({ rotation: r, duration: 0.09, ease: "apple.glide" })) }, 0.62);
+  RC.island(tl, di, 1.85, "idle");
+  // A Live Activity update alerts in the expanded presentation, its bar filling, then settles to compact.
+  RC.island(tl, di, 2.45, "expanded", { h: 96 });
+  tl.to("#root .exp .rc-di-bar", { "--p": 0.9, duration: 1.2, ease: "spring.soft" }, 2.8);
+  RC.island(tl, di, 4.15, "compact");
+  RC.camera(tl, "#root .cam", 0, { duration: 5.6, to: { scale: 1.03 } });
+  RC.drift(tl, "#root .rc-mesh", 0, { duration: 5.6, x: 40, y: -20, scale: 1.06 });
+  RC.hold(tl, 5.6);
+  window.__timelines["ios-island-alert"] = tl;
+})();
+</script>
+</template>
+</body></html>

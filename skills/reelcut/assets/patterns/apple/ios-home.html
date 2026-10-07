@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* IOS HOME. The home screen (sky look: a soft wallpaper from the look's colours, white labels). A finger taps
+     Calendar: the icon presses, and the app grows out of it on spring.page — its corners easing from the icon's
+     squircle to the screen's — while the home screen pushes back and fades behind it, the icon's colour giving way to
+     the app. A swipe up from the bottom edge and the app shrinks back into its icon; the home screen settles.
+     Grid: the UI is the frame. The phone at --pt 1.45, centred (x 231 → 849), from y 44, cropped by the bottom edge. */
+  #root { --accent: #ff3b30; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 540px 540px; }
+  #root .ph { left: 231px; top: 44px; --pt: 1.45px; }
+  #root .wall { position: absolute; inset: 0; background: radial-gradient(80% 50% at 20% 20%, #9fb4ff, transparent 70%), radial-gradient(70% 60% at 85% 70%, #c9a8ff, transparent 70%), linear-gradient(#7d8cf0, #b59ae8); }
+  #root .rc-hgrid { top: calc(268 * var(--pt)); }
+  #root .w1 { left: calc(27 * var(--pt)); top: calc(76 * var(--pt)); width: calc(160 * var(--pt)); height: calc(160 * var(--pt)); background: linear-gradient(160deg, #4aa3ff, #1f6fe5); }
+  #root .w2 { right: calc(27 * var(--pt)); top: calc(76 * var(--pt)); width: calc(160 * var(--pt)); height: calc(160 * var(--pt)); background: #fff; color: #111; }
+  #root .rc-widget small { display: block; font: 600 calc(13 * var(--pt)) / 1.2 var(--ui-font); opacity: .9; }
+  #root .rc-widget b { display: block; font: 300 calc(48 * var(--pt)) / 1 var(--ui-font); margin-top: calc(6 * var(--pt)); }
+  #root .w2 small { color: #ff3b30; text-transform: uppercase; }
+  #root .w2 b { font-weight: 400; }
+  #root .w2 span { display: block; margin-top: calc(10 * var(--pt)); font: 600 calc(13 * var(--pt)) / 1.3 var(--ui-font); }
+  #root .rc-appview { --card: #ffffff; --ui-bg: #ffffff; --ui-cell: #ffffff; --ui-label: #0d1433; --ui-label-2: #4d5676; --ui-sep: rgba(13,20,51,.12); background: #f2f2f7; }
+  #root .rc-cover { position: absolute; inset: 0; background: #fff; z-index: 3; }
+  #root .rc-appview .grp { position: absolute; left: calc(16 * var(--pt)); right: calc(16 * var(--pt)); top: calc(156 * var(--pt)); }
+  #root .rc-appview .rc-ltitle { color: var(--ui-red); }
+  #root .rc-touch { --pt: 1.45px; }
+</style>
+<div id="root" data-look="sky" data-composition-id="ios-home" data-width="1080" data-height="1080">
+  <div class="rc-mesh"></div>
+  <div class="cam">
+    <div class="rc-iphone ph rc-dark">
+      <div class="rc-scr">
+        <div class="wall"></div>
+        <div class="rc-home">
+          <div class="rc-widget w1"><small>Lisbon</small><b>24°</b><small style="margin-top:8px">Sunny · H 27° L 18°</small></div>
+          <div class="rc-widget w2"><small>Wednesday</small><b>8</b><span>Design review<br>10:00</span></div>
+          <div class="rc-hgrid">
+            <div class="rc-appicon"><i style="background: linear-gradient(#6be38f,#20b04f)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4c4.7 0 8.5 3.1 8.5 7S16.7 18 12 18c-.9 0-1.8-.1-2.6-.3L5 20l1.2-3.6C4.6 15 3.5 13.1 3.5 11c0-3.9 3.8-7 8.5-7z"/></svg></i><b>Messages</b></div>
+            <div class="rc-appicon cal"><i style="background:#fff; color:#111; display:block; text-align:center"><span style="display:block; margin-top:12%; font: 600 calc(11 * var(--pt))/1 var(--ui-font); color:#ff3b30">WED</span><span style="display:block; font: 300 calc(30 * var(--pt))/1.1 var(--ui-font)">8</span></i><b>Calendar</b></div>
+            <div class="rc-appicon"><i style="background: linear-gradient(#ffb54d,#ff7a1a)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/></svg></i><b>Clock</b></div>
+            <div class="rc-appicon"><i style="background: linear-gradient(#5ee38a,#26b45a)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a7 7 0 0 0-7 7c0 5 7 11 7 11s7-6 7-11a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 7.5a2.5 2.5 0 0 1 0 5z"/></svg></i><b>Maps</b></div>
+            <div class="rc-appicon"><i style="background: #fff"><svg viewBox="0 0 24 24"><g transform="translate(12 12)"><ellipse rx="3" ry="6.5" cy="-4.5" fill="#ffb11f"/><ellipse rx="3" ry="6.5" cy="-4.5" fill="#ff5e3a" transform="rotate(60)"/><ellipse rx="3" ry="6.5" cy="-4.5" fill="#c644fc" transform="rotate(120)"/><ellipse rx="3" ry="6.5" cy="-4.5" fill="#1f7bff" transform="rotate(180)"/><ellipse rx="3" ry="6.5" cy="-4.5" fill="#34c759" transform="rotate(240)"/><ellipse rx="3" ry="6.5" cy="-4.5" fill="#ffd60a" transform="rotate(300)"/></g></svg></i><b>Photos</b></div>
+            <div class="rc-appicon"><i style="background: linear-gradient(#ff6b7d,#ff2d55)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 5l10-2v12.5a2.5 2.5 0 1 1-2-2.45V7.2l-6 1.2v9.1a2.5 2.5 0 1 1-2-2.45z"/></svg></i><b>Music</b></div>
+            <div class="rc-appicon"><i style="background: linear-gradient(#ffe36e,#f5c400)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 8h12M6 12h12M6 16h8"/></svg></i><b>Notes</b></div>
+            <div class="rc-appicon"><i style="background: linear-gradient(#b8bec9,#7d8594)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg></i><b>Settings</b></div>
+            <div class="rc-appicon"><i style="background: linear-gradient(#6fd6ff,#1f9bff)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h15A1.5 1.5 0 0 1 21 6.5v11a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5zm1.8.3 7.2 5.4 7.2-5.4z"/></svg></i><b>Mail</b></div>
+            <div class="rc-appicon"><i style="background: linear-gradient(#c58bff,#8a3df0)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z"/></svg></i><b>Starred</b></div>
+            <div class="rc-appicon"><i style="background: linear-gradient(#ffd75e,#f5b400)"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18" stroke="#b37f00" stroke-width="2"/></svg></i><b>Wallet</b></div>
+            <div class="rc-appicon"><i style="background: linear-gradient(#5f6573,#2c2f36)"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="13" r="5"/><rect x="3" y="7" width="18" height="13" rx="3" fill="none" stroke="currentColor" stroke-width="2"/></svg></i><b>Camera</b></div>
+          </div>
+        </div>
+        <div class="rc-appview">
+          <div class="rc-ltitle" style="top: calc(96 * var(--pt))">Today</div>
+          <div class="rc-group grp">
+            <div class="rc-cell" style="--sep-l:16"><span>Standup</span><span class="rc-val">9:00</span></div>
+            <div class="rc-cell" style="--sep-l:16"><span>Design review</span><span class="rc-val">10:00</span></div>
+            <div class="rc-cell" style="--sep-l:16"><span>Lunch with Ana</span><span class="rc-val">12:00</span></div>
+            <div class="rc-cell" style="--sep-l:16"><span>Call Jonas</span><span class="rc-val">12:30</span></div>
+          </div>
+          <div class="rc-cover"></div>
+        </div>
+        <div class="rc-status st"><b>9:41</b><i class="rc-island"></i><span class="rc-sys"></span></div>
+      </div>
+    </div>
+    <div class="rc-touch"></div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  const P = 1.45, X = (x) => 231 + 12 * P + x * P, Y = (y) => 44 + 12 * P + y * P;
+  const icon = document.querySelector("#root .cal");
+  // Calendar is the second icon of the first row: 27 pt in, plus one icon and its share of the gap.
+  const ix = icon.offsetLeft + icon.offsetWidth / 2, iy = 268 * P + icon.offsetHeight / 2;
+  tl.set("#root .rc-touch", { opacity: 0 }, 0);
+  RC.cursor(tl, "#root .rc-touch", 0.3, [[X(260), Y(620), 0], [231 + 12 * P + ix, 44 + 12 * P + iy, 0.5]]);
+  tl.to("#root .rc-touch", { opacity: 1, duration: 0.2, ease: "apple.out" }, 0.3);
+  RC.press(tl, "#root .rc-touch", 0.85, { scale: 0.85 });
+  tl.to("#root .rc-touch", { opacity: 0, duration: 0.2, ease: "apple.exit" }, 1.0);
+  RC.appOpen(tl, icon, "#root .rc-appview", 0.85);
+  RC.present(tl, "#root .rc-appview .rc-cell", 1.25, { y: 10, scale: 1, stagger: 0.04, spring: "gentle", lead: false });
+  // A swipe up from the bottom edge, and the app goes back into its icon.
+  RC.cursor(tl, "#root .rc-touch", 2.5, [[X(201), Y(700), 0]]);
+  tl.to("#root .rc-touch", { opacity: 1, duration: 0.15, ease: "apple.out" }, 2.5);
+  tl.to("#root .rc-touch", { y: Y(520), duration: 0.35, ease: "apple.glide" }, 2.6);
+  tl.to("#root .rc-touch", { opacity: 0, duration: 0.2, ease: "apple.exit" }, 2.9);
+  RC.appClose(tl, icon, "#root .rc-appview", 2.85);
+  // The status bar reads dark over the app, light over the wallpaper.
+  tl.to("#root .st", { color: "#000000", duration: 0.2, ease: "apple.out" }, 1.1);
+  tl.to("#root .st", { color: "#ffffff", duration: 0.2, ease: "apple.out" }, 3.0);
+  RC.camera(tl, "#root .cam", 0, { duration: 4.6, to: { scale: 1.02 } });
+  RC.drift(tl, "#root .rc-mesh", 0, { duration: 4.6, x: 40, y: -20, scale: 1.06 });
+  RC.hold(tl, 4.6);
+  window.__timelines["ios-home"] = tl;
+})();
+</script>
+</template>
+</body></html>

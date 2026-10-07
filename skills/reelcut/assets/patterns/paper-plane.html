@@ -58,11 +58,11 @@
     trail.style.strokeDasharray = (L * st.p).toFixed(1) + " " + L.toFixed(1);
   }
   fly();
-  tl.fromTo(st, { p: 0 }, { p: 1, duration: 3.6, ease: "power1.inOut", onUpdate: fly, immediateRender: false }, 0.3);
+  tl.fromTo(st, { p: 0 }, { p: 1, duration: 3.6, ease: "apple.glide", onUpdate: fly, immediateRender: false }, 0.3);
   RC.words(tl, "#root .h", 0, { lead: true, stagger: 0.09, blur: 14, y: 20 });
   // The receipt answers the plane as it crosses the frame.
-  tl.fromTo("#root .toast", { y: 40, opacity: 0, transformPerspective: 1200, rotationX: 14 }, { y: 0, opacity: 1, rotationX: 0, duration: 0.9, ease: "expo.out" }, 2.55);
-  tl.fromTo("#root .toast", { filter: "blur(10px)" }, { filter: "blur(0px)", duration: 0.7, ease: "expo.out" }, 2.55);
+  tl.fromTo("#root .toast", { y: 40, opacity: 0, transformPerspective: 1200, rotationX: 14 }, { y: 0, opacity: 1, rotationX: 0, duration: 0.9, ease: "spring.gentle" }, 2.55);
+  tl.fromTo("#root .toast", { filter: "blur(10px)" }, { filter: "blur(0px)", duration: 0.7, ease: "spring.gentle" }, 2.55);
   RC.draw(tl, "#root .toast .ck path", 2.95, { duration: 0.35 });
   RC.camera(tl, "#root .cam", 0, { duration: 4.6, to: { scale: 1.035 } });
   RC.drift(tl, "#root .rc-mesh", 0, { duration: 4.6, x: 50, y: -30, scale: 1.08 });

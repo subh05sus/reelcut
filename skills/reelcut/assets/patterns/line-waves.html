@@ -44,9 +44,9 @@
   draw();
   // Lines are drawn at frame 0 already (amp .15), then swell, then collapse to flat.
   tl.fromTo(st, { amp: 0.15 }, { amp: 1, duration: 1.3, ease: "sine.inOut", onUpdate: draw, immediateRender: false }, 0);
-  tl.fromTo(st, { amp: 1 }, { amp: 0, duration: 1.5, ease: "expo.inOut", onUpdate: draw, immediateRender: false }, 1.9);
+  tl.fromTo(st, { amp: 1 }, { amp: 0, duration: 1.5, ease: "apple.glide", onUpdate: draw, immediateRender: false }, 1.9);
   // The stack of lines closes into one: the envelope dies, then the spacing does.
-  tl.fromTo(st, { span: 440 }, { span: 0, duration: 1.0, ease: "expo.inOut", onUpdate: draw, immediateRender: false }, 2.6);
+  tl.fromTo(st, { span: 440 }, { span: 0, duration: 1.0, ease: "apple.glide", onUpdate: draw, immediateRender: false }, 2.6);
   tl.fromTo(st, { ph: 0 }, { ph: 14, duration: 3.6, ease: "none", onUpdate: draw, immediateRender: false }, 0);
   RC.blurIn(tl, "#root .sub", 0, { lead: true, blur: 6, y: 8, duration: 0.7 });
   RC.words(tl, "#root .h", 2.7, { stagger: 0.1, blur: 18, y: 10, duration: 0.9 });

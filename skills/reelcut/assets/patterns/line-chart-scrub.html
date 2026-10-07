@@ -91,25 +91,25 @@
   gg.style.color = "rgba(15,20,32,.10)";
   // ---- entrances ---------------------------------------------------------------------------
   RC.words(tl, "#root .rc-head", 0, { lead: true, stagger: 0.09, blur: 14, y: 20 });
-  tl.fromTo("#root .ch", { y: 50, opacity: 0.75 }, { y: 0, opacity: 1, duration: 0.9, ease: "expo.out" }, 0.05);
+  tl.fromTo("#root .ch", { y: 50, opacity: 0.75 }, { y: 0, opacity: 1, duration: 0.9, ease: "spring.gentle" }, 0.05);
   // The header is on screen at frame 0 (partly, in soft focus) and settles; the control is not blurred, because
   // glass inside a filtered parent would lose what is behind it.
-  tl.fromTo("#root .lbl, #root .kpi", { opacity: 0.7, y: 12, filter: "blur(5px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.7, ease: "expo.out", stagger: 0.06 }, 0.1);
-  tl.fromTo("#root .rng", { opacity: 0.7, y: 12 }, { opacity: 1, y: 0, duration: 0.7, ease: "expo.out" }, 0.16);
+  tl.fromTo("#root .lbl, #root .kpi", { opacity: 0.7, y: 12, filter: "blur(5px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.7, ease: "spring.gentle", stagger: 0.06 }, 0.1);
+  tl.fromTo("#root .rng", { opacity: 0.7, y: 12 }, { opacity: 1, y: 0, duration: 0.7, ease: "spring.gentle" }, 0.16);
   // The plot is there at frame 0 (rules and labels, a little faint); the line is what arrives.
-  tl.fromTo("#root .yl, #root .xl", { opacity: 0.55, y: 8, filter: "blur(3px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.6, ease: "expo.out", stagger: 0.012 }, 0.2);
-  tl.fromTo("#root .grid", { opacity: 0.5 }, { opacity: 1, duration: 0.6, ease: "power2.out" }, 0.2);
+  tl.fromTo("#root .yl, #root .xl", { opacity: 0.55, y: 8, filter: "blur(3px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.6, ease: "spring.gentle", stagger: 0.012 }, 0.2);
+  tl.fromTo("#root .grid", { opacity: 0.5 }, { opacity: 1, duration: 0.6, ease: "apple.out" }, 0.2);
   // the control moves first; the chart answers it
   gsap.set("#root .rng .rc-thumb", { x: 92 });                       // it starts on 1M
-  tl.to("#root .rng .rc-thumb", { x: 184, duration: 0.6, ease: "expo.inOut" }, 0.8);
+  tl.to("#root .rng .rc-thumb", { x: 184, duration: 0.6, ease: "spring.default" }, 0.8);
   tl.to("#root .rng span:nth-of-type(2)", { color: "#586175", duration: 0.3 }, 0.9);
   tl.to("#root .rng span:nth-of-type(3)", { color: "#0f1420", duration: 0.3 }, 0.9);
   // The line has a head start, so frame 0 already holds a chart rather than an empty card: a third of it is
   // drawn, and the rest follows.
   const LEN = lp.getTotalLength(), HEAD = 0.33;
   lp.style.strokeDasharray = LEN; lp.style.strokeDashoffset = LEN * (1 - HEAD);
-  tl.to(lp, { strokeDashoffset: 0, duration: 1.6, ease: "power2.inOut" }, 0.5);
-  tl.fromTo("#root svg.area", { clipPath: "inset(0 " + (100 - HEAD * 100) + "% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 1.6, ease: "power2.inOut" }, 0.5);
+  tl.to(lp, { strokeDashoffset: 0, duration: 1.6, ease: "apple.glide" }, 0.5);
+  tl.fromTo("#root svg.area", { clipPath: "inset(0 " + (100 - HEAD * 100) + "% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 1.6, ease: "apple.glide" }, 0.5);
   // ---- the scrub: one clock, everything computed from it -----------------------------------
   const num = root.querySelector(".kpi .num"), dot = root.querySelector(".dot"), tip = root.querySelector(".tip"), gd = root.querySelector(".gd");
   const eo = (t) => 1 - Math.pow(1 - t, 3), eio = (t) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;

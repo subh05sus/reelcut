@@ -1,0 +1,102 @@
+/*
+ * App mockups: Messages, Calendar, Maps, Music, the home screen. Structure as Apple draws it, colours from the look
+ * (the app's tint is the accent; a beat that wants iMessage blue sets --ui-tint: var(--ui-blue)). Sized in points.
+ *
+ *   Messages   .rc-thread > .rc-msg(.rc-me)(.rc-tail) … .rc-typing > i×3 · .rc-tapback · .rc-composer.rc-glass
+ *   Calendar   .rc-cal (--hours, --hh) > .rc-cal-h … + .rc-ev (--c) > b + span · .rc-now
+ *   Maps       RC.mapDraw(el) builds .rc-map (svg); .rc-route path · .rc-pin · .rc-medot
+ *   Music      .rc-np > .rc-art + .rc-np-meta + .rc-scrub(.rc-sc-fill, .rc-sc-knob) + .rc-np-ctl
+ *   Home       .rc-home > .rc-hgrid > .rc-appicon (i + b) … + .rc-hdock.rc-glass + .rc-dots
+ */
+
+/* ---- Messages */
+[data-look] .rc-thread { position: absolute; left: 0; right: 0; display: flex; flex-direction: column; gap: calc(3 * var(--pt)); padding: 0 calc(12 * var(--pt)); font-family: var(--ui-font); }
+[data-look] .rc-msg { position: relative; align-self: flex-start; max-width: 74%; padding: calc(8 * var(--pt)) calc(13 * var(--pt)); border-radius: calc(19 * var(--pt));
+  background: var(--msg-in, color-mix(in oklab, var(--ui-label) 10%, var(--ui-bg))); color: var(--ui-label); font: 400 calc(17 * var(--pt)) / calc(22 * var(--pt)) var(--ui-font); letter-spacing: -0.02em; }
+[data-look] .rc-msg.rc-me { align-self: flex-end; background: var(--ui-tint); color: #fff; }
+[data-look="ink"] .rc-msg:not(.rc-me), [data-look="cinema"] .rc-msg:not(.rc-me) { --msg-in: #26252a; }
+/* The tail on the last bubble of a group, drawn with two pseudo-elements the way Apple's is curved. */
+[data-look] .rc-msg.rc-tail::before, [data-look] .rc-msg.rc-tail::after { content: ""; position: absolute; bottom: 0; height: calc(18 * var(--pt)); }
+[data-look] .rc-msg.rc-tail::before { left: calc(-7 * var(--pt)); width: calc(20 * var(--pt)); background: inherit; border-bottom-right-radius: calc(16 * var(--pt)) calc(14 * var(--pt)); }
+[data-look] .rc-msg.rc-tail::after { left: calc(-26 * var(--pt)); width: calc(26 * var(--pt)); background: var(--ui-bg); border-bottom-right-radius: calc(10 * var(--pt)); }
+[data-look] .rc-msg.rc-me.rc-tail::before { left: auto; right: calc(-7 * var(--pt)); border-bottom-right-radius: 0; border-bottom-left-radius: calc(16 * var(--pt)) calc(14 * var(--pt)); }
+[data-look] .rc-msg.rc-me.rc-tail::after { left: auto; right: calc(-26 * var(--pt)); border-bottom-right-radius: 0; border-bottom-left-radius: calc(10 * var(--pt)); }
+[data-look] .rc-msg.rc-tail[data-tail="0"]::before, [data-look] .rc-msg.rc-tail[data-tail="0"]::after { display: none; }
+[data-look] .rc-msg-meta { align-self: flex-end; margin: calc(2 * var(--pt)) calc(4 * var(--pt)) 0 0; font: 600 calc(11 * var(--pt)) / 1 var(--ui-font); color: var(--ui-label-2); }
+[data-look] .rc-typing { align-self: flex-start; display: inline-flex; gap: calc(4 * var(--pt)); padding: calc(13 * var(--pt)) calc(14 * var(--pt)); border-radius: calc(19 * var(--pt));
+  background: var(--msg-in, color-mix(in oklab, var(--ui-label) 10%, var(--ui-bg))); transform-origin: 0 100%; }
+[data-look="ink"] .rc-typing, [data-look="cinema"] .rc-typing { --msg-in: #26252a; }
+[data-look] .rc-typing > i { width: calc(8 * var(--pt)); height: calc(8 * var(--pt)); border-radius: 50%; background: var(--ui-label-2); }
+[data-look] .rc-tapback { position: absolute; top: calc(-16 * var(--pt)); width: calc(30 * var(--pt)); height: calc(30 * var(--pt)); border-radius: 50%; display: grid; place-items: center;
+  background: var(--ui-tint); color: #fff; box-shadow: 0 0 0 calc(2.5 * var(--pt)) var(--ui-bg); font-size: calc(15 * var(--pt)); }
+[data-look] .rc-tapback svg { width: 56%; height: 56%; }
+[data-look] .rc-composer { position: absolute; display: flex; align-items: center; height: calc(40 * var(--pt)); padding: 0 calc(4 * var(--pt)) 0 calc(16 * var(--pt)); border-radius: 999px;
+  --glass-tint: color-mix(in oklab, var(--ui-bg) 70%, transparent); --glass-blur: 16; color: var(--ui-label); font: 400 calc(17 * var(--pt)) / 1 var(--ui-font); letter-spacing: -0.02em; }
+[data-look] .rc-composer > .rc-ctext { flex: 1; white-space: pre; overflow: hidden; }
+[data-look] .rc-composer > .rc-ph { position: absolute; left: calc(16 * var(--pt)); color: var(--ui-label-2); }
+[data-look] .rc-composer > .rc-send { width: calc(32 * var(--pt)); height: calc(32 * var(--pt)); border-radius: 50%; background: var(--ui-tint); color: #fff; display: grid; place-items: center; flex: none; transform: scale(0); }
+[data-look] .rc-composer > .rc-send svg { width: 55%; height: 55%; }
+[data-look] .rc-composer > .rc-caret { width: calc(2 * var(--pt)); height: calc(20 * var(--pt)); background: var(--ui-tint); border-radius: 2px; opacity: 0; }
+
+/* ---- Calendar: a time grid. --hh is an hour's height in pt; events are placed in hours from the top. */
+[data-look] .rc-cal { position: absolute; font-family: var(--ui-font); --hh: 52; }
+[data-look] .rc-cal-h { position: absolute; left: 0; right: 0; height: 0.5px; background: var(--ui-sep); }
+[data-look] .rc-cal-h > span { position: absolute; left: 0; top: calc(-7 * var(--pt)); width: calc(44 * var(--pt)); font: 500 calc(11 * var(--pt)) / 1 var(--ui-font); color: var(--ui-label-2); font-variant-numeric: tabular-nums; }
+[data-look] .rc-cal-days { position: absolute; left: calc(50 * var(--pt)); right: 0; display: flex; }
+[data-look] .rc-cal-days > div { flex: 1; text-align: center; font: 600 calc(13 * var(--pt)) / 1 var(--ui-font); color: var(--ui-label-2); }
+[data-look] .rc-cal-days > div b { display: block; margin-top: calc(6 * var(--pt)); font: 600 calc(20 * var(--pt)) / 1 var(--ui-font); color: var(--ui-label); }
+[data-look] .rc-cal-days > div.rc-today b { width: calc(34 * var(--pt)); height: calc(34 * var(--pt)); margin: calc(3 * var(--pt)) auto 0; border-radius: 50%; display: grid; place-items: center; background: var(--ui-red); color: #fff; }
+[data-look] .rc-ev { position: absolute; padding: calc(5 * var(--pt)) calc(7 * var(--pt)) calc(5 * var(--pt)) calc(10 * var(--pt)); border-radius: calc(7 * var(--pt)); overflow: hidden;
+  background: color-mix(in oklab, var(--c, var(--ui-tint)) 20%, var(--ui-bg)); color: color-mix(in oklab, var(--c, var(--ui-tint)) 70%, var(--ui-label)); font-family: var(--ui-font); }
+[data-look] .rc-ev::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: calc(3.5 * var(--pt)); background: var(--c, var(--ui-tint)); }
+[data-look] .rc-ev b { display: block; font: 600 calc(13 * var(--pt)) / calc(16 * var(--pt)) var(--ui-font); letter-spacing: -0.01em; }
+[data-look] .rc-ev span { display: block; font: 400 calc(12 * var(--pt)) / calc(15 * var(--pt)) var(--ui-font); opacity: .85; }
+[data-look] .rc-now { position: absolute; left: calc(44 * var(--pt)); right: 0; height: calc(1.5 * var(--pt)); background: var(--ui-red); z-index: 3; }
+[data-look] .rc-now::before { content: ""; position: absolute; left: calc(-4 * var(--pt)); top: calc(-3.25 * var(--pt)); width: calc(8 * var(--pt)); height: calc(8 * var(--pt)); border-radius: 50%; background: var(--ui-red); }
+
+/* ---- Maps */
+[data-look] .rc-map { position: absolute; inset: 0; overflow: hidden; transform-origin: 50% 50%; }
+[data-look] .rc-map > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+[data-look] .rc-route { fill: none; stroke: var(--ui-blue); stroke-linecap: round; stroke-linejoin: round; }
+[data-look] .rc-pin { position: absolute; width: calc(36 * var(--pt)); height: calc(46 * var(--pt)); margin: calc(-46 * var(--pt)) 0 0 calc(-18 * var(--pt)); transform-origin: 50% 100%; z-index: 4; }
+[data-look] .rc-pin > i { position: absolute; left: 0; top: 0; width: calc(36 * var(--pt)); height: calc(36 * var(--pt)); border-radius: 50% 50% 50% 0; transform: rotate(-45deg); background: var(--pin, var(--ui-red));
+  box-shadow: 0 calc(3 * var(--pt)) calc(8 * var(--pt)) rgba(0,0,0,.3); }
+[data-look] .rc-pin > i::after { content: ""; position: absolute; left: 32%; top: 32%; width: 36%; height: 36%; border-radius: 50%; background: #fff; }
+[data-look] .rc-pin-shadow { position: absolute; width: calc(18 * var(--pt)); height: calc(6 * var(--pt)); margin: calc(-3 * var(--pt)) 0 0 calc(-9 * var(--pt)); border-radius: 50%; background: rgba(0,0,0,.28); filter: blur(calc(2 * var(--pt))); z-index: 3; }
+[data-look] .rc-medot { position: absolute; width: calc(20 * var(--pt)); height: calc(20 * var(--pt)); margin: calc(-10 * var(--pt)) 0 0 calc(-10 * var(--pt)); border-radius: 50%; z-index: 4;
+  background: var(--ui-blue); box-shadow: 0 0 0 calc(3.5 * var(--pt)) #fff, 0 calc(2 * var(--pt)) calc(8 * var(--pt)) rgba(0,0,0,.3); }
+[data-look] .rc-medot::before { content: ""; position: absolute; inset: calc(-26 * var(--pt)); border-radius: 50%; background: color-mix(in oklab, var(--ui-blue) 18%, transparent); transform: scale(var(--halo, 1)); }
+[data-look] .rc-map-banner { position: absolute; display: flex; align-items: center; gap: calc(12 * var(--pt)); padding: calc(14 * var(--pt)) calc(16 * var(--pt)); border-radius: calc(24 * var(--pt));
+  background: #1c1c1e; color: #fff; box-shadow: var(--ui-menu-shadow); font-family: var(--ui-font); }
+[data-look] .rc-map-banner svg { width: calc(34 * var(--pt)); height: calc(34 * var(--pt)); flex: none; }
+[data-look] .rc-map-banner b { display: block; font: 700 calc(26 * var(--pt)) / 1.05 var(--ui-font); letter-spacing: -0.02em; }
+[data-look] .rc-map-banner span { font: 500 calc(15 * var(--pt)) / 1.3 var(--ui-font); color: rgba(235,235,245,.7); }
+
+/* ---- Music: Now Playing */
+[data-look] .rc-np { position: absolute; inset: 0; font-family: var(--ui-font); color: #fff; }
+[data-look] .rc-art { position: absolute; border-radius: calc(12 * var(--pt)); box-shadow: 0 calc(20 * var(--pt)) calc(40 * var(--pt)) calc(-10 * var(--pt)) rgba(0,0,0,.5); transform-origin: 50% 50%; }
+[data-look] .rc-np-meta b { display: block; font: 600 calc(20 * var(--pt)) / 1.2 var(--ui-font); letter-spacing: -0.02em; }
+[data-look] .rc-np-meta span { font: 400 calc(20 * var(--pt)) / 1.2 var(--ui-font); color: rgba(255,255,255,.6); letter-spacing: -0.02em; }
+[data-look] .rc-scrub { position: absolute; height: calc(7 * var(--pt)); border-radius: 99px; background: rgba(255,255,255,.22); }
+[data-look] .rc-sc-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: inherit; background: rgba(255,255,255,.85); width: calc(var(--p, 0) * 100%); }
+[data-look] .rc-sc-times { position: absolute; left: 0; right: 0; top: calc(14 * var(--pt)); display: flex; justify-content: space-between; font: 500 calc(12 * var(--pt)) / 1 var(--ui-font); color: rgba(255,255,255,.6); font-variant-numeric: tabular-nums; }
+[data-look] .rc-np-ctl { position: absolute; display: flex; align-items: center; justify-content: space-between; }
+[data-look] .rc-np-ctl svg { fill: #fff; }
+[data-look] .rc-pp { position: relative; display: grid; place-items: center; }
+[data-look] .rc-pp > svg { grid-area: 1 / 1; }
+
+/* ---- Home screen */
+[data-look] .rc-home { position: absolute; inset: 0; transform-origin: 50% 50%; }
+[data-look] .rc-hgrid { position: absolute; left: calc(27 * var(--pt)); right: calc(27 * var(--pt)); display: grid; grid-template-columns: repeat(4, calc(64 * var(--pt)));
+  justify-content: space-between; row-gap: calc(28 * var(--pt)); }
+[data-look] .rc-appicon { position: relative; width: calc(64 * var(--pt)); height: calc(64 * var(--pt)); }
+[data-look] .rc-appicon > i { position: absolute; inset: 0; border-radius: calc(15 * var(--pt)); display: grid; place-items: center; color: #fff; box-shadow: 0 calc(2 * var(--pt)) calc(6 * var(--pt)) rgba(0,0,0,.18); }
+[data-look] .rc-appicon > i svg { width: 56%; height: 56%; }
+[data-look] .rc-appicon > b { position: absolute; left: -30%; right: -30%; top: calc(70 * var(--pt)); text-align: center; color: #fff; font: 500 calc(12 * var(--pt)) / 1 var(--ui-font); text-shadow: 0 1px 4px rgba(0,0,0,.25); }
+[data-look] .rc-hdock { position: absolute; left: calc(12 * var(--pt)); right: calc(12 * var(--pt)); bottom: calc(16 * var(--pt)); height: calc(92 * var(--pt)); border-radius: calc(36 * var(--pt));
+  display: flex; align-items: center; justify-content: space-around; padding: 0 calc(10 * var(--pt)); --glass-tint: rgba(255,255,255,.18); --glass-blur: 22; }
+[data-look] .rc-dots { position: absolute; left: 0; right: 0; display: flex; justify-content: center; gap: calc(8 * var(--pt)); }
+[data-look] .rc-dots > i { width: calc(7 * var(--pt)); height: calc(7 * var(--pt)); border-radius: 50%; background: rgba(255,255,255,.4); }
+[data-look] .rc-dots > i.rc-on { background: #fff; }
+[data-look] .rc-widget { position: absolute; border-radius: calc(22 * var(--pt)); padding: calc(16 * var(--pt)); color: #fff; font-family: var(--ui-font); }
+[data-look] .rc-appview { position: absolute; inset: 0; overflow: hidden; background: var(--ui-bg); transform-origin: 0 0; visibility: hidden; z-index: 20; }

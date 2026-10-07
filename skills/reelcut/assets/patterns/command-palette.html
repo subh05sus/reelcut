@@ -101,8 +101,8 @@
   RC.glass();
   RC.words(tl, "#root .rc-head", 0, { lead: true, stagger: 0.09, blur: 14, y: 20 });
   // The palette is open at frame 0 (all five suggestions, caret blinking); it settles and resolves.
-  tl.fromTo("#root .pal", { y: 40, opacity: 0.8 }, { y: 0, opacity: 1, duration: 0.9, ease: "expo.out" }, 0.05);
-  tl.fromTo("#root .pal", { filter: "blur(6px)" }, { filter: "blur(0px)", duration: 0.7, ease: "expo.out" }, 0.05);
+  tl.fromTo("#root .pal", { y: 40, opacity: 0.8 }, { y: 0, opacity: 1, duration: 0.9, ease: "spring.gentle" }, 0.05);
+  tl.fromTo("#root .pal", { filter: "blur(6px)" }, { filter: "blur(0px)", duration: 0.7, ease: "spring.gentle" }, 0.05);
   // New rows wait where they will land; the rows they replace are about to give way.
   gsap.set("#root .n3, #root .n4, #root .n5", { opacity: 0 });
   // ---- type the query ----------------------------------------------------------------------
@@ -110,24 +110,24 @@
   RC.type(tl, "#root .q", 1.2, { text: "inv", cps: 7, caret: "#root .rc-caret" });
   // ---- the results re-rank around it --------------------------------------------------------
   const R = 1.78;
-  tl.to("#root .m", { color: "#8b7bff", duration: 0.3, ease: "power2.out" }, R);
+  tl.to("#root .m", { color: "#8b7bff", duration: 0.3, ease: "apple.out" }, R);
   RC.roll(tl, "#root .lab", R, { values: ["SUGGESTED", "BEST MATCHES"], each: 0.5, duration: 0.35 });
   ["i3", "i4", "i5"].forEach((r, k) => {
-    tl.to("#root ." + r, { opacity: 0, y: -10, filter: "blur(6px)", duration: 0.22, ease: "power2.in" }, R + k * 0.05);
-    tl.fromTo("#root .n" + (k + 3), { opacity: 0, y: 14, filter: "blur(6px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "expo.out" }, R + 0.22 + k * 0.07);
+    tl.to("#root ." + r, { opacity: 0, y: -10, filter: "blur(6px)", duration: 0.22, ease: "apple.exit" }, R + k * 0.05);
+    tl.fromTo("#root .n" + (k + 3), { opacity: 0, y: 14, filter: "blur(6px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "spring.gentle" }, R + 0.22 + k * 0.07);
   });
   // ---- arrow, arrow, return -----------------------------------------------------------------
-  const press = (sel, at) => { tl.to(sel, { scale: 0.88, backgroundColor: "rgba(139,123,255,.45)", duration: 0.08, ease: "power2.in" }, at); tl.to(sel, { scale: 1, backgroundColor: "rgba(244,242,238,.08)", duration: 0.28, ease: "expo.out" }, at + 0.08); };
-  press("#root .hk1", 2.55); tl.to("#root .sel", { y: 88, duration: 0.4, ease: "expo.inOut" }, 2.58);
-  press("#root .hk1", 3.0); tl.to("#root .sel", { y: 176, duration: 0.4, ease: "expo.inOut" }, 3.03);
+  const press = (sel, at) => { tl.to(sel, { scale: 0.88, backgroundColor: "rgba(139,123,255,.45)", duration: 0.08, ease: "apple.exit" }, at); tl.to(sel, { scale: 1, backgroundColor: "rgba(244,242,238,.08)", duration: 0.28, ease: "spring.gentle" }, at + 0.08); };
+  press("#root .hk1", 2.55); tl.to("#root .sel", { y: 88, duration: 0.4, ease: "spring.default" }, 2.58);
+  press("#root .hk1", 3.0); tl.to("#root .sel", { y: 176, duration: 0.4, ease: "spring.default" }, 3.03);
   press("#root .hk2", 3.55);
   tl.to("#root .sel", { backgroundColor: "rgba(139,123,255,.55)", duration: 0.12 }, 3.58);
   // ---- it opens: the palette lets go, the invoice is there -----------------------------------
-  tl.to("#root .pal", { opacity: 0, scale: 0.985, filter: "blur(8px)", duration: 0.4, ease: "power2.in" }, 3.78);
-  tl.fromTo("#root .inv", { opacity: 0, y: 28, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: "expo.out" }, 4.1);
-  tl.fromTo("#root .inv", { filter: "blur(10px)" }, { filter: "blur(0px)", duration: 0.7, ease: "expo.out" }, 4.1);
-  RC.count(tl, "#root .inv .am", 4.5, { from: 0, to: 2400, decimals: 2, prefix: "€", duration: 1.0, ease: "expo.out" });
-  tl.fromTo("#root .inv .pd", { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.5, ease: "expo.out" }, 5.05);
+  tl.to("#root .pal", { opacity: 0, scale: 0.985, filter: "blur(8px)", duration: 0.4, ease: "apple.exit" }, 3.78);
+  tl.fromTo("#root .inv", { opacity: 0, y: 28, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: "spring.gentle" }, 4.1);
+  tl.fromTo("#root .inv", { filter: "blur(10px)" }, { filter: "blur(0px)", duration: 0.7, ease: "spring.gentle" }, 4.1);
+  RC.count(tl, "#root .inv .am", 4.5, { from: 0, to: 2400, decimals: 2, prefix: "€", duration: 1.0, ease: "spring.gentle" });
+  tl.fromTo("#root .inv .pd", { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.5, ease: "spring.gentle" }, 5.05);
   RC.camera(tl, "#root .cam", 0, { duration: 6.1, to: { scale: 1.03 } });
   RC.drift(tl, "#root .rc-mesh", 0, { duration: 6.1, x: 50, y: -30, scale: 1.08 });
   RC.hold(tl, 6.05);

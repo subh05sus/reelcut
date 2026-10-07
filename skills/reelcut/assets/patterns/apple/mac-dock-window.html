@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* MAC DOCK WINDOW. A Tahoe desktop (the UI is the frame). The cursor comes down to the Dock and runs along it: the
+     icons magnify around it with a smooth falloff and the shelf widens to hold them, all following the cursor's own
+     hand-like path. It clicks Notes: the icon bounces twice (up decelerating, down accelerating, the second hop lower)
+     and its window opens out of it on spring.page; the running dot appears. The cursor leaves (the Dock settles back),
+     goes to the sidebar, and the selection glides from Ideas to Travel; the list changes under the toolbar.
+     Glass: the Dock and the sidebar slab (the functional layer); the window and its list are content.
+     Grid: --pt 2. Window 880 × 560 at (100, 150); Dock centred, its shelf 84 px above the frame's bottom. */
+  #root { --accent: #f5b400; --pt: 2px; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 540px 540px; }
+  #root .wall { position: absolute; inset: 0;
+    background: radial-gradient(70% 60% at 20% 20%, color-mix(in oklab, var(--accent) 40%, transparent), transparent 70%),
+                radial-gradient(70% 60% at 85% 75%, rgba(47,91,255,.4), transparent 70%), linear-gradient(160deg, #f3efe8, #dfe5f2); }
+  #root .win { left: 100px; top: 150px; width: 880px; height: 560px; --sw: 150; }
+  #root .dock { left: 110px; top: 856px; }
+  #root .notes .rc-mac-item i { background: linear-gradient(150deg,#ffe36e,#f5b400); }
+  #root .set2 { opacity: 0; }
+  #root .rc-cursor { width: 44px; height: 44px; }
+</style>
+<div id="root" data-look="paper" data-composition-id="mac-dock-window" data-width="1080" data-height="1080">
+  <div class="cam">
+    <div class="wall"></div>
+    <div class="rc-mac win notes">
+      <div class="rc-mac-side rc-glass">
+        <div class="rc-lights"><i></i><i></i><i></i></div>
+        <span class="rc-mac-sel"></span>
+        <div class="rc-mac-sec">iCloud</div>
+        <div class="rc-mac-row"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 3h10l4 4v14H5z"/></svg>All Notes<small>12</small></div>
+        <div class="rc-mac-row"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 6h7l2 2h9v11H3z"/></svg>Ideas<small>5</small></div>
+        <div class="rc-mac-row"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 6h7l2 2h9v11H3z"/></svg>Recipes<small>4</small></div>
+        <div class="rc-mac-row"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 6h7l2 2h9v11H3z"/></svg>Travel<small>3</small></div>
+      </div>
+      <div class="rc-mac-main">
+        <div class="rc-mac-tb"><b class="t1">Ideas<small>5 notes</small></b><b class="t2 set2" style="position:absolute">Travel<small>3 notes</small></b>
+          <div class="rc-mac-tools rc-glass"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20h16M14.5 4.5l5 5L9 20H4v-5z"/></svg></i><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7.5 7.5 12 3l4.5 4.5M6 11H5v10h14V11h-1"/></svg></i></div></div>
+        <div class="rc-mac-list set1">
+          <div class="rc-mac-item"><i></i><div><b>A podcast about tools</b><span>Three episodes to start</span></div><time>9:12</time></div>
+          <div class="rc-mac-item"><i></i><div><b>Garden table</b><span>Oak, 180 by 90</span></div><time>Mon</time></div>
+          <div class="rc-mac-item"><i></i><div><b>Birthday surprise</b><span>Ask Jonas about Friday</span></div><time>Sun</time></div>
+        </div>
+        <div class="rc-mac-list set2">
+          <div class="rc-mac-item"><i></i><div><b>Lisbon in June</b><span>Trams, tiles, tarts</span></div><time>8:40</time></div>
+          <div class="rc-mac-item"><i></i><div><b>Packing list</b><span>Adapter, linen shirt</span></div><time>Tue</time></div>
+          <div class="rc-mac-item"><i></i><div><b>Train to Porto</b><span>Leaves 9:05, seat 41</span></div><time>Mar 2</time></div>
+        </div>
+      </div>
+    </div>
+    <div class="rc-dock dock">
+      <div class="rc-dock-shelf rc-glass"></div>
+      <div class="rc-dock-icon" style="--dot: currentColor"><i style="background: linear-gradient(#6fc4ff,#1f7bff)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M12 4v16M8 9v2M16 9v2M8 15c2 2 6 2 8 0"/></svg></i></div>
+      <div class="rc-dock-icon"><i style="background: linear-gradient(#ffffff,#d9e6ff)"><svg viewBox="0 0 24 24" fill="none" stroke="#1f7bff" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M15.5 8.5 13 13l-4.5 2.5L11 11z" fill="#ff3b30" stroke="none"/></svg></i></div>
+      <div class="rc-dock-icon"><i style="background: linear-gradient(#6be38f,#20b04f)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4c4.7 0 8.5 3.1 8.5 7S16.7 18 12 18c-.9 0-1.8-.1-2.6-.3L5 20l1.2-3.6C4.6 15 3.5 13.1 3.5 11c0-3.9 3.8-7 8.5-7z"/></svg></i></div>
+      <div class="rc-dock-icon ic-notes"><i style="background: linear-gradient(#fff6c9 0 28%, #ffffff 28%)"><svg viewBox="0 0 24 24" fill="none" stroke="#c9c9c9" stroke-width="1.6"><path d="M5 11h14M5 15h14M5 19h10"/><path d="M3 5h18" stroke="#f5b400" stroke-width="3"/></svg></i></div>
+      <div class="rc-dock-icon"><i style="background: linear-gradient(#ff6b7d,#ff2d55)"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 5l10-2v12.5a2.5 2.5 0 1 1-2-2.45V7.2l-6 1.2v9.1a2.5 2.5 0 1 1-2-2.45z"/></svg></i></div>
+      <div class="rc-dock-icon"><i style="background: #fff"><svg viewBox="0 0 24 24"><g transform="translate(12 12)"><ellipse rx="3" ry="6.5" cy="-4.5" fill="#ffb11f"/><ellipse rx="3" ry="6.5" cy="-4.5" fill="#ff5e3a" transform="rotate(60)"/><ellipse rx="3" ry="6.5" cy="-4.5" fill="#c644fc" transform="rotate(120)"/><ellipse rx="3" ry="6.5" cy="-4.5" fill="#1f7bff" transform="rotate(180)"/><ellipse rx="3" ry="6.5" cy="-4.5" fill="#34c759" transform="rotate(240)"/><ellipse rx="3" ry="6.5" cy="-4.5" fill="#ffd60a" transform="rotate(300)"/></g></svg></i></div>
+      <div class="rc-dock-icon"><i style="background: linear-gradient(#b8bec9,#7d8594)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg></i></div>
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  RC.glass();
+  RC.dockSet("#root .dock");
+  const cur = RC.cursorEl("#root .cam");
+  // Dock icon centres in the frame: the Dock starts at 110; each icon is 9 + 26 + 60 i points in.
+  const ix = (i) => 110 + (35 + 60 * i) * 2, iy = 856 + 70;
+  RC.dockHover(tl, "#root .dock", cur, 0, [[1000, 560, 0], [ix(0) + 20, iy, 1.0], [ix(3), iy, 0.85]], { enter: 1.05, leave: 2.75 });
+  RC.click(tl, cur, 1.95, { target: "#root .ic-notes i", ripple: false });
+  RC.dockBounce(tl, "#root .ic-notes", 2.0);
+  RC.macOpen(tl, "#root .win", 2.25, { from: "#root .ic-notes", lead: false });
+  gsap.set("#root .win", { opacity: 0 });
+  RC.macSelectSet("#root .rc-mac-side", 1);
+  // To the sidebar; Travel.
+  RC.cursor(tl, cur, 2.8, [[100 + 8 * 2 + 70, 150 + (8 + 46 + 28 + 28 * 3 + 14) * 2, 0.75]]);
+  RC.click(tl, cur, 3.65, { ripple: false });
+  RC.macSelect(tl, "#root .rc-mac-side", 3.68, 3);
+  tl.to("#root .set1, #root .t1", { opacity: 0, duration: 0.15, ease: "apple.exit" }, 3.7);
+  tl.to("#root .set2", { opacity: 1, duration: 0.22, ease: "apple.out" }, 3.8);
+  RC.rise(tl, "#root .set2 .rc-mac-item", 3.8, { y: 10, stagger: 0.04 });
+  RC.camera(tl, "#root .cam", 0, { duration: 5.2, to: { scale: 1.02 } });
+  RC.hold(tl, 5.2);
+  window.__timelines["mac-dock-window"] = tl;
+})();
+</script>
+</template>
+</body></html>

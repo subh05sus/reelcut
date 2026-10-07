@@ -24,9 +24,9 @@
 (function () {
   const tl = gsap.timeline({ paused: true });
   RC.words(tl, "#root .h", 0, { lead: true, stagger: 0.1 });
-  tl.fromTo("#root .rc-code", { rotationX: 28, rotationY: -18, y: 90, opacity: 0.6, transformPerspective: 1600 }, { rotationX: 0, rotationY: 0, y: 0, opacity: 1, duration: 1.4, ease: "expo.out" }, 0.1);
+  tl.fromTo("#root .rc-code", { rotationX: 28, rotationY: -18, y: 90, opacity: 0.6, transformPerspective: 1600 }, { rotationX: 0, rotationY: 0, y: 0, opacity: 1, duration: 1.4, ease: "spring.gentle" }, 0.1);
   // Lines write in one after another, each revealed along the reading direction.
-  tl.fromTo("#root .rc-code .ln", { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.45, ease: "power2.out", stagger: 0.22 }, 0.45);
+  tl.fromTo("#root .rc-code .ln", { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.45, ease: "apple.out", stagger: 0.22 }, 0.45);
   tl.fromTo("#root .rc-hlline", { backgroundColor: "rgba(139,123,255,0)", boxShadow: "inset 0 0 0 #8b7bff" }, { backgroundColor: "rgba(139,123,255,.18)", boxShadow: "inset 4px 0 0 #8b7bff", duration: 0.5 }, 1.9);
   RC.camera(tl, "#root .cam", 1.8, { duration: 2.6, to: { scale: 1.07 } });
   RC.hold(tl, 4.35);

@@ -51,16 +51,16 @@
 (function () {
   const tl = gsap.timeline({ paused: true });
   // The quote reads first: word by word out of blur, the first word already there at frame 0.
-  tl.fromTo("#root .qm", { opacity: 0.08, y: 14 }, { opacity: 0.16, y: 0, duration: 1.4, ease: "expo.out" }, 0);
+  tl.fromTo("#root .qm", { opacity: 0.08, y: 14 }, { opacity: 0.16, y: 0, duration: 1.4, ease: "spring.gentle" }, 0);
   RC.words(tl, "#root .q", 0, { lead: true, stagger: 0.07, blur: 12, y: 20, duration: 0.7 });
   // Then the byline: the rule draws, the face and name resolve, and the stars fill in one by one.
   const B = 2.45;
-  tl.fromTo("#root .rule", { scaleX: 0 }, { scaleX: 1, duration: 0.9, ease: "expo.inOut" }, B);
+  tl.fromTo("#root .rule", { scaleX: 0 }, { scaleX: 1, duration: 0.9, ease: "apple.glide" }, B);
   RC.blurIn(tl, "#root .av", B + 0.2, { blur: 10, y: 14, scale: 0.9, duration: 0.7 });
   RC.blurIn(tl, "#root .nm, #root .rl", B + 0.35, { blur: 8, y: 10, stagger: 0.08, duration: 0.6 });
   document.querySelectorAll("#root .stars svg").forEach((st, i) => {
-    tl.fromTo(st, { opacity: 0, scale: 0.6, transformOrigin: "50% 50%" }, { opacity: 1, scale: 1, duration: 0.5, ease: "expo.out" }, B + 0.7 + i * 0.1);
-    tl.fromTo(st, { filter: "blur(6px)" }, { filter: "blur(0px)", duration: 0.4, ease: "expo.out" }, B + 0.7 + i * 0.1);
+    tl.fromTo(st, { opacity: 0, scale: 0.6, transformOrigin: "50% 50%" }, { opacity: 1, scale: 1, duration: 0.5, ease: "spring.gentle" }, B + 0.7 + i * 0.1);
+    tl.fromTo(st, { filter: "blur(6px)" }, { filter: "blur(0px)", duration: 0.4, ease: "spring.gentle" }, B + 0.7 + i * 0.1);
   });
   RC.camera(tl, "#root .cam", 0, { duration: 5, to: { scale: 1.035 } });
   RC.drift(tl, "#root .rc-mesh", 0, { duration: 5, x: 50, y: -30, scale: 1.08 });

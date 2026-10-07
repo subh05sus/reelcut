@@ -67,11 +67,11 @@
   RC.glass();
   RC.words(tl, "#root .rc-head", 0, { lead: true, stagger: 0.09, blur: 14, y: 20 });
   // The thread is on screen at frame 0 (header and composer); the first message is already going out.
-  tl.fromTo("#root .chat", { y: 50, opacity: 0.75 }, { y: 0, opacity: 1, duration: 0.9, ease: "expo.out" }, 0.05);
-  tl.fromTo("#root .comp", { y: 30, opacity: 0.7 }, { y: 0, opacity: 1, duration: 0.9, ease: "expo.out" }, 0.15);
+  tl.fromTo("#root .chat", { y: 50, opacity: 0.75 }, { y: 0, opacity: 1, duration: 0.9, ease: "spring.gentle" }, 0.05);
+  tl.fromTo("#root .comp", { y: 30, opacity: 0.7 }, { y: 0, opacity: 1, duration: 0.9, ease: "spring.gentle" }, 0.15);
   RC.blurIn(tl, "#root .m1", 0.45, { blur: 8, x: 28, y: 0, duration: 0.7 });
   // Three dots, pulsing in turn, then the reply opens out of the corner they were sitting in.
-  tl.fromTo("#root .avs", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.5, ease: "expo.out" }, 1.25);
+  tl.fromTo("#root .avs", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.5, ease: "spring.gentle" }, 1.25);
   RC.blurIn(tl, "#root .typing", 1.25, { blur: 6, x: -16, y: 0, duration: 0.5 });
   for (let k = 0; k < 2; k++) {
     tl.to("#root .typing i", { opacity: 0.25, scale: 0.75, duration: 0.2, ease: "sine.inOut", stagger: 0.12 }, 1.7 + k * 0.42);
@@ -80,20 +80,20 @@
   tl.to("#root .typing", { opacity: 0, duration: 0.01 }, 2.55);
   gsap.set("#root .m2", { clipPath: "inset(0px 464px 39px 0px round 30px 30px 30px 8px)" });
   tl.to("#root .m2", { opacity: 1, duration: 0.01 }, 2.55);
-  tl.to("#root .m2", { clipPath: "inset(0px 0px 0px 0px round 30px 30px 30px 8px)", duration: 0.55, ease: "expo.out" }, 2.55);
+  tl.to("#root .m2", { clipPath: "inset(0px 0px 0px 0px round 30px 30px 30px 8px)", duration: 0.55, ease: "spring.gentle" }, 2.55);
   RC.words(tl, "#root .m2 .w", 2.65, { stagger: 0.085, blur: 8, y: 6, duration: 0.45 });
   // A reaction lands on the reply.
-  tl.fromTo("#root .react", { opacity: 0, y: 10, scale: 0.85 }, { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: "expo.out" }, 4.05);
-  tl.fromTo("#root .react", { filter: "blur(6px)" }, { filter: "blur(0px)", duration: 0.45, ease: "expo.out" }, 4.05);
+  tl.fromTo("#root .react", { opacity: 0, y: 10, scale: 0.85 }, { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: "spring.gentle" }, 4.05);
+  tl.fromTo("#root .react", { filter: "blur(6px)" }, { filter: "blur(0px)", duration: 0.45, ease: "spring.gentle" }, 4.05);
   // The answer: a line is typed into the composer, sent, and becomes the thread's last bubble.
   tl.to("#root .comp .ph", { opacity: 0, duration: 0.12 }, 4.4);
   RC.type(tl, "#root .comp .ty", 4.45, { text: "Ship it.", cps: 10 });
-  tl.to("#root .comp .send", { scale: 0.88, duration: 0.1, ease: "power2.in" }, 5.4);
-  tl.to("#root .comp .send", { scale: 1, duration: 0.3, ease: "back.out(3)" }, 5.5);
+  tl.to("#root .comp .send", { scale: 0.9, duration: 0.08, ease: "apple.out" }, 5.4);
+  tl.to("#root .comp .send", { scale: 1, duration: 0.3, ease: "spring.snappy" }, 5.5);
   tl.to("#root .comp .tx", { opacity: 0, duration: 0.15 }, 5.55);
   // The line leaves the composer: it rises from beneath the glass into its place in the thread.
-  tl.fromTo("#root .m3", { y: 150, opacity: 0 }, { y: 0, opacity: 1, duration: 0.75, ease: "expo.out" }, 5.55);
-  tl.fromTo("#root .m3", { filter: "blur(8px)" }, { filter: "blur(0px)", duration: 0.6, ease: "expo.out" }, 5.55);
+  tl.fromTo("#root .m3", { y: 150, opacity: 0 }, { y: 0, opacity: 1, duration: 0.75, ease: "spring.gentle" }, 5.55);
+  tl.fromTo("#root .m3", { filter: "blur(8px)" }, { filter: "blur(0px)", duration: 0.6, ease: "spring.gentle" }, 5.55);
   RC.blurIn(tl, "#root .dlv", 6.05, { blur: 4, y: 6, duration: 0.4 });
   RC.camera(tl, "#root .cam", 0, { duration: 6.6, to: { scale: 1.03 } });
   RC.drift(tl, "#root .rc-mesh", 0, { duration: 6.6, x: 50, y: -30, scale: 1.08 });

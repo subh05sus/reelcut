@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* IOS CONTEXT MENU. Three photos (content, on a dark look). A finger holds the middle one: it sinks slowly
+     (0.97 over 0.3 s), then lifts out of the page with a deeper shadow while everything behind it blurs and dims,
+     and the menu grows from the photo's corner on spring.default. Delete is chosen (the row highlights, the menu goes
+     faster than it came); the alert asks first (fade and zoom 0.95 → 1 in 200 ms over a scrim); Delete again, and
+     the photo goes while its neighbour glides into its place. Menus and alerts are solid: they hold text.
+     Grid: headline at (84, 96); three 280 px photos on the margins (84, 400, 716) from y 380; the menu under the
+     held photo, 400 px wide (250 pt at --pt 1.6); the alert centred on the content region. */
+  #root { --accent: #ff375f; --pt: 1.6px; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 540px 600px; }
+  #root .ph { position: absolute; top: 380px; width: 280px; height: 280px; border-radius: 30px; z-index: 1; box-shadow: 0 0px 0px -20px rgba(0,0,0,0); }
+  #root .p1 { left: 84px; background: linear-gradient(150deg,#ffb36b,#ff5e3a); }
+  #root .p2 { left: 400px; background: linear-gradient(150deg,#7cc6ff,#3a5bff); }
+  #root .p3 { left: 716px; background: linear-gradient(150deg,#ff9fb8,#c03a7a); }
+  #root .ph::after { content: ""; position: absolute; left: 22px; bottom: 20px; width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,.28); }
+  #root .rc-cm-back { top: 320px; z-index: 5; }
+  #root .p2.lift { z-index: 6; }
+  #root .rc-cmenu { left: 400px; top: 684px; z-index: 7; }
+  #root .rc-scrim { z-index: 9; }
+  #root .rc-alert { left: 300px; top: 520px; z-index: 10; }
+  #root .rc-touch { z-index: 11; }
+</style>
+<div id="root" data-look="ink" data-composition-id="ios-context-menu" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(255,55,95,.12); --mesh-2: rgba(58,91,255,.10)"></div>
+  <div class="cam">
+    <div class="rc-head"><span class="ln" style="--ox:-1.4px">Hold for</span><span class="ln" style="--ox:3px"><em class="rc">more.</em></span></div>
+    <div class="ph p1"></div><div class="ph p2 lift"></div><div class="ph p3"></div>
+    <div class="rc-cm-back"></div>
+    <div class="rc-cmenu">
+      <div class="rc-cm-row"><span>Copy</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/></svg></div>
+      <div class="rc-cm-row"><span>Share</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7.5 7.5 12 3l4.5 4.5M6 11H5v10h14V11h-1"/></svg></div>
+      <div class="rc-cm-row"><span>Favorite</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.3 4.3 4.3 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z"/></svg></div>
+      <div class="rc-cm-sep"></div>
+      <div class="rc-cm-row rc-red"><span>Delete</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"/></svg></div>
+    </div>
+    <div class="rc-scrim"></div>
+    <div class="rc-alert"><b>Delete this photo?</b><p>It will be removed from all of your devices.</p><div class="rc-alert-btns"><span>Cancel</span><span class="rc-red del">Delete</span></div></div>
+    <div class="rc-touch"></div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  RC.words(tl, "#root .rc-head", 0, { lead: true, stagger: 0.08 });
+  RC.rise(tl, "#root .ph", 0.05, { lead: true, y: 30, stagger: 0.05 });
+  tl.set("#root .rc-touch", { opacity: 0 }, 0);
+  RC.cursor(tl, "#root .rc-touch", 0.6, [[600, 760, 0], [540, 520, 0.45]]);
+  tl.to("#root .rc-touch", { opacity: 1, duration: 0.2, ease: "apple.out" }, 0.6);
+  RC.press(tl, "#root .rc-touch", 1.1, { scale: 0.85, release: false });
+  RC.contextMenu(tl, "#root .p2", "#root .rc-cmenu", 1.1, { backdrop: "#root .rc-cm-back", origin: "0% 0%" });
+  RC.to(tl, "#root .rc-touch", 1.55, { scale: 1 }, "snappy");
+  // Delete is the fourth row, after the separator.
+  RC.cursor(tl, "#root .rc-touch", 2.2, [[560, 684 + 3 * 70.4 + 12.8 + 35, 0.45]]);
+  RC.press(tl, "#root .rc-touch", 2.7, { scale: 0.85 });
+  RC.menuPick(tl, "#root .rc-cmenu", 2.7, 3);
+  // The alert asks first.
+  RC.alertIn(tl, "#root .rc-alert", 3.05);
+  const del = document.querySelector("#root .del"), a = document.querySelector("#root .rc-alert");
+  RC.cursor(tl, "#root .rc-touch", 3.5, [[300 + del.offsetLeft + del.offsetWidth / 2 + a.querySelector(".rc-alert-btns").offsetLeft, 520 + a.querySelector(".rc-alert-btns").offsetTop + del.offsetHeight / 2, 0.45]]);
+  RC.press(tl, "#root .rc-touch", 3.95, { scale: 0.85 });
+  RC.press(tl, "#root .del", 3.95, { scale: 0.96 });
+  RC.alertOut(tl, "#root .rc-alert", 4.1);
+  tl.to("#root .rc-touch", { opacity: 0, duration: 0.2, ease: "apple.exit" }, 4.1);
+  // The photo goes; its neighbour glides into its place.
+  tl.to("#root .p2", { scale: 0.8, opacity: 0, duration: 0.25, ease: "apple.exit" }, 4.25);
+  RC.to(tl, "#root .p3", 4.35, { x: -316 }, "default");
+  RC.emit("whoosh", 4.25);
+  RC.camera(tl, "#root .cam", 0, { duration: 5.4, to: { scale: 1.025 } });
+  RC.drift(tl, "#root .rc-mesh", 0, { duration: 5.4, x: 40, y: -20, scale: 1.06 });
+  RC.hold(tl, 5.4);
+  window.__timelines["ios-context-menu"] = tl;
+})();
+</script>
+</template>
+</body></html>

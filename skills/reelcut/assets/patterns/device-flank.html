@@ -42,7 +42,7 @@
 <script>
 (function () {
   const tl = gsap.timeline({ paused: true });
-  tl.fromTo("#root .rc-phone", { y: 260, rotation: 6, opacity: 0.6, filter: "blur(8px)" }, { y: 0, rotation: 0, opacity: 1, filter: "blur(0px)", duration: 1.1, ease: "expo.out" }, 0);
+  tl.fromTo("#root .rc-phone", { y: 260, rotation: 6, opacity: 0.6, filter: "blur(8px)" }, { y: 0, rotation: 0, opacity: 1, filter: "blur(0px)", duration: 1.1, ease: "spring.gentle" }, 0);
   RC.blurIn(tl, "#root .l", 0.35, { blur: 16, x: 40, y: 0 });
   RC.blurIn(tl, "#root .r", 0.45, { blur: 16, x: -40, y: 0 });
   RC.rise(tl, "#root .m1", 0.3, { lead: true, y: 20, duration: 0.5 });
@@ -50,7 +50,7 @@
   tl.fromTo("#root .pv .sk", { opacity: 0.5 }, { opacity: 1, duration: 0.5, ease: "sine.inOut", yoyo: true, repeat: 3 }, 0.2);
   RC.roll(tl, "#root .l .v", 1.9, { values: ["Say", "Build", "Ship"], each: 0.9 });
   RC.flyIn(tl, "#root .app", 2.0, { from: 0.9, blur: 12, y: 0 });
-  tl.fromTo("#root .app .ring", { rotation: -90 }, { rotation: 0, duration: 1.2, ease: "expo.out" }, 2.1);
+  tl.fromTo("#root .app .ring", { rotation: -90 }, { rotation: 0, duration: 1.2, ease: "spring.gentle" }, 2.1);
   RC.camera(tl, "#root .rc-phone", 1.1, { duration: 3.4, to: { scale: 1.04, y: -10 } });
   RC.hold(tl, 4.45);
   window.__timelines["device-flank"] = tl;

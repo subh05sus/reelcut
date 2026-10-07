@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* APP MAPS. A stylised neighbourhood (drawn from the look: light here) in Maps. The blue location dot breathes
+     calmly; a pin drops on the destination with a small give and its shadow grows; the route draws itself from the
+     dot to the pin like a pen (apple.glide) while the map eases in to frame it (spring.soft); the place card rises to
+     its detent; Directions is tapped and the turn banner drops in from the top. Glass is not used on the map: the
+     card and banner are solid, they hold text.
+     Grid: the UI is the frame. The phone at --pt 1.6, centred (x 199 → 881), from y 44, cropped by the bottom edge. */
+  #root { --accent: #0a84ff; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 540px 540px; }
+  #root .ph { left: 199px; top: 44px; --pt: 1.6px; }
+  #root .mapbox { position: absolute; inset: 0; }
+  #root .rc-medot { left: calc(96 * var(--pt)); top: calc(560 * var(--pt)); }
+  #root .rc-pin { left: calc(282 * var(--pt)); top: calc(300 * var(--pt)); }
+  #root .rc-pin-shadow { left: calc(282 * var(--pt)); top: calc(300 * var(--pt)); }
+  #root .rc-sheet { z-index: 20; }
+  #root .pc { position: absolute; left: calc(20 * var(--pt)); right: calc(20 * var(--pt)); top: calc(24 * var(--pt)); }
+  #root .pc b { display: block; font: 700 calc(24 * var(--pt)) / 1.1 var(--ui-font); letter-spacing: -0.02em; }
+  #root .pc span { display: block; margin-top: calc(4 * var(--pt)); font: 400 calc(15 * var(--pt)) / 1.3 var(--ui-font); color: var(--ui-label-2); }
+  #root .pc .btns { display: flex; gap: calc(8 * var(--pt)); margin-top: calc(16 * var(--pt)); }
+  #root .pc .btns i { flex: 1; height: calc(50 * var(--pt)); border-radius: calc(14 * var(--pt)); background: var(--ui-fill); display: grid; place-items: center; font: 600 calc(15 * var(--pt)) / 1.1 var(--ui-font); font-style: normal; color: var(--ui-tint); text-align: center; }
+  #root .pc .btns i.go { flex: 1.6; background: var(--ui-tint); color: #fff; }
+  #root .pc .btns i small { display: block; font-weight: 500; font-size: calc(12 * var(--pt)); opacity: .85; }
+  #root .rc-map-banner { left: calc(10 * var(--pt)); right: calc(10 * var(--pt)); top: calc(58 * var(--pt)); z-index: 30; opacity: 0; }
+  #root .rc-touch { --pt: 1.6px; z-index: 40; }
+</style>
+<div id="root" data-look="paper" data-composition-id="app-maps" data-width="1080" data-height="1080">
+  <div class="cam">
+    <div class="rc-iphone ph">
+      <div class="rc-scr">
+        <div class="mapbox">
+          <span class="rc-pin-shadow"></span><span class="rc-pin"><i></i></span>
+          <span class="rc-medot"></span>
+        </div>
+        <div class="rc-map-banner"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 20V11a3 3 0 0 1 3-3h8M14 4l4 4-4 4"/></svg>
+          <div><b>200 m</b><span>Turn right onto Rua Nova</span></div></div>
+        <div class="rc-sheet">
+          <i class="rc-grabber"></i>
+          <div class="pc"><b>Lume</b><span>Restaurant · 4.8 ★ · Open until 23:00</span>
+            <div class="btns"><i class="go"><span style="color:#fff;margin:0;font-weight:600">Directions</span><small>12 min</small></i><i>Call</i><i>Website</i></div></div>
+        </div>
+        <div class="rc-status"><b>9:41</b><i class="rc-island"></i><span class="rc-sys"></span></div>
+      </div>
+    </div>
+    <div class="rc-touch"></div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  const P = 1.6, X = (x) => 199 + 12 * P + x * P, Y = (y) => 44 + 12 * P + y * P;
+  const svg = RC.mapDraw("#root .mapbox", { seed: 8, labels: [["RUA NOVA", 120, 238, -4], ["PARQUE", 250, 470], ["AV. DO RIO", 30, 690, -8]] });
+  const route = RC.routePath(svg, [[96, 560], [96, 470], [182, 452], [192, 362], [282, 342], [282, 304]], { width: 8 });
+  const map = document.querySelector("#root .mapbox");
+  gsap.set(map, { transformOrigin: X(190) - 199 - 12 * P + "px " + (Y(430) - 44 - 12 * P) + "px", scale: 0.94 });
+  RC.breathe(tl, "#root .rc-medot", 0, 5.2, { period: 2.4 });
+  RC.pinDrop(tl, "#root .rc-pin", 0.45, { shadow: "#root .rc-pin-shadow" });
+  RC.draw(tl, route, 0.95, { duration: 1.25 });
+  tl.to(map, { scale: 1.06, duration: 1.4, ease: "spring.soft" }, 1.0);
+  RC.sheet(tl, "#root .rc-sheet", 2.35, 440);
+  // Directions.
+  tl.set("#root .rc-touch", { opacity: 0 }, 0);
+  RC.cursor(tl, "#root .rc-touch", 3.0, [[X(140), Y(620), 0], [X(98), Y(440 + 24 + 30 + 4 + 16 + 25 + 16), 0.45]]);
+  tl.to("#root .rc-touch", { opacity: 1, duration: 0.2, ease: "apple.out" }, 3.0);
+  RC.press(tl, "#root .rc-touch", 3.5, { scale: 0.85 });
+  RC.press(tl, "#root .pc .go", 3.5, { scale: 0.96 });
+  tl.to("#root .rc-touch", { opacity: 0, duration: 0.2, ease: "apple.exit" }, 3.7);
+  RC.sheet(tl, "#root .rc-sheet", 3.7, 620);
+  RC.notify(tl, "#root .rc-map-banner", 3.8, { lead: false });
+  RC.camera(tl, "#root .cam", 0, { duration: 5.2, to: { scale: 1.02 } });
+  RC.hold(tl, 5.2);
+  window.__timelines["app-maps"] = tl;
+})();
+</script>
+</template>
+</body></html>

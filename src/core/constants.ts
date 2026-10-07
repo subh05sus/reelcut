@@ -1,11 +1,12 @@
 /**
- * Reel format constants. Confirmed with the user 2026-09-15: 30fps @ 1080x1920 (9:16).
+ * Reel format constants. 1080x1920 (9:16) confirmed with the user 2026-09-15; 60fps since 2026-10-07, so a spring
+ * that settles in 0.4 s is drawn in 24 frames rather than 12 (Apple's motion only reads as smooth at 60).
  * These are the DEFAULTS a run falls back to when the CLI isn't given explicit --fps/--format
  * flags — they are not hardcoded into any renderer or template, which always take format/fps as
  * props (per the "never hardcode one aspect ratio into a template" non-negotiable).
  */
 
-export const DEFAULT_FPS = 30;
+export const DEFAULT_FPS = 60;
 
 export const WORDS_PER_SECOND_ESTIMATE = 2.7;
 

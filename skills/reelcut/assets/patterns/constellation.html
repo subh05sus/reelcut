@@ -49,7 +49,7 @@
     ln.setAttribute("x1", 540); ln.setAttribute("y1", 500); ln.setAttribute("x2", x); ln.setAttribute("y2", y); svg.appendChild(ln);
     return el;
   });
-  tl.fromTo("#root .c", { opacity: 0.6, scale: 0.9, filter: "blur(6px)" }, { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.7, ease: "expo.out" }, 0);
+  tl.fromTo("#root .c", { opacity: 0.6, scale: 0.9, filter: "blur(6px)" }, { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.7, ease: "spring.gentle" }, 0);
   RC.flyIn(tl, pts, 0.35, { from: 0.4, blur: 20, y: 0, stagger: 0.09 });
   tl.fromTo("#root svg.links line", { opacity: 0 }, { opacity: 1, duration: 0.5, stagger: 0.09 }, 0.55);
   tl.fromTo("#root .ring", { rotation: -8 }, { rotation: 8, duration: 4.4, ease: "sine.inOut" }, 0);

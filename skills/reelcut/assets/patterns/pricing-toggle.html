@@ -66,22 +66,22 @@
   RC.glass();
   RC.words(tl, "#root .rc-head", 0, { lead: true, stagger: 0.09, blur: 14, y: 20 });
   // The control and the three plans arrive from depth; the first plan is legible at frame 0.
-  tl.fromTo("#root .row", { opacity: 0.7, y: 16 }, { opacity: 1, y: 0, duration: 0.7, ease: "expo.out" }, 0.05);
+  tl.fromTo("#root .row", { opacity: 0.7, y: 16 }, { opacity: 1, y: 0, duration: 0.7, ease: "spring.gentle" }, 0.05);
   RC.flyIn(tl, "#root .plan", 0.1, { from: 0.94, blur: 12, y: 40, stagger: 0.09, duration: 0.9 });
   // The flip. The lens glides to Yearly and the labels trade places; everything below answers it.
   const FLIP = 1.75;
-  tl.to("#root .thumb", { x: 190, duration: 0.6, ease: "expo.inOut" }, FLIP);
+  tl.to("#root .thumb", { x: 190, duration: 0.6, ease: "spring.default" }, FLIP);
   tl.to("#root .l1", { color: "#6b675f", duration: 0.3 }, FLIP + 0.1);
   tl.to("#root .l2", { color: "#121212", duration: 0.3 }, FLIP + 0.1);
   [["p1", 12, 10], ["p2", 29, 24], ["p3", 79, 63]].forEach(([p, from, to], i) => {
-    RC.count(tl, "#root ." + p + " .pr", FLIP + 0.3 + i * 0.08, { from, to, prefix: "€", duration: 0.75, ease: "expo.out" });
+    RC.count(tl, "#root ." + p + " .pr", FLIP + 0.3 + i * 0.08, { from, to, prefix: "€", duration: 0.75, ease: "spring.gentle" });
     RC.roll(tl, "#root ." + p + " .bl", FLIP + 0.3 + i * 0.08, { values: ["billed monthly", "billed yearly"], each: 0.5, duration: 0.4 });
   });
-  tl.fromTo("#root .save", { opacity: 0, y: 12, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: "expo.out" }, FLIP + 0.45);
-  tl.fromTo("#root .save", { filter: "blur(8px)" }, { filter: "blur(0px)", duration: 0.5, ease: "expo.out" }, FLIP + 0.45);
+  tl.fromTo("#root .save", { opacity: 0, y: 12, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: "spring.gentle" }, FLIP + 0.45);
+  tl.fromTo("#root .save", { filter: "blur(8px)" }, { filter: "blur(0px)", duration: 0.5, ease: "spring.gentle" }, FLIP + 0.45);
   // The middle plan lifts and takes the accent ring.
-  tl.to("#root .p2", { y: -16, scale: 1.035, duration: 0.8, ease: "expo.out" }, FLIP + 0.9);
-  tl.to("#root .p2 .ring", { opacity: 1, duration: 0.6, ease: "power2.out" }, FLIP + 0.9);
+  tl.to("#root .p2", { y: -16, scale: 1.035, duration: 0.8, ease: "spring.gentle" }, FLIP + 0.9);
+  tl.to("#root .p2 .ring", { opacity: 1, duration: 0.6, ease: "apple.out" }, FLIP + 0.9);
   RC.camera(tl, "#root .cam", 0, { duration: 4.4, to: { scale: 1.03 } });
   RC.drift(tl, "#root .rc-mesh", 0, { duration: 4.4, x: 50, y: -30, scale: 1.08 });
   RC.hold(tl, 4.35);

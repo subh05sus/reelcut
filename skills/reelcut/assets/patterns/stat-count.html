@@ -30,9 +30,9 @@
 (function () {
   const tl = gsap.timeline({ paused: true });
   RC.blurIn(tl, "#root .k", 0, { lead: true, blur: 8, y: 10 });
-  tl.fromTo("#root .n", { opacity: 0.55, filter: "blur(8px)", scale: 0.96 }, { opacity: 1, filter: "blur(0px)", scale: 1, duration: 0.7, ease: "expo.out" }, 0);
-  RC.count(tl, "#root .n", 0.05, { from: 0, to: 1240000, duration: 1.6, ease: "expo.out" });
-  RC.draw(tl, "#root .spark .ln", 0.3, { duration: 1.5, ease: "expo.inOut" });
+  tl.fromTo("#root .n", { opacity: 0.55, filter: "blur(8px)", scale: 0.96 }, { opacity: 1, filter: "blur(0px)", scale: 1, duration: 0.7, ease: "spring.gentle" }, 0);
+  RC.count(tl, "#root .n", 0.05, { from: 0, to: 1240000, duration: 1.6, ease: "spring.gentle" });
+  RC.draw(tl, "#root .spark .ln", 0.3, { duration: 1.5, ease: "apple.glide" });
   tl.fromTo("#root .spark .area", { opacity: 0 }, { opacity: 1, duration: 0.8 }, 1.1);
   RC.pop(tl, "#root .pill span", 1.7);
   RC.hold(tl, 3.95);

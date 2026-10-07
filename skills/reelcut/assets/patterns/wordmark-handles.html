@@ -49,22 +49,22 @@
   const tl = gsap.timeline({ paused: true });
   const cam = document.querySelector("#root .cam"), cur = RC.cursorEl(cam);
   // The mark and the wordmark are on screen at frame 0, a little soft; they resolve.
-  tl.fromTo("#root .grp", { opacity: 0.6, scale: 1.04 }, { opacity: 1, scale: 1, duration: 1.1, ease: "expo.out" }, 0);
-  tl.fromTo("#root .grp", { filter: "blur(8px)" }, { filter: "blur(0px)", duration: 0.9, ease: "expo.out" }, 0);
-  tl.fromTo("#root .mk", { rotation: -40 }, { rotation: 0, duration: 1.4, ease: "expo.out", transformOrigin: "50% 50%" }, 0);
+  tl.fromTo("#root .grp", { opacity: 0.6, scale: 1.04 }, { opacity: 1, scale: 1, duration: 1.1, ease: "spring.gentle" }, 0);
+  tl.fromTo("#root .grp", { filter: "blur(8px)" }, { filter: "blur(0px)", duration: 0.9, ease: "spring.gentle" }, 0);
+  tl.fromTo("#root .mk", { rotation: -40 }, { rotation: 0, duration: 1.4, ease: "spring.gentle", transformOrigin: "50% 50%" }, 0);
   // The cursor drifts in from the lower right and settles on the wordmark's edge.
   tl.fromTo(cur, { opacity: 0 }, { opacity: 1, duration: 0.3 }, 0.9);
   RC.cursor(tl, cur, 0.9, [[1040, 1050, 0], [700, 510, 1.1]]);
   // The click: the box snaps around it — 0.12s after the press — and its handles come in corner by corner.
   RC.click(tl, cur, 2.1, {});
   const B = 2.22;
-  tl.fromTo("#root .sel", { opacity: 0, scale: 1.06 }, { opacity: 1, scale: 1, duration: 0.55, ease: "expo.out" }, B);
-  tl.fromTo("#root .sel .h", { scale: 0.4, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: "expo.out", stagger: 0.04 }, B + 0.08);
-  tl.fromTo("#root .chip", { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.5, ease: "expo.out" }, B + 0.35);
-  tl.fromTo("#root .chip", { filter: "blur(6px)" }, { filter: "blur(0px)", duration: 0.4, ease: "expo.out" }, B + 0.35);
-  tl.to(cur, { x: 1000, y: 690, opacity: 0, duration: 0.8, ease: "power2.in" }, B + 0.9);
+  tl.fromTo("#root .sel", { opacity: 0, scale: 1.06 }, { opacity: 1, scale: 1, duration: 0.55, ease: "spring.gentle" }, B);
+  tl.fromTo("#root .sel .h", { scale: 0.4, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: "spring.gentle", stagger: 0.04 }, B + 0.08);
+  tl.fromTo("#root .chip", { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.5, ease: "spring.gentle" }, B + 0.35);
+  tl.fromTo("#root .chip", { filter: "blur(6px)" }, { filter: "blur(0px)", duration: 0.4, ease: "spring.gentle" }, B + 0.35);
+  tl.to(cur, { x: 1000, y: 690, opacity: 0, duration: 0.8, ease: "apple.exit" }, B + 0.9);
   // Let go: the box, handles and chip dissolve, and the line that belongs with the mark arrives.
-  tl.to("#root .sel, #root .chip", { opacity: 0, filter: "blur(6px)", duration: 0.45, ease: "power2.in" }, 3.55);
+  tl.to("#root .sel, #root .chip", { opacity: 0, filter: "blur(6px)", duration: 0.45, ease: "apple.exit" }, 3.55);
   RC.words(tl, "#root .tag", 3.7, { stagger: 0.09, blur: 12, y: 16, duration: 0.7 });
   RC.camera(tl, "#root .cam", 0, { duration: 5.4, to: { scale: 1.03 } });
   RC.drift(tl, "#root .rc-mesh", 0, { duration: 5.4, x: 50, y: -30, scale: 1.08 });

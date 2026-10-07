@@ -46,11 +46,11 @@
   });
   gs.forEach((o, i) => gsap.set(o.g, { x: start[i].x, y: start[i].y, scale: start[i].s, svgOrigin: "0 0" }));
   // Draw the flock on, one glyph at a time. The accent glyph is already there: frame 0 is legible.
-  RC.draw(tl, gs.slice(1).map((o) => o.p), 0.15, { duration: 0.55, stagger: 0.11, ease: "power2.out" });
+  RC.draw(tl, gs.slice(1).map((o) => o.p), 0.15, { duration: 0.55, stagger: 0.11, ease: "apple.out" });
   gs.forEach((o, i) => {
     const d = i * 0.03;
-    tl.fromTo(o.g, { x: start[i].x, y: start[i].y, rotation: 0, scale: start[i].s }, { x: scatter[i].x, y: scatter[i].y, rotation: scatter[i].r, scale: scatter[i].s, duration: 1.15, ease: "expo.inOut", immediateRender: false }, 1.5 + d);
-    tl.fromTo(o.g, { x: scatter[i].x, y: scatter[i].y, rotation: scatter[i].r, scale: scatter[i].s }, { x: ring[i].x, y: ring[i].y, rotation: ring[i].r, scale: ring[i].s, duration: 1.2, ease: "expo.inOut", immediateRender: false }, 2.95 + d);
+    tl.fromTo(o.g, { x: start[i].x, y: start[i].y, rotation: 0, scale: start[i].s }, { x: scatter[i].x, y: scatter[i].y, rotation: scatter[i].r, scale: scatter[i].s, duration: 1.15, ease: "spring.default", immediateRender: false }, 1.5 + d);
+    tl.fromTo(o.g, { x: scatter[i].x, y: scatter[i].y, rotation: scatter[i].r, scale: scatter[i].s }, { x: ring[i].x, y: ring[i].y, rotation: ring[i].r, scale: ring[i].s, duration: 1.2, ease: "spring.default", immediateRender: false }, 2.95 + d);
   });
   RC.words(tl, "#root .l1", 0, { lead: true, stagger: 0.08, blur: 14, y: 20 });
   RC.words(tl, "#root .l2", 3.2, { stagger: 0.09, blur: 14, y: 20 });

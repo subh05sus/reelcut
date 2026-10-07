@@ -32,6 +32,41 @@ composing can go into the parts that should differ.
 
 The root is sized and grounded by the look. Override any token on `#root`.
 
+## Motion — Apple's springs
+
+Every helper moves on Apple's motion, not on GSAP's stock curves (owner's decision, 2026-10-07). The kit solves the
+real damped spring and registers each preset as a GSAP ease, so your own tweens can name them too:
+
+| ease | stiffness / damping | for |
+|---|---|---|
+| `spring.snappy` | 520 / 40 (~0.38 s) | presses, toggles, small state changes |
+| `spring.default` | 380 / 38 (~0.44 s) | panels, sheets, cards, a thumb or lens sliding, a value changing |
+| `spring.page` | 300 / 34 (~0.5 s) | a full-screen push, a big move |
+| `spring.gentle` | 200 / 28 (~0.63 s) | words and objects arriving in a film frame (the default entrance) |
+| `spring.soft` | 120 / 22 (~0.85 s) | large or far things, arrivals from depth, a map or a zoom easing in |
+| `spring.reward` | 320 / 22 (8.7% overshoot) | the one earned moment of a reel; nothing else bounces |
+| `spring.island` | 230 / 24 (1.7% overshoot) | the Dynamic Island's morph |
+| `apple.out` | `cubic-bezier(.2, 0, 0, 1)` | fades and colour paired with a spring (also the default for a tween that names no ease) |
+| `apple.push` | `cubic-bezier(.32, .72, 0, 1)` | the iOS push and pop, the keyboard |
+| `apple.exit` | `cubic-bezier(.4, 0, 1, 1)` | leaving: accelerating away, about 2/3 the length of the arrival |
+| `apple.glide` | minimum jerk | a hand moving a cursor or a finger, a pen drawing, a playhead dragged |
+
+Why it reads as calm: a spring released from rest eases off the start (the first 1% of the time covers 0.4% of the way;
+`expo.out` covers 6.7%, a jolt on frame one), reaches its speed in the first tenth and settles on a long, even
+deceleration with no bounce. Never use `expo`, `back`, `elastic`, `power` or `bounce` eases; keep `sine.inOut` for slow
+ambient camera and drift, `none` for typing and things scrubbed against time. A spring stretched to a longer duration is
+a softer spring of the same damping, so passing `duration` keeps the feel. `RC.spring("default")` gives `{ ease,
+duration }`; `RC.spring({ stiffness, damping })` makes your own.
+
+`data-motion` on the root (`restrained` · `default` · `energetic`, written by the render from `direction.motion` in
+`reel.json`) retunes every spring: restrained is slower and fully damped, energetic is quicker and lets presses and
+pops overshoot ~2%. Reels render at **60 fps** by default (`DEFAULT_FPS`); a 0.4 s spring is 24 frames, not 12.
+
+## Apple UI
+
+iPhone controls and surfaces, the Dynamic Island, the Mac, app mockups (Messages, Calendar, Maps, Music, the home
+screen) and feedback moments live in `assets/kit/ui/` and load with the kit: [apple-ui.md](apple-ui.md).
+
 ## Looks and tokens
 
 `data-look`: `paper` · `ink` · `flood` · `sky` · `cinema` · `poster` · `cool` — what each is for is in
@@ -63,13 +98,13 @@ absolute seconds in the beat.
 
 | helper | does | key options |
 |---|---|---|
-| `RC.words(tl, el, at, o)` | split into words, each resolves from blur | `lead`, `stagger` .075, `blur` 14, `y` 22, `duration` .7 |
+| `RC.words(tl, el, at, o)` | split into words, each resolves from blur on `spring.gentle` | `lead`, `stagger` .06, `blur` 12, `y` 18, `duration` (the spring's own) |
 | `RC.chars(tl, el, at, o)` | same, per character | `stagger` .022 |
 | `RC.blurIn / blurOut` | resolve (or dissolve) any elements | as above |
 | `RC.lines(tl, el, at, o)` | masked line rise for `.rc-line > .rc-in` | `stagger` .09 |
 | `RC.rise` | opacity + y, for objects | `y` 40 |
 | `RC.flyIn` | arrive from depth: small, blurred → sharp | `from` .72, `blur` 18, `stagger` |
-| `RC.pop` | scale from 0 with overshoot | |
+| `RC.pop` | grow from 0.4 on a snappy spring, no wobble | `reward: true` for the reel's one earned overshoot |
 | `RC.type(tl, el, at, o)` | type text, caret solid while typing, blinking either side; records the text, so `sfx suggest` places a keystroke per few letters | `text`, `cps` 24 |
 | `RC.count(tl, el, at, o)` | count a number, formatted, tabular | `from`, `to`, `decimals`, `prefix`, `suffix`, `locale` |
 | `RC.roll(tl, el, at, o)` | slot-reel through values in place | `values`, `each` .5 |
@@ -222,12 +257,12 @@ They keep: determinism (no clocks, no `Math.random`, finite loops), a legible fr
 
 They also keep: an empty element inside a line (an underline, a strike rule, a marker) out of the
 word split, so it is drawn once by its own tween instead of blurring in with the text first; and
-blur on a non-overshooting ease even when you pass `back.out` — an ease past 1 drives `blur()` below
+blur on a non-overshooting ease even when you pass an overshooting spring — an ease past 1 drives `blur()` below
 zero, which is invalid, and the element flickers sharp-then-soft.
 
 They cannot keep: the reading floor (you schedule it), hard cuts (never add a transition *between*
 beats), and one `fromTo` per property per element — a second `fromTo` on the same property stamps
 its start state over frame 0. After the first entrance, move an element with `tl.to`. The same goes
-for your own tweens: give `scale` a `back.out` if you like, but put `filter` and `opacity` on a
-separate tween with `expo.out`, and never animate an element's `scale` if something else draws it
+for your own tweens: give `scale` a `spring.snappy` if you like, but put `filter` and `opacity` on a
+separate tween with `apple.out` or `spring.gentle`, and never animate an element's `scale` if something else draws it
 with `scaleX`.

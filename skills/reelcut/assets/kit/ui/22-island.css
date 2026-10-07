@@ -1,0 +1,79 @@
+/*
+ * The Dynamic Island, to Apple's Live Activities spec (HIG › Live Activities, iOS dimensions, 6.1" Pro class, in pt):
+ *
+ *   idle      the TrueDepth pill            126 × 37,   centred on the screen, 11 from the top
+ *   compact   leading + trailing             230 × 36.67 (each side 52.33 wide, snug against the camera)
+ *   minimal   one attached on the leading side (36.67–45 wide) + one detached circle to the right
+ *   expanded  371 × 84–160, corner radius 44, the same top
+ *
+ * Always black and opaque (the HIG: Live Activities in the island use a black opaque background); colour lives in
+ * the content, bold and in the app's tint. On a dark screen a hairline key line (`--di-key`, tinted to the content)
+ * separates the island from what is behind it.
+ *
+ *   <div class="rc-di">                                    inside .rc-scr, after the content
+ *     <div class="rc-di-shape"><i class="rc-di-body"></i><i class="rc-di-bubble"></i></div>
+ *     <div class="rc-di-lead"  data-di="compact">…</div>   52 × 37, left of the camera
+ *     <div class="rc-di-trail" data-di="compact">…</div>   52 × 37, right of the camera
+ *     <div class="rc-di-min"   data-di="minimal">…</div>   45 × 37, attached, left of the camera
+ *     <div class="rc-di-bub"   data-di="minimal">…</div>   37 × 37, the detached circle
+ *     <div class="rc-di-exp"   data-di="expanded">…</div>  371 wide, padded 14 / 20, laid out by the beat
+ *   </div>
+ *
+ * Geometry is held in custom properties (in pt) that RC.island tweens on the island's spring:
+ *   --l (left edge), --w (width), --h (height), --rad (corner radius), and --bl (the bubble's left edge).
+ * Put the static .rc-island of the base phone away when a beat uses .rc-di: this replaces it.
+ */
+[data-look] .rc-di { position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 41; pointer-events: none;
+  --l: 138; --w: 126; --h: 37; --rad: 18.5; --bl: 227; --bs: 37; --di-key: transparent;
+  --di-ink: #fff; --di-ink-2: rgba(235,235,245,.6); --di-tint: var(--ui-tint); color: var(--di-ink); font-family: var(--ui-font); }
+[data-look] .rc-di-shape { position: absolute; inset: 0; }
+[data-look] .rc-di-body, [data-look] .rc-di-bubble { position: absolute; display: block; background: #000; }
+[data-look] .rc-di-body { left: calc(var(--l) * var(--pt)); top: calc(11 * var(--pt)); width: calc(var(--w) * var(--pt)); height: calc(var(--h) * var(--pt));
+  border-radius: calc(var(--rad) * var(--pt)); box-shadow: 0 0 0 calc(0.75 * var(--pt)) var(--di-key); }
+[data-look] .rc-di-bubble { left: calc(var(--bl) * var(--pt)); top: calc(11 * var(--pt)); width: calc(var(--bs) * var(--pt)); height: calc(37 * var(--pt));
+  border-radius: calc(18.5 * var(--pt)); opacity: 0; }
+[data-look] .rc-di[data-goo="1"] .rc-di-shape { filter: var(--goo); }
+[data-look] .rc-di[data-goo="1"] .rc-di-body { box-shadow: none; }
+/* On a dark screen, the key line. RC.island turns it off while the bubble splits (it would ghost through the goo). */
+[data-look] .rc-iphone.rc-dark .rc-di, [data-look="ink"] .rc-di, [data-look="cinema"] .rc-di { --di-key: color-mix(in oklab, var(--di-tint) 30%, transparent); }
+
+/* Content slots, all in screen points. Text is medium weight or heavier, as the HIG asks. */
+[data-look] .rc-di [data-di] { position: absolute; display: flex; align-items: center; opacity: 0; font-weight: 600; letter-spacing: -0.01em;
+  font-size: calc(15 * var(--pt)); line-height: 1; font-variant-numeric: tabular-nums; }
+[data-look] .rc-di .rc-di-lead  { left: calc(86 * var(--pt));  top: calc(11 * var(--pt)); width: calc(52 * var(--pt)); height: calc(37 * var(--pt)); justify-content: center; padding-left: calc(6 * var(--pt)); }
+[data-look] .rc-di .rc-di-trail { left: calc(264 * var(--pt)); top: calc(11 * var(--pt)); width: calc(52 * var(--pt)); height: calc(37 * var(--pt)); justify-content: center; padding-right: calc(6 * var(--pt)); }
+[data-look] .rc-di .rc-di-min   { left: calc(93 * var(--pt));  top: calc(11 * var(--pt)); width: calc(45 * var(--pt)); height: calc(37 * var(--pt)); justify-content: center; }
+[data-look] .rc-di .rc-di-bub   { left: calc(272 * var(--pt)); top: calc(11 * var(--pt)); width: calc(37 * var(--pt)); height: calc(37 * var(--pt)); justify-content: center; }
+[data-look] .rc-di .rc-di-exp   { left: calc(15.5 * var(--pt)); top: calc(11 * var(--pt)); width: calc(371 * var(--pt)); height: calc(var(--eh, 160) * var(--pt));
+  display: block; padding: calc(16 * var(--pt)) calc(22 * var(--pt)); }
+[data-look] .rc-di .rc-di-wide  { left: calc(var(--wl, 50) * var(--pt)); top: calc(11 * var(--pt)); width: calc(var(--ww, 302) * var(--pt)); height: calc(37 * var(--pt));
+  justify-content: space-between; padding: 0 calc(14 * var(--pt)); }
+
+/* Parts Live Activities are made of. */
+[data-look] .rc-di .rc-di-tint { color: var(--di-tint); }
+[data-look] .rc-di .rc-di-2 { color: var(--di-ink-2); font-weight: 500; }
+/* An app glyph in a tinted disc (compact leading, the expanded header). */
+[data-look] .rc-di .rc-di-glyph { width: calc(24 * var(--pt)); height: calc(24 * var(--pt)); border-radius: 50%; flex: none; display: grid; place-items: center;
+  background: var(--di-tint); color: #000; }
+[data-look] .rc-di .rc-di-glyph svg { width: 62%; height: 62%; }
+/* A progress ring (compact trailing, minimal): set --p 0..1. */
+[data-look] .rc-di .rc-di-ring { width: calc(22 * var(--pt)); height: calc(22 * var(--pt)); border-radius: 50%; flex: none;
+  background: conic-gradient(var(--di-tint) calc(var(--p, 0) * 360deg), color-mix(in oklab, var(--di-tint) 25%, transparent) 0);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3.5 * var(--pt)), #000 calc(100% - 3.4 * var(--pt)));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 3.5 * var(--pt)), #000 calc(100% - 3.4 * var(--pt))); }
+/* A progress bar (expanded): set --p 0..1. */
+[data-look] .rc-di .rc-di-bar { height: calc(6 * var(--pt)); border-radius: 99px; background: color-mix(in oklab, var(--di-tint) 25%, transparent); position: relative; overflow: hidden; }
+[data-look] .rc-di .rc-di-bar::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--di-tint); transform-origin: 0 50%; transform: scaleX(var(--p, 0)); }
+/* Round buttons in the expanded presentation (pause, stop, accept). */
+[data-look] .rc-di .rc-di-btn { width: calc(50 * var(--pt)); height: calc(50 * var(--pt)); border-radius: 50%; display: grid; place-items: center; flex: none;
+  background: color-mix(in oklab, var(--di-tint) 28%, #000); color: var(--di-tint); }
+[data-look] .rc-di .rc-di-btn.rc-gray { background: rgba(120,120,128,.36); color: #fff; }
+[data-look] .rc-di .rc-di-btn svg { width: 40%; height: 40%; }
+/* A live waveform (music, a call): five bars; RC.islandWave drives their heights from time. */
+[data-look] .rc-di .rc-di-wave { display: flex; align-items: center; gap: calc(2.2 * var(--pt)); height: calc(16 * var(--pt)); }
+[data-look] .rc-di .rc-di-wave > i { width: calc(2.6 * var(--pt)); height: 100%; border-radius: 99px; background: var(--di-tint); transform-origin: 50% 50%; }
+/* Numbers that change in place (RC.numeric): a column per character. */
+[data-look] .rc-numeric { display: inline-block; font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* A column per character: as wide as its glyph, clipped above and below (clip-path keeps the baseline, overflow would not). */
+[data-look] .rc-numeric > span { position: relative; display: inline-block; clip-path: inset(-0.06em -0.4em -0.14em -0.4em); }
+[data-look] .rc-numeric > span > b { position: absolute; left: 0; right: 0; top: 0; text-align: center; font-weight: inherit; }

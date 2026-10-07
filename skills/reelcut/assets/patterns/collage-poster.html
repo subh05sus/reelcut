@@ -32,14 +32,14 @@
 <script>
 (function () {
   const tl = gsap.timeline({ paused: true });
-  tl.fromTo("#root .ht", { scale: 0.5, rotation: -40, opacity: 0.6 }, { scale: 1, rotation: 0, opacity: 1, duration: 1.2, ease: "expo.out" }, 0);
-  RC.wipe(tl, "#root .b1", 0, { dir: "right", duration: 0.35, ease: "power4.out" });
+  tl.fromTo("#root .ht", { scale: 0.5, rotation: -40, opacity: 0.6 }, { scale: 1, rotation: 0, opacity: 1, duration: 1.2, ease: "spring.gentle" }, 0);
+  RC.wipe(tl, "#root .b1", 0, { dir: "right", duration: 0.35, ease: "spring.gentle" });
   // One hit per word. Each slams from a squash, like a stamp.
   [["w1", 0.05], ["w2", 0.5], ["w3", 0.95], ["w4", 1.45]].forEach(([w, t], i) => {
-    tl.fromTo("#root ." + w, { scaleY: i === 0 ? 0.7 : 0.2, opacity: i === 0 ? 0.6 : 0, transformOrigin: "50% 100%" }, { scaleY: 1, opacity: 1, duration: 0.32, ease: "back.out(2.5)" }, t);
+    tl.fromTo("#root ." + w, { scaleY: i === 0 ? 0.7 : 0.2, opacity: i === 0 ? 0.6 : 0, transformOrigin: "50% 100%" }, { scaleY: 1, opacity: 1, duration: 0.32, ease: "spring.snappy" }, t);
   });
-  RC.wipe(tl, "#root .b2", 0.85, { dir: "left", duration: 0.35, ease: "power4.out" });
-  tl.fromTo("#root .stk", { scale: 0, rotation: -90 }, { scale: 1, rotation: -12, duration: 0.6, ease: "back.out(2)" }, 2.0);
+  RC.wipe(tl, "#root .b2", 0.85, { dir: "left", duration: 0.35, ease: "spring.gentle" });
+  tl.fromTo("#root .stk", { scale: 0, rotation: -90 }, { scale: 1, rotation: -12, duration: 0.6, ease: "spring.reward" }, 2.0);
   tl.fromTo("#root .ht", { rotation: 0 }, { rotation: 25, duration: 2.8, ease: "none", immediateRender: false }, 1.2);
   RC.hold(tl, 3.95);
   window.__timelines["collage-poster"] = tl;

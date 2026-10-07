@@ -44,9 +44,9 @@
   RC.words(tl, "#root .h", 0, { lead: true, stagger: 0.08, blur: 14, y: 20 });
   slabs.forEach((g, i) => {
     // Each slab settles from just above its place, out of soft focus: a stack resolving, not dropping.
-    tl.fromTo(g, { y: tight[i] - 70, opacity: i === 0 ? 0.7 : 0 }, { y: tight[i], opacity: 1, duration: 0.7, ease: "expo.out" }, 0.1 + i * 0.14);
-    tl.fromTo(g, { filter: "blur(8px)" }, { filter: "blur(0px)", duration: 0.6, ease: "expo.out" }, 0.1 + i * 0.14);
-    tl.fromTo(g, { y: tight[i] }, { y: open[i], duration: 1.0, ease: "expo.inOut", immediateRender: false }, 1.6 + (3 - i) * 0.05);
+    tl.fromTo(g, { y: tight[i] - 70, opacity: i === 0 ? 0.7 : 0 }, { y: tight[i], opacity: 1, duration: 0.7, ease: "spring.gentle" }, 0.1 + i * 0.14);
+    tl.fromTo(g, { filter: "blur(8px)" }, { filter: "blur(0px)", duration: 0.6, ease: "spring.gentle" }, 0.1 + i * 0.14);
+    tl.fromTo(g, { y: tight[i] }, { y: open[i], duration: 1.0, ease: "spring.default", immediateRender: false }, 1.6 + (3 - i) * 0.05);
   });
   lines.forEach((l, i) => {
     const y = open[i];

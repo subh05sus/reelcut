@@ -1,0 +1,60 @@
+/*
+ * Feedback moments: the small confirmations that make Apple's UI feel alive. Sized in points, coloured by the look.
+ *
+ *   Check       .rc-check-d (+ .rc-outline | .rc-bare) > svg > path      RC.checkDraw
+ *   Saved       .rc-saved > .rc-check-d + span                             RC.saved
+ *   Copy        .rc-copy > .rc-copy-a (copy glyph) + .rc-copy-b (check) + .rc-tip   RC.copied
+ *   Async       .rc-abtn > span.rc-lbl + .rc-spin + .rc-check-d            RC.asyncButton
+ *   Ring        .rc-pring > svg (circle.t + circle.v) + .rc-check-d        RC.ringDone
+ *   Badge       .rc-nbadge                                                  RC.bump
+ *   Delta       .rc-delta  ("+747", green)                                  RC.delta
+ *   Shine       any pane, given .rc-shiny                                   RC.shine
+ *   Confetti    RC.confetti(tl, root, at, o) builds its own pieces
+ */
+[data-look] .rc-check-d { position: relative; display: inline-grid; place-items: center; width: calc(var(--cs, 26) * var(--pt)); height: calc(var(--cs, 26) * var(--pt));
+  border-radius: 50%; background: var(--cc, var(--ui-green)); color: #fff; flex: none; }
+[data-look] .rc-check-d > svg { width: 62%; height: 62%; overflow: visible; }
+[data-look] .rc-check-d > svg path { fill: none; stroke: currentColor; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+[data-look] .rc-check-d.rc-outline { background: none; color: var(--cc, var(--ui-green)); box-shadow: inset 0 0 0 calc(2 * var(--pt)) currentColor; }
+[data-look] .rc-check-d.rc-bare { background: none; color: var(--cc, var(--ui-green)); }
+
+[data-look] .rc-saved { display: inline-flex; align-items: center; gap: calc(6 * var(--pt)); font: 600 calc(15 * var(--pt)) / 1 var(--ui-font); color: var(--ui-label-2); opacity: 0; --cs: 18; }
+[data-look] .rc-saved.rc-err { color: var(--ui-red); }
+
+[data-look] .rc-copy { position: relative; display: inline-grid; place-items: center; width: calc(36 * var(--pt)); height: calc(36 * var(--pt)); border-radius: calc(10 * var(--pt));
+  background: var(--ui-fill); color: var(--ui-label); }
+[data-look] .rc-copy > svg { grid-area: 1 / 1; width: calc(19 * var(--pt)); height: calc(19 * var(--pt)); }
+[data-look] .rc-copy > .rc-copy-b { color: var(--ui-green); opacity: 0; }
+[data-look] .rc-tip { position: absolute; bottom: calc(100% + 8 * var(--pt)); left: 50%; transform: translateX(-50%); padding: calc(6 * var(--pt)) calc(10 * var(--pt)); border-radius: calc(8 * var(--pt));
+  background: var(--ui-label); color: var(--ui-bg); font: 600 calc(13 * var(--pt)) / 1 var(--ui-font); white-space: nowrap; opacity: 0; }
+
+[data-look] .rc-abtn { position: relative; display: inline-grid; place-items: center; height: calc(50 * var(--pt)); padding: 0 calc(26 * var(--pt)); border-radius: 999px;
+  background: var(--ui-tint); color: var(--ui-tint-ink); font: 600 calc(17 * var(--pt)) / 1 var(--ui-font); letter-spacing: -0.02em; }
+[data-look] .rc-abtn > * { grid-area: 1 / 1; }
+[data-look] .rc-abtn > .rc-spin { width: calc(20 * var(--pt)); height: calc(20 * var(--pt)); border-radius: 50%; opacity: 0;
+  background: conic-gradient(from 0deg, transparent 0 15%, currentColor 100%);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2.6 * var(--pt)), #000 calc(100% - 2.5 * var(--pt)));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 2.6 * var(--pt)), #000 calc(100% - 2.5 * var(--pt))); }
+[data-look] .rc-abtn > .rc-check-d { --cc: transparent; color: currentColor; opacity: 0; --cs: 32; }
+
+[data-look] .rc-pring { position: relative; display: inline-grid; place-items: center; width: calc(var(--rs, 64) * var(--pt)); height: calc(var(--rs, 64) * var(--pt)); }
+[data-look] .rc-pring > svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+[data-look] .rc-pring circle { fill: none; stroke-width: 7; stroke-linecap: round; }
+[data-look] .rc-pring circle.t { stroke: var(--ui-fill-2); }
+[data-look] .rc-pring circle.v { stroke: var(--ui-tint); }
+[data-look] .rc-pring > .rc-check-d { --cs: calc(var(--rs, 64) * .62); opacity: 0; }
+
+[data-look] .rc-nbadge { display: inline-grid; place-items: center; min-width: calc(22 * var(--pt)); height: calc(22 * var(--pt)); padding: 0 calc(6 * var(--pt)); border-radius: 999px;
+  background: var(--ui-red); color: #fff; font: 600 calc(14 * var(--pt)) / 1 var(--ui-font); font-variant-numeric: tabular-nums; }
+
+[data-look] .rc-delta { position: absolute; color: var(--ui-green); font: 600 calc(17 * var(--pt)) / 1 var(--ui-font); font-variant-numeric: tabular-nums; opacity: 0; white-space: nowrap; }
+
+/* The shine: a band of light that sweeps across, a soft bloom, a faint rainbow fringe at the rim. */
+[data-look] .rc-shiny { position: relative; overflow: hidden; isolation: isolate; }
+[data-look] .rc-shiny > .rc-shine-band { position: absolute; top: -50%; bottom: -50%; left: 0; width: 45%; z-index: 3; pointer-events: none; mix-blend-mode: plus-lighter;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,.08) 30%, rgba(255,255,255,.55) 50%, rgba(255,255,255,.08) 70%, transparent); transform: translateX(-160%) skewX(-18deg); }
+[data-look] .rc-shine-bloom { position: absolute; inset: calc(-14 * var(--pt)); border-radius: 999px; z-index: 0; opacity: 0; pointer-events: none; filter: blur(calc(14 * var(--pt)));
+  background: conic-gradient(from 200deg, #ff7a7a, #ffd36b, #7dffb2, #6bc8ff, #c58bff, #ff7a7a); }
+
+[data-look] .rc-confetti { position: absolute; left: 0; top: 0; width: 0; height: 0; pointer-events: none; z-index: 70; }
+[data-look] .rc-confetti > i { position: absolute; left: 0; top: 0; display: block; border-radius: 2px; }

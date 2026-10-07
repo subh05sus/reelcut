@@ -39,8 +39,8 @@
   const tl = gsap.timeline({ paused: true });
   RC.rise(tl, "#root .p", 0, { lead: true, y: 30 });
   RC.type(tl, "#root .p .tx", 0.25, { text: "Book the team offsite in Lisbon", cps: 30 });
-  tl.to("#root .p .rc-send", { scale: 0.86, duration: 0.08 }, 1.35).to("#root .p .rc-send", { scale: 1, duration: 0.3, ease: "back.out(3)" }, 1.43);
-  tl.to("#root .p", { y: -60, scale: 0.9, duration: 0.7, ease: "expo.inOut" }, 1.45);
+  tl.to("#root .p .rc-send", { scale: 0.9, duration: 0.08, ease: "apple.out" }, 1.35).to("#root .p .rc-send", { scale: 1, duration: 0.3, ease: "spring.snappy" }, 1.43);
+  tl.to("#root .p", { y: -60, scale: 0.9, duration: 0.7, ease: "spring.default" }, 1.45);
   // Each step appears, spins while it works, then resolves: the done state is the consequence.
   ["s1", "s2", "s3"].forEach((s, i) => {
     const t = 1.7 + i * 0.42;

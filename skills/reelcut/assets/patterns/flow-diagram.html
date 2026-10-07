@@ -59,8 +59,8 @@
   RC.words(tl, "#root .rc-head", 0, { lead: true, stagger: 0.09, blur: 14, y: 20 });
   // The nodes are there at frame 0, dim; they resolve in order of the flow.
   [".nA", ".nB", ".nC1", ".nC2"].forEach((n, i) => {
-    tl.fromTo("#root " + n, { opacity: 0.7, y: 24, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: "expo.out" }, 0.05 + i * 0.12);
-    tl.fromTo("#root " + n, { filter: "blur(6px)" }, { filter: "blur(0px)", duration: 0.6, ease: "expo.out" }, 0.05 + i * 0.12);
+    tl.fromTo("#root " + n, { opacity: 0.7, y: 24, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: "spring.gentle" }, 0.05 + i * 0.12);
+    tl.fromTo("#root " + n, { filter: "blur(6px)" }, { filter: "blur(0px)", duration: 0.6, ease: "spring.gentle" }, 0.05 + i * 0.12);
   });
   // The traces start faint at frame 0 and are drawn over by light as the pulses go.
   const route = (cls) => { const base = document.querySelector("#root path." + cls), over = document.querySelector("#root path.o" + cls); return { base, over, len: over.getTotalLength() }; };
@@ -75,20 +75,20 @@
     route.over.style.strokeDashoffset = (route.len * (1 - st.p)).toFixed(1);
   };
   const s1 = { p: 0 }, s2 = { p: 0 }, s3 = { p: 0 };
-  tl.fromTo(s1, { p: 0 }, { p: 1, duration: 0.8, ease: "power2.inOut", onUpdate: () => run(ab, P[0], s1), immediateRender: false }, 1.7);
-  tl.fromTo(s2, { p: 0 }, { p: 1, duration: 0.9, ease: "power2.inOut", onUpdate: () => run(c1, P[1], s2), immediateRender: false }, 2.85);
-  tl.fromTo(s3, { p: 0 }, { p: 1, duration: 0.9, ease: "power2.inOut", onUpdate: () => run(c2, P[2], s3), immediateRender: false }, 2.85);
+  tl.fromTo(s1, { p: 0 }, { p: 1, duration: 0.8, ease: "apple.glide", onUpdate: () => run(ab, P[0], s1), immediateRender: false }, 1.7);
+  tl.fromTo(s2, { p: 0 }, { p: 1, duration: 0.9, ease: "apple.glide", onUpdate: () => run(c1, P[1], s2), immediateRender: false }, 2.85);
+  tl.fromTo(s3, { p: 0 }, { p: 1, duration: 0.9, ease: "apple.glide", onUpdate: () => run(c2, P[2], s3), immediateRender: false }, 2.85);
   // Each node lights when the light reaches it.
-  const light = (sel, at) => tl.to("#root " + sel + " .ring", { opacity: 1, duration: 0.35, ease: "power2.out" }, at);
+  const light = (sel, at) => tl.to("#root " + sel + " .ring", { opacity: 1, duration: 0.35, ease: "apple.out" }, at);
   light(".nA", 1.6); light(".nB", 2.5); light(".nC1", 3.75); light(".nC2", 3.75);
   tl.to("#root .nB .ring", { opacity: 0.55, duration: 0.5 }, 3.0);
   ["nC1", "nC2"].forEach((n) => {
-    tl.fromTo("#root ." + n + " .ok", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.4, ease: "expo.out" }, 3.85);
+    tl.fromTo("#root ." + n + " .ok", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.4, ease: "spring.gentle" }, 3.85);
     RC.draw(tl, "#root ." + n + " .ok path", 3.9, { duration: 0.3 });
   });
   // The receipt.
-  tl.fromTo("#root .rcpt", { opacity: 0, y: 26, scale: 0.94 }, { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: "expo.out" }, 4.2);
-  tl.fromTo("#root .rcpt", { filter: "blur(10px)" }, { filter: "blur(0px)", duration: 0.7, ease: "expo.out" }, 4.2);
+  tl.fromTo("#root .rcpt", { opacity: 0, y: 26, scale: 0.94 }, { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: "spring.gentle" }, 4.2);
+  tl.fromTo("#root .rcpt", { filter: "blur(10px)" }, { filter: "blur(0px)", duration: 0.7, ease: "spring.gentle" }, 4.2);
   RC.camera(tl, "#root .cam", 0, { duration: 5.6, to: { scale: 1.03 } });
   RC.drift(tl, "#root .rc-mesh", 0, { duration: 5.6, x: 50, y: -30, scale: 1.08 });
   RC.hold(tl, 5.55);

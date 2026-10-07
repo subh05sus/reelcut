@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* IOS PUSH SWIPE. Reminders-style lists in an inset group (paper look). A finger swipes Groceries left: the row
+     follows it a little past its actions (the rubber band) and springs back onto Pin and Delete; Delete, and the row
+     slides away and folds shut while the rows under it glide up. Then Travel is tapped (the row fills, no scale:
+     rows never wobble) and the detail page is pushed: it slides in from the right on the iOS curve (380 ms) while the
+     list shifts a quarter left and dims, a soft shadow on its edge.
+     Grid: the UI is the frame. The phone at --pt 1.45, centred (x 231 → 849), from y 44, cropped by the bottom edge. */
+  #root { --accent: #ff9230; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 540px 400px; }
+  #root .ph { left: 231px; top: 44px; --pt: 1.45px; }
+  #root .rc-view { overflow: hidden; }
+  #root .grp { position: absolute; left: calc(16 * var(--pt)); right: calc(16 * var(--pt)); top: calc(160 * var(--pt)); }
+  #root .rc-cell .n { color: var(--ui-label-2); }
+  #root .rc-cell > b { position: absolute; inset: 0; background: var(--ui-fill-2); opacity: 0; pointer-events: none; }
+  #root .v2 .rc-navbar .rc-inline { opacity: 0; }
+  #root .todo { position: absolute; left: calc(20 * var(--pt)); right: calc(16 * var(--pt)); display: flex; align-items: center; gap: calc(12 * var(--pt)); height: calc(48 * var(--pt));
+    font: 400 calc(17 * var(--pt)) / 1 var(--ui-font); letter-spacing: -0.02em; border-bottom: 0.5px solid var(--ui-sep); }
+  #root .todo i { width: calc(22 * var(--pt)); height: calc(22 * var(--pt)); border-radius: 50%; border: calc(1.6 * var(--pt)) solid var(--ui-label-3); flex: none; }
+  #root .rc-touch { --pt: 1.45px; }
+</style>
+<div id="root" data-look="paper" data-composition-id="ios-push-swipe" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(255,146,48,.14); --mesh-2: rgba(18,18,18,.05)"></div>
+  <div class="cam">
+    <div class="rc-iphone ph">
+      <div class="rc-scr">
+        <div class="rc-view rc-grouped v1">
+          <div class="rc-navbar"><span class="rc-inline">Lists</span></div>
+          <div class="rc-ltitle">Lists</div>
+          <div class="rc-group grp">
+            <div class="rc-cell"><span class="rc-ico-tile" style="--c:#0a84ff"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="5" width="16" height="15" rx="2.5"/></svg></span><span>Today</span><span class="n">4</span><i class="rc-chev"></i></div>
+            <div class="rc-swipe sw"><div class="rc-acts"><span style="--c:#ff9230">Pin</span><span class="rc-red">Delete</span></div>
+              <div class="rc-cell"><span class="rc-ico-tile" style="--c:#30d158"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 8.5h12l-1 11.5H7z"/></svg></span><span>Groceries</span><span class="n">9</span><i class="rc-chev"></i></div></div>
+            <div class="rc-cell trv"><b></b><span class="rc-ico-tile" style="--c:#ff9230"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M2.5 13.5 21 6l-4 14-5.5-4.5L8 19v-5z"/></svg></span><span>Travel</span><span class="n">6</span><i class="rc-chev"></i></div>
+            <div class="rc-cell"><span class="rc-ico-tile" style="--c:#af52de"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="7" width="16" height="12" rx="2"/><path d="M9 7V5h6v2" fill="none" stroke="currentColor" stroke-width="2"/></svg></span><span>Work</span><span class="n">12</span><i class="rc-chev"></i></div>
+            <div class="rc-cell"><span class="rc-ico-tile" style="--c:#ff375f"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 4h6v16H5zM13 4h6v16h-6z"/></svg></span><span>Books</span><span class="n">3</span><i class="rc-chev"></i></div>
+          </div>
+          <i class="rc-dimmer"></i>
+        </div>
+        <div class="rc-view v2">
+          <div class="rc-navbar"><span class="rc-back">Lists</span><span class="rc-inline">Travel</span></div>
+          <div class="rc-ltitle" style="color: var(--ui-orange)">Travel</div>
+          <div class="todo" style="top: calc(160 * var(--pt))"><i></i>Passport and charger</div>
+          <div class="todo" style="top: calc(208 * var(--pt))"><i></i>Book the airport train</div>
+          <div class="todo" style="top: calc(256 * var(--pt))"><i></i>Download offline maps</div>
+          <div class="todo" style="top: calc(304 * var(--pt))"><i></i>Check in online</div>
+        </div>
+        <div class="rc-status"><b>9:41</b><i class="rc-island"></i><span class="rc-sys"></span></div>
+      </div>
+    </div>
+    <div class="rc-touch"></div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  const P = 1.45, X = (x) => 231 + 12 * P + x * P, Y = (y) => 44 + 12 * P + y * P;
+  gsap.set("#root .v2", { xPercent: 100 });
+  tl.set("#root .rc-touch", { opacity: 0 }, 0);
+  // Swipe Groceries (the second row, 212–264 pt): the finger and the row travel left together.
+  RC.cursor(tl, "#root .rc-touch", 0.35, [[X(330), Y(238), 0]]);
+  tl.to("#root .rc-touch", { opacity: 1, duration: 0.2, ease: "apple.out" }, 0.35);
+  RC.press(tl, "#root .rc-touch", 0.6, { scale: 0.85, release: false });
+  RC.swipe(tl, "#root .sw", 0.7, { drag: 0.45, remove: 2.0 });
+  tl.to("#root .rc-touch", { x: X(330) - 152 * P * 1.12, duration: 0.45, ease: "apple.glide" }, 0.7);
+  RC.to(tl, "#root .rc-touch", 1.15, { scale: 1 }, "snappy");
+  // Delete.
+  RC.cursor(tl, "#root .rc-touch", 1.4, [[X(16 + 370 - 38), Y(238), 0.4]]);
+  RC.press(tl, "#root .rc-touch", 1.85, { scale: 0.85 });
+  // Travel (now the second row): the row fills under the finger, then the detail is pushed.
+  RC.cursor(tl, "#root .rc-touch", 2.6, [[X(200), Y(238), 0.45]]);
+  RC.press(tl, "#root .rc-touch", 3.05, { scale: 0.85 });
+  tl.to("#root .trv > b", { opacity: 1, duration: 0.08, ease: "apple.out" }, 3.05);
+  tl.to("#root .rc-touch", { opacity: 0, duration: 0.2, ease: "apple.exit" }, 3.2);
+  RC.navPush(tl, "#root .v1", "#root .v2", 3.25);
+  tl.to("#root .trv > b", { opacity: 0, duration: 0.3, ease: "apple.out" }, 3.6);
+  RC.present(tl, "#root .todo", 3.45, { y: 12, scale: 1, stagger: 0.04, spring: "gentle" });
+  RC.camera(tl, "#root .cam", 0, { duration: 5, to: { scale: 1.025 } });
+  RC.drift(tl, "#root .rc-mesh", 0, { duration: 5, x: 40, y: -20, scale: 1.06 });
+  RC.hold(tl, 5);
+  window.__timelines["ios-push-swipe"] = tl;
+})();
+</script>
+</template>
+</body></html>

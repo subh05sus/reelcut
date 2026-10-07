@@ -1,0 +1,70 @@
+/*
+ * macOS Tahoe, in points (`--pt`; on a 1080 frame a Mac usually wants --pt 1.6–2.2 so Body, 13 pt, stays ≥ 21 px).
+ * macOS metrics (type-layout.md): Body 13/16, Headline 13 bold, Title 3 15/20, rows 28 pt, targets 28 pt.
+ * Glass: the sidebar slab, toolbar button groups, the Dock. Menus are solid elevated surfaces.
+ *
+ *   Window    .rc-mac > .rc-mac-side.rc-glass (.rc-lights, .rc-mac-sec, .rc-mac-row…, .rc-mac-sel)
+ *                     + .rc-mac-main (.rc-mac-tb > b + .rc-mac-tools.rc-glass > i…, content)
+ *   Menu      .rc-menubar > span…  ·  .rc-mmenu > .rc-mm-row (span + kbd) … .rc-mm-sep  + .rc-mm-hl
+ *   Dock      .rc-dock > .rc-dock-shelf.rc-glass + .rc-dock-icon (i.rc-app) …            RC.dockHover, RC.dockBounce
+ */
+[data-look] .rc-mac { position: absolute; border-radius: calc(18 * var(--pt)); background: var(--ui-bg); color: var(--ui-label); overflow: hidden; font-family: var(--ui-font);
+  box-shadow: 0 0 0 0.5px rgba(0,0,0,.12), 0 calc(22 * var(--pt)) calc(60 * var(--pt)) calc(-10 * var(--pt)) rgba(0,0,0,.45); }
+[data-look="ink"] .rc-mac, [data-look="cinema"] .rc-mac { background: #1e1e1e; box-shadow: 0 0 0 0.5px rgba(255,255,255,.12), 0 calc(22 * var(--pt)) calc(60 * var(--pt)) calc(-10 * var(--pt)) rgba(0,0,0,.7); }
+/* The sidebar: a floating glass slab, inset 8 pt, its radius concentric with the window's (18 − 8 = 10). */
+[data-look] .rc-mac-side { position: absolute; left: calc(8 * var(--pt)); top: calc(8 * var(--pt)); bottom: calc(8 * var(--pt)); width: calc(var(--sw, 200) * var(--pt));
+  border-radius: calc(10 * var(--pt)); padding: calc(46 * var(--pt)) calc(10 * var(--pt)) calc(10 * var(--pt));
+  --glass-tint: color-mix(in oklab, var(--ui-grouped) 70%, transparent); --glass-blur: 18; --glass-ink: var(--ui-label); color: var(--ui-label); }
+[data-look] .rc-lights { position: absolute; left: calc(12 * var(--pt)); top: calc(13 * var(--pt)); display: flex; gap: calc(8 * var(--pt)); }
+[data-look] .rc-lights > i { width: calc(12 * var(--pt)); height: calc(12 * var(--pt)); border-radius: 50%; background: #ff5f57; box-shadow: inset 0 0 0 0.5px rgba(0,0,0,.15); }
+[data-look] .rc-lights > i:nth-child(2) { background: #febc2e; } [data-look] .rc-lights > i:nth-child(3) { background: #28c840; }
+[data-look] .rc-mac-sec { padding: calc(10 * var(--pt)) calc(8 * var(--pt)) calc(4 * var(--pt)); font: 700 calc(11 * var(--pt)) / calc(14 * var(--pt)) var(--ui-font); color: var(--ui-label-2); }
+[data-look] .rc-mac-row { position: relative; z-index: 1; display: flex; align-items: center; gap: calc(8 * var(--pt)); height: calc(28 * var(--pt)); padding: 0 calc(8 * var(--pt));
+  font: 400 calc(13 * var(--pt)) / 1 var(--ui-font); letter-spacing: -0.005em; border-radius: calc(7 * var(--pt)); }
+[data-look] .rc-mac-row svg { width: calc(16 * var(--pt)); height: calc(16 * var(--pt)); color: var(--ui-tint); flex: none; }
+[data-look] .rc-mac-row small { margin-left: auto; font: 400 calc(12 * var(--pt)) / 1 var(--ui-font); color: var(--ui-label-2); font-variant-numeric: tabular-nums; }
+/* The selection: one tinted fill that glides between rows. */
+[data-look] .rc-mac-sel { position: absolute; z-index: 0; top: 0; left: calc(10 * var(--pt)); right: calc(10 * var(--pt)); height: calc(28 * var(--pt)); border-radius: calc(7 * var(--pt));
+  background: color-mix(in oklab, var(--ui-tint) 22%, transparent); }
+[data-look] .rc-mac-main { position: absolute; left: calc((var(--sw, 200) + 16) * var(--pt)); right: 0; top: 0; bottom: 0; }
+[data-look] .rc-mac-tb { position: relative; display: flex; align-items: center; height: calc(52 * var(--pt)); padding: 0 calc(10 * var(--pt)) 0 calc(8 * var(--pt)); }
+[data-look] .rc-mac-tb > b { font: 700 calc(15 * var(--pt)) / 1 var(--ui-font); letter-spacing: -0.01em; }
+[data-look] .rc-mac-tb > b small { display: block; margin-top: calc(3 * var(--pt)); font: 400 calc(11 * var(--pt)) / 1 var(--ui-font); color: var(--ui-label-2); }
+[data-look] .rc-mac-tools { margin-left: auto; display: flex; align-items: center; height: calc(32 * var(--pt)); padding: 0 calc(4 * var(--pt)); border-radius: 999px;
+  --glass-tint: color-mix(in oklab, var(--ui-bg) 60%, transparent); --glass-blur: 10; color: var(--ui-label); }
+[data-look] .rc-mac-tools > i { width: calc(32 * var(--pt)); height: calc(28 * var(--pt)); display: grid; place-items: center; }
+[data-look] .rc-mac-tools svg { width: calc(16 * var(--pt)); height: calc(16 * var(--pt)); }
+[data-look] .rc-mac-list { position: absolute; left: calc(8 * var(--pt)); right: calc(14 * var(--pt)); top: calc(52 * var(--pt)); }
+[data-look] .rc-mac-item { display: flex; align-items: center; gap: calc(10 * var(--pt)); height: calc(44 * var(--pt)); padding: 0 calc(10 * var(--pt)); border-radius: calc(8 * var(--pt));
+  font: 400 calc(13 * var(--pt)) / 1.2 var(--ui-font); }
+[data-look] .rc-mac-item + .rc-mac-item { box-shadow: inset 0 0.5px 0 var(--ui-sep); }
+[data-look] .rc-mac-item b { font-weight: 600; display: block; }
+[data-look] .rc-mac-item span { color: var(--ui-label-2); }
+[data-look] .rc-mac-item i { width: calc(28 * var(--pt)); height: calc(28 * var(--pt)); border-radius: calc(6 * var(--pt)); flex: none; }
+[data-look] .rc-mac-item time { margin-left: auto; color: var(--ui-label-2); font-size: calc(12 * var(--pt)); }
+
+/* ---- menu bar and menus */
+[data-look] .rc-menubar { position: absolute; left: 0; right: 0; top: 0; height: calc(24 * var(--pt)); display: flex; align-items: center; gap: calc(18 * var(--pt)); padding: 0 calc(16 * var(--pt));
+  font: 400 calc(13 * var(--pt)) / 1 var(--ui-font); color: var(--mb-ink, #fff); }
+[data-look] .rc-menubar > b { font-weight: 700; }
+[data-look] .rc-menubar > span { position: relative; padding: calc(3 * var(--pt)) calc(7 * var(--pt)); margin: 0 calc(-7 * var(--pt)); border-radius: calc(5 * var(--pt)); }
+[data-look] .rc-menubar > .rc-mb-r { margin-left: auto; }
+[data-look] .rc-mmenu { position: absolute; min-width: calc(230 * var(--pt)); padding: calc(5 * var(--pt)); border-radius: calc(12 * var(--pt)); background: var(--ui-raised); color: var(--ui-label);
+  box-shadow: var(--ui-menu-shadow); opacity: 0; transform-origin: 0 0; font-family: var(--ui-font); }
+[data-look] .rc-mm-row { position: relative; z-index: 1; display: flex; align-items: center; height: calc(24 * var(--pt)); padding: 0 calc(10 * var(--pt)); font: 400 calc(13 * var(--pt)) / 1 var(--ui-font); }
+[data-look] .rc-mm-row kbd { margin-left: auto; padding-left: calc(24 * var(--pt)); font: inherit; color: var(--ui-label-2); }
+[data-look] .rc-mm-sep { height: 0.5px; margin: calc(5 * var(--pt)) calc(10 * var(--pt)); background: var(--ui-sep); }
+[data-look] .rc-mm-hl { position: absolute; z-index: 0; left: calc(5 * var(--pt)); right: calc(5 * var(--pt)); top: 0; height: calc(24 * var(--pt)); border-radius: calc(6 * var(--pt)); background: var(--ui-tint); opacity: 0; }
+[data-look] .rc-mm-row.rc-hot { color: #fff; }
+
+/* ---- the Dock: a glass shelf; icons grow from their base. */
+[data-look] .rc-dock { position: absolute; height: calc(70 * var(--pt)); }
+[data-look] .rc-dock-shelf { position: absolute; left: 0; right: 0; bottom: 0; height: calc(70 * var(--pt)); border-radius: calc(24 * var(--pt));
+  --glass-tint: color-mix(in oklab, var(--ui-bg) 38%, transparent); --glass-blur: 22; transform-origin: 50% 100%; }
+[data-look] .rc-dock-icon { position: absolute; bottom: calc(9 * var(--pt)); width: calc(52 * var(--pt)); height: calc(52 * var(--pt)); transform-origin: 50% 100%; }
+[data-look] .rc-dock-icon > i { position: absolute; inset: 0; border-radius: calc(12 * var(--pt)); box-shadow: 0 calc(2 * var(--pt)) calc(5 * var(--pt)) rgba(0,0,0,.25); display: grid; place-items: center; color: #fff; }
+[data-look] .rc-dock-icon > i svg { width: 56%; height: 56%; }
+[data-look] .rc-dock-icon::after { content: ""; position: absolute; left: 50%; bottom: calc(-6 * var(--pt)); width: calc(4 * var(--pt)); height: calc(4 * var(--pt)); margin-left: calc(-2 * var(--pt));
+  border-radius: 50%; background: var(--dot, transparent); }
+[data-look] .rc-dock-tip { position: absolute; padding: calc(4 * var(--pt)) calc(10 * var(--pt)); border-radius: calc(7 * var(--pt)); background: var(--ui-raised); color: var(--ui-label);
+  font: 400 calc(13 * var(--pt)) / 1.1 var(--ui-font); box-shadow: var(--ui-menu-shadow); opacity: 0; white-space: nowrap; transform: translateX(-50%); }

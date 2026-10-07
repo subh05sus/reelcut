@@ -52,6 +52,143 @@
     };
   }
 
+  /*
+   * Motion: Apple's springs, computed.
+   *
+   * What makes Apple's motion read as calm is the curve, not the duration. A spring released from rest
+   * starts gently (zero velocity, finite acceleration), reaches its speed in the first tenth, then settles
+   * on a long, even deceleration and never bounces. `expo.out` starts at full speed (a jolt on frame one),
+   * `expo.inOut` crawls, rushes and crawls, and `back.out` bounces. So the kit solves the real damped
+   * spring, x'' = -k(x - 1) - c x', analytically and registers each as a GSAP ease. It is a pure
+   * function of progress: no clocks, the same on every seek.
+   *
+   *   ease: "spring.snappy"   presses, toggles, small state changes   (520 / 40, ~0.35 s to rest)
+   *   ease: "spring.default"  panels, sheets, cards, a thumb sliding   (380 / 38)
+   *   ease: "spring.page"     a full-screen push, a big move           (300 / 34)
+   *   ease: "spring.gentle"   words and objects entering a film frame  (200 / 28)
+   *   ease: "spring.soft"     large or far things, arrivals from depth (120 / 22)
+   *   ease: "spring.reward"   the one earned moment: a visible overshoot (320 / 22, ζ≈.6)
+   *   ease: "spring.island"   the Dynamic Island growing and shrinking (230 / 24, a 1.7% overshoot)
+   *   ease: "apple.out"       cubic-bezier(.2, 0, 0, 1): fades and colour paired with a spring
+   *   ease: "apple.push"      cubic-bezier(.32, .72, 0, 1): the iOS push and pop
+   *   ease: "apple.exit"      cubic-bezier(.4, 0, 1, 1): leaving, faster than arriving
+   *   ease: "apple.glide"     minimum-jerk: a hand moving a cursor, a pen drawing, a playhead
+   *
+   * Give a tween its spring's own length with RC.spring("default").duration, or any duration: a spring
+   * stretched in time is a softer spring of the same damping, so the feel holds. `data-motion` on the
+   * root ("restrained" | "default" | "energetic") retunes every helper's springs: restrained is slower
+   * and fully damped, energetic is quicker and lets presses and pops overshoot a little.
+   */
+  var SPRINGS = {
+    snappy: [520, 40], default: [380, 38], page: [300, 34], gentle: [200, 28], soft: [120, 22], reward: [320, 22],
+    // The Dynamic Island's morph: the one shape Apple lets overshoot a touch (ζ≈.79, ~1.7%), so it reads as liquid.
+    island: [230, 24],
+  };
+  /** How each energy retunes a spring: stiffness × k, and the damping ratio it is held to (null = as given). */
+  var ENERGY = { restrained: { k: 0.55, zeta: 1 }, default: { k: 1, zeta: null }, energetic: { k: 1.7, zeta: 0.78 } };
+  var springCache = {};
+  /** The unit step response of a damped spring from rest, and the time it takes to stay within `eps` of 1. */
+  function solveSpring(k, c, m) {
+    m = m || 1;
+    var w0 = Math.sqrt(k / m), z = c / (2 * Math.sqrt(k * m)), x;
+    if (z < 0.999) {
+      var wd = w0 * Math.sqrt(1 - z * z);
+      x = function (t) { return 1 - Math.exp(-z * w0 * t) * (Math.cos(wd * t) + (z * w0 / wd) * Math.sin(wd * t)); };
+    } else if (z <= 1.001) {
+      x = function (t) { return 1 - Math.exp(-w0 * t) * (1 + w0 * t); };
+    } else {
+      var s = Math.sqrt(z * z - 1), r1 = -w0 * (z - s), r2 = -w0 * (z + s);
+      x = function (t) { return 1 + (r2 * Math.exp(r1 * t) - r1 * Math.exp(r2 * t)) / (r1 - r2); };
+    }
+    // At rest when it stays within 0.1% of the travel: under a pixel on a 600px move.
+    var T = 0.05;
+    for (var t = 0; t < 6; t += 0.002) if (Math.abs(1 - x(t)) > 0.001) T = t + 0.002;
+    var end = x(T);
+    // Normalised so progress 1 lands exactly on 1, whatever the last 0.1% was doing.
+    var ease = function (p) { return p <= 0 ? 0 : p >= 1 ? 1 : x(p * T) + (1 - end) * p; };
+    return { ease: ease, duration: Math.round(T * 1000) / 1000, zeta: z, stiffness: k, damping: c };
+  }
+  function energyOf(el) {
+    var r = el && el.closest ? el.closest("[data-motion]") : (document.querySelector ? document.querySelector("[data-look][data-motion]") : null);
+    var e = r && r.getAttribute("data-motion");
+    return ENERGY[e] ? e : "default";
+  }
+  /**
+   * RC.spring("default") → { ease, duration } for that preset under the beat's motion energy;
+   * RC.spring({ stiffness, damping, mass }) for one of your own. `el` picks the root whose data-motion applies.
+   */
+  function spring(name, el) {
+    var energy = typeof el === "string" ? el : energyOf(one(el));
+    if (name && typeof name === "object") {
+      var key0 = [name.stiffness, name.damping, name.mass || 1].join("/");
+      return springCache[key0] || (springCache[key0] = solveSpring(name.stiffness, name.damping, name.mass));
+    }
+    var preset = SPRINGS[name] ? name : "default", key = preset + ":" + energy;
+    if (springCache[key]) return springCache[key];
+    var kc = SPRINGS[preset], en = ENERGY[energy], k = kc[0] * en.k;
+    var zeta = kc[1] / (2 * Math.sqrt(kc[0]));                     // the preset's own damping ratio
+    if (preset === "reward") zeta = energy === "restrained" ? 0.8 : zeta;   // the earned moment keeps its overshoot
+    else if (preset === "island") zeta = energy === "restrained" ? 0.9 : zeta; // so does the island's liquid morph
+    else if (en.zeta != null) zeta = preset === "soft" || preset === "gentle" ? Math.max(en.zeta, 0.95) : en.zeta;
+    return (springCache[key] = solveSpring(k, zeta * 2 * Math.sqrt(k)));
+  }
+  /** cubic-bezier(x1, y1, x2, y2) as an ease, solved by Newton's method then bisection, as CSS does. */
+  function bezier(x1, y1, x2, y2) {
+    function a(p1, p2) { return 1 - 3 * p2 + 3 * p1; }
+    function b(p1, p2) { return 3 * p2 - 6 * p1; }
+    function c(p1) { return 3 * p1; }
+    function at(t, p1, p2) { return ((a(p1, p2) * t + b(p1, p2)) * t + c(p1)) * t; }
+    function slope(t, p1, p2) { return 3 * a(p1, p2) * t * t + 2 * b(p1, p2) * t + c(p1); }
+    return function (p) {
+      if (p <= 0) return 0; if (p >= 1) return 1;
+      var t = p;
+      for (var i = 0; i < 8; i++) { var s = slope(t, x1, x2); if (Math.abs(s) < 1e-6) break; var d = at(t, x1, x2) - p; if (Math.abs(d) < 1e-7) return at(t, y1, y2); t -= d / s; }
+      var lo = 0, hi = 1; t = p;
+      for (var j = 0; j < 30; j++) { var v = at(t, x1, x2); if (Math.abs(v - p) < 1e-7) break; if (v < p) lo = t; else hi = t; t = (lo + hi) / 2; }
+      return at(t, y1, y2);
+    };
+  }
+  var EASES = {
+    "apple.out": bezier(0.2, 0, 0, 1),
+    "apple.push": bezier(0.32, 0.72, 0, 1),
+    "apple.exit": bezier(0.4, 0, 1, 1),
+    // Minimum jerk (10p³ − 15p⁴ + 6p⁵): how a hand moves from one point to another.
+    "apple.glide": function (p) { return p <= 0 ? 0 : p >= 1 ? 1 : p * p * p * (10 + p * (-15 + 6 * p)); },
+  };
+  /** The ease a helper uses: a preset name ("default") or any GSAP ease string, under this element's motion energy. */
+  function E(name, el) {
+    if (typeof name === "function") return name;
+    if (SPRINGS[name]) return spring(name, el).ease;
+    var m = /^spring\.(\w+)$/.exec(name || "");
+    if (m && SPRINGS[m[1]] && el) return spring(m[1], el).ease;
+    return name;
+  }
+  /** A preset's natural length under this element's energy, or `given` when the beat asked for one. */
+  function D(name, el, given) { return given != null ? given : spring(name, el).duration; }
+  /** True when an ease can overshoot 1: blur and other filters must never ride on one. */
+  function overshoots(ease, el) {
+    if (typeof ease === "function") return true;              // unknown: assume it might
+    if (typeof ease !== "string") return false;
+    if (/back|elastic/.test(ease)) return true;
+    var m = /^(?:spring\.)?(\w+)$/.exec(ease);
+    return !!(m && SPRINGS[m[1]] && spring(m[1], el).zeta < 0.999);
+  }
+  // A beat's own tweens name these too ("spring.gentle"), so the registered ease follows the beat's
+  // data-motion. It is read on the first frame (the root does not exist yet when the kit loads), once.
+  var docEnergy = null;
+  function registered(n) {
+    return function (p) {
+      if (!docEnergy) docEnergy = energyOf(null);
+      return spring(n, docEnergy).ease(p);
+    };
+  }
+  if (gsap && gsap.registerEase) {
+    Object.keys(SPRINGS).forEach(function (n) { gsap.registerEase("spring." + n, registered(n)); });
+    Object.keys(EASES).forEach(function (n) { gsap.registerEase(n, EASES[n]); });
+    // A tween that names no ease gets Apple's CSS curve rather than GSAP's power1.out, which starts at speed.
+    if (gsap.defaults) gsap.defaults({ ease: "apple.out" });
+  }
+
   /**
    * Split text into spans, keeping nested markup (an <em>, a .rc-accent) intact.
    * by: "words" -> .rc-w, "chars" -> .rc-c (grouped inside word spans so lines never break mid-word).
@@ -109,11 +246,11 @@
   function blurIn(tl, target, at, o) {
     o = o || {};
     var els = q(target); if (!els.length) return tl;
-    var blur = o.blur == null ? 14 : o.blur, y = o.y == null ? 22 : o.y, x = o.x || 0;
-    var dur = o.duration || 0.7, stagger = o.stagger == null ? 0.075 : o.stagger, ease = o.ease || "expo.out";
+    var blur = o.blur == null ? 12 : o.blur, y = o.y == null ? 18 : o.y, x = o.x || 0;
+    var dur = D("gentle", els[0], o.duration), stagger = o.stagger == null ? 0.06 : o.stagger, ease = E(o.ease || "gentle", els[0]);
     // Filter blur must never overshoot: an ease past 1 drives blur below zero, which is invalid CSS,
     // and the element flickers sharp-then-soft. Any overshooting ease goes to transform only.
-    var blurEase = /back|elastic/.test(ease) ? "expo.out" : ease;
+    var blurEase = overshoots(o.ease, els[0]) ? E("gentle", els[0]) : ease;
     els.forEach(function (el, i) {
       var lead = o.lead && i === 0;
       var from = { opacity: lead ? 0.55 : 0, y: lead ? y * 0.4 : y, x: x };
@@ -128,13 +265,14 @@
   function blurOut(tl, target, at, o) {
     o = o || {};
     var els = q(target);
-    tl.to(els, { opacity: 0, filter: "blur(" + (o.blur == null ? 12 : o.blur) + "px)", y: o.y == null ? -16 : o.y, duration: o.duration || 0.4,
-      ease: o.ease || "power2.in", stagger: o.stagger == null ? 0.03 : o.stagger }, at);
+    // Leaving is quicker than arriving, and accelerates away: Apple's exit curve.
+    tl.to(els, { opacity: 0, filter: "blur(" + (o.blur == null ? 10 : o.blur) + "px)", y: o.y == null ? -12 : o.y, duration: o.duration || 0.32,
+      ease: E(o.ease || "apple.exit", els[0]), stagger: o.stagger == null ? 0.03 : o.stagger }, at);
     return tl;
   }
   function words(tl, target, at, o) { return blurIn(tl, split(target, "words"), at, o); }
   function chars(tl, target, at, o) {
-    o = Object.assign({ stagger: 0.022, blur: 8, y: 18, duration: 0.55 }, o || {});
+    o = Object.assign({ stagger: 0.022, blur: 8, y: 14 }, o || {});
     return blurIn(tl, split(target, "chars"), at, o);
   }
 
@@ -145,7 +283,7 @@
     q(target).forEach(function (el) { ins.push.apply(ins, q(el.querySelectorAll(".rc-line > .rc-in"))); });
     ins.forEach(function (el, i) {
       var lead = o.lead && i === 0;
-      tl.fromTo(el, { yPercent: lead ? 40 : 108, opacity: lead ? 0.6 : 1 }, { yPercent: 0, opacity: 1, duration: o.duration || 0.8, ease: o.ease || "expo.out" },
+      tl.fromTo(el, { yPercent: lead ? 40 : 108, opacity: lead ? 0.6 : 1 }, { yPercent: 0, opacity: 1, duration: D("gentle", el, o.duration), ease: E(o.ease || "gentle", el) },
         at + i * (o.stagger == null ? 0.09 : o.stagger));
     });
     return tl;
@@ -156,8 +294,9 @@
     o = o || {};
     q(target).forEach(function (el, i) {
       var lead = o.lead && i === 0;
-      tl.fromTo(el, { opacity: lead ? 0.6 : 0, y: lead ? (o.y == null ? 40 : o.y) * 0.3 : (o.y == null ? 40 : o.y), scale: o.scale || 1 },
-        { opacity: 1, y: 0, scale: 1, duration: o.duration || 0.8, ease: o.ease || "expo.out" }, at + i * (o.stagger || 0.08));
+      var y = o.y == null ? 32 : o.y;
+      tl.fromTo(el, { opacity: lead ? 0.6 : 0, y: lead ? y * 0.3 : y, scale: o.scale || 1 },
+        { opacity: 1, y: 0, scale: 1, duration: D("gentle", el, o.duration), ease: E(o.ease || "gentle", el) }, at + i * (o.stagger || 0.06));
     });
     return tl;
   }
@@ -166,17 +305,26 @@
   function flyIn(tl, target, at, o) {
     o = o || {};
     q(target).forEach(function (el, i) {
-      tl.fromTo(el, { opacity: 0, scale: o.from == null ? 0.72 : o.from, filter: "blur(" + (o.blur == null ? 18 : o.blur) + "px)", y: o.y == null ? 60 : o.y, rotation: o.rotation || 0 },
-        { opacity: 1, scale: 1, filter: "blur(0px)", y: 0, rotation: 0, duration: o.duration || 0.9, ease: o.ease || "expo.out" }, at + i * (o.stagger == null ? 0.07 : o.stagger));
+      // From depth: a far, soft object settling on the long, even deceleration of a soft spring.
+      var ease = E(o.ease || "soft", el), dur = D("soft", el, o.duration);
+      tl.fromTo(el, { opacity: 0, scale: o.from == null ? 0.82 : o.from, y: o.y == null ? 48 : o.y, rotation: o.rotation || 0 },
+        { opacity: 1, scale: 1, y: 0, rotation: 0, duration: dur, ease: ease }, at + i * (o.stagger == null ? 0.06 : o.stagger));
+      tl.fromTo(el, { filter: "blur(" + (o.blur == null ? 16 : o.blur) + "px)" }, { filter: "blur(0px)", duration: dur, ease: overshoots(o.ease, el) ? E("soft", el) : ease }, at + i * (o.stagger == null ? 0.06 : o.stagger));
     });
     return tl;
   }
 
-  /** Pop: scale from nothing with an overshoot. Icons, badges, the send button. */
+  /**
+   * Pop: an icon, a badge, the send button appears. Apple grows it from 0.4 on a snappy spring, so it
+   * lands without a wobble; `reward: true` gives the one earned moment of a reel its overshoot.
+   */
   function pop(tl, target, at, o) {
     o = o || {};
     emit("pop", at);
-    tl.fromTo(q(target), { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: o.duration || 0.55, ease: o.ease || "back.out(2.2)", stagger: o.stagger || 0.05 }, at);
+    var els = q(target); if (!els.length) return tl;
+    var name = o.reward ? "reward" : "snappy";
+    tl.fromTo(els, { scale: o.from == null ? 0.4 : o.from }, { scale: 1, duration: D(name, els[0], o.duration), ease: E(o.ease || name, els[0]), stagger: o.stagger || 0.04 }, at);
+    tl.fromTo(els, { opacity: 0 }, { opacity: 1, duration: 0.16, ease: E("apple.out"), stagger: o.stagger || 0.04 }, at);
     return tl;
   }
 
@@ -219,7 +367,7 @@
     var st = { v: from };
     var fmt = function (v) { return pre + v.toLocaleString(loc, { minimumFractionDigits: dec, maximumFractionDigits: dec }) + suf; };
     el.textContent = fmt(from);
-    tl.fromTo(st, { v: from }, { v: to, duration: o.duration || 1.4, ease: o.ease || "expo.out", onUpdate: function () { el.textContent = fmt(st.v); } }, at);
+    tl.fromTo(st, { v: from }, { v: to, duration: o.duration || 1.4, ease: E(o.ease || "soft", el), onUpdate: function () { el.textContent = fmt(st.v); } }, at);
     return tl;
   }
 
@@ -229,7 +377,7 @@
    */
   function roll(tl, target, at, o) {
     var el = one(target); if (!el) return tl;
-    var values = o.values, each = o.each || 0.5, d = o.duration || 0.38;
+    var values = o.values, each = o.each || 0.5, d = D("default", el, o.duration);
     el.style.display = "inline-grid"; el.style.overflow = "hidden"; el.style.verticalAlign = "bottom";
     el.textContent = "";
     var spans = values.map(function (v, i) {
@@ -242,8 +390,10 @@
       emit("roll", t);
       // The outgoing value already has its own entrance tween; a second fromTo would stamp its
       // start state over frame 0. So it leaves with a plain to().
-      tl.to(spans[i - 1], { yPercent: -100, opacity: 0, filter: "blur(6px)", duration: d, ease: "power3.inOut" }, t);
-      tl.fromTo(spans[i], { yPercent: 100, opacity: 0, filter: "blur(6px)" }, { yPercent: 0, opacity: 1, filter: "blur(0px)", duration: d, ease: "power3.inOut" }, t);
+      // An odometer: the old value leaves up on the exit curve, the new one rises in on a spring.
+      tl.to(spans[i - 1], { yPercent: -100, opacity: 0, filter: "blur(4px)", duration: d * 0.7, ease: E("apple.exit") }, t);
+      tl.fromTo(spans[i], { yPercent: 100, opacity: 0 }, { yPercent: 0, opacity: 1, duration: d, ease: E("default", el) }, t);
+      tl.fromTo(spans[i], { filter: "blur(4px)" }, { filter: "blur(0px)", duration: d, ease: E("apple.out") }, t);
     }
     return tl;
   }
@@ -255,7 +405,7 @@
    */
   function wheel(tl, target, at, o) {
     var el = one(target); if (!el) return tl;
-    var values = o.values, each = o.each || 0.6, d = o.duration || 0.45, n = values.length;
+    var values = o.values, each = o.each || 0.6, d = D("page", el, o.duration), n = values.length;
     el.style.display = "inline-block"; el.style.position = "relative"; el.style.verticalAlign = "top"; el.style.height = "1.15em";
     el.textContent = "";
     var col = document.createElement("span");
@@ -275,8 +425,8 @@
     items.forEach(function (it, i) { gsap.set(it, { opacity: s0[i].opacity, filter: "blur(" + s0[i].blur + "px)" }); });
     for (var k = 1; k < n; k++) {
       var t = at + (k - 1) * each, sk = state(k);
-      tl.to(col, { y: -k * 1.15 + "em", duration: d, ease: "power3.inOut" }, t);
-      items.forEach(function (it, i) { tl.to(it, { opacity: sk[i].opacity, filter: "blur(" + sk[i].blur + "px)", duration: d, ease: "power2.inOut" }, t); });
+      tl.to(col, { y: -k * 1.15 + "em", duration: d, ease: E("page", el) }, t);
+      items.forEach(function (it, i) { tl.to(it, { opacity: sk[i].opacity, filter: "blur(" + sk[i].blur + "px)", duration: d, ease: E("apple.out") }, t); });
     }
     return tl;
   }
@@ -289,7 +439,8 @@
       var m = el.matches && (el.matches(".rc-mark") || el.matches(".rc-rule")) ? el : el.querySelector(".rc-mark, .rc-rule");
       if (m) els.push(m);
     });
-    tl.fromTo(els, { scaleX: 0 }, { scaleX: 1, duration: o.duration || 0.5, ease: o.ease || "power3.inOut", stagger: o.stagger || 0.1 }, at);
+    // A pen stroke: it moves like a hand, minimum jerk from rest to rest.
+    tl.fromTo(els, { scaleX: 0 }, { scaleX: 1, duration: o.duration || 0.5, ease: E(o.ease || "apple.glide"), stagger: o.stagger || 0.1 }, at);
     return tl;
   }
 
@@ -304,8 +455,9 @@
     points.forEach(function (p, i) {
       if (i === 0 && !p[2]) { tl.set(el, { x: p[0], y: p[1] }, t); el.__rcPath.push({ t: t, x: p[0], y: p[1] }); return; }
       var d = p[2] || 0.8;
-      tl.to(el, { x: p[0], duration: d, ease: "power3.inOut" }, t);
-      tl.to(el, { y: p[1], duration: d, ease: "sine.inOut" }, t);
+      // A hand reaching for something: minimum jerk on x, a slightly earlier settle on y, so the path curves.
+      tl.to(el, { x: p[0], duration: d, ease: E("apple.glide") }, t);
+      tl.to(el, { y: p[1], duration: d * 0.92, ease: E("apple.glide") }, t);
       t += d;
       el.__rcPath.push({ t: t, x: p[0], y: p[1] });
     });
@@ -326,10 +478,11 @@
     o = o || {};
     emit("click", at);
     var cur = one(target);
-    if (cur) tl.to(cur, { scale: 0.82, duration: 0.09, ease: "power2.in", transformOrigin: "0 0" }, at)
-             .to(cur, { scale: 1, duration: 0.22, ease: "back.out(3)" }, at + 0.09);
+    // Apple's press: down quickly on the CSS curve, back up on a snappy spring. No bounce.
+    if (cur) tl.to(cur, { scale: 0.86, duration: 0.08, ease: E("apple.out"), transformOrigin: "0 0" }, at)
+             .to(cur, { scale: 1, duration: D("snappy", cur), ease: E("snappy", cur) }, at + 0.08);
     var tgt = one(o.target);
-    if (tgt) tl.to(tgt, { scale: 0.94, duration: 0.09, ease: "power2.in" }, at).to(tgt, { scale: 1, duration: 0.35, ease: "back.out(2.5)" }, at + 0.09);
+    if (tgt) tl.to(tgt, { scale: o.press || 0.97, duration: 0.08, ease: E("apple.out") }, at).to(tgt, { scale: 1, duration: D("default", tgt), ease: E("default", tgt) }, at + 0.08);
     var root = lookRoot(cur || tgt);
     if (cur && o.ripple !== false) {
       // The ripple sits where the cursor rests at click time, computed from the scheduled path —
@@ -338,8 +491,8 @@
       if (pos) {
         var r = document.createElement("div"); r.className = "rc-ripple"; root.appendChild(r);
         gsap.set(r, { x: pos.x + 4, y: pos.y + 4 });
-        tl.fromTo(r, { scale: 0.3, opacity: 0 }, { scale: 0.3, opacity: 0.9, duration: 0.01 }, at)
-          .to(r, { scale: 1.6, opacity: 0, duration: 0.55, ease: "power2.out" }, at + 0.02);
+        tl.fromTo(r, { scale: 0.4, opacity: 0 }, { scale: 0.4, opacity: 0.7, duration: 0.01 }, at)
+          .to(r, { scale: 1.4, opacity: 0, duration: 0.5, ease: E("apple.out") }, at + 0.02);
       }
     }
     return tl;
@@ -358,7 +511,7 @@
     o = o || {};
     emit("reveal", at);
     var at0 = o.from || "50% 50%";
-    tl.fromTo(q(target), { clipPath: "circle(0% at " + at0 + ")" }, { clipPath: "circle(" + (o.to || 150) + "% at " + at0 + ")", duration: o.duration || 0.9, ease: o.ease || "expo.inOut" }, at);
+    tl.fromTo(q(target), { clipPath: "circle(0% at " + at0 + ")" }, { clipPath: "circle(" + (o.to || 150) + "% at " + at0 + ")", duration: D("soft", one(target), o.duration), ease: E(o.ease || "soft", one(target)) }, at);
     return tl;
   }
 
@@ -367,7 +520,7 @@
     o = o || {};
     emit("reveal", at);
     var from = { right: "inset(0 100% 0 0)", left: "inset(0 0 0 100%)", up: "inset(100% 0 0 0)", down: "inset(0 0 100% 0)" }[o.dir || "right"];
-    tl.fromTo(q(target), { clipPath: from }, { clipPath: "inset(0 0% 0 0)", duration: o.duration || 0.8, ease: o.ease || "expo.inOut" }, at);
+    tl.fromTo(q(target), { clipPath: from }, { clipPath: "inset(0 0% 0 0)", duration: D("page", one(target), o.duration), ease: E(o.ease || "page", one(target)) }, at);
     return tl;
   }
 
@@ -402,7 +555,7 @@
     q(target).forEach(function (el, i) {
       var len = el.getTotalLength ? el.getTotalLength() : 1000;
       el.style.strokeDasharray = len; el.style.strokeDashoffset = len;
-      tl.to(el, { strokeDashoffset: 0, duration: o.duration || 0.9, ease: o.ease || "power2.inOut" }, at + i * (o.stagger || 0));
+      tl.to(el, { strokeDashoffset: 0, duration: o.duration || 0.9, ease: E(o.ease || "apple.glide") }, at + i * (o.stagger || 0));
     });
     return tl;
   }
@@ -602,7 +755,7 @@
       var clamp = function (v, lo, hi) { return Math.max(lo, Math.min(hi, v)); };
       var wx = clamp(r[0] + r[2] / 2 - 0.5 / s, 0, 1 - 1 / s), wy = clamp(r[1] + r[3] / 2 - 0.5 / s, 0, 1 - 1 / s);
       tl.fromTo(inner, { scale: 1, xPercent: 0, yPercent: 0 },
-        { scale: s, xPercent: -wx * s * 100, yPercent: -wy * s * 100, duration: o.duration || 1.1, ease: o.ease || "expo.inOut", immediateRender: false }, at);
+        { scale: s, xPercent: -wx * s * 100, yPercent: -wy * s * 100, duration: o.duration || 1.1, ease: E(o.ease || "soft", box), immediateRender: false }, at);
     });
     return tl;
   }
@@ -624,8 +777,8 @@
   function spot(tl, target, at, o) {
     o = o || {};
     q(target).forEach(function (el) {
-      tl.fromTo(el, { opacity: 0, scale: 1.08 }, { opacity: 1, scale: 1, duration: o.duration || 0.55, ease: o.ease || "expo.out", immediateRender: false }, at);
-      if (o.out != null) tl.to(el, { opacity: 0, duration: 0.35, ease: "power2.in" }, o.out);
+      tl.fromTo(el, { opacity: 0, scale: 1.08 }, { opacity: 1, scale: 1, duration: D("default", el, o.duration), ease: E(o.ease || "default", el), immediateRender: false }, at);
+      if (o.out != null) tl.to(el, { opacity: 0, duration: 0.24, ease: E("apple.exit") }, o.out);
     });
     return tl;
   }
@@ -676,6 +829,7 @@
 
   window.RC = {
     word: word, wordEnd: wordEnd, voice: voice, voiceDrive: voiceDrive,
+    spring: spring, ease: E, SPRINGS: SPRINGS, emit: emit,
     q: q, one: one, rand: rand, split: split, hold: hold,
     blurIn: blurIn, blurOut: blurOut, words: words, chars: chars, lines: lines, rise: rise, flyIn: flyIn, pop: pop,
     type: type, count: count, roll: roll, wheel: wheel, mark: mark,

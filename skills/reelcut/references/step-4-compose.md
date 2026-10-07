@@ -60,8 +60,19 @@ Off-centre is a decision — a bottom-left statement, a headline above a chart �
 numbers, depth from radius and shadow, and something happens in it. See
 [design-system.md](design-system.md#product-surfaces--real-large-alive).
 
-**Resolve, don't slide.** Entrances come out of blur (`RC.words`, `RC.blurIn`), 0.6–0.8s,
-`expo.out`. And nothing is ever quite still: a camera push or a drift runs under every beat.
+**Resolve, don't slide.** Entrances come out of blur (`RC.words`, `RC.blurIn`), 0.6–0.8s, on a
+spring. And nothing is ever quite still: a camera push or a drift runs under every beat.
+
+**Move like Apple.** Every tween you write names a spring or an Apple curve: `spring.snappy` (press,
+toggle), `spring.default` (a panel, a thumb, a lens, a value), `spring.page` (a push, a big move),
+`spring.gentle` (arrivals), `spring.soft` (far, large things), `apple.exit` (leaving, quicker than
+arriving), `apple.glide` (a cursor, a pen), `apple.out` (fades). Never `expo`, `back`, `elastic` or
+`power` eases; one `spring.reward` per reel at most. See [kit.md](kit.md#motion--apples-springs).
+
+**Apple UI is in the kit.** iPhone controls and surfaces, the Mac, app mockups (Messages, Mail,
+Calendar, Maps, Music, Photos, Wallet, the home screen) and feedback moments (a check that draws,
+an odometer, Saved) are ready as classes and helpers, with a pattern for each in
+`assets/patterns/apple/`. Open [apple-ui.md](apple-ui.md) before drawing any UI yourself.
 
 **The reading floor**, counted from when the whole line is on screen and settled:
 

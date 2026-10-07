@@ -97,7 +97,7 @@ moving, so a reel assembled from them looks like one product:
 - **Surfaces.** Soft paper cards on light grounds (`paper`, `cool`), flat dark cards on `ink`, and
   Liquid Glass only for the control layer: a palette, a switch thumb, a receipt, a count
   ([Glass](kit.md#glass)).
-- **Motion.** Blur-resolve entrances, `expo.out`, a 1.03 camera push carrying headline and object
+- **Motion.** Blur-resolve entrances on Apple's springs, a 1.03 camera push carrying headline and object
   together; typing and cursor beats run 5 to 6s, a small beat like `pricing-toggle` 4.4s. Nothing pops.
 - **Frame 0.** Every one is a composed, legible frame at 0s, because a hard cut lands on it: the
   object is already there, partly drawn or in soft focus, and the first thing that *happens* comes
@@ -128,3 +128,29 @@ first entrance with `lead: true`, pass `hyperframes check` with a non-zero sampl
 the pattern reel, and be named for what the beat does.
 
 More moves not yet built as patterns are catalogued in [motion-ideas.md](motion-ideas.md).
+
+## Apple UI — `patterns/apple/`
+
+Eighteen beats built on the Apple UI families ([apple-ui.md](apple-ui.md)). Each follows the reel's look and moves on
+Apple's springs. Lift the interaction; recompose the frame for your sentence.
+
+| pattern | look | for a beat that | the move |
+|---|---|---|---|
+| `ios-island` | ink | shows something live | a timer in the Dynamic Island: compact → held into expanded → compact → minimal, the second activity splitting off |
+| `ios-island-alert` | paper | is quiet until it matters | the island widens for Silent Mode, then a Live Activity alerts into expanded and settles to compact |
+| `ios-tabbar` | cool | says "everything, one tap away" | the glass tab bar's lens glides from tab to tab; the bar minimises as content scrolls and comes back |
+| `ios-controls-board` | ink | shows control | segmented lens, two switches, the glass-bead slider and a stepper, operated by a finger |
+| `ios-search-keyboard` | paper | is about finding | the field focuses, the keyboard rises, keys show their callouts, suggestions arrive, results settle |
+| `ios-notification` | ink | shows things arriving | notifications drop onto a lock screen, make room, and tuck into a stack |
+| `ios-sheet` | cool | shares or offers options | a share sheet rises to medium, is dragged to large (the page steps back), an action is chosen |
+| `ios-context-menu` | ink | reveals hidden power | a long-press lifts a photo, the world blurs, the menu grows; Delete asks with an alert; the grid closes the gap |
+| `ios-push-swipe` | paper | organises or drills in | a row is swiped to Delete and folds shut; another is tapped and the detail page is pushed |
+| `app-messages` | cool | is a conversation | a reply is typed and sent, the thread glides, dots breathe, the answer grows out of them, a tapback lands |
+| `app-calendar` | ink | rearranges time | events settle on a three-day grid; one is lifted, carried to a free slot and set down |
+| `app-maps` | paper | goes somewhere | a pin drops, the route draws itself, the place card rises, Directions brings the turn banner |
+| `app-music` | ink | plays | Play grows the artwork, the playhead runs, a scrub drags it to the chorus, Pause lets the artwork rest |
+| `ios-home` | sky | opens an app | an app grows out of its icon on the home screen and is swiped back into it |
+| `mac-dock-window` | paper | launches on the Mac | the Dock magnifies under the cursor, the icon bounces, the window opens from it, the sidebar selection glides |
+| `mac-menu` | ink | shows a command | a menu-bar menu and a right-click menu: the highlight glides, the choice blinks |
+| `fx-odometer-pay` | cool | lands money or a figure | Accept: spinner → check; the balance rolls only the digits that change; "+€747" rises |
+| `fx-checklist-shine` | ink | finishes something | checks draw, Saved confirms, the ring completes; Publish gets the droplet shine and a little confetti |

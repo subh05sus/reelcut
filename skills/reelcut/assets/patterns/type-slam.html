@@ -31,14 +31,14 @@
   const tl = gsap.timeline({ paused: true });
   // Each word lands from a squash, like a stamp. The first is already legible at frame 0.
   [["r1", 0.05, true], ["r2", 0.5, false], ["r3", 0.95, false]].forEach(([r, t, lead]) => {
-    tl.fromTo("#root ." + r, { scaleY: lead ? 0.72 : 0.15, opacity: lead ? 0.6 : 0 }, { scaleY: 1, opacity: 1, duration: 0.42, ease: "expo.out" }, t);
+    tl.fromTo("#root ." + r, { scaleY: lead ? 0.72 : 0.15, opacity: lead ? 0.6 : 0 }, { scaleY: 1, opacity: 1, duration: 0.42, ease: "spring.gentle" }, t);
   });
-  tl.fromTo("#root .ht", { scale: 0.6, rotation: -40, opacity: 0.6 }, { scale: 1, rotation: 0, opacity: 0.9, duration: 1.2, ease: "expo.out" }, 0);
-  tl.fromTo("#root .rule", { scaleX: 0 }, { scaleX: 1, duration: 1.0, ease: "expo.inOut" }, 0.2);
+  tl.fromTo("#root .ht", { scale: 0.6, rotation: -40, opacity: 0.6 }, { scale: 1, rotation: 0, opacity: 0.9, duration: 1.2, ease: "spring.gentle" }, 0);
+  tl.fromTo("#root .rule", { scaleX: 0 }, { scaleX: 1, duration: 1.0, ease: "apple.glide" }, 0.2);
   RC.blurIn(tl, "#root .tag", 1.5, { blur: 6, y: 10 });
   // The downbeat: the stack inverts, one band after another, top to bottom.
   [["r1", 2.4, "#2437ff", "#121212"], ["r2", 2.5, "rgba(18,18,18,0)", "#2437ff"], ["r3", 2.6, "#121212", "#f1ece2"]].forEach(([r, t, from, to]) => {
-    tl.fromTo("#root ." + r, { backgroundColor: from }, { backgroundColor: to, duration: 0.2, ease: "power2.inOut", immediateRender: false }, t);
+    tl.fromTo("#root ." + r, { backgroundColor: from }, { backgroundColor: to, duration: 0.2, ease: "apple.out", immediateRender: false }, t);
   });
   tl.fromTo("#root .r1 .t", { color: "#f1ece2" }, { color: "#f1ece2", duration: 0.2, immediateRender: false }, 2.4);
   tl.fromTo("#root .r2 .t", { color: "#121212" }, { color: "#f1ece2", duration: 0.2, immediateRender: false }, 2.5);

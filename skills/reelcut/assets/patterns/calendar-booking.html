@@ -70,20 +70,20 @@
   RC.glass();
   RC.words(tl, "#root .rc-head", 0, { lead: true, stagger: 0.09, blur: 14, y: 20 });
   // The week arrives whole, at frame 0 already readable; its events then drop into place.
-  tl.fromTo("#root .cal", { y: 50, opacity: 0.75 }, { y: 0, opacity: 1, duration: 0.9, ease: "expo.out" }, 0.05);
+  tl.fromTo("#root .cal", { y: 50, opacity: 0.75 }, { y: 0, opacity: 1, duration: 0.9, ease: "spring.gentle" }, 0.05);
   ["e1", "e2", "e3", "e4", "e5"].forEach((id, i) => {
     RC.blurIn(tl, "#root ." + id, 0.6 + i * 0.17, { blur: 6, y: -26, duration: 0.6 });
   });
   // The slot is marked, the new booking comes down and lands on it, and the old event steps aside.
-  tl.to("#root .ghost", { opacity: 0.75, duration: 0.4, ease: "power2.out" }, 1.95);
-  tl.fromTo("#root .new", { y: -72, scale: 1.1, opacity: 0 }, { y: 0, scale: 1, opacity: 1, duration: 0.7, ease: "expo.out" }, 2.25);
-  tl.fromTo("#root .new", { filter: "blur(8px)" }, { filter: "blur(0px)", duration: 0.6, ease: "expo.out" }, 2.25);
+  tl.to("#root .ghost", { opacity: 0.75, duration: 0.4, ease: "apple.out" }, 1.95);
+  tl.fromTo("#root .new", { y: -72, scale: 1.1, opacity: 0 }, { y: 0, scale: 1, opacity: 1, duration: 0.7, ease: "spring.gentle" }, 2.25);
+  tl.fromTo("#root .new", { filter: "blur(8px)" }, { filter: "blur(0px)", duration: 0.6, ease: "spring.gentle" }, 2.25);
   tl.to("#root .ghost", { opacity: 0, duration: 0.25 }, 2.85);
-  tl.to("#root .e3 .bg", { scaleX: 0.488, duration: 0.6, ease: "expo.out" }, 2.85);
-  tl.to("#root .new", { boxShadow: "0 6px 10px -6px rgba(194,65,12,.3)", duration: 0.6, ease: "power2.out" }, 2.85);
+  tl.to("#root .e3 .bg", { scaleX: 0.488, duration: 0.6, ease: "spring.gentle" }, 2.85);
+  tl.to("#root .new", { boxShadow: "0 6px 10px -6px rgba(194,65,12,.3)", duration: 0.6, ease: "apple.out" }, 2.85);
   // The receipt floats over the lower edge: glass, because it is a control-layer message over content.
-  tl.fromTo("#root .toast", { y: 26, opacity: 0, scale: 0.94 }, { y: 0, opacity: 1, scale: 1, duration: 0.8, ease: "expo.out" }, 3.3);
-  tl.fromTo("#root .toast", { filter: "blur(10px)" }, { filter: "blur(0px)", duration: 0.7, ease: "expo.out" }, 3.3);
+  tl.fromTo("#root .toast", { y: 26, opacity: 0, scale: 0.94 }, { y: 0, opacity: 1, scale: 1, duration: 0.8, ease: "spring.gentle" }, 3.3);
+  tl.fromTo("#root .toast", { filter: "blur(10px)" }, { filter: "blur(0px)", duration: 0.7, ease: "spring.gentle" }, 3.3);
   RC.draw(tl, "#root .toast .ck path", 3.65, { duration: 0.35 });
   RC.camera(tl, "#root .cam", 0, { duration: 5.2, to: { scale: 1.035 } });
   RC.drift(tl, "#root .rc-mesh", 0, { duration: 5.2, x: 50, y: -30, scale: 1.08 });

@@ -207,6 +207,96 @@
       "id": "wordmark-handles",
       "durationSeconds": 5.4,
       "composition": "../../skills/reelcut/assets/patterns/wordmark-handles.html"
+    },
+    {
+      "id": "app-calendar",
+      "durationSeconds": 4.8,
+      "composition": "../../skills/reelcut/assets/patterns/apple/app-calendar.html"
+    },
+    {
+      "id": "app-maps",
+      "durationSeconds": 5.2,
+      "composition": "../../skills/reelcut/assets/patterns/apple/app-maps.html"
+    },
+    {
+      "id": "app-messages",
+      "durationSeconds": 5.4,
+      "composition": "../../skills/reelcut/assets/patterns/apple/app-messages.html"
+    },
+    {
+      "id": "app-music",
+      "durationSeconds": 5.4,
+      "composition": "../../skills/reelcut/assets/patterns/apple/app-music.html"
+    },
+    {
+      "id": "fx-checklist-shine",
+      "durationSeconds": 5.2,
+      "composition": "../../skills/reelcut/assets/patterns/apple/fx-checklist-shine.html"
+    },
+    {
+      "id": "fx-odometer-pay",
+      "durationSeconds": 4.8,
+      "composition": "../../skills/reelcut/assets/patterns/apple/fx-odometer-pay.html"
+    },
+    {
+      "id": "ios-context-menu",
+      "durationSeconds": 5.4,
+      "composition": "../../skills/reelcut/assets/patterns/apple/ios-context-menu.html"
+    },
+    {
+      "id": "ios-controls-board",
+      "durationSeconds": 5.8,
+      "composition": "../../skills/reelcut/assets/patterns/apple/ios-controls-board.html"
+    },
+    {
+      "id": "ios-home",
+      "durationSeconds": 4.6,
+      "composition": "../../skills/reelcut/assets/patterns/apple/ios-home.html"
+    },
+    {
+      "id": "ios-island-alert",
+      "durationSeconds": 5.6,
+      "composition": "../../skills/reelcut/assets/patterns/apple/ios-island-alert.html"
+    },
+    {
+      "id": "ios-island",
+      "durationSeconds": 6.0,
+      "composition": "../../skills/reelcut/assets/patterns/apple/ios-island.html"
+    },
+    {
+      "id": "ios-notification",
+      "durationSeconds": 5.4,
+      "composition": "../../skills/reelcut/assets/patterns/apple/ios-notification.html"
+    },
+    {
+      "id": "ios-push-swipe",
+      "durationSeconds": 5.0,
+      "composition": "../../skills/reelcut/assets/patterns/apple/ios-push-swipe.html"
+    },
+    {
+      "id": "ios-search-keyboard",
+      "durationSeconds": 4.6,
+      "composition": "../../skills/reelcut/assets/patterns/apple/ios-search-keyboard.html"
+    },
+    {
+      "id": "ios-sheet",
+      "durationSeconds": 5.0,
+      "composition": "../../skills/reelcut/assets/patterns/apple/ios-sheet.html"
+    },
+    {
+      "id": "ios-tabbar",
+      "durationSeconds": 5.6,
+      "composition": "../../skills/reelcut/assets/patterns/apple/ios-tabbar.html"
+    },
+    {
+      "id": "mac-dock-window",
+      "durationSeconds": 5.2,
+      "composition": "../../skills/reelcut/assets/patterns/apple/mac-dock-window.html"
+    },
+    {
+      "id": "mac-menu",
+      "durationSeconds": 5.4,
+      "composition": "../../skills/reelcut/assets/patterns/apple/mac-menu.html"
     }
   ]
 }

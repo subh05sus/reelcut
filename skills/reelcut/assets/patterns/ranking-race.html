@@ -39,7 +39,7 @@
 (function () {
   const tl = gsap.timeline({ paused: true });
   RC.words(tl, "#root .rc-head", 0, { lead: true, stagger: 0.09, blur: 14, y: 20 });
-  tl.fromTo("#root .card", { y: 50, opacity: 0.75 }, { y: 0, opacity: 1, duration: 0.9, ease: "expo.out" }, 0.05);
+  tl.fromTo("#root .card", { y: 50, opacity: 0.75 }, { y: 0, opacity: 1, duration: 0.9, ease: "spring.gentle" }, 0.05);
   // ---- the race ----------------------------------------------------------------------------
   const names = ["Atlas", "Beacon", "Cobalt", "Delta", "Ember", "Fjord"];
   const K = [[30, 52, 83, 96], [58, 74, 78, 80], [20, 34, 60, 88], [46, 50, 48, 52], [36, 38, 42, 45], [26, 29, 31, 33]];

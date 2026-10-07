@@ -3,7 +3,7 @@
 ## Segment it
 
 ```bash
-npm run beats -- <script.txt|script.srt> [--fps 30] [--short]
+npm run beats -- <script.txt|script.srt> [--fps 60] [--short]
 ```
 
 An `.srt` carries exact timings. A `.txt` is estimated from words per minute, and the output says

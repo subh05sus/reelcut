@@ -42,6 +42,11 @@ so the cut can move considerably faster. It asks more of the visuals, which is t
 Affects entrance durations, stagger spacing, how many elements move at once, and how much
 secondary motion a beat carries. It does **not** affect how long a line stays on screen.
 
+It also tunes the springs. The render writes it on every beat's root as `data-motion`, and every
+`spring.*` ease and `RC` helper reads it: `restrained` is slower and fully damped, `default` is
+Apple's own springs, `energetic` is quicker and lets presses and pops overshoot slightly. The curves
+stay Apple's in all three; nothing becomes bouncy.
+
 ### `--palette "#ground #ink #accent"`
 
 Three hex values, in that order. When given, every beat must use them — a beat that quietly picks

@@ -124,12 +124,15 @@ A block of type pinned top-left at 72px with the rest of the frame blank is not 
 Observed in the few films read frame by frame (**not counted** across the 809 — treat the numbers as
 what those films did, not as an industry norm):
 
-- **Entrances resolve from blur**: `opacity 0→1`, `filter blur(14–18px)→0`, `y 20–30px→0`,
-  0.6–0.8s, `expo.out`. This is what the closely read films do; it is not a counted share.
+- **Entrances resolve from blur**: `opacity 0→1`, `filter blur(10–16px)→0`, `y 16–30px→0`,
+  0.6–0.8s. This is what the closely read films do; it is not a counted share. The curve is
+  Apple's, not the films' `expo.out`: a spring from rest (`spring.gentle`), which eases off the start
+  instead of jolting on frame one (see [kit.md](kit.md#motion--apples-springs)).
 - **Word stagger 0.07–0.1s**; char stagger 0.02–0.045s. The sentence finishes arriving within about
   a second.
-- **Ease is expo/power4 out** for arrivals, `power3.inOut` for moves between states, `sine.inOut` for
-  anything ambient. Never linear, except typing and continuous rotation.
+- **Every move is a spring** (owner's decision, 2026-10-07): `spring.gentle` for arrivals, `spring.default`
+  for moves between states, `spring.snappy` for presses, `apple.exit` for exits, `apple.glide` for a cursor or
+  a pen, `sine.inOut` for anything ambient. Never linear, except typing and continuous rotation.
 - **Nothing is still.** Every layer has some slow motion over the whole beat: camera push
   (`RC.camera`), mesh or bloom drift (`RC.drift`), a ring that turns. Four held seconds of a
   perfectly static frame read as a slide.
@@ -189,9 +192,9 @@ are the ones that also pass 10 and 11.
    Small, sparse, generic clip-art in a big empty frame is the commonest failure.
 4. **Layered depth.** A faint mesh tint in the corners, something behind the hero blurred out of
    focus, grain on top. A flat fill with nothing behind it looks unfinished.
-5. **Motion resolves, it does not pop.** Type and objects come out of blur with a small rise,
-   `expo.out`, 0.6–0.8s, staggered 70–100ms. No `back.out` overshoot on anything that is not a
-   button press. No hard cuts inside a beat unless the pattern is *about* the cut.
+5. **Motion resolves, it does not pop.** Type and objects come out of blur with a small rise on a
+   spring (`spring.gentle`), 0.6–0.8s, staggered 60–100ms. Nothing bounces: at most one
+   `spring.reward` overshoot per reel, on the moment that earned it. No hard cuts inside a beat unless the pattern is *about* the cut.
 6. **An action causes a consequence.** A click flips a status; a send starts the steps; a number
    lands and a pill confirms it 0.1–0.2s later. Decoration that does not cause or confirm anything
    is cut.

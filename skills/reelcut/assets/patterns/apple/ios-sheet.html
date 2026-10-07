@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* IOS SHEET. An album in Photos (light look). The share button (a glass toolbar button, the functional layer) is
+     tapped and the share sheet rises to its medium detent on spring.default while the scrim fades in; the grabber is
+     dragged and the sheet goes to large, the album stepping back behind it like a card (0.93, rounded, the screen
+     black around it); Copy is tapped, its row highlights, and the sheet goes down faster than it came up.
+     Grid: the UI is the frame. The phone at --pt 1.45, centred (x 231 → 849), from y 44, cropped by the bottom edge;
+     at this size the smallest label (13 pt) is 19 px. */
+  #root { --accent: #0a84ff; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 540px 400px; }
+  #root .ph { left: 231px; top: 44px; --pt: 1.45px; }
+  #root .rc-scr { background: #000; }
+  #root .pg { position: absolute; inset: 0; background: var(--ui-bg); overflow: hidden; transform-origin: 50% 0%; }
+  #root .pg .tt { position: absolute; left: calc(20 * var(--pt)); top: calc(100 * var(--pt)); font: 700 calc(34 * var(--pt)) / 1 var(--ui-font); }
+  #root .pg .st { position: absolute; left: calc(20 * var(--pt)); top: calc(142 * var(--pt)); font: 400 calc(17 * var(--pt)) / 1 var(--ui-font); color: var(--ui-label-2); }
+  #root .pg .shr { position: absolute; right: calc(16 * var(--pt)); top: calc(56 * var(--pt)); }
+  #root .grid { position: absolute; left: 0; right: 0; top: calc(176 * var(--pt)); display: grid; grid-template-columns: repeat(3, 1fr); gap: calc(2 * var(--pt)); }
+  #root .grid i { aspect-ratio: 1; display: block; }
+  #root .rc-sheet { --sy: 874; z-index: 20; }
+  #root .sh-h { position: absolute; left: calc(16 * var(--pt)); right: calc(16 * var(--pt)); top: calc(22 * var(--pt)); display: flex; align-items: center; gap: calc(12 * var(--pt)); }
+  #root .sh-h i { width: calc(52 * var(--pt)); height: calc(52 * var(--pt)); border-radius: calc(10 * var(--pt)); background: linear-gradient(150deg,#ffb36b,#ff5e3a); flex: none; }
+  #root .sh-h b { display: block; font: 600 calc(17 * var(--pt)) / 1.2 var(--ui-font); }
+  #root .sh-h span { font: 400 calc(15 * var(--pt)) / 1.3 var(--ui-font); color: var(--ui-label-2); }
+  #root .ppl, #root .apps { position: absolute; left: calc(16 * var(--pt)); right: calc(16 * var(--pt)); display: flex; justify-content: space-between; }
+  #root .ppl { top: calc(100 * var(--pt)); } #root .apps { top: calc(214 * var(--pt)); }
+  #root .ppl div, #root .apps div { width: calc(70 * var(--pt)); text-align: center; font: 400 calc(13 * var(--pt)) / 1.2 var(--ui-font); color: var(--ui-label); }
+  #root .ppl i { display: block; width: calc(62 * var(--pt)); height: calc(62 * var(--pt)); margin: 0 auto calc(8 * var(--pt)); border-radius: 50%; }
+  #root .apps i { display: block; width: calc(62 * var(--pt)); height: calc(62 * var(--pt)); margin: 0 auto calc(8 * var(--pt)); border-radius: calc(14 * var(--pt)); }
+  #root .acts { position: absolute; left: calc(16 * var(--pt)); right: calc(16 * var(--pt)); top: calc(330 * var(--pt)); }
+  #root .acts .rc-cell > i { position: absolute; inset: 0; background: var(--ui-fill-2); opacity: 0; }
+  #root .rc-touch { --pt: 1.45px; }
+</style>
+<div id="root" data-look="cool" data-composition-id="ios-sheet" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(10,132,255,.14); --mesh-2: rgba(255,94,58,.08)"></div>
+  <div class="cam">
+    <div class="rc-iphone ph">
+      <div class="rc-scr">
+        <div class="pg">
+          <div class="tt">Lisbon</div><div class="st">12 photos · June</div>
+          <div class="rc-gbtn rc-glass shr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7.5 7.5 12 3l4.5 4.5M6 11H5v10h14V11h-1"/></svg></div>
+          <div class="grid">
+            <i style="background:linear-gradient(150deg,#ffb36b,#ff5e3a)"></i><i style="background:linear-gradient(150deg,#7cc6ff,#2f6bff)"></i><i style="background:linear-gradient(150deg,#ffe08a,#f5a524)"></i>
+            <i style="background:linear-gradient(150deg,#9ee6c8,#2bb38a)"></i><i style="background:linear-gradient(150deg,#ff9fb8,#e0457b)"></i><i style="background:linear-gradient(150deg,#c7b5ff,#7a5cff)"></i>
+            <i style="background:linear-gradient(150deg,#ffcfa1,#ff8a4c)"></i><i style="background:linear-gradient(150deg,#a7e0ff,#3fa3e8)"></i><i style="background:linear-gradient(150deg,#d6f29a,#79b934)"></i>
+            <i style="background:linear-gradient(150deg,#ffd2e0,#ff7aa2)"></i><i style="background:linear-gradient(150deg,#b5f0ff,#36c2d6)"></i><i style="background:linear-gradient(150deg,#ffe9b0,#f0b84a)"></i>
+          </div>
+        </div>
+        <div class="rc-scrim"></div>
+        <div class="rc-sheet rc-grouped">
+          <i class="rc-grabber"></i>
+          <div class="sh-h"><i></i><div><b>Lisbon</b><span>12 photos · Shared Album</span></div></div>
+          <div class="ppl"><div><i style="background:linear-gradient(150deg,#ffcf8a,#ff9230)"></i>Ana</div><div><i style="background:linear-gradient(150deg,#9fd1ff,#3a8cff)"></i>Jonas</div><div><i style="background:linear-gradient(150deg,#b8f0b0,#34c759)"></i>Mira</div><div><i style="background:linear-gradient(150deg,#e6c2ff,#a855f7)"></i>Sam</div></div>
+          <div class="apps"><div><i style="background:linear-gradient(#5ee38a,#26b45a)"></i>Messages</div><div><i style="background:linear-gradient(#6fd6ff,#1f9bff)"></i>Mail</div><div><i style="background:linear-gradient(#ffe36e,#f5c400)"></i>Notes</div><div><i style="background:linear-gradient(#c9ccd3,#9aa0ad)"></i>More</div></div>
+          <div class="acts rc-group">
+            <div class="rc-cell" style="--sep-l:16"><span>Copy</span><i></i></div>
+            <div class="rc-cell" style="--sep-l:16"><span>Add to Album</span></div>
+            <div class="rc-cell" style="--sep-l:16"><span>Save to Files</span></div>
+            <div class="rc-cell" style="--sep-l:16"><span>Create Slideshow</span></div>
+          </div>
+        </div>
+        <div class="rc-status"><b>9:41</b><i class="rc-island"></i><span class="rc-sys"></span></div>
+      </div>
+    </div>
+    <div class="rc-touch"></div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  RC.glass();
+  // Screen points → frame pixels (the screen's top-left is the phone's plus its 12 pt bezel).
+  const P = 1.45, X = (x) => 231 + 12 * P + x * P, Y = (y) => 44 + 12 * P + y * P;
+  tl.set("#root .rc-touch", { opacity: 0 }, 0);
+  RC.cursor(tl, "#root .rc-touch", 0.4, [[X(330), Y(160), 0], [X(364), Y(78), 0.45]]);
+  tl.to("#root .rc-touch", { opacity: 1, duration: 0.2, ease: "apple.out" }, 0.4);
+  RC.press(tl, "#root .rc-touch", 0.85, { scale: 0.85 });
+  RC.press(tl, "#root .shr", 0.85, { scale: 0.9 });
+  RC.sheet(tl, "#root .rc-sheet", 1.0, "medium");
+  // The grabber is dragged up: the finger and the sheet move together, then the sheet settles on the large detent.
+  RC.cursor(tl, "#root .rc-touch", 1.5, [[X(201), Y(450), 0.5]]);
+  RC.press(tl, "#root .rc-touch", 2.0, { scale: 0.85, release: false });
+  tl.to("#root .rc-touch", { y: Y(80), duration: 0.45, ease: "apple.glide" }, 2.1);
+  RC.sheet(tl, "#root .rc-sheet", 2.15, "large", { behind: "#root .pg", behindY: 10 * P, radius: 24 * P + "px" });
+  RC.to(tl, "#root .rc-touch", 2.6, { scale: 1 }, "snappy");
+  // Over the black around the stepped-back card, the status bar turns light.
+  tl.to("#root .rc-status", { color: "#ffffff", duration: 0.3, ease: "apple.out" }, 2.15);
+  tl.to("#root .rc-status", { color: "#0f1420", duration: 0.3, ease: "apple.out" }, 3.6);
+  // Copy.
+  RC.cursor(tl, "#root .rc-touch", 2.8, [[X(110), Y(62 + 330 + 26), 0.45]]);
+  RC.press(tl, "#root .rc-touch", 3.3, { scale: 0.85 });
+  tl.to("#root .acts .rc-cell > i", { opacity: 1, duration: 0.08, ease: "apple.out" }, 3.3);
+  RC.emit("click", 3.3);
+  tl.to("#root .rc-touch", { opacity: 0, duration: 0.2, ease: "apple.exit" }, 3.55);
+  RC.sheet(tl, "#root .rc-sheet", 3.6, "closed", { behind: "#root .pg" });
+  RC.camera(tl, "#root .cam", 0, { duration: 5, to: { scale: 1.025 } });
+  RC.drift(tl, "#root .rc-mesh", 0, { duration: 5, x: 40, y: -20, scale: 1.06 });
+  RC.hold(tl, 5);
+  window.__timelines["ios-sheet"] = tl;
+})();
+</script>
+</template>
+</body></html>

@@ -39,16 +39,16 @@
   const hudPre = RC.hud("#root .pre", labels); hudPre.style.color = "#a9a9a9";
   const hud = RC.hud("#root .flood", labels);
   // Frame 0: the dot and ring are already there, so the cut into this beat is never black.
-  tl.fromTo("#root .ring", { scale: 0.35, opacity: 0.7 }, { scale: 1.25, opacity: 0.35, duration: 1.1, ease: "expo.out" }, 0);
-  tl.fromTo("#root .mark svg circle", { scale: 1.6, transformOrigin: "50% 50%" }, { scale: 1, duration: 0.5, ease: "back.out(2)" }, 0);
-  RC.draw(tl, "#root .mark line", 0.2, { duration: 0.55, stagger: 0.04, ease: "expo.out" });
-  tl.fromTo("#root .mark", { rotation: -30 }, { rotation: 90, duration: 1.4, ease: "expo.inOut" }, 0.2);
+  tl.fromTo("#root .ring", { scale: 0.35, opacity: 0.7 }, { scale: 1.25, opacity: 0.35, duration: 1.1, ease: "spring.gentle" }, 0);
+  tl.fromTo("#root .mark svg circle", { scale: 1.6, transformOrigin: "50% 50%" }, { scale: 1, duration: 0.5, ease: "spring.snappy" }, 0);
+  RC.draw(tl, "#root .mark line", 0.2, { duration: 0.55, stagger: 0.04, ease: "spring.gentle" });
+  tl.fromTo("#root .mark", { rotation: -30 }, { rotation: 90, duration: 1.4, ease: "spring.soft" }, 0.2);
   RC.iris(tl, "#root .flood", 1.2, { duration: 0.8, from: "50% 43.5%" });
-  tl.fromTo("#root .rule", { scaleX: 0 }, { scaleX: 1, duration: 0.7, ease: "expo.inOut" }, 1.6);
+  tl.fromTo("#root .rule", { scaleX: 0 }, { scaleX: 1, duration: 0.7, ease: "apple.glide" }, 1.6);
   RC.chars(tl, "#root .name .nm", 1.55, { stagger: 0.045, blur: 12, y: 30, duration: 0.6 });
   // Width settles from stretched, like the extended face exhaling. scaleX, never letterSpacing:
   // spacing reflows text and snaps to whole pixels frame by frame.
-  tl.fromTo("#root .name", { scaleX: 1.35 }, { scaleX: 1, duration: 1.0, ease: "expo.out" }, 1.55);
+  tl.fromTo("#root .name", { scaleX: 1.35 }, { scaleX: 1, duration: 1.0, ease: "spring.gentle" }, 1.55);
   RC.words(tl, "#root .sub", 2.15, { stagger: 0.1, blur: 10, y: 14 });
   tl.fromTo(hudPre, { opacity: 0.6 }, { opacity: 1, duration: 0.6 }, 0);
   // Text left under an opaque layer is still text: fade the intro's HUD as the iris opens, and

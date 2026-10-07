@@ -76,24 +76,24 @@
   RC.glass();
   RC.words(tl, "#root .rc-head", 0, { lead: true, stagger: 0.09, blur: 14, y: 20 });
   // The card is whole at frame 0, every switch off; it settles, its rows resolve.
-  tl.fromTo("#root .set", { y: 50, opacity: 0.75 }, { y: 0, opacity: 1, duration: 0.9, ease: "expo.out" }, 0.05);
+  tl.fromTo("#root .set", { y: 50, opacity: 0.75 }, { y: 0, opacity: 1, duration: 0.9, ease: "spring.gentle" }, 0.05);
   RC.blurIn(tl, "#root .row .nm, #root .row .sb", 0.3, { blur: 6, y: 10, stagger: 0.03, duration: 0.6 });
   // Three switches: the glass thumb travels thirty pixels and the accent comes up under it.
   ["r1", "r2", "r3"].forEach((r, i) => {
     const t = 1.1 + i * 0.42;
-    tl.to("#root ." + r + " .rc-thumb", { x: 30, duration: 0.5, ease: "expo.inOut" }, t);
-    tl.to("#root ." + r + " .rc-fill", { opacity: 1, duration: 0.4, ease: "power2.out" }, t + 0.06);
+    tl.to("#root ." + r + " .rc-thumb", { x: 30, duration: 0.5, ease: "spring.default" }, t);
+    tl.to("#root ." + r + " .rc-fill", { opacity: 1, duration: 0.4, ease: "apple.out" }, t + 0.06);
   });
   // The slider: the handle travels from five minutes to fifteen, the fill follows it, the value rolls.
   const X0 = 317 - 38, X1 = 595 - 38;                     // handle left edge at 5m and at 15m (card coordinates)
   gsap.set("#root .hd", { x: X0 - 40 });                  // .hd starts at left 40
   gsap.set("#root .fill", { scaleX: 277 / 832 });
-  tl.to("#root .hd", { x: X1 - 40, duration: 0.95, ease: "expo.inOut" }, 2.55);
-  tl.to("#root .fill", { scaleX: 555 / 832, duration: 0.95, ease: "expo.inOut" }, 2.55);
+  tl.to("#root .hd", { x: X1 - 40, duration: 0.95, ease: "spring.default" }, 2.55);
+  tl.to("#root .fill", { scaleX: 555 / 832, duration: 0.95, ease: "spring.default" }, 2.55);
   RC.roll(tl, "#root .sl .val", 2.85, { values: ["5 min", "15 min"], each: 0.5, duration: 0.4 });
   // The consequence: the card says it saved.
-  tl.fromTo("#root .saved", { opacity: 0, y: 10, scale: 0.92 }, { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: "expo.out" }, 3.75);
-  tl.fromTo("#root .saved", { filter: "blur(8px)" }, { filter: "blur(0px)", duration: 0.5, ease: "expo.out" }, 3.75);
+  tl.fromTo("#root .saved", { opacity: 0, y: 10, scale: 0.92 }, { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: "spring.gentle" }, 3.75);
+  tl.fromTo("#root .saved", { filter: "blur(8px)" }, { filter: "blur(0px)", duration: 0.5, ease: "spring.gentle" }, 3.75);
   RC.camera(tl, "#root .cam", 0, { duration: 4.8, to: { scale: 1.035 } });
   RC.drift(tl, "#root .rc-mesh", 0, { duration: 4.8, x: 50, y: -30, scale: 1.08 });
   RC.hold(tl, 4.75);

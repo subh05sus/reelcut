@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* IOS SEARCH KEYBOARD. The UI is the whole frame: the lower part of an iPhone (light look), cropped by the top
+     edge. The search field is tapped: its focus ring fades in (150 ms) and the keyboard rises on the iOS curve
+     (apple.push). "pasta" is typed: each key shows its callout balloon exactly while it is pressed, the placeholder
+     goes on the first letter and the clear button scales in on a snappy spring. Suggestions arrive one by one
+     (fade and an 8 pt rise, 40 ms apart). Search is pressed; the keyboard goes down faster than it came and the
+     results settle where it was.
+     Grid: the phone at --pt 1.7, centred, its bottom at y 1000; the field at y 105, everything readable inside 84 → 996. */
+  #root { --accent: #e2562a; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 540px 540px; }
+  #root .ph { left: 178px; top: -527px; --pt: 1.7px; }
+  #root .pg { position: absolute; inset: 0; background: var(--ui-bg); }
+  #root .fld { left: calc(16 * var(--pt)); top: calc(360 * var(--pt)); width: calc(300 * var(--pt)); }
+  #root .cancel { position: absolute; left: calc(330 * var(--pt)); top: calc(360 * var(--pt)); height: calc(44 * var(--pt)); display: flex; align-items: center;
+    font: 400 calc(17 * var(--pt)) / 1 var(--ui-font); color: var(--ui-tint); opacity: 0; }
+  #root .sug { position: absolute; left: calc(16 * var(--pt)); right: calc(16 * var(--pt)); height: calc(52 * var(--pt)); display: flex; align-items: center; gap: calc(14 * var(--pt));
+    font: 400 calc(17 * var(--pt)) / 1 var(--ui-font); color: var(--ui-label); letter-spacing: -0.02em; opacity: 0; }
+  #root .sug b { font-weight: 600; }
+  #root .sug::after { content: ""; position: absolute; left: calc(34 * var(--pt)); right: 0; bottom: 0; height: 0.5px; background: var(--ui-sep); }
+  #root .sug svg { width: calc(20 * var(--pt)); height: calc(20 * var(--pt)); color: var(--ui-label-2); flex: none; }
+  #root .res { position: absolute; left: calc(16 * var(--pt)); right: calc(16 * var(--pt)); top: calc(590 * var(--pt)); display: grid; grid-template-columns: 1fr 1fr; gap: calc(12 * var(--pt)); opacity: 0; }
+  #root .res .tile { height: calc(150 * var(--pt)); border-radius: calc(20 * var(--pt)); position: relative; overflow: hidden; }
+  #root .res .tile b { position: absolute; left: calc(12 * var(--pt)); bottom: calc(12 * var(--pt)); color: #fff; font: 600 calc(17 * var(--pt)) / 1.1 var(--ui-font); letter-spacing: -0.02em; text-shadow: 0 1px 8px rgba(0,0,0,.25); }
+</style>
+<div id="root" data-look="paper" data-composition-id="ios-search-keyboard" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(226,86,42,.12); --mesh-2: rgba(18,18,18,.05)"></div>
+  <div class="cam">
+    <div class="rc-iphone ph">
+      <div class="rc-scr">
+        <div class="pg"></div>
+        <div class="rc-search fld"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg><span class="rc-q"></span><span class="rc-caret"></span><span class="rc-ph">Recipes, ingredients</span><span class="rc-x">✕</span></div>
+        <div class="cancel">Cancel</div>
+        <div class="sug" style="top: calc(420 * var(--pt))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg><span><b>pasta</b> carbonara</span></div>
+        <div class="sug" style="top: calc(472 * var(--pt))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg><span><b>pasta</b> with lemon and basil</span></div>
+        <div class="sug" style="top: calc(524 * var(--pt))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg><span><b>pasta</b> in 15 minutes</span></div>
+        <div class="res">
+          <div class="tile" style="background: linear-gradient(150deg,#f5c06b,#e2562a)"><b>Carbonara</b></div>
+          <div class="tile" style="background: linear-gradient(150deg,#b8e07a,#3f9e4a)"><b>Pesto</b></div>
+        </div>
+        <div class="kbh"></div>
+      </div>
+    </div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  const kb = RC.keyboard("#root .kbh", { go: "search" });
+  gsap.set(kb, { yPercent: 100 });
+  // Frame 0: the field is there, ready. The tap focuses it and brings the keyboard up.
+  RC.press(tl, "#root .fld", 0.3, { scale: 0.98 });
+  RC.searchFocus(tl, "#root .fld", 0.35);
+  tl.to("#root .cancel", { opacity: 1, duration: 0.2, ease: "apple.out" }, 0.4);
+  RC.keyboardIn(tl, kb, 0.35);
+  RC.keyType(tl, kb, "#root .fld", 0.95, { text: "pasta", cps: 7, blinkFrom: 0.35, blinkTo: 2.45 });
+  // Suggestions arrive as the word forms: fade and an 8 pt rise, 40 ms apart.
+  RC.present(tl, "#root .sug", 1.25, { y: 14, scale: 1, stagger: 0.06, spring: "gentle" });
+  // Search: the key goes down; the keyboard leaves faster than it came; results settle.
+  const go = kb.querySelector(".rc-go");
+  tl.set(go, { filter: "brightness(.85)" }, 2.35).set(go, { filter: "brightness(1)" }, 2.47);
+  RC.emit("click", 2.35);
+  tl.to(kb, { yPercent: 100, duration: 0.3, ease: "apple.exit" }, 2.5);
+  tl.to("#root .fld", { "--ring": 0, duration: 0.2, ease: "apple.out" }, 2.5);
+  tl.set("#root .rc-caret", { opacity: 0 }, 2.5);
+  RC.present(tl, "#root .res", 2.7, { y: 30, scale: 0.98, spring: "gentle" });
+  RC.camera(tl, "#root .cam", 0, { duration: 4.6, to: { scale: 1.025 } });
+  RC.drift(tl, "#root .rc-mesh", 0, { duration: 4.6, x: 40, y: -20, scale: 1.06 });
+  RC.hold(tl, 4.6);
+  window.__timelines["ios-search-keyboard"] = tl;
+})();
+</script>
+</template>
+</body></html>

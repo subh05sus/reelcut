@@ -61,23 +61,23 @@
   ["n1", "n2", "n3", "n4"].forEach((id, i) => {
     const sel = "#root ." + id;
     // Each card resolves from above and out of soft focus; the first is already there at frame 0.
-    tl.fromTo(sel, { y: -80, scale: 1.03 }, { y: 0, scale: 1, duration: 0.85, ease: "expo.out" }, T[i]);
-    tl.fromTo(sel, { opacity: i === 0 ? 0.7 : 0 }, { opacity: 1, duration: 0.3, ease: "power2.out" }, T[i]);
-    tl.fromTo(sel, { filter: "blur(" + (i === 0 ? 5 : 14) + "px)" }, { filter: "blur(0px)", duration: 0.7, ease: "expo.out" }, T[i]);
+    tl.fromTo(sel, { y: -80, scale: 1.03 }, { y: 0, scale: 1, duration: 0.85, ease: "spring.gentle" }, T[i]);
+    tl.fromTo(sel, { opacity: i === 0 ? 0.7 : 0 }, { opacity: 1, duration: 0.3, ease: "apple.out" }, T[i]);
+    tl.fromTo(sel, { filter: "blur(" + (i === 0 ? 5 : 14) + "px)" }, { filter: "blur(0px)", duration: 0.7, ease: "spring.gentle" }, T[i]);
     // Every later arrival pushes this card one step deeper. Its words go just before, so no two lines
     // of text ever share a card: a stack shows edges.
     for (let j = i + 1; j < 4; j++) {
       const b = back[j - i];
-      tl.to(sel, { y: b.y, scale: b.scale, opacity: b.opacity, filter: "blur(" + b.blur + "px)", duration: 0.75, ease: "expo.out" }, T[j]);
+      tl.to(sel, { y: b.y, scale: b.scale, opacity: b.opacity, filter: "blur(" + b.blur + "px)", duration: 0.75, ease: "spring.gentle" }, T[j]);
     }
-    if (i < 3) tl.to(sel + " .ct", { opacity: 0, duration: 0.2, ease: "power2.out" }, T[i + 1] - 0.03);
+    if (i < 3) tl.to(sel + " .ct", { opacity: 0, duration: 0.2, ease: "apple.out" }, T[i + 1] - 0.03);
   });
   // The close: the stack tightens, and a glass count comes to rest across its lower edge.
   [["n3", 18, 0.96], ["n2", 34, 0.92], ["n1", 48, 0.88]].forEach(([id, y, s], k) => {
-    tl.to("#root ." + id, { y, scale: s, duration: 0.8, ease: "expo.inOut" }, 3.75 + k * 0.05);
+    tl.to("#root ." + id, { y, scale: s, duration: 0.8, ease: "spring.default" }, 3.75 + k * 0.05);
   });
-  tl.fromTo("#root .more", { y: 22, opacity: 0, scale: 0.92 }, { y: 0, opacity: 1, scale: 1, duration: 0.8, ease: "expo.out" }, 3.95);
-  tl.fromTo("#root .more", { filter: "blur(10px)" }, { filter: "blur(0px)", duration: 0.7, ease: "expo.out" }, 3.95);
+  tl.fromTo("#root .more", { y: 22, opacity: 0, scale: 0.92 }, { y: 0, opacity: 1, scale: 1, duration: 0.8, ease: "spring.gentle" }, 3.95);
+  tl.fromTo("#root .more", { filter: "blur(10px)" }, { filter: "blur(0px)", duration: 0.7, ease: "spring.gentle" }, 3.95);
   RC.camera(tl, "#root .cam", 0, { duration: 4.8, to: { scale: 1.04 } });
   RC.drift(tl, "#root .rc-mesh", 0, { duration: 4.8, x: 50, y: -30, scale: 1.08 });
   RC.hold(tl, 4.75);

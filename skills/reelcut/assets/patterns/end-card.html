@@ -24,11 +24,11 @@
 <script>
 (function () {
   const tl = gsap.timeline({ paused: true });
-  tl.fromTo("#root .mk", { scale: 0.6, rotation: -30, opacity: 0.6 }, { scale: 1, rotation: 0, opacity: 1, duration: 0.9, ease: "back.out(1.8)" }, 0);
+  tl.fromTo("#root .mk", { scale: 0.6, rotation: -30, opacity: 0.6 }, { scale: 1, rotation: 0, opacity: 1, duration: 0.9, ease: "spring.reward" }, 0);
   RC.chars(tl, "#root .nm", 0.15, { lead: true, stagger: 0.04 });
   RC.words(tl, "#root .tag", 0.7, { stagger: 0.08, blur: 10, y: 14 });
   RC.rise(tl, "#root .url span", 1.1, { y: 20 });
-  tl.fromTo("#root .rc-horizon", { yPercent: 30, opacity: 0.4 }, { yPercent: 0, opacity: 1, duration: 2.4, ease: "expo.out" }, 0);
+  tl.fromTo("#root .rc-horizon", { yPercent: 30, opacity: 0.4 }, { yPercent: 0, opacity: 1, duration: 2.4, ease: "spring.gentle" }, 0);
   RC.camera(tl, "#root .lock", 0, { duration: 3.5, to: { scale: 1.03 } });
   RC.hold(tl, 3.45);
   window.__timelines["end-card"] = tl;

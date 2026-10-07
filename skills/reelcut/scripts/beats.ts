@@ -6,6 +6,7 @@ import { segmentBeats, type BeatTiming } from "../../../src/planner/beatSegmenta
 import { mergeShortBeats } from "../../../src/planner/mergeShortBeats.js";
 import { planShortCut, type CutBeat } from "../../../src/planner/shortCut.js";
 import { readingFloorSeconds } from "../../../src/core/readingFloor.js";
+import { DEFAULT_FPS } from "../../../src/core/constants.js";
 
 /**
  * Script in, beats out. Step 1 of the skill, as a command you can run and read.
@@ -14,7 +15,7 @@ import { readingFloorSeconds } from "../../../src/core/readingFloor.js";
  * and seeing them before composing anything is the cheapest way to catch a script that segments
  * badly — a run-on sentence with no punctuation, a beat too short for its own line.
  *
- *   npm run beats -- script.txt [--fps 30] [--short]
+ *   npm run beats -- script.txt [--fps 60] [--short]
  *
  * `.srt` gives exact timings. `.txt` is estimated from words per minute, which is an estimate and
  * is labelled as one in the output, because every duration downstream inherits it.
@@ -28,7 +29,7 @@ interface Args {
 
 function parseArgs(argv: readonly string[]): Args | undefined {
   let file: string | undefined;
-  let fps = 30;
+  let fps = DEFAULT_FPS;
   let short = false;
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]!;
@@ -46,7 +47,7 @@ function seconds(ms: number): number {
 function main(): void {
   const args = parseArgs(process.argv.slice(2));
   if (!args) {
-    console.error("usage: beats.ts <script.txt|script.srt> [--fps 30] [--short]");
+    console.error("usage: beats.ts <script.txt|script.srt> [--fps 60] [--short]");
     process.exitCode = 2;
     return;
   }

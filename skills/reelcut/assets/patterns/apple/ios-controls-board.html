@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* IOS CONTROLS BOARD. An inset-grouped settings card on a dark look, operated by a touch: the segmented control
+     moves Day → Week (one raised lens travels and swells), two switches turn on (each knob widens under the finger,
+     travels, and the track fills green), the brightness slider is held (its thumb swells into clear glass, a value
+     bubble pops up), dragged like a hand from 40% to 80% and released, and the stepper counts 2 → 3 with only the
+     digit rolling. Every move is one of Apple's springs; nothing bounces.
+     Grid: headline at (84, 96); the card on the margins (84 → 996), from 336 to 996, radius 40, inner padding 40;
+     rows 120 px on a regular pitch; controls at --pt 2.2 so their labels are 33 px. */
+  #root { --accent: #ff9230; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 540px 640px; }
+  #root .card { position: absolute; left: 84px; top: 336px; width: 912px; height: 660px; border-radius: 40px; background: var(--ui-cell); box-shadow: var(--shadow); --pt: 2.2px; }
+  #root .seg { left: 40px; top: 34px; width: 832px; }
+  #root .row { position: absolute; left: 40px; right: 40px; height: 120px; display: flex; align-items: center; gap: 24px; }
+  #root .row + .row::before, #root .sep { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1px; background: var(--ui-sep); }
+  #root .row .nm { flex: 1; font: 600 34px/1.1 var(--ui-font); letter-spacing: -0.02em; color: var(--ui-label); }
+  #root .row .nm small { display: block; margin-top: 6px; font: 400 25px/1.1 var(--ui-font); color: var(--ui-label-2); letter-spacing: -0.01em; }
+  #root .r1 { top: 140px; } #root .r2 { top: 260px; } #root .r3 { top: 380px; } #root .r4 { top: 520px; }
+  #root .r3 { height: 140px; align-items: flex-end; padding-bottom: 22px; }
+  #root .r3 .nm { position: absolute; left: 0; top: 18px; }
+  #root .r3 .sld { position: relative; flex: 1; margin: 0 10px; }
+  #root .sun { width: 30px; height: 30px; color: var(--ui-label-2); flex: none; margin-bottom: 29px; }
+  #root .sun.lo { width: 22px; height: 22px; margin-bottom: 33px; }
+  #root .stepv { font: 600 34px/1 var(--ui-font); color: var(--ui-label); min-width: 30px; text-align: center; }
+  #root .rc-touch { --pt: 2.2px; }
+</style>
+<div id="root" data-look="ink" data-composition-id="ios-controls-board" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(255,146,48,.12); --mesh-2: rgba(48,209,88,.08)"></div>
+  <div class="cam">
+    <div class="rc-head"><span class="ln" style="--ox:-1.4px">Every control,</span><span class="ln" style="--ox:3px"><em class="rc">just so.</em></span></div>
+    <div class="card">
+      <div class="rc-segctl seg"><span class="rc-lens"><i></i></span><span>Day</span><span>Week</span><span>Month</span></div>
+      <div class="row r1"><div class="nm">Focus<small>Silence what can wait</small></div><div class="rc-sw sw1"><span class="rc-sw-fill"></span><span class="rc-sw-knob"></span></div></div>
+      <div class="row r2"><div class="nm">Summary<small>Every morning at 8</small></div><div class="rc-sw sw2"><span class="rc-sw-fill"></span><span class="rc-sw-knob"></span></div></div>
+      <div class="row r3"><div class="nm">Brightness</div>
+        <svg class="sun lo" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="4.5"/><g stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></g></svg>
+        <div class="rc-slider sld"><span class="rc-sl-track"></span><span class="rc-sl-fill"></span><span class="rc-sl-thumb"></span><span class="rc-sl-bubble"></span></div>
+        <svg class="sun" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/><g stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 1.5v2.5M12 20v2.5M1.5 12H4M20 12h2.5M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8"/></g></svg>
+      </div>
+      <div class="row r4"><div class="nm">Reminders a day</div><span class="stepv">2</span>
+        <div class="rc-stepper"><button>−</button><i></i><button class="plus">+</button></div></div>
+    </div>
+    <div class="rc-touch"></div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  RC.words(tl, "#root .rc-head", 0, { lead: true, stagger: 0.08 });
+  RC.present(tl, "#root .card", 0.05, { y: 40, scale: 1, spring: "gentle", lead: true });
+  RC.lensSet("#root .seg", 0);
+  gsap.set("#root .sld", { "--v": 0.4 });
+  // Card-relative positions → frame pixels: the card is at (84, 336).
+  const C = (x, y) => [84 + x, 336 + y];
+  const seg1 = C(40 + 832 / 2, 34 + 40), sw1 = C(872 - 70, 140 + 60), sw2 = C(872 - 70, 260 + 60);
+  tl.set("#root .rc-touch", { opacity: 0 }, 0);
+  RC.cursor(tl, "#root .rc-touch", 0.55, [[seg1[0] + 60, seg1[1] + 120, 0], [seg1[0], seg1[1], 0.45]]);
+  tl.to("#root .rc-touch", { opacity: 1, duration: 0.2, ease: "apple.out" }, 0.55);
+  RC.press(tl, "#root .rc-touch", 1.0, { scale: 0.85 });
+  RC.lensTo(tl, "#root .seg", 1.03, 1);
+  RC.cursor(tl, "#root .rc-touch", 1.35, [[sw1[0], sw1[1], 0.45]]);
+  RC.press(tl, "#root .rc-touch", 1.8, { scale: 0.85, hold: 0.12 });
+  RC.toggle(tl, "#root .sw1", 1.8, true);
+  RC.cursor(tl, "#root .rc-touch", 2.1, [[sw2[0], sw2[1], 0.35]]);
+  RC.press(tl, "#root .rc-touch", 2.45, { scale: 0.85, hold: 0.12 });
+  RC.toggle(tl, "#root .sw2", 2.45, true);
+  // The slider: the touch lands on the thumb (40% of the track), holds, drags to 80%, lets go.
+  const sl = document.querySelector("#root .sld"), x0 = 84 + 40 + sl.offsetLeft, w = sl.offsetWidth, ys = 336 + 380 + 140 - 22 - 20;
+  RC.cursor(tl, "#root .rc-touch", 2.75, [[x0 + w * 0.4, ys, 0.4]]);
+  RC.press(tl, "#root .rc-touch", 3.15, { scale: 0.85, release: false });
+  RC.slide(tl, "#root .sld", 3.15, { from: 0.4, to: 0.8, duration: 0.85, hold: 0.25 });
+  tl.to("#root .rc-touch", { x: x0 + w * 0.8, duration: 0.85, ease: "apple.glide" }, 3.4);
+  RC.to(tl, "#root .rc-touch", 4.4, { scale: 1 }, "snappy");
+  // The stepper: + presses, only the digit rolls.
+  // Layout offsets (not screen rects), so the camera's scale never enters the arithmetic.
+  const card = document.querySelector("#root .card"), plus = document.querySelector("#root .plus");
+  let px = plus.offsetWidth / 2, py = plus.offsetHeight / 2;
+  for (let e = plus; e && e !== card; e = e.offsetParent) { px += e.offsetLeft; py += e.offsetTop; }
+  RC.cursor(tl, "#root .rc-touch", 4.45, [[84 + px, 336 + py, 0.4]]);
+  RC.press(tl, "#root .rc-touch", 4.85, { scale: 0.85 });
+  RC.press(tl, "#root .plus", 4.85, { scale: 0.9 });
+  tl.to("#root .plus", { backgroundColor: "rgba(255,255,255,.14)", duration: 0.08, ease: "apple.out" }, 4.85).to("#root .plus", { backgroundColor: "rgba(255,255,255,0)", duration: 0.3, ease: "apple.out" }, 4.97);
+  RC.numeric(tl, "#root .stepv", 4.9, { values: ["2", "3"] });
+  tl.to("#root .rc-touch", { opacity: 0, duration: 0.2, ease: "apple.exit" }, 5.3);
+  RC.camera(tl, "#root .cam", 0, { duration: 5.8, to: { scale: 1.02 } });
+  RC.drift(tl, "#root .rc-mesh", 0, { duration: 5.8, x: 40, y: -20, scale: 1.06 });
+  RC.hold(tl, 5.8);
+  window.__timelines["ios-controls-board"] = tl;
+})();
+</script>
+</template>
+</body></html>

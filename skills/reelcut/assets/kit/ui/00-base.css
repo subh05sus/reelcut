@@ -1,0 +1,103 @@
+/*
+ * Apple UI, the base every family in ui/ stands on: a point unit, the structural tokens (follow the reel's
+ * look, arranged the way Apple arranges them), Apple's text styles, and the iPhone.
+ *
+ * The point. Everything in ui/ is sized in iOS points times `--pt`, so one component can be a corner
+ * detail or fill the frame: `--pt: 1.5px` (default) draws a 44 pt row 66 px tall; set `--pt` on the
+ * component (or the phone) to scale all of it. Mind the 16 px floor: Caption 2 (11 pt) needs --pt ≥ 1.46.
+ *
+ * The colours follow the look. A light look gets Apple's light structure (a grey grouped ground, white
+ * cells, hairline separators); ink and cinema get the dark structure (black ground, raised cells). The
+ * accent is the tint, as an app's tint is its brand. The system colours are there for meaning only:
+ * green for on and done, red for destructive, the blue of a link or a sent message where the beat needs it.
+ */
+[data-look] {
+  --pt: 1.5px;
+  --ui-font: var(--font-sans);
+  --ui-bg: var(--card);
+  --ui-grouped: color-mix(in oklab, var(--card-ink) 5%, var(--card));
+  --ui-cell: var(--card);
+  --ui-raised: var(--card);
+  --ui-label: var(--card-ink);
+  --ui-label-2: var(--card-muted);
+  --ui-label-3: color-mix(in oklab, var(--card-ink) 30%, transparent);   /* placeholders, chevrons: never body text */
+  --ui-sep: color-mix(in oklab, var(--card-ink) 13%, transparent);
+  --ui-fill: color-mix(in oklab, var(--card-ink) 7%, transparent);
+  --ui-fill-2: color-mix(in oklab, var(--card-ink) 12%, transparent);
+  --ui-tint: var(--accent);
+  --ui-tint-ink: var(--accent-ink);
+  --ui-green: #34c759; --ui-red: #ff3b30; --ui-blue: #0088ff; --ui-orange: #ff8d28; --ui-yellow: #ffcc00;
+  --ui-teal: #00c3d0; --ui-indigo: #6155f5; --ui-purple: #cb30e0; --ui-pink: #ff2d55; --ui-gray: #8e8e93;
+  --ui-scrim: rgba(0,0,0,.2);
+  --ui-menu-shadow: 0 calc(10 * var(--pt)) calc(40 * var(--pt)) calc(-6 * var(--pt)) rgba(0,0,0,.25), 0 0 0 0.5px rgba(0,0,0,.06);
+}
+[data-look="ink"], [data-look="cinema"] {
+  --ui-grouped: color-mix(in oklab, #000 60%, var(--card));
+  --ui-cell: color-mix(in oklab, #fff 5%, var(--card));
+  --ui-raised: color-mix(in oklab, #fff 9%, var(--card));
+  --ui-sep: rgba(84,84,88,.6);
+  --ui-fill: rgba(118,118,128,.24);
+  --ui-fill-2: rgba(120,120,128,.36);
+  --ui-green: #30d158; --ui-red: #ff4245; --ui-blue: #0091ff; --ui-orange: #ff9230; --ui-yellow: #ffd600;
+  --ui-teal: #00d2e0; --ui-indigo: #6d7cff; --ui-purple: #db34f2; --ui-pink: #ff375f; --ui-gray: #98989d;
+  --ui-scrim: rgba(0,0,0,.5);
+  --ui-menu-shadow: 0 calc(10 * var(--pt)) calc(40 * var(--pt)) calc(-6 * var(--pt)) rgba(0,0,0,.7), 0 0 0 0.5px rgba(255,255,255,.08);
+}
+
+/* Apple's text styles (iOS), in points. Size/line-height, weight. Tracking as SF uses it at each size. */
+[data-look] .rc-t-large  { font: 700 calc(34 * var(--pt)) / calc(41 * var(--pt)) var(--ui-font); letter-spacing: 0.01em; }
+[data-look] .rc-t-title1 { font: 700 calc(28 * var(--pt)) / calc(34 * var(--pt)) var(--ui-font); letter-spacing: 0.013em; }
+[data-look] .rc-t-title2 { font: 700 calc(22 * var(--pt)) / calc(28 * var(--pt)) var(--ui-font); letter-spacing: -0.012em; }
+[data-look] .rc-t-title3 { font: 600 calc(20 * var(--pt)) / calc(25 * var(--pt)) var(--ui-font); letter-spacing: -0.022em; }
+[data-look] .rc-t-headline { font: 600 calc(17 * var(--pt)) / calc(22 * var(--pt)) var(--ui-font); letter-spacing: -0.024em; }
+[data-look] .rc-t-body   { font: 400 calc(17 * var(--pt)) / calc(22 * var(--pt)) var(--ui-font); letter-spacing: -0.024em; }
+[data-look] .rc-t-callout { font: 400 calc(16 * var(--pt)) / calc(21 * var(--pt)) var(--ui-font); letter-spacing: -0.02em; }
+[data-look] .rc-t-subhead { font: 400 calc(15 * var(--pt)) / calc(20 * var(--pt)) var(--ui-font); letter-spacing: -0.015em; }
+[data-look] .rc-t-footnote { font: 400 calc(13 * var(--pt)) / calc(18 * var(--pt)) var(--ui-font); letter-spacing: -0.006em; }
+[data-look] .rc-t-caption { font: 400 calc(12 * var(--pt)) / calc(16 * var(--pt)) var(--ui-font); }
+[data-look] .rc-t-caption2 { font: 400 calc(11 * var(--pt)) / calc(13 * var(--pt)) var(--ui-font); letter-spacing: 0.006em; }
+[data-look] .rc-t-2 { color: var(--ui-label-2); }
+[data-look] .rc-num { font-variant-numeric: tabular-nums; }
+
+/*
+ * The iPhone (16 Pro proportions: 402 × 874 pt, a 62 pt corner, the Dynamic Island).
+ *
+ *   <div class="rc-iphone" style="--pt: 1.2px">
+ *     <div class="rc-scr">
+ *       <div class="rc-status"><b>9:41</b><i class="rc-island"></i><span class="rc-sys"></span></div>
+ *       … the app …
+ *       <i class="rc-homebar"></i>
+ *     </div>
+ *   </div>
+ *
+ * The screen is a positioning context 402 × 874 pt: lay an app out inside it in points. `.rc-iphone.rc-dark`
+ * draws the status bar light on a dark screen. A phone usually crops at the frame edge in a film: place it
+ * so the part that matters sits in the content region and let the rest fall off.
+ */
+[data-look] .rc-iphone { position: absolute; width: calc(426 * var(--pt)); height: calc(898 * var(--pt)); padding: calc(12 * var(--pt));
+  border-radius: calc(72 * var(--pt)); background: #0b0b0d;
+  box-shadow: 0 0 0 calc(1.6 * var(--pt)) #3a3a3f inset, 0 0 0 calc(3.2 * var(--pt)) #1a1a1d inset, var(--shadow); }
+[data-look] .rc-iphone > .rc-scr { position: relative; width: calc(402 * var(--pt)); height: calc(874 * var(--pt)); border-radius: calc(60 * var(--pt));
+  overflow: hidden; background: var(--ui-bg); color: var(--ui-label); font-family: var(--ui-font); isolation: isolate; }
+[data-look] .rc-status { position: absolute; left: 0; right: 0; top: 0; height: calc(54 * var(--pt)); z-index: 40; color: var(--ui-label); pointer-events: none; }
+[data-look] .rc-status > b { position: absolute; left: calc(52 * var(--pt)); top: calc(19 * var(--pt)); font: 600 calc(17 * var(--pt)) / calc(22 * var(--pt)) var(--ui-font); letter-spacing: -0.02em; }
+[data-look] .rc-status > .rc-sys { position: absolute; right: calc(34 * var(--pt)); top: calc(23 * var(--pt)); width: calc(76 * var(--pt)); height: calc(13 * var(--pt));
+  background:
+    linear-gradient(var(--sig, currentColor), var(--sig, currentColor)) 0 100% / calc(3 * var(--pt)) 35% no-repeat,
+    linear-gradient(var(--sig, currentColor), var(--sig, currentColor)) calc(4.5 * var(--pt)) 100% / calc(3 * var(--pt)) 55% no-repeat,
+    linear-gradient(var(--sig, currentColor), var(--sig, currentColor)) calc(9 * var(--pt)) 100% / calc(3 * var(--pt)) 78% no-repeat,
+    linear-gradient(var(--sig, currentColor), var(--sig, currentColor)) calc(13.5 * var(--pt)) 100% / calc(3 * var(--pt)) 100% no-repeat; }
+[data-look] .rc-status > .rc-sys::after { content: ""; position: absolute; right: 0; top: 0; width: calc(25 * var(--pt)); height: calc(12 * var(--pt));
+  border-radius: calc(4 * var(--pt)); border: calc(1 * var(--pt)) solid color-mix(in oklab, currentColor 40%, transparent);
+  background: linear-gradient(currentColor, currentColor) calc(2 * var(--pt)) 50% / 70% calc(7 * var(--pt)) no-repeat; }
+[data-look] .rc-island { position: absolute; left: 50%; top: calc(11 * var(--pt)); width: calc(126 * var(--pt)); height: calc(37 * var(--pt));
+  margin-left: calc(-63 * var(--pt)); border-radius: calc(19 * var(--pt)); background: #000; z-index: 41; }
+[data-look] .rc-homebar { position: absolute; left: 50%; bottom: calc(8 * var(--pt)); width: calc(140 * var(--pt)); height: calc(5 * var(--pt));
+  margin-left: calc(-70 * var(--pt)); border-radius: 99px; background: var(--ui-label); z-index: 40; }
+[data-look] .rc-iphone.rc-dark > .rc-scr { --ui-label: #fff; }
+[data-look] .rc-iphone.rc-dark .rc-status, [data-look] .rc-iphone.rc-dark .rc-homebar { color: #fff; }
+[data-look] .rc-iphone.rc-dark .rc-homebar { background: #fff; }
+
+/* A screen inside the phone: what a push slides in and out. Fills the screen; stack them. */
+[data-look] .rc-view { position: absolute; inset: 0; background: var(--ui-bg); overflow: hidden; }
+[data-look] .rc-view.rc-grouped { background: var(--ui-grouped); }

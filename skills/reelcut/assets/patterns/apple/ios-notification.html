@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* IOS NOTIFICATION. A dark lock screen. Three notifications arrive one by one: each drops from the top of the
+     list on spring.default (slightly stretched, so it lands calmly) while the ones already there glide down to make
+     room. Then the list tidies itself into a stack: the older two tuck under the newest, smaller and dimmer, the way
+     iOS stacks notifications from one moment. Nothing bounces; the clock never moves.
+     Grid: the UI is the frame. The phone at --pt 1.5, centred, from y 60 (cropped by the bottom edge); the clock at
+     the screen's 140 pt; the list from 300 pt in 72 pt slots. */
+  #root { --accent: #6d7cff; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 540px 600px; }
+  #root .ph { left: 220px; top: 60px; --pt: 1.5px; }
+  #root .wall { position: absolute; inset: 0;
+    background: radial-gradient(90% 60% at 20% 15%, color-mix(in oklab, var(--accent) 55%, transparent), transparent 70%),
+                radial-gradient(80% 60% at 90% 80%, rgba(255,90,140,.45), transparent 70%), #07070c; }
+  #root .date { position: absolute; left: 0; right: 0; top: calc(118 * var(--pt)); text-align: center; color: rgba(255,255,255,.82); font: 600 calc(19 * var(--pt)) / 1 var(--ui-font); }
+  #root .clock { position: absolute; left: 0; right: 0; top: calc(140 * var(--pt)); text-align: center; color: #fff; font: 700 calc(96 * var(--pt)) / 1 var(--font-display); letter-spacing: -0.04em; }
+  #root .rc-note { left: calc(12 * var(--pt)); width: calc(378 * var(--pt)); top: calc(300 * var(--pt)); }
+  #root .n1 { z-index: 1; } #root .n2 { z-index: 2; } #root .n3 { z-index: 3; }
+</style>
+<div id="root" data-look="ink" data-composition-id="ios-notification" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(109,124,255,.16); --mesh-2: rgba(255,90,140,.10)"></div>
+  <div class="cam">
+    <div class="rc-iphone rc-dark ph">
+      <div class="rc-scr">
+        <div class="wall"></div>
+        <div class="rc-status"><b></b><i class="rc-island"></i><span class="rc-sys"></span></div>
+        <div class="date">Tuesday, 7 October</div>
+        <div class="clock">9:41</div>
+        <div class="rc-note n1"><span class="rc-note-ico" style="background:#30d158"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-4 3v-3H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></svg></span>
+          <div class="rc-note-tx"><b>Mira <small>now</small></b><span>Table for four at 8. See you there?</span></div></div>
+        <div class="rc-note n2"><span class="rc-note-ico" style="background:#ff9230"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 8.5h12l-1 11.5H7z"/><path d="M9 9V7a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="2.2"/></svg></span>
+          <div class="rc-note-tx"><b>Orders <small>now</small></b><span>Your groceries arrive in 10 minutes.</span></div></div>
+        <div class="rc-note n3"><span class="rc-note-ico" style="background:#0091ff"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 9h18" stroke="#0091ff" stroke-width="2"/></svg></span>
+          <div class="rc-note-tx"><b>Calendar <small>now</small></b><span>Design review moved to 10:30.</span></div></div>
+        <i class="rc-homebar"></i>
+      </div>
+    </div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  const SLOT = 72 * 1.5;   // a 64 pt note and an 8 pt gap, in frame pixels at --pt 1.5
+  gsap.set("#root .rc-note", { opacity: 0, transformOrigin: "50% 0%" });
+  RC.notify(tl, "#root .n1", 0.45, { lead: false });
+  RC.notify(tl, "#root .n2", 1.55, { lead: false });
+  RC.to(tl, "#root .n1", 1.57, { y: SLOT }, "default");
+  RC.notify(tl, "#root .n3", 2.65, { lead: false });
+  RC.to(tl, "#root .n1", 2.67, { y: SLOT * 2 }, "default");
+  RC.to(tl, "#root .n2", 2.67, { y: SLOT }, "default");
+  // Into a stack: the older ones tuck under the newest, each a little smaller and dimmer.
+  RC.to(tl, "#root .n2", 3.95, { y: 12 * 1.5, scale: 0.95 }, "page");
+  RC.to(tl, "#root .n1", 4.0, { y: 24 * 1.5, scale: 0.9 }, "page");
+  tl.to("#root .n2 .rc-note-tx, #root .n2 .rc-note-ico", { opacity: 0, duration: 0.2, ease: "apple.exit" }, 3.95);
+  tl.to("#root .n1 .rc-note-tx, #root .n1 .rc-note-ico", { opacity: 0, duration: 0.2, ease: "apple.exit" }, 4.0);
+  RC.camera(tl, "#root .cam", 0, { duration: 5.4, to: { scale: 1.03 } });
+  RC.drift(tl, "#root .rc-mesh", 0, { duration: 5.4, x: 40, y: -20, scale: 1.06 });
+  RC.hold(tl, 5.4);
+  window.__timelines["ios-notification"] = tl;
+})();
+</script>
+</template>
+</body></html>

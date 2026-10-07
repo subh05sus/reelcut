@@ -47,12 +47,12 @@
     const sel = "#root .s" + i, k0 = i - 1;
     gsap.set(sel, { clipPath: C });
     // Arrive from soft focus, small and a little low: the row resolves, it does not pop.
-    tl.fromTo(sel, { x: pose.a[k0][0], y: pose.a[k0][1] + 40, scale: 0.7, opacity: i === 1 ? 0.6 : 0 }, { x: pose.a[k0][0], y: pose.a[k0][1], scale: 1, opacity: 1, duration: 0.8, ease: "expo.out" }, 0.05 + i * 0.09);
-    tl.fromTo(sel, { filter: "blur(10px)" }, { filter: "blur(0px)", duration: 0.7, ease: "expo.out" }, 0.05 + i * 0.09);
+    tl.fromTo(sel, { x: pose.a[k0][0], y: pose.a[k0][1] + 40, scale: 0.7, opacity: i === 1 ? 0.6 : 0 }, { x: pose.a[k0][0], y: pose.a[k0][1], scale: 1, opacity: 1, duration: 0.8, ease: "spring.gentle" }, 0.05 + i * 0.09);
+    tl.fromTo(sel, { filter: "blur(10px)" }, { filter: "blur(0px)", duration: 0.7, ease: "spring.gentle" }, 0.05 + i * 0.09);
     for (let k = 1; k < 3; k++) {
       const p0 = pose[names[k - 1]][k0], p1 = pose[names[k]][k0], t = at[k] + i * 0.07;
-      tl.fromTo(sel, { x: p0[0], y: p0[1], rotation: rot[names[k - 1]][k0] }, { x: p1[0], y: p1[1], rotation: rot[names[k]][k0], duration: 1.0, ease: "expo.inOut", immediateRender: false }, t);
-      tl.fromTo(sel, { clipPath: shape[names[k - 1]][k0] }, { clipPath: shape[names[k]][k0], duration: 1.0, ease: "expo.inOut", immediateRender: false }, t);
+      tl.fromTo(sel, { x: p0[0], y: p0[1], rotation: rot[names[k - 1]][k0] }, { x: p1[0], y: p1[1], rotation: rot[names[k]][k0], duration: 1.0, ease: "spring.default", immediateRender: false }, t);
+      tl.fromTo(sel, { clipPath: shape[names[k - 1]][k0] }, { clipPath: shape[names[k]][k0], duration: 1.0, ease: "spring.default", immediateRender: false }, t);
     }
   }
   RC.words(tl, "#root .h", 0, { lead: true, stagger: 0.09, blur: 14, y: 20 });

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* APP MESSAGES. A conversation (cool look, the tint as the sent-bubble colour). A reply is typed into the glass
+     composer — the send button scales in with the first letter — and sent: the bubble rises out of the composer while
+     the thread glides up to make room (spring.default). Three dots breathe in a wave in a bubble on the left; it goes,
+     and the answer grows from its tail corner where the dots were. A heart tapback lands on the message that earned it.
+     Bubbles group the way Apple's do: the tail only on the last of a run.
+     Grid: the UI is the frame. The phone at --pt 1.8, centred (x 156 → 924), cropped above the thread so the
+     composer sits on the bottom margin; Body text is 31 px. */
+  #root { --accent: #0a84ff; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 540px 700px; }
+  #root .ph { left: 156px; top: -537px; --pt: 1.8px; }
+  #root .hdr { position: absolute; left: 0; right: 0; top: 0; height: calc(150 * var(--pt)); z-index: 5;
+    background: linear-gradient(var(--ui-bg) 78%, color-mix(in oklab, var(--ui-bg) 0%, transparent)); }
+  #root .hdr .back { position: absolute; left: calc(16 * var(--pt)); top: calc(62 * var(--pt)); }
+  #root .hdr .av { position: absolute; left: 50%; top: calc(56 * var(--pt)); width: calc(52 * var(--pt)); height: calc(52 * var(--pt)); margin-left: calc(-26 * var(--pt)); border-radius: 50%;
+    background: linear-gradient(150deg,#ffcf8a,#ff9230); }
+  #root .hdr .nm { position: absolute; left: 0; right: 0; top: calc(114 * var(--pt)); text-align: center; font: 500 calc(13 * var(--pt)) / 1 var(--ui-font); color: var(--ui-label); }
+  #root .rc-thread { top: calc(160 * var(--pt)); }
+  #root .rc-thread .rc-msg + .rc-msg.rc-me, #root .rc-thread .rc-msg.rc-me + .rc-msg:not(.rc-me) { margin-top: calc(8 * var(--pt)); }
+  #root .typ { position: absolute; left: calc(12 * var(--pt)); top: calc(742 * var(--pt)); }
+  #root .plus { position: absolute; left: calc(12 * var(--pt)); top: calc(790 * var(--pt)); width: calc(40 * var(--pt)); height: calc(40 * var(--pt)); border-radius: 50%;
+    background: var(--ui-fill); display: grid; place-items: center; color: var(--ui-label-2); font: 300 calc(26 * var(--pt)) / 1 var(--ui-font); }
+  #root .rc-composer { left: calc(60 * var(--pt)); right: calc(12 * var(--pt)); top: calc(790 * var(--pt)); }
+  #root .m4 { position: relative; }
+  #root .rc-tapback { left: calc(-14 * var(--pt)); }
+</style>
+<div id="root" data-look="cool" data-composition-id="app-messages" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(10,132,255,.14); --mesh-2: rgba(255,146,48,.08)"></div>
+  <div class="cam">
+    <div class="rc-iphone ph">
+      <div class="rc-scr">
+        <div class="rc-thread">
+          <div class="rc-msg rc-tail">Did you see the place on the corner?</div>
+          <div class="rc-msg rc-me rc-tail">The one with the garden?</div>
+          <div class="rc-msg">That one. Lume has a table at 8</div>
+          <div class="rc-msg rc-tail">Are we still on for tonight?</div>
+          <div class="rc-msg rc-me rc-tail">Yes! Can't wait</div>
+          <div class="rc-msg rc-me rc-tail m4">I booked the window table</div>
+          <div class="rc-msg rc-tail">Perfect. See you there</div>
+        </div>
+        <div class="rc-typing typ"><i></i><i></i><i></i></div>
+        <div class="hdr"><div class="rc-gbtn rc-glass back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></div>
+          <div class="av"></div><div class="nm">Mira</div></div>
+        <div class="plus">+</div>
+        <div class="rc-composer rc-glass"><span class="rc-ctext"></span><span class="rc-caret"></span><span class="rc-ph">iMessage</span>
+          <span class="rc-send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg></span></div>
+        <div class="rc-status"><b>9:41</b><i class="rc-island"></i><span class="rc-sys"></span></div>
+      </div>
+    </div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  RC.glass();
+  const P = 1.8, bottom = 776 * P;
+  RC.threadSet("#root .rc-thread", 5, bottom);
+  // The reply is typed and sent.
+  RC.compose(tl, "#root .rc-composer", 0.4, { text: "I booked the window table", cps: 17, send: 2.15 });
+  RC.msgShow(tl, "#root .rc-thread", "#root .m4", 2.2);
+  // Mira is typing; then her answer grows out of where the dots were.
+  RC.msgTyping(tl, "#root .typ", 2.75, 3.85);
+  RC.msgShow(tl, "#root .rc-thread", "#root .rc-thread .rc-msg:last-child", 3.85);
+  // A heart for the booking.
+  const tb = document.createElement("span"); tb.className = "rc-tapback";
+  tb.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 20.5s-8-4.9-8-10.6A4.6 4.6 0 0 1 12 7a4.6 4.6 0 0 1 8 2.9c0 5.7-8 10.6-8 10.6z"/></svg>';
+  document.querySelector("#root .m4").appendChild(tb);
+  RC.pop(tl, tb, 4.45);
+  RC.camera(tl, "#root .cam", 0, { duration: 5.4, to: { scale: 1.025 } });
+  RC.drift(tl, "#root .rc-mesh", 0, { duration: 5.4, x: 40, y: -20, scale: 1.06 });
+  RC.hold(tl, 5.4);
+  window.__timelines["app-messages"] = tl;
+})();
+</script>
+</template>
+</body></html>

@@ -52,9 +52,9 @@
   const tl = gsap.timeline({ paused: true });
   RC.words(tl, "#root .h", 0, { lead: true, stagger: 0.09, blur: 14, y: 20 });
   // The card settles out of a slight tilt and is fully legible from frame 0; the pen comes after.
-  tl.fromTo("#root .card", { rotationX: 16, y: 60, opacity: 0.85, transformPerspective: 1400 }, { rotationX: 0, y: 0, opacity: 1, duration: 1.1, ease: "expo.out" }, 0.05);
+  tl.fromTo("#root .card", { rotationX: 16, y: 60, opacity: 0.85, transformPerspective: 1400 }, { rotationX: 0, y: 0, opacity: 1, duration: 1.1, ease: "spring.gentle" }, 0.05);
   RC.draw(tl, "#root .und", 1.2, { duration: 0.6 });
-  RC.draw(tl, "#root .circ", 1.9, { duration: 0.75, ease: "power1.inOut" });
+  RC.draw(tl, "#root .circ", 1.9, { duration: 0.75, ease: "apple.glide" });
   // The figure answers the circle: it turns the accent just after the pen lifts.
   tl.fromTo("#root .card .hot", { color: "#121212" }, { color: "#c2410c", duration: 0.3, immediateRender: false }, 2.7);
   RC.blurIn(tl, "#root .note", 2.85, { blur: 8, y: 0, x: 26, duration: 0.55 });

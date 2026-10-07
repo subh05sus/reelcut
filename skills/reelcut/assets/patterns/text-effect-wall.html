@@ -52,11 +52,11 @@
   const tl = gsap.timeline({ paused: true });
   RC.words(tl, "#root .rc-head", 0, { lead: true, stagger: 0.09, blur: 14, y: 20 });
   // The wall's own frame (hairlines and labels) is there at frame 0; the words are what arrive.
-  tl.fromTo("#root .wall", { y: 36, opacity: 0.8 }, { y: 0, opacity: 1, duration: 0.9, ease: "expo.out" }, 0.05);
+  tl.fromTo("#root .wall", { y: 36, opacity: 0.8 }, { y: 0, opacity: 1, duration: 0.9, ease: "spring.gentle" }, 0.05);
   // 1 — blur: each letter resolves out of soft focus. Already legible, a little soft, at frame 0.
   RC.chars(tl, "#root .c1 .w", 0.15, { lead: true, stagger: 0.05, blur: 12, y: 16, duration: 0.75 });
   // 2 — roll: a value cell cycles through three words.
-  tl.fromTo("#root .c2 .w", { opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.6, ease: "expo.out" }, 0.55);
+  tl.fromTo("#root .c2 .w", { opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.6, ease: "spring.gentle" }, 0.55);
   RC.roll(tl, "#root .c2 .rv", 1.5, { values: ["Design", "Build", "Ship"], each: 0.8, duration: 0.45 });
   // 3 — decode: noise resolves into the word, left to right, in the accent.
   tl.fromTo("#root .c3 .w", { opacity: 0 }, { opacity: 1, duration: 0.01 }, 0.95);
@@ -66,14 +66,14 @@
   // 5 — spread: letters close in from a wide tracking, out of blur.
   const g = RC.split("#root .c5 .w", "chars"), mid = (g.length - 1) / 2;
   g.forEach((c, i) => {
-    tl.fromTo(c, { x: (i - mid) * 44, opacity: 0 }, { x: 0, opacity: 1, duration: 1.0, ease: "expo.out" }, 1.75);
-    tl.fromTo(c, { filter: "blur(10px)" }, { filter: "blur(0px)", duration: 0.8, ease: "expo.out" }, 1.75);
+    tl.fromTo(c, { x: (i - mid) * 44, opacity: 0 }, { x: 0, opacity: 1, duration: 1.0, ease: "spring.gentle" }, 1.75);
+    tl.fromTo(c, { filter: "blur(10px)" }, { filter: "blur(0px)", duration: 0.8, ease: "spring.gentle" }, 1.75);
   });
   // 6 — type: the word is typed, the caret solid while keys land and blinking after.
   RC.type(tl, "#root .c6 .tx", 2.2, { text: "Typed.", cps: 7 });
   // labels arrive with their cells
   [".c1", ".c2", ".c3", ".c4", ".c5", ".c6"].forEach((c, i) => {
-    tl.fromTo("#root " + c + " .lb", { opacity: 0.45 }, { opacity: 1, duration: 0.5, ease: "power2.out" }, 0.3 + i * 0.4);
+    tl.fromTo("#root " + c + " .lb", { opacity: 0.45 }, { opacity: 1, duration: 0.5, ease: "apple.out" }, 0.3 + i * 0.4);
   });
   RC.camera(tl, "#root .cam", 0, { duration: 5, to: { scale: 1.03 } });
   RC.drift(tl, "#root .rc-mesh", 0, { duration: 5, x: 50, y: -30, scale: 1.08 });

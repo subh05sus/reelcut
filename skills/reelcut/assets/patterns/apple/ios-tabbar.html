@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* IOS TABBAR. iOS 26's floating tab bar, Liquid Glass over a scrolling library. A touch taps Search, then Library:
+     the one milky lens travels to each tab on spring.default while its child swells (1.14 × 1.08 → 1) and the tapped
+     tab presses to .92; the label takes the tint as the lens arrives. Then the content scrolls up under the bar and it
+     minimises (62 → 50 pt, labels fold away), the way the bar gets out of the way of reading; a scroll back and it
+     expands. The bar is glass because it floats over content (the functional layer); everything under it is content.
+     Grid: headline at (84, 96); the library fills the content region in three 280 px columns (84 → 996, gutters 36);
+     the bar is centred, 811 px wide at --pt 2.6, its bottom 84 px from the frame's. */
+  #root { --accent: #2f5bff; }
+  #root .cam { position: absolute; inset: 0; transform-origin: 540px 640px; }
+  #root .lib { position: absolute; left: 84px; top: 336px; width: 912px; display: grid; grid-template-columns: repeat(3, 280px); gap: 36px; }
+  #root .lib .it .art { height: 280px; border-radius: 26px; box-shadow: 0 18px 40px -20px rgba(20,40,90,.45); }
+  #root .lib .it b { display: block; margin-top: 14px; font: 650 26px/1.15 var(--font-sans); letter-spacing: -0.02em; }
+  #root .lib .it small { display: block; margin-top: 4px; font: 500 21px/1.2 var(--font-sans); color: var(--muted); }
+  #root .clip { position: absolute; left: 0; right: 0; top: 320px; bottom: 0; overflow: hidden; }
+  #root .bar { --pt: 2.6px; left: 134px; bottom: 84px; width: calc(312 * var(--pt)); }
+  #root .rc-touch { --pt: 2.6px; }
+</style>
+<div id="root" data-look="cool" data-composition-id="ios-tabbar" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(47,91,255,.14); --mesh-2: rgba(255,90,140,.08)"></div>
+  <div class="cam">
+    <div class="rc-head"><span class="ln" style="--ox:-1.6px">Everything,</span><span class="ln" style="--ox:3px"><em class="rc">one tap away.</em></span></div>
+    <div class="clip">
+      <div class="lib" style="top:16px">
+        <div class="it"><div class="art" style="background: linear-gradient(150deg,#ff9a62,#ff3d6e)"></div><b>Night Drive</b><small>Mixtape</small></div>
+        <div class="it"><div class="art" style="background: linear-gradient(150deg,#6f8cff,#2a3bd6)"></div><b>Blue Hours</b><small>Playlist</small></div>
+        <div class="it"><div class="art" style="background: linear-gradient(150deg,#5fe0b0,#109e8a)"></div><b>Coastline</b><small>Album</small></div>
+        <div class="it"><div class="art" style="background: linear-gradient(150deg,#ffd166,#ff8a3d)"></div><b>Golden</b><small>Single</small></div>
+        <div class="it"><div class="art" style="background: linear-gradient(150deg,#c58bff,#6a3df0)"></div><b>Late Bloom</b><small>EP</small></div>
+        <div class="it"><div class="art" style="background: linear-gradient(150deg,#ff6b6b,#b51f4a)"></div><b>Red Room</b><small>Live</small></div>
+        <div class="it"><div class="art" style="background: linear-gradient(150deg,#7ee0ff,#2f8cff)"></div><b>Air</b><small>Playlist</small></div>
+        <div class="it"><div class="art" style="background: linear-gradient(150deg,#b8f06a,#3fae4a)"></div><b>Greenhouse</b><small>Album</small></div>
+        <div class="it"><div class="art" style="background: linear-gradient(150deg,#ffa8d6,#f2508f)"></div><b>Sugar</b><small>Single</small></div>
+      </div>
+    </div>
+    <div class="rc-tabbar rc-glass bar">
+      <span class="rc-lens"><i></i></span>
+      <div class="rc-tab"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.2 3 10.4V20a1 1 0 0 0 1 1h5v-6h6v6h5a1 1 0 0 0 1-1v-9.6z"/></svg><span>Home</span></div>
+      <div class="rc-tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg><span>Search</span></div>
+      <div class="rc-tab"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="4" width="4" height="16" rx="1.4"/><rect x="9" y="4" width="4" height="16" rx="1.4"/><rect x="15.2" y="4.6" width="4" height="16" rx="1.4" transform="rotate(-14 17 12)"/></svg><span>Library</span></div>
+      <div class="rc-tab"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4.2"/><path d="M4 20.5c.8-4 4-6.2 8-6.2s7.2 2.2 8 6.2z"/></svg><span>Profile</span></div>
+    </div>
+    <div class="rc-touch"></div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  RC.glass();
+  RC.words(tl, "#root .rc-head", 0, { lead: true, stagger: 0.08 });
+  RC.rise(tl, "#root .lib .it", 0.1, { lead: true, y: 24, stagger: 0.04 });
+  RC.lensSet("#root .bar", 0);
+  // Tab centres, in frame pixels: the bar starts at 134 + 4 pt; each tab is 76 pt.
+  const P = 2.6, tabX = (i) => 134 + (4 + 76 * i + 38) * P, tabY = 1080 - 84 - 31 * P;
+  tl.set("#root .rc-touch", { opacity: 0 }, 0);
+  RC.cursor(tl, "#root .rc-touch", 0.6, [[tabX(1) + 30, tabY + 120, 0], [tabX(1), tabY, 0.55]]);
+  tl.to("#root .rc-touch", { opacity: 1, duration: 0.2, ease: "apple.out" }, 0.6);
+  RC.press(tl, "#root .rc-touch", 1.15, { scale: 0.85 });
+  RC.lensTo(tl, "#root .bar", 1.18, 1);
+  RC.cursor(tl, "#root .rc-touch", 1.6, [[tabX(2), tabY, 0.5]]);
+  RC.press(tl, "#root .rc-touch", 2.1, { scale: 0.85 });
+  RC.lensTo(tl, "#root .bar", 2.13, 2);
+  // The finger leaves the bar, then the library scrolls under it and the bar gets out of the way.
+  RC.cursor(tl, "#root .rc-touch", 2.45, [[540, 700, 0.4]]);
+  tl.to("#root .lib", { y: -330, duration: 1.0, ease: "spring.soft" }, 2.9);
+  tl.to("#root .rc-touch", { y: 370, duration: 0.5, ease: "apple.glide" }, 2.85);
+  tl.to("#root .rc-touch", { opacity: 0, duration: 0.2, ease: "apple.exit" }, 3.3);
+  RC.tabbarMin(tl, "#root .bar", 3.0, true);
+  // A scroll back up, and it expands.
+  tl.to("#root .lib", { y: -120, duration: 0.9, ease: "spring.soft" }, 4.35);
+  RC.tabbarMin(tl, "#root .bar", 4.4, false);
+  RC.camera(tl, "#root .cam", 0, { duration: 5.6, to: { scale: 1.02 } });
+  RC.drift(tl, "#root .rc-mesh", 0, { duration: 5.6, x: 40, y: -20, scale: 1.06 });
+  RC.hold(tl, 5.6);
+  window.__timelines["ios-tabbar"] = tl;
+})();
+</script>
+</template>
+</body></html>
