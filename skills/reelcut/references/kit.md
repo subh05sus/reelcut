@@ -70,7 +70,7 @@ absolute seconds in the beat.
 | `RC.rise` | opacity + y, for objects | `y` 40 |
 | `RC.flyIn` | arrive from depth: small, blurred → sharp | `from` .72, `blur` 18, `stagger` |
 | `RC.pop` | scale from 0 with overshoot | |
-| `RC.type(tl, el, at, o)` | type text, caret solid while typing, blinking either side | `text`, `cps` 24 |
+| `RC.type(tl, el, at, o)` | type text, caret solid while typing, blinking either side; records the text, so `sfx suggest` places a keystroke per few letters | `text`, `cps` 24 |
 | `RC.count(tl, el, at, o)` | count a number, formatted, tabular | `from`, `to`, `decimals`, `prefix`, `suffix`, `locale` |
 | `RC.roll(tl, el, at, o)` | slot-reel through values in place | `values`, `each` .5 |
 | `RC.wheel(tl, el, at, o)` | vertical list, current sharp, neighbours faded | `values`, `each` .6 |
@@ -89,6 +89,26 @@ absolute seconds in the beat.
 | `RC.spot(tl, ring, at, o)` | bring a `.rc-spot` ring onto the part of a recording it points at | `out` |
 | `RC.hold(tl, seconds)` | make the timeline this long — every beat ends with it | |
 | `RC.rand(seed)` | seeded PRNG — the only randomness allowed | |
+| `RC.word(q, nth?, fallback?)` | when the voiceover says `q` in this beat (seconds), or `fallback` | see The voiceover |
+| `RC.wordEnd(q, nth?, fallback?)` | when it has been said | |
+| `RC.voice(t)` | the voice's loudness at `t`, 0..1 | |
+| `RC.voiceDrive(tl, el, at, dur, props)` | move with the speaker: `{ scale: [1, 1.08] }` from quiet to loud | sampled 30× a second |
+
+## The voiceover
+
+With `"voiceover"` in `reel.json`, the render gives every composition its own words and the voice's loudness, in
+the beat's time (0 = its first frame). Put a moment on the word that names it rather than on a guessed second:
+
+```js
+RC.words(tl, "#root .claim", RC.word("Claude", 0, 0.4));          // the claim resolves as "Claude" is said
+RC.type(tl, "#root .ty", RC.word("Higgsfield", 0, 0.25), { text: "Higgsfield", cps: 18 });
+RC.pop(tl, "#root .badge", RC.wordEnd("Rabatt", 0, 2.1));         // the badge lands as the word ends
+RC.voiceDrive(tl, "#root .orb", 0, 2.4, { scale: [1, 1.08], opacity: [0.7, 1] });
+```
+
+Words match ignoring case and punctuation (`"Claude"` finds `Claude,`); `nth` picks a later occurrence. The
+fallback is what renders without a voiceover, so a beat still works without one: give the time you would have
+written anyway. `voice.json` beside `reel.json` lists every word's time (`npm run voice -- reel.json`).
 
 ## Glass
 

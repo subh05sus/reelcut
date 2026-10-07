@@ -27,6 +27,15 @@ export interface ProjectBeat {
   compositionHtml: string;
   /** Sound effects placed relative to the start of this beat. Only used when `--sfx` is on. */
   sfx?: readonly SfxCue[];
+  /** This beat's words and the voice's loudness, in its own time, for RC.word and RC.voice. */
+  voice?: { words: { w: string; start: number; end: number }[]; fps: number; rms: number[] };
+}
+
+/** Put the voice data at the top of a composition's template, before the kit reads it. */
+export function injectVoice(html: string, voice: ProjectBeat["voice"]): string {
+  if (!voice || html.includes("data-rc-voice")) return html;
+  const json = JSON.stringify(voice).replace(/</g, "\\u003c");
+  return html.replace(/<template(\s[^>]*)?>/i, (open) => `${open}\n<script data-rc-voice>window.__rcVoice = ${json};</script>`);
 }
 
 export interface SfxCue {
@@ -302,6 +311,7 @@ export function buildProject(beats: readonly ProjectBeat[], options: ProjectOpti
     const kit = options.kit;
     beats = beats.map((beat) => ({ ...beat, compositionHtml: injectKit(beat.compositionHtml, kit) }));
   }
+  beats = beats.map((beat) => (beat.voice ? { ...beat, compositionHtml: injectVoice(beat.compositionHtml, beat.voice) } : beat));
 
   const placements = placeBeats(beats, options.fps);
   const totalSeconds = placements[placements.length - 1]!.endFrame / options.fps;

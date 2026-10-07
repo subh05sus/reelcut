@@ -43,7 +43,7 @@ After composing, write `reel.json` beside the compositions:
 ```
 
 Durations come from the beats **verbatim** — never recomputed from word counts, or the cut drifts
-against the voice. `"poster": <seconds>` is optional and overrides the automatic thumbnail.
+against the voice. With a recorded voiceover they come from the read itself (below). `"poster": <seconds>` is optional and overrides the automatic thumbnail.
 
 Optional fields that let the studio learn from the reel (see [learnings.md](learnings.md)):
 
@@ -83,17 +83,66 @@ placed; copy that, with the recording's date, into `report.md`.
 `"type": "<pairing>"` in `reel.json` gives every beat that pairing unless its root sets `data-type` itself.
 Each clip loads only the bundled fonts it uses; nothing is fetched while rendering.
 
-`"music": { "source": "library:<id>", "sync": "fit" | "snap", "volume": 1 }` lays a bed under the **master**
-(clips stay without it). **fit** keeps every cut and chooses where the track starts so its beats (bar lines
+`"music": { "source": "library:<id>", "sync": "fit" | "snap", "volume": 1 }` lays a bed under the reel, in the
+mix below (each clip carries its slice). **fit** keeps every cut and chooses where the track starts so its beats (bar lines
 most) land on cuts and the reel ends near a bar. **snap** then moves each cut onto the nearest beat, by at most
-0.15 s, so the beats' lengths change by a few frames. The bed is levelled to about -16 LUFS, fades out over the
-last 1.5 s, and is written alone as `music-bed.m4a` for the edit. The render prints how many cuts landed on a
+0.15 s, so the beats' lengths change by a few frames. The bed is levelled to about -16 LUFS, ducks under a
+voiceover, fades out over the last 1.5 s, and is written alone as `mix/stem-music.wav` for the edit. The render prints how many cuts landed on a
 beat; put the track, its licence and credit (or "AI-generated") in `report.md`.
+
+### The voiceover sets the cut
+
+```json
+{
+  "voiceover": { "file": "vo.wav", "language": "de" },
+  "beats": [
+    { "id": "beat-00", "durationSeconds": 4.29, "composition": "compositions/beat-00.html",
+      "text": "Du kannst jetzt Videos direkt in Claude und ChatGPT generieren." }
+  ]
+}
+```
+
+`npm run voice -- reel.json` (and every render, cached) transcribes the recording on this machine with whisper.cpp
+(`hyperframes transcribe`; the model is fetched once), matches the transcript to each beat's `text` (misheard
+names, split words and spelled-out numbers still match: "Cloude" → Claude, "Chat GPT" → ChatGPT, "dreißig" → 30),
+moves word edges onto the voice's real pauses, and cuts each beat in the pause before its first word: 45% of the
+pause ahead of it, at least 0.04 s and at most 0.18 s, never before the previous line has ended. The last beat ends
+0.7 s after the last word. The lengths are written back into `reel.json`, every word into `voice.json`. It prints
+how much of the text it heard; under 60% means the text is not what is said, or the language is wrong. `"timing":
+"manifest"` keeps your lengths and only gives the compositions their words. `"model": "medium"` for a hard
+recording. A music bed set to `snap` fits instead: the voice owns the cut.
+
+### The sound mix
+
+The render mixes the reel's sound itself, once, before any clip renders, and lays each clip's slice under it (the
+master gets the whole mix, with no seam at the cuts):
+
+- **Cues land on their moment by what they are.** A click or a hit by its transient, a whoosh or slide by its
+  loudest instant, a riser or reverse swell by its end, so it arrives on the cut instead of starting there. Override
+  with `"align": "onset" | "peak" | "end" | "raw"` on a cue.
+- **Repeats vary.** A cue's `"rate"` (1.05 is a touch higher and faster) and `"pan"` (-1..1) are written by
+  `sfx suggest` for keystrokes, a different key and a small step of pitch and pan each strike, always the same for
+  the same reel.
+- **The voice comes first.** Effects duck 7 dB and the music bed 9 dB while it speaks (10 ms attack, 180 ms
+  release), so a whoosh never covers a word. `"volume"` on `"voiceover"` sets its level.
+- **Delivery loudness.** With a voice or music the mix is normalised to -14 LUFS integrated, true peak -1.5 dBTP
+  (two-pass, linear: the dynamics stay). Effects alone keep the levels they were given.
+- **Stems.** `mix/stem-effects.wav`, `stem-voice.wav`, `stem-music.wav` (each as it sits in the mix) and
+  `mix/mix.wav` for an editor.
+
+### Motion blur and 4K
+
+`"render": { "motionBlur": true }` (or `--blur`, `--blur 8` for more sub-frames) renders each clip at four times
+its frame rate and blends each frame from the first half of its sub-frames, a 180° shutter: a fast move smears
+along its path, a still frame stays exactly as sharp. About twice the render time. `"resolution": "4k"` (or
+`--4k`) renders the same layout at 2160 on the short side (1:1, 9:16, 16:9; not 4:5). Both are asked in Step 0;
+`--no-blur` and `--hd` override `reel.json` for a quick draft.
 
 ### Sound effects: the bundled pack and the library
 
-328 CC0 motion-graphics sounds ship with the skill (`assets/sfx`, credits in `CREDITS.md`): whooshes, swishes,
-risers, reverse swells, card slides, page flips; clicks, taps, ticks, toggles, typing runs, dings, success chimes,
+377 CC0 motion-graphics sounds ship with the skill (`assets/sfx`, credits in `CREDITS.md`): whooshes, swishes,
+risers, reverse swells, card slides, page flips; clicks, taps, ticks, toggles, single keystrokes, typewriter
+strikes, typing runs, dings, success chimes,
 error buzzes; pops and bloops; punches, thuds, booms and clangs; glitches, zaps, lasers, shimmers and power-ups.
 They are ready to use: `npm run sfx -- list --pack`, or the studio's Sounds page to hear them.
 
@@ -113,8 +162,10 @@ npm run sfx -- suggest out/reel.json --apply          # write them into reel.jso
 npm run render -- out/reel.json --sfx                 # and hear them
 ```
 
-`suggest` loads every beat in Chrome and reads the moments the kit's helpers recorded (a click, a
-typing run, a count, a reveal). It is deliberately quiet: at most three cues a beat, one cue for a
+`suggest` loads every beat in Chrome (with its voiceover words, so a moment on `RC.word` is read where it will
+render) and reads the moments the kit's helpers recorded (a click, a typing run, a count, a reveal). Typing
+becomes keystrokes: about one strike per 2.6 letters inside each word, with a human swing, each a different key
+(`--apply` writes them as one cue each; they count as one moment). It is deliberately quiet: at most three cues a beat, one cue for a
 run of the same event, a different sound for each moment while the library has one. Silence is a
 choice; the user's `--sfx` answer in Step 0 decides whether sound is on at all.
 

@@ -118,7 +118,7 @@ describe("the kit records the moments a sound could go with", () => {
     RC.iris!(tl, "#x", 4.5);
     expect(events).toEqual([
       { type: "click", at: 2.1 },
-      { type: "type", at: 1.2, duration: 0.5 },
+      { type: "type", at: 1.2, duration: 0.5, text: "hello" },
       { type: "count", at: 0.5, duration: 1 },
       { type: "roll", at: 3 },
       { type: "roll", at: 3.5 },

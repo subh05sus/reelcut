@@ -50,6 +50,10 @@ export interface HyperframesRenderOptions {
   videoFrameFormat?: "png" | "jpg" | "auto";
   /** Chrome workers for this render. Left out, HyperFrames picks; set when several clips render at once so they share the cores. */
   workers?: number;
+  /** Render at this frame rate instead of the composition's (motion blur renders several frames per output frame). */
+  fps?: number;
+  /** A HyperFrames resolution preset, e.g. `square-4k`: the same layout at a higher pixel density. */
+  resolution?: string;
 }
 
 export interface HyperframesRenderResult {
@@ -169,7 +173,8 @@ export function parseCheckReport(stdout: string): CheckReport {
 }
 
 export async function renderHyperframesProject(options: HyperframesRenderOptions): Promise<HyperframesRenderResult> {
-  const { projectDir, outputPath, quality = "looks", samples = 24, skipCheck = false, timeoutMs = DEFAULT_TIMEOUT_MS, videoFrameFormat, workers } = options;
+  const { projectDir, outputPath, quality = "looks", samples = 24, skipCheck = false, timeoutMs = DEFAULT_TIMEOUT_MS, videoFrameFormat, workers, fps, resolution } = options;
+  const extra = { ...(workers ? { workers } : {}), ...(fps ? { fps } : {}), ...(resolution ? { resolution } : {}) };
   try {
     await access(path.join(projectDir, "index.html"));
   } catch {
@@ -190,7 +195,7 @@ export async function renderHyperframesProject(options: HyperframesRenderOptions
       if (report.layoutSamples === 0) {
         return { status: "failed", error: "check audited 0 layout samples — a lint error switches the layout and contrast audits off, so this is not a pass", checkSamples: 0 };
       }
-      return await renderOnly({ projectDir, outputPath, quality, timeoutMs, checkSamples: report.layoutSamples, ...(videoFrameFormat ? { videoFrameFormat } : {}), ...(workers ? { workers } : {}) });
+      return await renderOnly({ projectDir, outputPath, quality, timeoutMs, checkSamples: report.layoutSamples, ...(videoFrameFormat ? { videoFrameFormat } : {}), ...extra });
     } catch (error) {
       // A non-zero exit from `check` is a real gate failure: findings, or a lint error. Its JSON is
       // still on stdout, and that — not stderr's font-fetch log — says what to fix.
@@ -201,7 +206,7 @@ export async function renderHyperframesProject(options: HyperframesRenderOptions
     }
   }
 
-  return await renderOnly({ projectDir, outputPath, quality, timeoutMs, ...(videoFrameFormat ? { videoFrameFormat } : {}), ...(workers ? { workers } : {}) });
+  return await renderOnly({ projectDir, outputPath, quality, timeoutMs, ...(videoFrameFormat ? { videoFrameFormat } : {}), ...extra });
 }
 
 async function renderOnly(args: {
@@ -212,12 +217,14 @@ async function renderOnly(args: {
   checkSamples?: number;
   videoFrameFormat?: "png" | "jpg" | "auto";
   workers?: number;
+  fps?: number;
+  resolution?: string;
 }): Promise<HyperframesRenderResult> {
-  const { projectDir, outputPath, quality, timeoutMs, checkSamples, videoFrameFormat, workers } = args;
+  const { projectDir, outputPath, quality, timeoutMs, checkSamples, videoFrameFormat, workers, fps, resolution } = args;
   await mkdir(path.dirname(path.resolve(outputPath)), { recursive: true });
 
   try {
-    await run(cliLine(["render", "--quality", quality, ...(videoFrameFormat ? ["--video-frame-format", videoFrameFormat] : []), ...(workers ? ["--workers", String(workers)] : []), "--output", path.resolve(outputPath)]), {
+    await run(cliLine(["render", "--quality", quality, ...(videoFrameFormat ? ["--video-frame-format", videoFrameFormat] : []), ...(workers ? ["--workers", String(workers)] : []), ...(fps ? ["--fps", String(fps)] : []), ...(resolution ? ["--resolution", resolution] : []), "--output", path.resolve(outputPath)]), {
       cwd: projectDir,
       timeout: timeoutMs,
       maxBuffer: 64 * 1024 * 1024,

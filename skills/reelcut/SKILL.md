@@ -37,6 +37,9 @@ on a quarter of the frame and read as generic. **You compose each beat**, on the
 | `--palette` | `"#ground #ink #accent"` | taken from the source |
 | `--look` | freeform art direction | inferred |
 | `--visuals` | freeform register steer | inferred |
+| `--voiceover <audio>` | the recorded read (wav, mp3, m4a): it sets every cut | none |
+| `--blur` / `--no-blur` | camera motion blur (4 sub-frames a frame) | asked |
+| `--4k` / `--hd` | render resolution | asked |
 
 **Anything else typed is kept as freeform direction** and carried into the plan verbatim.
 "Make it feel like a museum exhibit" is real direction no flag will capture.
@@ -78,7 +81,7 @@ Run `npm run beats` on the script first, then read what the studio has learned
 then ask the user — with the AskUserQuestion tool, at most
 two rounds — about everything the invocation left open: how much text goes on screen, the length,
 the look and palette, the type pairing (show three with `npm run fonts -- sheet --pairings …`), motion,
-format, sound effects, a music bed (fits the cut, or cuts snap to its beat), and whether to open the studio. Options are tailored
+format, sound effects, a music bed (fits the cut, or cuts snap to its beat), motion blur, HD or 4K, and whether to open the studio. Options are tailored
 to *this* script, the recommended one first. Never ask about what a flag or the freeform direction
 already answered, and skip the questions when the run is unattended.
 
@@ -113,6 +116,12 @@ written under it, and `--text` changes what `mustRead` may contain.
 
 Parse the script, segment it into beats, and write a `BeatBrief` for each. An `.srt` gives exact
 timings; a `.txt` is estimated from words per minute.
+
+**A recorded voiceover sets the cut.** With a recording (`--voiceover`, or one handed over), write `reel.json`
+with `"voiceover": { "file": …, "language": "de" }` and each beat's `"text"` (the words spoken while it is on
+screen), and run `npm run voice -- reel.json`: it transcribes the read on this machine, matches it to the text and
+rewrites every beat's length so each cut sits in the pause before its first word. Compose against those lengths,
+and put entrances on the words themselves with `RC.word("Claude")` (see [references/kit.md](references/kit.md#the-voiceover)).
 
 You are the director. There is no model API in this pipeline — the brief is yours to write.
 
@@ -226,9 +235,12 @@ time, checks every file, joins the passing clips into the master (no second rend
 clips that passed) and bakes the hook's strongest settled frame in as the thumbnail. A blocked beat does not
 hold up the others; render it later with `--only`, and the master is joined then. Look at `contact.jpg` (a row
 of five frames per beat) instead of re-opening compositions in a browser. Add `--sfx` for sound effects: `npm run sfx -- suggest reel.json --apply` proposes cues
-from the 328 bundled CC0 sounds and the user's own approved sounds (theirs win a tie) (see [references/step-5-render.md](references/step-5-render.md)).
-A music bed (`"music"` in `reel.json`, found in Step 2) goes under the master only, levelled and faded, and also
-alone as `music-bed.m4a`; the render says how many cuts landed on a beat. `"type"` sets every beat's type
+from the 377 bundled CC0 sounds and the user's own approved sounds (theirs win a tie); typing becomes a keystroke
+per few letters, each a different key (see [references/step-5-render.md](references/step-5-render.md)).
+The sound is mixed by the render, not the browser: cues land by their transient, peak or end, the voiceover sits
+on top with effects (7 dB) and the music bed (`"music"`, found in Step 2; 9 dB) ducking under it, and a reel with
+a voice or music is normalised to -14 LUFS. Every clip carries its slice of that mix, the master all of it, and
+`mix/` holds the stems. `"render"` in `reel.json` turns on motion blur and 4K, as asked in Step 0. `"type"` sets every beat's type
 pairing; each clip carries only the bundled fonts it uses.
 Write the report. The run is recorded; open the studio
 (http://localhost:5198) or not, as the user chose in Step 0. Every beat the user rates "Works" there is kept

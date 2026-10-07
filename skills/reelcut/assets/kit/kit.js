@@ -190,7 +190,7 @@
     var text = o.text != null ? o.text : el.textContent;
     var cps = o.cps || 24;
     var dur = o.duration || text.length / cps;
-    emit("type", at, { duration: Math.round(dur * 1000) / 1000 });
+    emit("type", at, { duration: Math.round(dur * 1000) / 1000, text: text });
     var state = { n: 0 };
     el.textContent = o.keep ? text : "";
     tl.fromTo(state, { n: 0 }, { n: text.length, duration: dur, ease: o.ease || "none",
@@ -630,7 +630,52 @@
     return tl;
   }
 
+  /**
+   * The voiceover, when the reel has one: this beat's own words and the voice's loudness, in the beat's time
+   * (0 = its first frame), written in by the render. Without a voiceover each helper returns its fallback, so a beat
+   * renders the same with or without one.
+   *
+   *   RC.word("Claude")          when "Claude" is said (its first occurrence), or 0
+   *   RC.word("Claude", 1, 2.4)  its second occurrence, or 2.4 when there is no voiceover
+   *   RC.wordEnd("Claude")       when it has been said
+   *   RC.voice(t)                the voice's loudness at t, 0..1
+   *   RC.voiceDrive(tl, ".orb", 0, 4, { scale: [1, 1.08] })   move with the speaker for 4 s
+   */
+  // Read when asked, not when the kit loads: the composition's voice data arrives after the kit.
+  function V() { return window.__rcVoice || null; }
+  function normWord(s) { return String(s).toLowerCase().replace(/ß/g, "ss").replace(/[^a-z0-9äöüàâçéèêëîïôûùüÿñæœ]+/g, ""); }
+  function findWord(q, nth) {
+    var VOICE = V();
+    if (!VOICE) return null;
+    var n = normWord(q), hits = VOICE.words.filter(function (w) { return normWord(w.w) === n; });
+    return hits[nth || 0] || null;
+  }
+  function word(q, nth, fallback) { var w = findWord(q, nth); return w ? Math.max(0, w.start) : (fallback != null ? fallback : 0); }
+  function wordEnd(q, nth, fallback) { var w = findWord(q, nth); return w ? Math.max(0, w.end) : (fallback != null ? fallback : 0); }
+  function voice(t) {
+    var VOICE = V();
+    if (!VOICE || !VOICE.rms.length) return 0;
+    var f = t * VOICE.fps, i = Math.floor(f), k = f - i;
+    var a = VOICE.rms[Math.max(0, Math.min(VOICE.rms.length - 1, i))], b = VOICE.rms[Math.max(0, Math.min(VOICE.rms.length - 1, i + 1))];
+    return a + (b - a) * k;
+  }
+  /** Drive properties from the voice's loudness: { prop: [quiet, loud] }, sampled 30 times a second. */
+  function voiceDrive(tl, target, at, duration, props) {
+    var step = 1 / 30, n = Math.max(1, Math.round(duration / step));
+    q(target).forEach(function (el) {
+      var frames = [];
+      for (var i = 0; i <= n; i++) {
+        var v = voice(at + i * step), kf = { duration: step, ease: "none" };
+        for (var p in props) kf[p] = props[p][0] + (props[p][1] - props[p][0]) * v;
+        frames.push(kf);
+      }
+      tl.to(el, { keyframes: frames, immediateRender: false }, at);
+    });
+    return tl;
+  }
+
   window.RC = {
+    word: word, wordEnd: wordEnd, voice: voice, voiceDrive: voiceDrive,
     q: q, one: one, rand: rand, split: split, hold: hold,
     blurIn: blurIn, blurOut: blurOut, words: words, chars: chars, lines: lines, rise: rise, flyIn: flyIn, pop: pop,
     type: type, count: count, roll: roll, wheel: wheel, mark: mark,

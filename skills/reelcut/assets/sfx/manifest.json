@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "builtAt": "2026-10-07T07:43:32.083Z",
+  "builtAt": "2026-10-07T08:22:22.410Z",
   "licence": "CC0 1.0 (public domain); see CREDITS.md",
   "sounds": [
     {
@@ -3422,15 +3422,1066 @@
       }
     },
     {
-      "id": "keys-01",
-      "name": "Keys 1",
-      "file": "ui/keys-01.ogg",
+      "id": "key-01",
+      "name": "Keystroke 1",
+      "file": "ui/key-01.ogg",
+      "category": "ui",
+      "tags": [
+        "keystroke",
+        "key",
+        "keyboard",
+        "click"
+      ],
+      "durationSeconds": 0.25,
+      "gainDb": 2,
+      "lufs": -30.2,
+      "peakDb": -3,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "key-02",
+      "name": "Keystroke 2",
+      "file": "ui/key-02.ogg",
+      "category": "ui",
+      "tags": [
+        "keystroke",
+        "key",
+        "keyboard",
+        "click"
+      ],
+      "durationSeconds": 0.208,
+      "gainDb": 1.9,
+      "lufs": -26,
+      "peakDb": -2.9,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "key-03",
+      "name": "Keystroke 3",
+      "file": "ui/key-03.ogg",
+      "category": "ui",
+      "tags": [
+        "keystroke",
+        "key",
+        "keyboard",
+        "click"
+      ],
+      "durationSeconds": 0.19,
+      "gainDb": 2,
+      "lufs": -27.9,
+      "peakDb": -3,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "key-04",
+      "name": "Keystroke 4",
+      "file": "ui/key-04.ogg",
+      "category": "ui",
+      "tags": [
+        "keystroke",
+        "key",
+        "keyboard",
+        "click"
+      ],
+      "durationSeconds": 0.165,
+      "gainDb": 2.1,
+      "lufs": -26.4,
+      "peakDb": -3.1,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "key-05",
+      "name": "Keystroke 5",
+      "file": "ui/key-05.ogg",
+      "category": "ui",
+      "tags": [
+        "keystroke",
+        "key",
+        "keyboard",
+        "click"
+      ],
+      "durationSeconds": 0.189,
+      "gainDb": 2,
+      "lufs": -26,
+      "peakDb": -3,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "key-06",
+      "name": "Keystroke 6",
+      "file": "ui/key-06.ogg",
+      "category": "ui",
+      "tags": [
+        "keystroke",
+        "key",
+        "keyboard",
+        "click"
+      ],
+      "durationSeconds": 0.25,
+      "gainDb": 1.9,
+      "lufs": -25.8,
+      "peakDb": -2.9,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "key-07",
+      "name": "Keystroke 7",
+      "file": "ui/key-07.ogg",
+      "category": "ui",
+      "tags": [
+        "keystroke",
+        "key",
+        "keyboard",
+        "click"
+      ],
+      "durationSeconds": 0.25,
+      "gainDb": 2,
+      "lufs": -25.4,
+      "peakDb": -3,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "key-08",
+      "name": "Keystroke 8",
+      "file": "ui/key-08.ogg",
+      "category": "ui",
+      "tags": [
+        "keystroke",
+        "key",
+        "keyboard",
+        "click"
+      ],
+      "durationSeconds": 0.179,
+      "gainDb": 2,
+      "lufs": -26.4,
+      "peakDb": -3,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "key-09",
+      "name": "Keystroke 9",
+      "file": "ui/key-09.ogg",
+      "category": "ui",
+      "tags": [
+        "keystroke",
+        "key",
+        "keyboard",
+        "click"
+      ],
+      "durationSeconds": 0.243,
+      "gainDb": 2,
+      "lufs": -25.6,
+      "peakDb": -3,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "key-10",
+      "name": "Keystroke 10",
+      "file": "ui/key-10.ogg",
+      "category": "ui",
+      "tags": [
+        "keystroke",
+        "key",
+        "keyboard",
+        "click"
+      ],
+      "durationSeconds": 0.178,
+      "gainDb": 2,
+      "lufs": -28.3,
+      "peakDb": -3,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "key-11",
+      "name": "Keystroke 11",
+      "file": "ui/key-11.ogg",
+      "category": "ui",
+      "tags": [
+        "keystroke",
+        "key",
+        "keyboard",
+        "click"
+      ],
+      "durationSeconds": 0.195,
+      "gainDb": 2,
+      "lufs": -25.9,
+      "peakDb": -3,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "key-12",
+      "name": "Keystroke 12",
+      "file": "ui/key-12.ogg",
+      "category": "ui",
+      "tags": [
+        "keystroke",
+        "key",
+        "keyboard",
+        "click"
+      ],
+      "durationSeconds": 0.25,
+      "gainDb": 2,
+      "lufs": -28.8,
+      "peakDb": -3,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "key-13",
+      "name": "Keystroke 13",
+      "file": "ui/key-13.ogg",
+      "category": "ui",
+      "tags": [
+        "keystroke",
+        "key",
+        "keyboard",
+        "click"
+      ],
+      "durationSeconds": 0.192,
+      "gainDb": 2,
+      "lufs": -28.6,
+      "peakDb": -3,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "key-14",
+      "name": "Keystroke 14",
+      "file": "ui/key-14.ogg",
+      "category": "ui",
+      "tags": [
+        "keystroke",
+        "key",
+        "keyboard",
+        "click"
+      ],
+      "durationSeconds": 0.18,
+      "gainDb": 2,
+      "lufs": -28.4,
+      "peakDb": -3,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "key-15",
+      "name": "Keystroke 15",
+      "file": "ui/key-15.ogg",
+      "category": "ui",
+      "tags": [
+        "keystroke",
+        "key",
+        "keyboard",
+        "click"
+      ],
+      "durationSeconds": 0.207,
+      "gainDb": 2.3,
+      "lufs": -24.6,
+      "peakDb": -3.3,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "key-16",
+      "name": "Keystroke 16",
+      "file": "ui/key-16.ogg",
+      "category": "ui",
+      "tags": [
+        "keystroke",
+        "key",
+        "keyboard",
+        "click"
+      ],
+      "durationSeconds": 0.225,
+      "gainDb": 2,
+      "lufs": -28.6,
+      "peakDb": -3,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "key-17",
+      "name": "Keystroke 17",
+      "file": "ui/key-17.ogg",
+      "category": "ui",
+      "tags": [
+        "keystroke",
+        "key",
+        "keyboard",
+        "click"
+      ],
+      "durationSeconds": 0.184,
+      "gainDb": 1.9,
+      "lufs": -26.2,
+      "peakDb": -2.9,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "key-18",
+      "name": "Keystroke 18",
+      "file": "ui/key-18.ogg",
+      "category": "ui",
+      "tags": [
+        "keystroke",
+        "key",
+        "keyboard",
+        "click"
+      ],
+      "durationSeconds": 0.25,
+      "gainDb": 2,
+      "lufs": -26.8,
+      "peakDb": -3,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "key-19",
+      "name": "Keystroke 19",
+      "file": "ui/key-19.ogg",
+      "category": "ui",
+      "tags": [
+        "keystroke",
+        "key",
+        "keyboard",
+        "click"
+      ],
+      "durationSeconds": 0.25,
+      "gainDb": 2.1,
+      "lufs": -26.5,
+      "peakDb": -3.1,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "key-20",
+      "name": "Keystroke 20",
+      "file": "ui/key-20.ogg",
+      "category": "ui",
+      "tags": [
+        "keystroke",
+        "key",
+        "keyboard",
+        "click"
+      ],
+      "durationSeconds": 0.25,
+      "gainDb": 1.9,
+      "lufs": -26,
+      "peakDb": -2.9,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "key-21",
+      "name": "Keystroke 21",
+      "file": "ui/key-21.ogg",
+      "category": "ui",
+      "tags": [
+        "keystroke",
+        "key",
+        "keyboard",
+        "click"
+      ],
+      "durationSeconds": 0.195,
+      "gainDb": 2,
+      "lufs": -25.6,
+      "peakDb": -3,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "key-22",
+      "name": "Keystroke 22",
+      "file": "ui/key-22.ogg",
+      "category": "ui",
+      "tags": [
+        "keystroke",
+        "key",
+        "keyboard",
+        "click"
+      ],
+      "durationSeconds": 0.206,
+      "gainDb": 2,
+      "lufs": -27.9,
+      "peakDb": -3,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "key-23",
+      "name": "Keystroke 23",
+      "file": "ui/key-23.ogg",
+      "category": "ui",
+      "tags": [
+        "keystroke",
+        "key",
+        "keyboard",
+        "click"
+      ],
+      "durationSeconds": 0.25,
+      "gainDb": 2,
+      "lufs": -26.8,
+      "peakDb": -3,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "key-24",
+      "name": "Keystroke 24",
+      "file": "ui/key-24.ogg",
+      "category": "ui",
+      "tags": [
+        "keystroke",
+        "key",
+        "keyboard",
+        "click"
+      ],
+      "durationSeconds": 0.246,
+      "gainDb": 2.1,
+      "lufs": -28.8,
+      "peakDb": -3.1,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "typing-human-01",
+      "name": "Typing 1",
+      "file": "ui/typing-human-01.ogg",
       "category": "ui",
       "tags": [
         "type",
         "typing",
-        "keyboard",
-        "keys"
+        "keyboard"
+      ],
+      "durationSeconds": 9,
+      "gainDb": 2,
+      "lufs": -33.4,
+      "peakDb": -3,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "typing-human-02",
+      "name": "Typing 2",
+      "file": "ui/typing-human-02.ogg",
+      "category": "ui",
+      "tags": [
+        "type",
+        "typing",
+        "keyboard"
+      ],
+      "durationSeconds": 8.25,
+      "gainDb": 2,
+      "lufs": -31.9,
+      "peakDb": -3,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "typing-human-03",
+      "name": "Typing 3",
+      "file": "ui/typing-human-03.ogg",
+      "category": "ui",
+      "tags": [
+        "type",
+        "typing",
+        "keyboard"
+      ],
+      "durationSeconds": 5.852,
+      "gainDb": 1.9,
+      "lufs": -32.7,
+      "peakDb": -2.9,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "typing-human-04",
+      "name": "Typing 4",
+      "file": "ui/typing-human-04.ogg",
+      "category": "ui",
+      "tags": [
+        "type",
+        "typing",
+        "keyboard"
+      ],
+      "durationSeconds": 5.908,
+      "gainDb": 1.9,
+      "lufs": -34.1,
+      "peakDb": -2.9,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "typing-human-05",
+      "name": "Typing 5",
+      "file": "ui/typing-human-05.ogg",
+      "category": "ui",
+      "tags": [
+        "type",
+        "typing",
+        "keyboard"
+      ],
+      "durationSeconds": 7.297,
+      "gainDb": 2,
+      "lufs": -33.2,
+      "peakDb": -3,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "typing-human-06",
+      "name": "Typing 6",
+      "file": "ui/typing-human-06.ogg",
+      "category": "ui",
+      "tags": [
+        "type",
+        "typing",
+        "keyboard"
+      ],
+      "durationSeconds": 5.375,
+      "gainDb": 1.9,
+      "lufs": -34.5,
+      "peakDb": -2.9,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "typing-human-07",
+      "name": "Typing 7",
+      "file": "ui/typing-human-07.ogg",
+      "category": "ui",
+      "tags": [
+        "type",
+        "typing",
+        "keyboard"
+      ],
+      "durationSeconds": 6.405,
+      "gainDb": 2,
+      "lufs": -31.1,
+      "peakDb": -3,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "typing-human-08",
+      "name": "Typing 8",
+      "file": "ui/typing-human-08.ogg",
+      "category": "ui",
+      "tags": [
+        "type",
+        "typing",
+        "keyboard"
+      ],
+      "durationSeconds": 7.5,
+      "gainDb": 1.9,
+      "lufs": -28.9,
+      "peakDb": -2.9,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "typing-human-09",
+      "name": "Typing 9",
+      "file": "ui/typing-human-09.ogg",
+      "category": "ui",
+      "tags": [
+        "type",
+        "typing",
+        "keyboard"
+      ],
+      "durationSeconds": 4.25,
+      "gainDb": 2,
+      "lufs": -28.9,
+      "peakDb": -3,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "typing-human-10",
+      "name": "Typing 10",
+      "file": "ui/typing-human-10.ogg",
+      "category": "ui",
+      "tags": [
+        "type",
+        "typing",
+        "keyboard"
+      ],
+      "durationSeconds": 3.656,
+      "gainDb": 1.9,
+      "lufs": -26.4,
+      "peakDb": -2.9,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "typing-steady-01",
+      "name": "Typing, steady 1",
+      "file": "ui/typing-steady-01.ogg",
+      "category": "ui",
+      "tags": [
+        "type",
+        "typing",
+        "keyboard"
+      ],
+      "durationSeconds": 6.589,
+      "gainDb": 2,
+      "lufs": -27.2,
+      "peakDb": -3,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "typing-steady-02",
+      "name": "Typing, steady 2",
+      "file": "ui/typing-steady-02.ogg",
+      "category": "ui",
+      "tags": [
+        "type",
+        "typing",
+        "keyboard"
+      ],
+      "durationSeconds": 8.218,
+      "gainDb": 2.1,
+      "lufs": -28.9,
+      "peakDb": -3.1,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "typing-steady-03",
+      "name": "Typing, steady 3",
+      "file": "ui/typing-steady-03.ogg",
+      "category": "ui",
+      "tags": [
+        "type",
+        "typing",
+        "keyboard"
+      ],
+      "durationSeconds": 8.95,
+      "gainDb": 2.1,
+      "lufs": -26.9,
+      "peakDb": -3.1,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "typing-steady-04",
+      "name": "Typing, steady 4",
+      "file": "ui/typing-steady-04.ogg",
+      "category": "ui",
+      "tags": [
+        "type",
+        "typing",
+        "keyboard"
+      ],
+      "durationSeconds": 5.857,
+      "gainDb": 2,
+      "lufs": -26.4,
+      "peakDb": -3,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "typing-steady-05",
+      "name": "Typing, steady 5",
+      "file": "ui/typing-steady-05.ogg",
+      "category": "ui",
+      "tags": [
+        "type",
+        "typing",
+        "keyboard"
+      ],
+      "durationSeconds": 12.009,
+      "gainDb": 2,
+      "lufs": -25.2,
+      "peakDb": -3,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "typing-steady-06",
+      "name": "Typing, steady 6",
+      "file": "ui/typing-steady-06.ogg",
+      "category": "ui",
+      "tags": [
+        "type",
+        "typing",
+        "keyboard"
+      ],
+      "durationSeconds": 9.345,
+      "gainDb": 2,
+      "lufs": -24.9,
+      "peakDb": -3,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "typing-steady-07",
+      "name": "Typing, steady 7",
+      "file": "ui/typing-steady-07.ogg",
+      "category": "ui",
+      "tags": [
+        "type",
+        "typing",
+        "keyboard"
+      ],
+      "durationSeconds": 6.36,
+      "gainDb": 1.9,
+      "lufs": -23.3,
+      "peakDb": -2.9,
+      "source": {
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "typewriter-01",
+      "name": "Typewriter 1",
+      "file": "ui/typewriter-01.ogg",
+      "category": "ui",
+      "tags": [
+        "typewriter",
+        "keystroke",
+        "type"
+      ],
+      "durationSeconds": 0.643,
+      "gainDb": 1.9,
+      "lufs": -27.2,
+      "peakDb": -2.9,
+      "source": {
+        "pack": "Typewriter sounds",
+        "author": "cassie-orbitgames",
+        "url": "https://opengameart.org/content/typewriter-sounds",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "typewriter-02",
+      "name": "Typewriter 2",
+      "file": "ui/typewriter-02.ogg",
+      "category": "ui",
+      "tags": [
+        "typewriter",
+        "keystroke",
+        "type"
+      ],
+      "durationSeconds": 0.659,
+      "gainDb": -1.1,
+      "lufs": -25.6,
+      "peakDb": -2.9,
+      "source": {
+        "pack": "Typewriter sounds",
+        "author": "cassie-orbitgames",
+        "url": "https://opengameart.org/content/typewriter-sounds",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "typewriter-03",
+      "name": "Typewriter 3",
+      "file": "ui/typewriter-03.ogg",
+      "category": "ui",
+      "tags": [
+        "typewriter",
+        "keystroke",
+        "type"
+      ],
+      "durationSeconds": 0.509,
+      "gainDb": -1.1,
+      "lufs": -23.6,
+      "peakDb": -2.9,
+      "source": {
+        "pack": "Typewriter sounds",
+        "author": "cassie-orbitgames",
+        "url": "https://opengameart.org/content/typewriter-sounds",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "typewriter-04",
+      "name": "Typewriter 4",
+      "file": "ui/typewriter-04.ogg",
+      "category": "ui",
+      "tags": [
+        "typewriter",
+        "keystroke",
+        "type"
+      ],
+      "durationSeconds": 0.362,
+      "gainDb": -1.2,
+      "lufs": -23.6,
+      "peakDb": -2.8,
+      "source": {
+        "pack": "Typewriter sounds",
+        "author": "cassie-orbitgames",
+        "url": "https://opengameart.org/content/typewriter-sounds",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "typewriter-05",
+      "name": "Typewriter 5",
+      "file": "ui/typewriter-05.ogg",
+      "category": "ui",
+      "tags": [
+        "typewriter",
+        "keystroke",
+        "type"
+      ],
+      "durationSeconds": 0.585,
+      "gainDb": -1.2,
+      "lufs": -23.5,
+      "peakDb": -2.8,
+      "source": {
+        "pack": "Typewriter sounds",
+        "author": "cassie-orbitgames",
+        "url": "https://opengameart.org/content/typewriter-sounds",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "typewriter-06",
+      "name": "Typewriter 6",
+      "file": "ui/typewriter-06.ogg",
+      "category": "ui",
+      "tags": [
+        "typewriter",
+        "keystroke",
+        "type"
+      ],
+      "durationSeconds": 0.274,
+      "gainDb": -1.2,
+      "lufs": -22.8,
+      "peakDb": -2.8,
+      "source": {
+        "pack": "Typewriter sounds",
+        "author": "cassie-orbitgames",
+        "url": "https://opengameart.org/content/typewriter-sounds",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "typewriter-07",
+      "name": "Typewriter 7",
+      "file": "ui/typewriter-07.ogg",
+      "category": "ui",
+      "tags": [
+        "typewriter",
+        "keystroke",
+        "type"
+      ],
+      "durationSeconds": 0.273,
+      "gainDb": -0.9,
+      "lufs": -21,
+      "peakDb": -3.1,
+      "source": {
+        "pack": "Typewriter sounds",
+        "author": "cassie-orbitgames",
+        "url": "https://opengameart.org/content/typewriter-sounds",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "typewriter-08",
+      "name": "Typewriter 8",
+      "file": "ui/typewriter-08.ogg",
+      "category": "ui",
+      "tags": [
+        "typewriter",
+        "keystroke",
+        "type"
+      ],
+      "durationSeconds": 0.401,
+      "gainDb": -0.9,
+      "lufs": -18.7,
+      "peakDb": -3.1,
+      "source": {
+        "pack": "Typewriter sounds",
+        "author": "cassie-orbitgames",
+        "url": "https://opengameart.org/content/typewriter-sounds",
+        "licence": "CC0 1.0"
+      }
+    },
+    {
+      "id": "keys-jingle-01",
+      "name": "Keys jingle 1",
+      "file": "texture/keys-jingle-01.ogg",
+      "category": "texture",
+      "tags": [
+        "keys",
+        "jingle"
       ],
       "durationSeconds": 0.176,
       "gainDb": -0.8,
@@ -3444,15 +4495,13 @@
       }
     },
     {
-      "id": "keys-02",
-      "name": "Keys 2",
-      "file": "ui/keys-02.ogg",
-      "category": "ui",
+      "id": "keys-jingle-02",
+      "name": "Keys jingle 2",
+      "file": "texture/keys-jingle-02.ogg",
+      "category": "texture",
       "tags": [
-        "type",
-        "typing",
-        "keyboard",
-        "keys"
+        "keys",
+        "jingle"
       ],
       "durationSeconds": 0.332,
       "gainDb": 2.2,
@@ -3466,15 +4515,13 @@
       }
     },
     {
-      "id": "keys-03",
-      "name": "Keys 3",
-      "file": "ui/keys-03.ogg",
-      "category": "ui",
+      "id": "keys-jingle-03",
+      "name": "Keys jingle 3",
+      "file": "texture/keys-jingle-03.ogg",
+      "category": "texture",
       "tags": [
-        "type",
-        "typing",
-        "keyboard",
-        "keys"
+        "keys",
+        "jingle"
       ],
       "durationSeconds": 0.35,
       "gainDb": -0.4,
@@ -3488,15 +4535,13 @@
       }
     },
     {
-      "id": "keys-04",
-      "name": "Keys 4",
-      "file": "ui/keys-04.ogg",
-      "category": "ui",
+      "id": "keys-jingle-04",
+      "name": "Keys jingle 4",
+      "file": "texture/keys-jingle-04.ogg",
+      "category": "texture",
       "tags": [
-        "type",
-        "typing",
-        "keyboard",
-        "keys"
+        "keys",
+        "jingle"
       ],
       "durationSeconds": 0.931,
       "gainDb": 1.1,
@@ -6883,20 +7928,19 @@
       "tags": [
         "type",
         "typing",
-        "keyboard",
-        "keys"
+        "keyboard"
       ],
-      "durationSeconds": 1.054,
-      "gainDb": 1,
-      "lufs": -23.3,
-      "peakDb": -2,
+      "durationSeconds": 0.925,
+      "gainDb": 2,
+      "lufs": -28,
+      "peakDb": -3,
       "source": {
-        "pack": "58 Random Sound Effects",
-        "author": "TokyoGeisha",
-        "url": "https://opengameart.org/content/58-random-sound-effects",
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
         "licence": "CC0 1.0"
       },
-      "derivedFrom": "8 key sounds from 58 Random Sound Effects"
+      "derivedFrom": "8 keypresses from Keyboard Soundpack #1"
     },
     {
       "id": "typing-run-02",
@@ -6906,20 +7950,19 @@
       "tags": [
         "type",
         "typing",
-        "keyboard",
-        "keys"
+        "keyboard"
       ],
-      "durationSeconds": 2.134,
-      "gainDb": -0.4,
-      "lufs": -21.7,
-      "peakDb": -0.6,
+      "durationSeconds": 1.448,
+      "gainDb": 2,
+      "lufs": -30,
+      "peakDb": -3,
       "source": {
-        "pack": "58 Random Sound Effects",
-        "author": "TokyoGeisha",
-        "url": "https://opengameart.org/content/58-random-sound-effects",
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
         "licence": "CC0 1.0"
       },
-      "derivedFrom": "13 key sounds from 58 Random Sound Effects"
+      "derivedFrom": "13 keypresses from Keyboard Soundpack #1"
     },
     {
       "id": "typing-run-03",
@@ -6929,20 +7972,19 @@
       "tags": [
         "type",
         "typing",
-        "keyboard",
-        "keys"
+        "keyboard"
       ],
-      "durationSeconds": 2.252,
-      "gainDb": 1.3,
-      "lufs": -20.5,
-      "peakDb": -2.3,
+      "durationSeconds": 2.123,
+      "gainDb": 2.2,
+      "lufs": -29.6,
+      "peakDb": -3.2,
       "source": {
-        "pack": "58 Random Sound Effects",
-        "author": "TokyoGeisha",
-        "url": "https://opengameart.org/content/58-random-sound-effects",
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
         "licence": "CC0 1.0"
       },
-      "derivedFrom": "19 key sounds from 58 Random Sound Effects"
+      "derivedFrom": "19 keypresses from Keyboard Soundpack #1"
     },
     {
       "id": "typing-run-04",
@@ -6952,20 +7994,19 @@
       "tags": [
         "type",
         "typing",
-        "keyboard",
-        "keys"
+        "keyboard"
       ],
-      "durationSeconds": 3.203,
-      "gainDb": 1,
-      "lufs": -23,
-      "peakDb": -2,
+      "durationSeconds": 3.034,
+      "gainDb": 2.1,
+      "lufs": -30.1,
+      "peakDb": -3.1,
       "source": {
-        "pack": "58 Random Sound Effects",
-        "author": "TokyoGeisha",
-        "url": "https://opengameart.org/content/58-random-sound-effects",
+        "pack": "Keyboard Soundpack #1",
+        "author": "Unicae Games",
+        "url": "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes",
         "licence": "CC0 1.0"
       },
-      "derivedFrom": "27 key sounds from 58 Random Sound Effects"
+      "derivedFrom": "27 keypresses from Keyboard Soundpack #1"
     }
   ]
 }

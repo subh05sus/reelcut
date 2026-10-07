@@ -17,6 +17,7 @@
     "render": "tsx skills/reelcut/scripts/render.ts",
     "measure": "tsx skills/reelcut/scripts/measure.ts",
     "sfx": "tsx skills/reelcut/scripts/sfx.ts",
+    "voice": "tsx skills/reelcut/scripts/voice.ts",
     "footage": "tsx skills/reelcut/scripts/footage.ts",
     "references": "tsx skills/reelcut/scripts/references.ts",
     "generate": "tsx skills/reelcut/scripts/generate.ts",

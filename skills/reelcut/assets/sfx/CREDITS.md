@@ -23,7 +23,9 @@ Every sound here is CC0 1.0 (public domain): free for any use, commercial includ
 - **4 Metal Dings/Rings** by StarNinjas: https://opengameart.org/content/4-metal-dingsrings (CC0 1.0). 4 sound(s).
 - **UI Sounds** by StumpyStrust: https://opengameart.org/content/ui-sounds (CC0 1.0). 5 sound(s).
 - **7 Assorted Sound Effects (Menu, Level Up)** by Joth: https://opengameart.org/content/7-assorted-sound-effects-menu-level-up (CC0 1.0). 6 sound(s).
-- **58 Random Sound Effects** by TokyoGeisha: https://opengameart.org/content/58-random-sound-effects (CC0 1.0). 39 sound(s).
+- **58 Random Sound Effects** by TokyoGeisha: https://opengameart.org/content/58-random-sound-effects (CC0 1.0). 35 sound(s).
+- **Keyboard Soundpack #1** by Unicae Games: https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes (CC0 1.0). 45 sound(s).
+- **Typewriter sounds** by cassie-orbitgames: https://opengameart.org/content/typewriter-sounds (CC0 1.0). 8 sound(s).
 - **18 random video game sound effects** by Bart: https://opengameart.org/content/18-random-video-game-sound-effects (CC0 1.0). 12 sound(s).
 
 Trimmed, peak-normalised and re-encoded (Opus) by reelcut. Risers, reverse swells and typing runs are derived from the CC0 sounds above (reversed, slowed or layered); each says what it was made from in manifest.json.

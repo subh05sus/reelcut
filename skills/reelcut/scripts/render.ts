@@ -6,7 +6,7 @@ import { frameSizeFor, isOutputFormat } from "../../../src/core/constants.js";
 import { assertComposition, buildProject, ProjectError, SFX_DEFAULT_VOLUME, type ProjectBeat, type ProjectFile, type SfxCue } from "../../../src/render/project.js";
 import { loadKit, PROJECT_FONT_DIR } from "../../../src/render/kit.js";
 import { recordPatternUses } from "../../../src/patterns/mine.js";
-import { mixMusic, resolveMusic, type MusicSpec, type ResolvedMusic } from "../../../src/render/music.js";
+import { resolveMusic, type MusicSpec, type ResolvedMusic } from "../../../src/render/music.js";
 import { durationsFromCuts, planMusic, type MusicPlan } from "../../../src/library/music.js";
 import { applyDefaultPairing, fontFilesFor, pairingById, pairingIn, PAIRINGS } from "../../../src/fonts/index.js";
 import { bakePoster, contactSheet, joinClips, planJobs, runPool, SHEET_AT, stackSheets } from "../../../src/render/assemble.js";
@@ -17,11 +17,18 @@ import { checkVideo, type VideoReport } from "../../../src/verify/checkVideo.js"
 import { choosePosterTime } from "../../../src/render/poster.js";
 import { LIBRARY_ASSET_DIR, loadSfxPack, acceptMoments, blobPath, detectKey, ensureKeyed, isKeyed, keyedBlob, libraryRefsIn, loadIndex, recordRun, recordUse, wantsKey, type LibraryAsset } from "../../../src/library/index.js";
 import { expandFootage, linkOrCopy, type FootageUse, type HoldFrame } from "../../../src/render/footage.js";
+import { bedFor } from "../../../src/render/music.js";
+import { muxAudio, type MixCue } from "../../../src/audio/mixer.js";
+import { mixReel, muxSlice, type ReelMix } from "../../../src/audio/reelmix.js";
+import { applyMotionBlur, SCALE_PRESET } from "../../../src/render/blur.js";
+import { beatVoice } from "../../../src/voice/index.js";
+import { voiceForReel, type ReelVoice, type VoiceoverSpec } from "../../../src/voice/reel.js";
 
 /**
  * Turn a reel manifest into rendered clips and a master.
  *
  *   npm run render -- out/reel.json [--preflight] [--sfx] [--clips-only] [--master-only] [--only beat-03] [--jobs N] [--quality looks]
+ *                                   [--blur [N]] [--no-blur] [--4k] [--hd]
  *
  * `reel.json`, written by the agent after composing:
  *
@@ -51,6 +58,12 @@ import { expandFootage, linkOrCopy, type FootageUse, type HoldFrame } from "../.
  * `data-footage="<asset>:<moment>"` placeholder, which is expanded here into the trimmed, retimed
  * `<video>` (see `src/render/footage.ts`); a big video blob is hardlinked rather than copied when it can be. Every render is recorded in `~/.reelcut/runs.json`
  * so the studio can list it.
+ *
+ * Sound is mixed here, not by the renderer: clips render silent, the whole reel's audio (cues, voiceover, music,
+ * ducked under the voice, normalised to -14 LUFS) is mixed once, and every clip carries its slice of it. With a
+ * `"voiceover"`, the read sets each beat's length and each composition gets its own words (`RC.word`) and the
+ * voice's loudness (`RC.voice`). `"render": { "motionBlur": true, "resolution": "4k" }` (or `--blur`, `--4k`)
+ * renders sub-frames for a camera's motion blur and doubles the pixels.
  */
 
 
@@ -60,7 +73,9 @@ interface ManifestBeat {
   composition: string;
   /** The pattern this beat was adapted from, if any. The studio learns which patterns you keep. */
   pattern?: string;
-  sfx?: { source: string; at: number; volume?: number; durationSeconds?: number }[];
+  sfx?: { source: string; at: number; volume?: number; durationSeconds?: number; pan?: number; rate?: number; align?: "onset" | "peak" | "end" | "raw" }[];
+  /** The words spoken while this beat is on screen. With a voiceover, they set its length. */
+  text?: string;
 }
 
 interface Manifest {
@@ -82,6 +97,10 @@ interface Manifest {
   beats: ManifestBeat[];
   /** A music bed under the master: `{ "source": "library:<id>", "sync": "fit" | "snap" }` (see `npm run music`). */
   music?: MusicSpec;
+  /** The voiceover: `{ "file": "vo.wav", "language": "de" }`. It sets the cut unless `"timing": "manifest"`. */
+  voiceover?: VoiceoverSpec;
+  /** Asked in Step 0. `motionBlur`: true (4 sub-frames) or a number of sub-frames. `resolution`: "4k" or "hd". */
+  render?: { motionBlur?: boolean | number; resolution?: "4k" | "hd" };
 }
 
 interface Args {
@@ -96,6 +115,10 @@ interface Args {
   preflight: boolean;
   /** Clips rendered at once; left out, worked out from the machine. */
   jobs?: number;
+  /** Sub-frames per frame for motion blur (0 = off); left out, reel.json decides. */
+  blur?: number;
+  /** "4k" or "hd"; left out, reel.json decides. */
+  resolution?: "4k" | "hd";
 }
 
 function parseArgs(argv: readonly string[]): Args | undefined {
@@ -107,6 +130,8 @@ function parseArgs(argv: readonly string[]): Args | undefined {
   let quality: Args["quality"] = "looks";
   let preflight = false;
   let jobs: number | undefined;
+  let blur: number | undefined;
+  let resolution: Args["resolution"];
   const only: string[] = [];
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]!;
@@ -117,9 +142,13 @@ function parseArgs(argv: readonly string[]): Args | undefined {
     else if (arg === "--quality") quality = (argv[++i] ?? "looks") as Args["quality"];
     else if (arg === "--preflight") preflight = true;
     else if (arg === "--jobs") jobs = Number(argv[++i]) || undefined;
+    else if (arg === "--blur") blur = /^\d+$/.test(argv[i + 1] ?? "") ? Number(argv[++i]) : 4;
+    else if (arg === "--no-blur") blur = 0;
+    else if (arg === "--4k") resolution = "4k";
+    else if (arg === "--hd") resolution = "hd";
     else if (!arg.startsWith("--")) manifest = path.resolve(cwd, arg);
   }
-  return manifest ? { manifest, sfx, clips, master, only, quality, preflight, ...(jobs ? { jobs } : {}) } : undefined;
+  return manifest ? { manifest, sfx, clips, master, only, quality, preflight, ...(jobs ? { jobs } : {}), ...(blur !== undefined ? { blur } : {}), ...(resolution ? { resolution } : {}) } : undefined;
 }
 
 /** Sound effects need a duration on the element; probe it rather than trusting the manifest. */
@@ -247,14 +276,35 @@ interface Outcome {
   seconds?: number;
 }
 
-async function renderOne(id: string, projectDir: string, outFile: string, quality: Args["quality"], footage: boolean, workers: number | undefined, sheetDir: string): Promise<Outcome> {
+interface Look {
+  fps: number;
+  /** Sub-frames per frame, 0 for none. */
+  blur: number;
+  /** A HyperFrames resolution preset, for 4K. */
+  resolution?: string;
+  /** This clip's slice of the reel's mix. */
+  audio?: { file: string; start: number; length: number };
+}
+
+async function renderOne(id: string, projectDir: string, outFile: string, quality: Args["quality"], footage: boolean, workers: number | undefined, sheetDir: string, look: Look): Promise<Outcome> {
   const started = Date.now();
+  const raw = look.blur > 1 ? outFile.replace(/\.mp4$/, `.x${look.blur}.mp4`) : outFile;
   // Recorded footage is pulled out as PNG: JPEG smears the thin text of a recorded interface.
-  const result = await renderHyperframesProject({ projectDir, outputPath: outFile, quality, samples: 12, ...(footage ? { videoFrameFormat: "png" as const } : {}), ...(workers ? { workers } : {}) });
-  const seconds = (Date.now() - started) / 1000;
+  const result = await renderHyperframesProject({ projectDir, outputPath: raw, quality, samples: 12, ...(footage ? { videoFrameFormat: "png" as const } : {}), ...(workers ? { workers } : {}), ...(look.blur > 1 ? { fps: look.fps * look.blur } : {}), ...(look.resolution ? { resolution: look.resolution } : {}) });
   if (result.status !== "rendered" || !result.outputPath) {
-    return { id, status: "render_failed", detail: result.error ?? "render failed", seconds };
+    return { id, status: "render_failed", detail: result.error ?? "render failed", seconds: (Date.now() - started) / 1000 };
   }
+  try {
+    if (look.blur > 1) {
+      applyMotionBlur(raw, outFile, { fps: look.fps, samples: look.blur, crf: quality === "delivery" ? 14 : 16 });
+      rmSync(raw, { force: true });
+      result.outputPath = outFile;
+    }
+    if (look.audio) muxSlice(outFile, look.audio.file, look.audio.start, look.audio.length);
+  } catch (error) {
+    return { id, status: "render_failed", detail: `after rendering: ${error instanceof Error ? error.message : String(error)}`, seconds: (Date.now() - started) / 1000 };
+  }
+  const seconds = (Date.now() - started) / 1000;
   const report = checkVideo(result.outputPath, { samplesPerSecond: 4, footage });
   // The contact sheet is what to look at instead of opening the composition in a browser again.
   try {
@@ -282,6 +332,47 @@ async function main(): Promise<void> {
   if (!isOutputFormat(format)) throw new Error(`unknown format ${format}`);
   const { width, height } = frameSizeFor(format);
   const fps = manifest.fps ?? 30;
+
+  // Motion blur and 4K, as chosen in Step 0 (reel.json), or for this render (--blur, --4k).
+  const blurSetting = args.blur ?? (manifest.render?.motionBlur === true ? 4 : typeof manifest.render?.motionBlur === "number" ? manifest.render.motionBlur : 0);
+  const blur = blurSetting > 1 ? Math.min(16, Math.round(blurSetting)) : 0;
+  const wants4k = (args.resolution ?? manifest.render?.resolution) === "4k";
+  const resolution = wants4k ? SCALE_PRESET[format] : undefined;
+  if (wants4k && !resolution) {
+    console.error(`4K: HyperFrames has no 4K preset for ${format} (only ${Object.keys(SCALE_PRESET).join(", ")}). Render in HD, or upscale the master afterwards.`);
+    process.exitCode = 1;
+    return;
+  }
+
+  // The voiceover sets the cut: every beat lasts from just before its first word to just before the next beat's.
+  let voice: ReelVoice | undefined;
+  if (manifest.voiceover) {
+    try {
+      const spec = manifest.voiceover;
+      const lib = /^library:([0-9a-f]{16})$/.exec(spec.file);
+      const asset = lib ? loadIndex().assets.find((a) => a.id === lib[1]) : undefined;
+      if (lib && !asset) throw new Error(`voiceover: ${spec.file} is not in the library`);
+      const file = asset ? blobPath(asset) : path.resolve(base, spec.file);
+      if (!existsSync(file)) throw new Error(`voiceover: no file at ${file}`);
+      process.stdout.write(`  voiceover … transcribing ${path.basename(file)} (${spec.language ?? "de"}, cached after the first time) … `);
+      voice = await voiceForReel(spec, file, manifest.beats, base);
+      const changed = voice.spans.filter((sp, i) => Math.abs(sp.durationSeconds - manifest.beats[i]!.durationSeconds) > 0.01);
+      if ((spec.timing ?? "voice") === "voice") voice.spans.forEach((sp, i) => { manifest.beats[i]!.durationSeconds = sp.durationSeconds; });
+      console.log(`${Math.round(voice.analysis.matched * 100)}% of the script heard, ${voice.analysis.durationSeconds.toFixed(2)}s${(spec.timing ?? "voice") === "voice" ? ` · ${changed.length} beat length${changed.length === 1 ? "" : "s"} set by the read (voice.json)` : ""}`);
+      if (voice.analysis.matched < 0.6) console.warn(`  warning: the transcript matches only ${Math.round(voice.analysis.matched * 100)}% of the beats' text: is the text what is actually said, and the language right?`);
+      if (voice.unheard.length > 0) console.warn(`  warning: no word of ${voice.unheard.join(", ")} was heard; their timing is a guess between their neighbours`);
+      if ((spec.timing ?? "voice") === "voice" && changed.length > 0) {
+        // reel.json keeps the lengths the voice set, so compositions are written against them.
+        const onDisk = JSON.parse(readFileSync(args.manifest, "utf8")) as Manifest;
+        onDisk.beats.forEach((b, i) => { b.durationSeconds = Math.round(voice!.spans[i]!.durationSeconds * 1000) / 1000; });
+        writeFileSync(args.manifest, `${JSON.stringify(onDisk, null, 2)}\n`);
+      }
+    } catch (error) {
+      console.error(error instanceof Error ? error.message : String(error));
+      process.exitCode = 1;
+      return;
+    }
+  }
   // The music bed is planned before anything is placed: in snap mode the cuts move onto its beats, which changes
   // the beats' lengths, and so every clip's.
   let music: { resolved: ResolvedMusic; plan: MusicPlan; length: number } | undefined;
@@ -291,7 +382,12 @@ async function main(): Promise<void> {
       const durations = manifest.beats.map((b) => b.durationSeconds);
       const length = durations.reduce((a, b) => a + b, 0);
       const cuts = durations.slice(0, -1).map((_, i) => durations.slice(0, i + 1).reduce((a, b) => a + b, 0));
-      const sync = manifest.music.sync ?? "fit";
+      // The voice has already set the cut; the music fits under it rather than moving it.
+      let sync = manifest.music.sync ?? "fit";
+      if (sync === "snap" && voice && (manifest.voiceover?.timing ?? "voice") === "voice") {
+        console.warn(`  music: "snap" would move cuts off the voice; fitting the track to the voice's cuts instead`);
+        sync = "fit";
+      }
       const plan = planMusic(resolved.analysis, cuts, length, sync, manifest.music.start !== undefined ? { start: manifest.music.start } : {});
       if (sync === "snap") durationsFromCuts(plan.cuts, length).forEach((d, i) => { manifest.beats[i]!.durationSeconds = d; });
       music = { resolved, plan, length };
@@ -342,6 +438,13 @@ async function main(): Promise<void> {
   }
 
   const sfxLibraryIds = new Set<string>();
+  /** Every cue, in its beat's time, for the mixer. */
+  const mixCues = new Map<string, MixCue[]>();
+  const spanOf = new Map(voice?.spans.map((sp) => [sp.id, sp]) ?? []);
+  const voiceFor = (id: string) => {
+    const sp = spanOf.get(id);
+    return voice && sp ? { voice: beatVoice(voice.analysis, id, sp.start, sp.end) } : {};
+  };
   const sfxPack = loadSfxPack();
   const footageUses: FootageUse[] = [];
   const footageByBeat = new Map<string, { uses: FootageUse[]; holds: HoldFrame[] }>();
@@ -364,6 +467,7 @@ async function main(): Promise<void> {
           }
           for (const w of resolved.warnings) console.warn(`  warning: ${w}`);
           if (resolved.libraryId) sfxLibraryIds.add(resolved.libraryId);
+          mixCues.set(b.id, [...(mixCues.get(b.id) ?? []), { file: resolved.source, at: resolved.at, volume: resolved.volume ?? SFX_DEFAULT_VOLUME, align: resolved.align, ...(resolved.pan !== undefined ? { pan: resolved.pan } : {}), ...(resolved.rate !== undefined ? { rate: resolved.rate } : {}), ...(cue.durationSeconds !== undefined ? { maxSeconds: cue.durationSeconds } : {}) }]);
           return [{ source: resolved.source, at: resolved.at, durationSeconds: resolved.durationSeconds, ...(resolved.volume === undefined ? {} : { volume: resolved.volume }) }];
         });
       } catch (error) {
@@ -378,11 +482,11 @@ async function main(): Promise<void> {
         footageByBeat.set(b.id, { uses: expanded.uses, holds: expanded.holds });
         footageUses.push(...expanded.uses);
       }
-      return { id: b.id, durationSeconds: b.durationSeconds, compositionHtml: expanded.html, sfx };
+      return { id: b.id, durationSeconds: b.durationSeconds, compositionHtml: expanded.html, sfx, ...voiceFor(b.id) };
     } catch (error) {
       if (!(error instanceof ProjectError)) throw error;
       block(b.id, own(b.id, error.message));
-      return { id: b.id, durationSeconds: b.durationSeconds, compositionHtml: html, sfx };
+      return { id: b.id, durationSeconds: b.durationSeconds, compositionHtml: html, sfx, ...voiceFor(b.id) };
     }
   });
 
@@ -431,7 +535,8 @@ async function main(): Promise<void> {
 
   let built;
   try {
-    built = buildProject(beats, projectOptions, args.sfx, new Set(blocked.keys()));
+    // Clips render silent: the reel's sound is mixed below and laid under each clip.
+    built = buildProject(beats, projectOptions, false, new Set(blocked.keys()));
   } catch (error) {
     if (error instanceof ProjectError) {
       console.error(`project refused: ${error.message}`);
@@ -443,7 +548,8 @@ async function main(): Promise<void> {
 
   const plan = planJobs(undefined, args.jobs);
   const wanted = beats.filter((b) => args.only.length === 0 || args.only.includes(b.id));
-  console.log(`${beats.length} beats, ${built.totalSeconds.toFixed(2)}s, ${width}x${height} @ ${fps}fps${args.sfx ? ", with sound effects" : ", silent"}${args.clips && !args.preflight ? ` · ${plan.jobs} clip${plan.jobs === 1 ? "" : "s"} at a time, ${plan.workersPerJob} worker${plan.workersPerJob === 1 ? "" : "s"} each` : ""}`);
+  const sound = [args.sfx ? "sound effects" : "", voice ? "voiceover" : "", music ? "music" : ""].filter(Boolean);
+  console.log(`${beats.length} beats, ${built.totalSeconds.toFixed(2)}s, ${resolution ? `${width * 2}x${height * 2} (4K)` : `${width}x${height}`} @ ${fps}fps${blur ? `, motion blur (${blur} sub-frames)` : ""}${sound.length ? `, with ${sound.join(" + ")}` : ", silent"}${args.clips && !args.preflight ? ` · ${plan.jobs} clip${plan.jobs === 1 ? "" : "s"} at a time, ${plan.workersPerJob} worker${plan.workersPerJob === 1 ? "" : "s"} each` : ""}`);
 
   if (args.preflight) {
     console.log("");
@@ -465,6 +571,32 @@ async function main(): Promise<void> {
   const outcomes: Outcome[] = [];
   const started = Date.now();
 
+  // The whole reel's sound, mixed once: cues placed by their transient, peak or end, the voice on top, effects and
+  // music ducked under it, the total normalised. Each clip then carries its slice, and the master all of it.
+  let reelMix: ReelMix | undefined;
+  const cuesTotal = [...mixCues.values()].reduce((n, c) => n + c.length, 0);
+  if ((args.sfx && cuesTotal > 0) || voice || music) {
+    try {
+      const startOf = new Map(built.placements.map((p) => [p.id, p.startSeconds]));
+      const cues = [...mixCues.entries()].flatMap(([id, cs]) => cs.map((c) => ({ ...c, at: (startOf.get(id) ?? 0) + c.at })));
+      reelMix = mixReel({
+        length: built.totalSeconds,
+        cues,
+        ...(music ? { bed: bedFor(music.resolved, music.plan, built.totalSeconds, manifest.music?.volume) } : {}),
+        ...(voice && manifest.voiceover ? { voice: { file: voice.analysis.file, volume: manifest.voiceover.volume ?? 1 } } : {}),
+      }, path.join(base, "mix"));
+      console.log(`  sound … ${reelMix.placed} cue${reelMix.placed === 1 ? "" : "s"}${voice ? ", voiceover (effects duck 7 dB under it, music 9 dB)" : ""}${music ? `, music bed` : ""}${reelMix.inputLufs !== undefined ? ` · normalised from ${reelMix.inputLufs.toFixed(1)} to -14 LUFS` : ""} · stems in mix/`);
+    } catch (error) {
+      console.error(`sound: could not mix: ${error instanceof Error ? error.message : String(error)}`);
+      process.exitCode = 1;
+      return;
+    }
+  }
+  const lookFor = (id: string): Look => {
+    const p = built.placements.find((x) => x.id === id)!;
+    return { fps, blur, ...(resolution ? { resolution } : {}), ...(reelMix ? { audio: { file: reelMix.file, start: p.startSeconds, length: p.durationSeconds } } : {}) };
+  };
+
   if (args.clips) {
     for (const b of wanted) {
       const reasons = blocked.get(b.id);
@@ -485,7 +617,7 @@ async function main(): Promise<void> {
         mkdirSync(path.dirname(target), { recursive: true });
         copyFileSync(path.join(kit.fonts.lib.dir, file), target);
       }
-      const outcome = await renderOne(beat.id, dir, path.join(clipsOut, `${beat.id}.mp4`), args.quality, footageByBeat.has(beat.id), plan.jobs > 1 ? plan.workersPerJob : undefined, sheetDir);
+      const outcome = await renderOne(beat.id, dir, path.join(clipsOut, `${beat.id}.mp4`), args.quality, footageByBeat.has(beat.id), plan.jobs > 1 ? plan.workersPerJob : undefined, sheetDir, lookFor(beat.id));
       console.log(`  ${beat.id} … ${outcome.status === "ok" ? "ok" : `${outcome.status}: ${outcome.detail}`}${outcome.seconds ? `  (${outcome.seconds.toFixed(1)}s)` : ""}`);
       return outcome;
     });
@@ -512,9 +644,13 @@ async function main(): Promise<void> {
         console.log(`join failed: ${joined.detail}`);
       } else {
         console.log(`joined (${joined.detail})`);
-        if (music) {
-          const mixed = mixMusic(masterFile, music.resolved, music.plan, built.totalSeconds, manifest.music?.volume);
-          console.log(`  music … mixed under the master at ×${mixed.gain}, and alone in ${path.basename(mixed.stem)}`);
+        if (reelMix) {
+          // The joined clips' audio is the same mix in slices; the master takes it whole, with no seam at the cuts.
+          const withSound = masterFile.replace(/\.mp4$/, ".sound.mp4");
+          muxAudio(masterFile, reelMix.file, withSound);
+          rmSync(masterFile, { force: true });
+          copyFileSync(withSound, masterFile);
+          rmSync(withSound, { force: true });
         }
         const report = checkVideo(masterFile, { samplesPerSecond: 4, footage: footageByBeat.size > 0 });
         outcomes.push({ id: "master", status: "ok", file: masterFile, report });

@@ -4,6 +4,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { isUsableSound, loadIndex, loadSfxPack, packAsAssets, proposeCues, searchSfx, SFX_CATEGORIES, type CueProposal } from "../../../src/library/index.js";
 import { collectEvents } from "../../../src/verify/events.js";
+import { injectVoice } from "../../../src/render/project.js";
+import { readBeatVoices } from "../../../src/voice/reel.js";
 
 /**
  * Sound effects: your own approved sounds, and the bundled pack of 328 CC0 motion-graphics sounds (`pack:<id>`).
@@ -77,7 +79,7 @@ function find(argv: string[]): void {
   console.log(matches.length ? matches.slice(0, 20).map((m) => `${m.score.toFixed(1).padStart(5)}  ${row(m.asset)}  (${m.why})`).join("\n") : "Nothing fits. Try another --event or --tags, or add your own sounds in the studio.");
 }
 
-interface Manifest { beats: { id: string; durationSeconds: number; composition: string; sfx?: { source: string; at: number; durationSeconds?: number; volume?: number }[] }[] }
+interface Manifest { beats: { id: string; durationSeconds: number; composition: string; sfx?: { source: string; at: number; durationSeconds?: number; volume?: number; pan?: number; rate?: number }[] }[] }
 
 async function suggest(argv: string[]): Promise<void> {
   const cuts = bool(argv, "--cuts");
@@ -93,12 +95,21 @@ async function suggest(argv: string[]): Promise<void> {
     console.log("No approved sounds in the library and no bundled pack, so there is nothing to propose.");
     return;
   }
-  const events = await collectEvents(manifest.beats.map((b) => ({ id: b.id, html: readFileSync(path.resolve(base, b.composition), "utf8") })), kit);
+  // With a voiceover, a moment placed on a word (RC.word) is read at that word, as it will render.
+  const voices = readBeatVoices(base);
+  const events = await collectEvents(manifest.beats.map((b) => ({ id: b.id, html: injectVoice(readFileSync(path.resolve(base, b.composition), "utf8"), voices?.get(b.id)) })), kit);
   const proposals = proposeCues(manifest.beats.map((b) => ({ id: b.id, durationSeconds: b.durationSeconds, events: events[b.id] ?? [] })), allSounds(), { cuts, seed: path.basename(base) });
 
   if (json) console.log(JSON.stringify(proposals, null, 2));
   else if (proposals.length === 0) console.log("Nothing to propose: no beat has a moment the library has a sound for.");
-  else for (const p of proposals) console.log(`${p.beat.padEnd(14)} ${p.at.toFixed(2).padStart(5)}s  ${p.name}  (${p.why})`);
+  else {
+    for (const p of proposals) {
+      if (p.event !== "keystroke") console.log(`${p.beat.padEnd(14)} ${p.at.toFixed(2).padStart(5)}s  ${p.name}  (${p.why})`);
+    }
+    const strikes = new Map<string, CueProposal[]>();
+    for (const p of proposals) if (p.event === "keystroke") strikes.set(p.beat, [...(strikes.get(p.beat) ?? []), p]);
+    for (const [beat, ks] of strikes) console.log(`${beat.padEnd(14)} ${ks[0]!.at.toFixed(2).padStart(5)}s  ${ks.length} keystrokes to ${ks[ks.length - 1]!.at.toFixed(2)}s, ${new Set(ks.map((k) => k.soundId)).size} different keys`);
+  }
 
   if (!apply || proposals.length === 0) {
     if (proposals.length && !apply) console.log("\nNot written. Add --apply to put these cues in reel.json; they play only with `npm run render -- reel.json --sfx`.");
@@ -112,7 +123,7 @@ async function suggest(argv: string[]): Promise<void> {
       const source = p.source;
       beat.sfx ??= [];
       if (beat.sfx.some((c) => c.source === source && Math.abs(c.at - p.at) < 0.05)) continue;
-      beat.sfx.push({ source, at: p.at, ...(p.durationSeconds ? { durationSeconds: Math.round(p.durationSeconds * 1000) / 1000 } : {}) });
+      beat.sfx.push({ source, at: p.at, ...(p.durationSeconds ? { durationSeconds: Math.round(p.durationSeconds * 1000) / 1000 } : {}), ...(p.pan ? { pan: p.pan } : {}), ...(p.rate && p.rate !== 1 ? { rate: p.rate } : {}) });
       beat.sfx.sort((a, b) => a.at - b.at);
       added += 1;
     }

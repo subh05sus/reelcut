@@ -16,7 +16,7 @@ import { resolveMusic, type MusicSpec } from "../../../src/render/music.js";
  *
  * Where a track comes from, in order: the library (yours) → a free-licence site (Pixabay Music, Free Music Archive
  * CC0/CC-BY, Incompetech), downloaded with its page, licence and credit line → generated with Higgsfield (AI). The
- * render lays it under the master only, at about -16 LUFS, and writes the bed alone as music-bed.m4a.
+ * render mixes it under the reel at about -16 LUFS, ducked under a voiceover, and writes the bed alone as mix/stem-music.wav.
  */
 
 function flag(argv: string[], name: string): string | undefined {

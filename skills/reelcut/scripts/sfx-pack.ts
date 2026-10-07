@@ -19,6 +19,8 @@ import { packDir, SFX_CATEGORIES, type PackManifest, type PackSound, type SfxCat
 interface Source {
   key: string;
   url: string;
+  /** More files of the same source, downloaded beside the first. */
+  more?: string[];
   page: string;
   author: string;
   title: string;
@@ -47,6 +49,8 @@ const SOURCES: Source[] = [
   { key: "oga-ui", url: "https://opengameart.org/sites/default/files/sounds_2.zip", page: "https://opengameart.org/content/ui-sounds", author: "StumpyStrust", title: "UI Sounds" },
   { key: "oga-menu", url: "https://opengameart.org/sites/default/files/UISoundEffects.zip", page: "https://opengameart.org/content/7-assorted-sound-effects-menu-level-up", author: "Joth", title: "7 Assorted Sound Effects (Menu, Level Up)" },
   { key: "oga-58", url: "https://opengameart.org/sites/default/files/Sound%20Effects.zip", page: "https://opengameart.org/content/58-random-sound-effects", author: "TokyoGeisha", title: "58 Random Sound Effects" },
+  { key: "oga-keyboard", url: "https://opengameart.org/sites/default/files/unicae_games_keyboard_soundpack_1_0.zip", page: "https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes", author: "Unicae Games", title: "Keyboard Soundpack #1" },
+  { key: "oga-typewriter", url: "https://opengameart.org/sites/default/files/typewriter1.wav", more: [2, 3, 4, 5, 6, 7, 8].map((i) => `https://opengameart.org/sites/default/files/typewriter${i}.wav`), page: "https://opengameart.org/content/typewriter-sounds", author: "cassie-orbitgames", title: "Typewriter sounds" },
   { key: "oga-18", url: "https://opengameart.org/sites/default/files/sound_effects.zip", page: "https://opengameart.org/content/18-random-video-game-sound-effects", author: "Bart", title: "18 random video game sound effects" },
 ];
 
@@ -101,7 +105,11 @@ const PICKS: Selection[] = [
   P("kenney-ui", /switch\d/, 10, "switch", "Switch", "ui", ["switch", "toggle", "click"]),
   P("oga-clicks", /click/, 16, "click", "Click", "ui", ["click", "tap", "tick"]),
   P("oga-58", /(^|\/)(click_|finger_click|tongue_click)/, 8, "click-finger", "Finger click", "ui", ["click", "tap", "snap"]),
-  P("oga-58", /keys_/, 4, "keys", "Keys", "ui", ["type", "typing", "keyboard", "keys"]),
+  P("oga-keyboard", /single keys\/keypress/, 24, "key", "Keystroke", "ui", ["keystroke", "key", "keyboard", "click"]),
+  P("oga-keyboard", /human typing\//, 10, "typing-human", "Typing", "ui", ["type", "typing", "keyboard"]),
+  P("oga-keyboard", /generated typing\//, 7, "typing-steady", "Typing, steady", "ui", ["type", "typing", "keyboard"]),
+  P("oga-typewriter", /typewriter\d/, 8, "typewriter", "Typewriter", "ui", ["typewriter", "keystroke", "type"]),
+  P("oga-58", /keys_/, 4, "keys-jingle", "Keys jingle", "texture", ["keys", "jingle"]),
   P("oga-58", /scissors/, 3, "snip", "Snip", "ui", ["click", "snip", "cut"]),
   P("oga-58", /coins/, 4, "coins", "Coins", "ui", ["coin", "success", "money"]),
   P("oga-ui", /button/, 2, "button", "Button", "ui", ["click", "tap"]),
@@ -183,6 +191,7 @@ function fetchSources(src: string): Map<string, string> {
       mkdirSync(dir, { recursive: true });
       if (/\.(zip|7z)$/.test(file)) execFileSync("/usr/bin/tar", ["-xf", file, "-C", dir]);
       else execFileSync("cp", [file, path.join(dir, decodeURIComponent(path.basename(new URL(s.url).pathname)))]);
+      for (const u of s.more ?? []) execFileSync("curl", ["-sL", "-m", "180", "-o", path.join(dir, decodeURIComponent(path.basename(new URL(u).pathname))), u]);
     }
     dirs.set(s.key, dir);
   }
@@ -264,13 +273,13 @@ function build(argv: string[]): void {
   // Slow-down: the time-morph sound, a tape-stop for a beat that freezes.
   add("slowdown-01", "Slow-down", "transition", ["slowdown", "tape-stop", "transition"], [one("oga-timehitwind", /slomo/)], "oga-timehitwind");
   // Typing runs: real key and click sounds laid at fixed, uneven intervals (no randomness: the same every build).
-  const keys = walk(dirs.get("oga-58")!).filter((f) => /keys_|click_0/i.test(path.basename(f))).sort();
+  const keys = walk(dirs.get("oga-keyboard")!).filter((f) => /keypress/i.test(path.basename(f))).sort();
   const gaps = [0, 0.11, 0.19, 0.33, 0.41, 0.5, 0.62, 0.7, 0.83, 0.95, 1.04, 1.18, 1.26, 1.37, 1.5, 1.61, 1.73, 1.8, 1.92, 2.05, 2.17, 2.26, 2.4, 2.52, 2.6, 2.71, 2.85, 2.96];
   [0.8, 1.4, 2.0, 3.0].forEach((len, k) => {
     const hits = gaps.filter((g) => g < len - 0.05);
     const inputs = hits.map((_, i) => keys[(i * 3 + k) % keys.length]!);
     const graph = `${hits.map((g, i) => `[${i}:a]aresample=48000,aformat=channel_layouts=mono,volume=${(0.75 + ((i * 7) % 5) * 0.06).toFixed(2)},adelay=${Math.round(g * 1000)}|${Math.round(g * 1000)}[k${i}]`).join(";")};${hits.map((_, i) => `[k${i}]`).join("")}amix=inputs=${hits.length}:normalize=0`;
-    add(`typing-run-${String(k + 1).padStart(2, "0")}`, `Typing run ${len} s`, "ui", ["type", "typing", "keyboard", "keys"], inputs, "oga-58", graph, `${hits.length} key sounds from 58 Random Sound Effects`);
+    add(`typing-run-${String(k + 1).padStart(2, "0")}`, `Typing run ${len} s`, "ui", ["type", "typing", "keyboard"], inputs, "oga-keyboard", graph, `${hits.length} keypresses from Keyboard Soundpack #1`);
   });
 
   // Sounds that came out silent (a trim took everything) are dropped.

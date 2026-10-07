@@ -124,12 +124,15 @@ That is the whole invocation. Everything else is optional.
 | `--palette` | `"#ground #ink #accent"` | taken from the source |
 | `--look` | freeform art direction | inferred |
 | `--visuals` | freeform register steer | inferred |
+| `--voiceover <audio>` | the recorded read: it sets every cut | none |
+| `--blur` / `--no-blur` | camera motion blur | asked |
+| `--4k` / `--hd` | render resolution | asked |
 
 **Anything else you type is kept as freeform direction** and carried into the plan verbatim.
 *"Make it feel like a museum exhibit"* is real direction that no flag will ever capture.
 
 **Input.** An `.srt` gives exact beat timings. A `.txt` is estimated from words per minute —
-workable, but if the voiceover already exists, use the SRT.
+workable, but if the voiceover already exists, use the SRT, or better, the recording itself (`--voiceover`).
 
 ---
 
@@ -186,8 +189,8 @@ The skill stops at each gate rather than pushing through.
 
 Once the script is segmented, it asks — one or two rounds of multiple choice — about everything you
 did not already say: how much text goes on screen, full length or a short cut, the palette and
-look (proposed from the script's own product when it names one), motion, format, sound, and
-whether to open the studio when the reel is done. Options are tailored to the script, with a
+look (proposed from the script's own product when it names one), motion, format, sound, motion
+blur, HD or 4K, and whether to open the studio when the reel is done. Options are tailored to the script, with a
 recommendation first. Anything you gave as a flag or in plain words is never asked again, and an
 unattended run skips the questions and records the defaults.
 
@@ -412,13 +415,36 @@ shadow and edge controls; `npm run footage -- key <asset>` does the same from th
 `data-frame="cutout"` (see the `footage-cutout` pattern). Details, and the three ways it can go wrong, in
 [footage.md](skills/reelcut/references/footage.md).
 
-### Sounds — 328 CC0 motion-graphics sound effects, bundled
+### Voiceover — the read sets the cut
 
-Whooshes, risers, reverse swells, slides; clicks, typing runs, toggles, dings, chimes, error buzzes; pops; punches,
+Hand it the recording and each beat's spoken text, and `npm run voice -- reel.json` transcribes it on your machine
+(whisper.cpp, German included; nothing is uploaded), matches the transcript to the text even where a name was
+misheard or a number spelled out, moves every word's edges onto the voice's real pauses, and cuts each beat in the
+pause just before its first word. The compositions then get their own words: `RC.word("Claude")` is the moment
+"Claude" is said, so a headline resolves on the word that names it, and `RC.voiceDrive` moves a shape with the
+speaker's loudness.
+
+### The mix — designed, not stacked
+
+Clips render silent and the reel's sound is mixed once: each cue lands by its transient, its peak (whooshes) or
+its end (risers, so they arrive on the cut); repeated sounds vary a touch in pitch and pan; effects duck 7 dB and
+music 9 dB under the voice; the whole is normalised to -14 LUFS, true peak -1.5. Every clip carries its slice of
+that mix, the master all of it, and `mix/` keeps the stems (effects, voice, music) for an editor.
+
+### Motion blur and 4K — asked per reel
+
+Motion blur renders four sub-frames per frame and blends them like a camera's 180° shutter: fast moves smear
+along their path, still frames stay sharp. 4K renders the same layout at twice the pixels (1:1, 9:16, 16:9).
+Both are Step 0 questions, stored in `reel.json` as `"render"`, and `--no-blur` / `--hd` make a quick draft.
+
+### Sounds — 377 CC0 motion-graphics sound effects, bundled
+
+Whooshes, risers, reverse swells, slides; clicks, single keystrokes, typewriter strikes, typing runs, toggles, dings, chimes, error buzzes; pops; punches,
 thuds, booms; glitches, zaps, shimmers. All CC0 (Kenney's audio packs and CC0 sets from OpenGameArt, each licence
 checked; credits in `skills/reelcut/assets/sfx/CREDITS.md`), trimmed, normalised so nothing clips, and measured so
 each sits at the same level in the mix. `npm run sfx -- suggest reel.json` picks them for the moments the kit
-records (clicks, typing, counts, reveals, cuts) alongside your own approved sounds, which win a tie. Hear them on the
+records (clicks, typing, counts, reveals, cuts) alongside your own approved sounds, which win a tie. Typing is
+placed as keystrokes, about one per 2.6 letters with a human swing, each a different key. Hear them on the
 studio's **Sounds** page.
 
 ```bash
@@ -458,8 +484,9 @@ Step 2 finds one in this order: your library → a free-licence site (Pixabay Mu
 Incompetech), saved with its page, licence and credit → generated with Higgsfield, labelled AI-generated.
 
 Two ways to lay it, chosen per reel: **fit** keeps every cut and starts the track where most cuts land on beats;
-**snap** also moves each cut onto the nearest beat (at most 0.15 s). It goes under the master only, at about
--16 LUFS, and alone as `music-bed.m4a` so an editor can add a voiceover over the same bed.
+**snap** also moves each cut onto the nearest beat (at most 0.15 s; with a voiceover the voice owns the cut and the
+track fits instead). It goes into the mix at about -16 LUFS, ducks under the voice, and is kept alone as
+`mix/stem-music.wav` for an editor.
 
 ```bash
 npm run music -- find --mood upbeat --bpm 100-130 --min-seconds 60
@@ -580,7 +607,7 @@ when a gap actually blocks the reel. Reports only — it never moves or renames 
 ### `npm run render` — beats to clips, a master and a thumbnail
 
 ```bash
-npm run render -- examples/notiz-apps/reel.json [--preflight] [--sfx] [--clips-only] [--master-only] [--only beat-03] [--jobs N]
+npm run render -- examples/notiz-apps/reel.json [--preflight] [--sfx] [--clips-only] [--master-only] [--only beat-03] [--jobs N] [--blur [N]] [--no-blur] [--4k] [--hd]
 ```
 
 `reel.json` lists the beats, their durations and their compositions. Every beat renders as its own
@@ -613,8 +640,8 @@ Three things it checks that would otherwise fail silently:
   fullest settled frame of the **hook**, the beat whose job is to say what the video is. Override
   with `"poster": <seconds>` in the manifest.
 
-`--sfx` adds sound effects placed in the manifest, mixed under the voice at 0.35 by default. Off
-unless asked for.
+`--sfx` adds sound effects placed in the manifest, at 0.35 by default adjusted by each sound's measured loudness,
+in the render's own mix (above). Off unless asked for.
 
 ### `npm run measure` — a beat's layout, to the pixel
 
