@@ -412,6 +412,21 @@ shadow and edge controls; `npm run footage -- key <asset>` does the same from th
 `data-frame="cutout"` (see the `footage-cutout` pattern). Details, and the three ways it can go wrong, in
 [footage.md](skills/reelcut/references/footage.md).
 
+### Sounds — 328 CC0 motion-graphics sound effects, bundled
+
+Whooshes, risers, reverse swells, slides; clicks, typing runs, toggles, dings, chimes, error buzzes; pops; punches,
+thuds, booms; glitches, zaps, shimmers. All CC0 (Kenney's audio packs and CC0 sets from OpenGameArt, each licence
+checked; credits in `skills/reelcut/assets/sfx/CREDITS.md`), trimmed, normalised so nothing clips, and measured so
+each sits at the same level in the mix. `npm run sfx -- suggest reel.json` picks them for the moments the kit
+records (clicks, typing, counts, reveals, cuts) alongside your own approved sounds, which win a tie. Hear them on the
+studio's **Sounds** page.
+
+```bash
+npm run sfx -- list --pack --category transition
+npm run sfx -- find --event riser
+npm run sfx -- suggest out/reel.json --cuts --apply && npm run render -- out/reel.json --sfx
+```
+
 ### Type — 66 bundled fonts, in 18 pairings
 
 Every font ships with the skill (open licences, files in `skills/reelcut/assets/fonts`), so a render needs no

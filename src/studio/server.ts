@@ -29,6 +29,7 @@ import { claudeQueue, needsClaude } from "../library/queue.js";
 import { blobPath, findAsset, LibraryError, libraryRoot, loadIndex, setReview, thumbBlobPath, updateAsset, type AssetPatch } from "../library/store.js";
 import { editPattern, loadPatterns, patternHtmlPath, patternThumbPath, rankPatterns, ratePatternUse, removePattern, savePatternFromBeat, unsaveFromBeat, type PersonalPattern } from "../patterns/mine.js";
 import { pairingIn } from "../fonts/index.js";
+import { loadSfxPack, packSoundPath } from "../library/sfxpack.js";
 import { detectKey, isKeyed, keyedBlob, keyingStatus, keyOf, patchKey, scheduleKey, wantsKey, type KeyPatch } from "../library/key.js";
 import { addMoment, findMoments, patchFootage, refreshFootageAnalysis, removeMoment, updateMoment, type FootagePatch, type MomentInput, type MomentPatch } from "../library/footage.js";
 import { PLATFORMS } from "../library/schema.js";
@@ -773,6 +774,12 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
       }
     }
 
+    // ---- the bundled CC0 sound pack, to audition and copy cues from
+    if (read && parts[0] === "api" && parts[1] === "sfx-pack" && parts.length === 2) {
+      const pack = loadSfxPack();
+      return sendJson(res, 200, { sounds: (pack?.sounds ?? []).map((s) => ({ ...s, url: `/files/pack/${s.id}` })) });
+    }
+
     // ---- your patterns: beats rated "Works", kept for the next reel
     if (parts[0] === "api" && parts[1] === "patterns") {
       if (read && parts.length === 2) return sendJson(res, 200, { patterns: rankPatterns(loadPatterns()).map(publicPattern) });
@@ -895,6 +902,12 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
         const file = ref ? (parts[1] === "reference" ? referenceBlobPath(ref) : parts[1] === "reference-sheet" ? referenceSheetPath(ref) : referenceThumbPath(ref)) : undefined;
         if (!file) throw new HttpError(404, "no such file");
         return sendFile(req, res, file);
+      }
+      if (parts[1] === "pack" && parts.length === 3) {
+        const pack = loadSfxPack();
+        const sound = pack?.byId.get(parts[2]!);
+        if (!pack || !sound) throw new HttpError(404, "no such sound");
+        return sendFile(req, res, packSoundPath(pack, sound));
       }
       if (parts[1] === "pattern-thumb" && parts.length === 3) {
         const id = parts[2]!.replace(/\.[a-z0-9]+$/i, "");

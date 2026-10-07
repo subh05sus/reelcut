@@ -90,9 +90,17 @@ most) land on cuts and the reel ends near a bar. **snap** then moves each cut on
 last 1.5 s, and is written alone as `music-bed.m4a` for the edit. The render prints how many cuts landed on a
 beat; put the track, its licence and credit (or "AI-generated") in `report.md`.
 
-### Sound effects from the library
+### Sound effects: the bundled pack and the library
 
-A cue's `source` may be a file path, or `library:<id>` for a sound in the user's library. The render
+328 CC0 motion-graphics sounds ship with the skill (`assets/sfx`, credits in `CREDITS.md`): whooshes, swishes,
+risers, reverse swells, card slides, page flips; clicks, taps, ticks, toggles, typing runs, dings, success chimes,
+error buzzes; pops and bloops; punches, thuds, booms and clangs; glitches, zaps, lasers, shimmers and power-ups.
+They are ready to use: `npm run sfx -- list --pack`, or the studio's Sounds page to hear them.
+
+A cue's `source` may be a file path, `library:<id>` for a sound in the user's library, or `pack:<id>` for a bundled
+one. `sfx suggest` picks from both, and the user's own approved sound wins a tie; among equally good pack sounds it
+varies by reel, so two reels do not share every click. For moments the helpers do not record, place a cue by hand
+from `npm run sfx -- find --event ding|success|error|glitch|shimmer|riser|slide|boom|toggle`. The render
 resolves it, reads its duration, mixes it at the default level adjusted by the gain measured when
 the sound was ingested (the file itself is never changed), clips a cue that would run past the end of
 its beat, and records the use. Only sounds the user has approved should be used.

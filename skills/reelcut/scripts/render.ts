@@ -15,7 +15,7 @@ import { resolveCue } from "../../../src/library/sfx.js";
 import { renderHyperframesProject } from "../../../src/render/hyperframes.js";
 import { checkVideo, type VideoReport } from "../../../src/verify/checkVideo.js";
 import { choosePosterTime } from "../../../src/render/poster.js";
-import { LIBRARY_ASSET_DIR, acceptMoments, blobPath, detectKey, ensureKeyed, isKeyed, keyedBlob, libraryRefsIn, loadIndex, recordRun, recordUse, wantsKey, type LibraryAsset } from "../../../src/library/index.js";
+import { LIBRARY_ASSET_DIR, loadSfxPack, acceptMoments, blobPath, detectKey, ensureKeyed, isKeyed, keyedBlob, libraryRefsIn, loadIndex, recordRun, recordUse, wantsKey, type LibraryAsset } from "../../../src/library/index.js";
 import { expandFootage, linkOrCopy, type FootageUse, type HoldFrame } from "../../../src/render/footage.js";
 
 /**
@@ -342,6 +342,7 @@ async function main(): Promise<void> {
   }
 
   const sfxLibraryIds = new Set<string>();
+  const sfxPack = loadSfxPack();
   const footageUses: FootageUse[] = [];
   const footageByBeat = new Map<string, { uses: FootageUse[]; holds: HoldFrame[] }>();
   const index = loadIndex();
@@ -356,7 +357,7 @@ async function main(): Promise<void> {
     if (args.sfx) {
       try {
         sfx = (b.sfx ?? []).flatMap((cue): SfxCue[] => {
-          const resolved = resolveCue(cue, b, { assets: index.assets, blobPath, exists: existsSync, resolveFile: (source) => path.resolve(base, source), probe: probeSeconds, defaultVolume: SFX_DEFAULT_VOLUME });
+          const resolved = resolveCue(cue, b, { assets: index.assets, blobPath, exists: existsSync, resolveFile: (source) => path.resolve(base, source), probe: probeSeconds, defaultVolume: SFX_DEFAULT_VOLUME, ...(sfxPack ? { pack: sfxPack } : {}) });
           if (!resolved) {
             console.warn(`  warning: ${b.id}: a cue at ${cue.at}s has no room before the beat ends; dropped`);
             return [];

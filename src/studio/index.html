@@ -518,6 +518,7 @@
       <a class="nav-i" href="#review" data-tab="review" title="Review"><span data-ic="review"></span><span class="lab">Review</span><span class="n" data-count="review"></span></a>
       <a class="nav-i" href="#folders" data-tab="folders" title="Folders"><span data-ic="folders"></span><span class="lab">Folders</span><span class="n" data-count="folders"></span></a>
       <a class="nav-i" href="#references" data-tab="references" title="References"><span data-ic="references"></span><span class="lab">References</span><span class="n" data-count="references"></span></a>
+      <a class="nav-i" href="#sounds" data-tab="sounds" title="Sound effects"><span data-ic="sounds"></span><span class="lab">Sounds</span><span class="n" data-count="sounds"></span></a>
       <a class="nav-i" href="#patterns" data-tab="patterns" title="Your patterns"><span data-ic="patterns"></span><span class="lab">Patterns</span><span class="n" data-count="patterns"></span></a>
       <a class="nav-i" href="#learnings" data-tab="learnings" title="Learnings"><span data-ic="learnings"></span><span class="lab">Learnings</span><span class="n" data-count="learnings"></span></a>
       <a class="nav-i" href="#jobs" data-tab="jobs" title="Jobs"><span data-ic="jobs"></span><span class="lab">Jobs</span><span class="n" data-count="jobs"></span></a>
@@ -547,7 +548,7 @@ const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "
 const IMG = new Set(["png", "jpg", "jpeg", "gif", "webp", "avif", "svg"]);
 const VID = new Set(["mp4", "webm", "mov"]);
 const TYPES = [["", "All"], ["image", "Images"], ["vector", "Vectors"], ["video", "Video"], ["audio", "Sounds"], ["document", "Docs"]];
-const state = { patterns: [], tagFilter: new Set(), q: "", type: "", selected: null, assets: [], counts: { all: 0, pending: 0, queue: 0, audio: 0 }, tags: {}, runs: [], jobs: [], folders: [], ingest: null, picked: new Set(), uploads: [], dropKind: "generic", dropPrivate: false, learn: null, videos: [], fsel: null, ffmt: "1:1", refs: [], rbrief: null, rcounts: { all: 0, included: 0, queue: 0 }, rcommand: "/reelcut study-references", rsel: null, ruploads: [], tab: "library" };
+const state = { packSounds: [], soundCat: "transition", patterns: [], tagFilter: new Set(), q: "", type: "", selected: null, assets: [], counts: { all: 0, pending: 0, queue: 0, audio: 0 }, tags: {}, runs: [], jobs: [], folders: [], ingest: null, picked: new Set(), uploads: [], dropKind: "generic", dropPrivate: false, learn: null, videos: [], fsel: null, ffmt: "1:1", refs: [], rbrief: null, rcounts: { all: 0, included: 0, queue: 0 }, rcommand: "/reelcut study-references", rsel: null, ruploads: [], tab: "library" };
 const isPhone = () => window.matchMedia("(max-width: 899px)").matches;
 
 // ---------- icons (Lucide shapes, 1.8 stroke: San Francisco's regular weight)
@@ -560,6 +561,7 @@ const ICONS = {
   references: '<path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>',
   learnings: '<path d="M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2Z"/><path d="M19 3v4M17 5h4"/>',
   jobs: '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+  sounds: '<path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/>',
   patterns: '<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',
   settings: '<path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"/>',
   more: '<circle cx="5" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.6" fill="currentColor" stroke="none"/>',
@@ -764,7 +766,7 @@ $("#rail").addEventListener("click", () => setRail(document.documentElement.data
 function openMore() {
   const c = (n) => (n ? `<span class="badge">${n}</span>` : "");
   const s = state.ingest?.status;
-  openSheet({ title: "More", body: `<div class="group">${[["review", "Review", state.counts.pending], ["patterns", "Patterns", state.patterns.length], ["folders", "Folders", state.folders.length], ["references", "References", state.rcounts.all], ["learnings", "Learnings", (state.learn?.rules || []).filter((r) => r.status === "proposed" && !r.conflictWith.length).length], ["jobs", "Jobs", state.jobs.filter((j) => j.status === "running").length]]
+  openSheet({ title: "More", body: `<div class="group">${[["review", "Review", state.counts.pending], ["sounds", "Sounds", state.packSounds.length], ["patterns", "Patterns", state.patterns.length], ["folders", "Folders", state.folders.length], ["references", "References", state.rcounts.all], ["learnings", "Learnings", (state.learn?.rules || []).filter((r) => r.status === "proposed" && !r.conflictWith.length).length], ["jobs", "Jobs", state.jobs.filter((j) => j.status === "running").length]]
       .map(([k, l, n]) => `<a class="row-i" href="#${k}" data-sclose style="color:var(--label);text-decoration:none"><span class="tile" style="background:var(--fill-1);color:var(--label)">${ic(k, 17)}</span><span class="t grow">${l}</span>${c(n)}<span style="color:var(--label-3)">${ic("back", 14).replace("m15 18-6-6 6-6", "m9 18 6-6-6-6")}</span></a>`).join("")}</div>
     <div class="group"><button class="row-i" id="more-set" style="width:100%;border-radius:0;justify-content:flex-start;height:auto;font-size:var(--fs-b);font-weight:400"><span class="tile" style="background:#8e8e93">${ic("settings", 17)}</span><span class="t grow" style="text-align:left">Settings</span></button>
       <div class="row-i"><span class="dot ${s?.paused ? "off" : s?.scanning ? "busy" : ""}"></span><span class="s grow">${esc($("#sync-text").textContent)}</span><button class="sm" id="more-pause">${s?.paused ? "Resume" : "Pause"}</button></div></div>`,
@@ -1130,6 +1132,31 @@ $("#import").addEventListener("change", async (e) => {
   const file = e.target.files[0]; e.target.value = ""; if (!file) return;
   try { const r = await api("/api/learnings/import", { method: "POST", body: await file.text() }); toast(`Imported ${r.added} new, ${r.replaced} replaced, ${r.skipped} skipped`); renderLearnings(); } catch (err) { toast(err.message); }
 });
+
+// ---------- the bundled sound pack: 328 CC0 motion-graphics sounds, ready to use
+const SOUND_CATS = [["transition", "Transitions"], ["ui", "UI and clicks"], ["pop", "Pops"], ["hit", "Hits"], ["texture", "Glitch and texture"]];
+async function loadPackSounds() { if (!state.packSounds.length) state.packSounds = (await api("/api/sfx-pack")).sounds; }
+let soundPlayer;
+function renderSounds() {
+  const list = state.packSounds.filter((s) => s.category === state.soundCat);
+  const families = [...new Set(list.map((s) => s.id.replace(/-\d+$/, "")))];
+  $("#main").innerHTML = `
+    ${pageHead("Sounds")}
+    <p class="lede">${state.packSounds.length} CC0 motion-graphics sounds ship with reelcut, ready to use: <code>npm run sfx -- suggest reel.json</code> picks them for clicks, typing, reveals and cuts, beside your own approved sounds (yours win a tie). Click a sound to hear it; copy its cue to place it by hand.</p>
+    <div class="bar">${segHtml("sound-cats", SOUND_CATS.map(([v, l]) => [v, `${l} <span class="n">${state.packSounds.filter((s) => s.category === v).length}</span>`]), state.soundCat)}</div>
+    ${families.map((fam) => { const group = list.filter((s) => s.id.replace(/-\d+$/, "") === fam); return `
+      <div class="cap"><b>${esc(group[0].name.replace(/ \d+$/, ""))}</b> ${group.length} · ${group[0].tags.map((t) => `#${esc(t)}`).join(" ")}</div>
+      <div class="group">${group.map((s) => `<div class="row-i" data-sound="${s.id}"><button class="icon" data-play aria-label="Play ${esc(s.name)}" style="background:var(--fill-3);color:var(--label)">${ic("play", 14)}</button><div class="col"><span class="t">${esc(s.name)}</span><span class="s">${s.durationSeconds.toFixed(2)} s · ${esc(s.source.pack)} by ${esc(s.source.author)}${s.derivedFrom ? ` · ${esc(s.derivedFrom)}` : ""}</span></div><code class="s">pack:${s.id}</code><button class="sm" data-copy>Copy cue</button></div>`).join("")}</div>`; }).join("")}
+    <p class="foot-note">All CC0 1.0 (public domain): free for commercial use, no credit required. Credits: <code>skills/reelcut/assets/sfx/CREDITS.md</code>.</p>`;
+  bindSeg("sound-cats", (v) => { state.soundCat = v; renderSounds(); });
+  $$("[data-sound]").forEach((row) => {
+    const s = list.find((x) => x.id === row.dataset.sound);
+    const play = () => { soundPlayer?.pause(); soundPlayer = new Audio(s.url); soundPlayer.play(); };
+    $("[data-play]", row).addEventListener("click", play);
+    $(".col", row).addEventListener("click", play);
+    $("[data-copy]", row).addEventListener("click", () => { navigator.clipboard?.writeText(JSON.stringify({ source: `pack:${s.id}`, at: 0 })); toast(`Copied the cue for ${s.name}`); });
+  });
+}
 
 // ---------- your patterns: beats rated "Works", kept for the next reel
 async function loadPatterns() { state.patterns = (await api("/api/patterns")).patterns; }
@@ -1538,6 +1565,7 @@ async function updateBadges() {
   setCount("learnings", waiting);
   setCount("reels", state.runs.length);
   try { await loadPatterns(); setCount("patterns", state.patterns.length); } catch { /* the page still works */ }
+  try { await loadPackSounds(); setCount("sounds", state.packSounds.length); } catch { /* the page still works */ }
   setCount("jobs", state.jobs.filter((j) => j.status === "running").length ? "●" : "");
   setCount("more", (state.counts.pending || 0) + waiting || "");
 }
@@ -1565,6 +1593,7 @@ async function route() {
     else if (tab === "folders") await renderFolders();
     else if (tab === "learnings") await renderLearnings();
     else if (tab === "patterns") { await loadPatterns(); renderPatterns(); }
+    else if (tab === "sounds") { await loadPackSounds(); renderSounds(); }
     else { await loadLibrary(); renderLibrary(); }
   } catch (e) { $("#main").innerHTML = `${pageHead("Something went wrong")}${emptyState("x", "This page could not load", esc(e.message), `<button class="primary" id="retry">Retry</button>`)}`; $("#retry")?.addEventListener("click", route); }
   clearTimeout(slow);

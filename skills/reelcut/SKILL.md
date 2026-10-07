@@ -226,7 +226,7 @@ time, checks every file, joins the passing clips into the master (no second rend
 clips that passed) and bakes the hook's strongest settled frame in as the thumbnail. A blocked beat does not
 hold up the others; render it later with `--only`, and the master is joined then. Look at `contact.jpg` (a row
 of five frames per beat) instead of re-opening compositions in a browser. Add `--sfx` for sound effects: `npm run sfx -- suggest reel.json --apply` proposes cues
-from the user's own approved sounds (see [references/step-5-render.md](references/step-5-render.md)).
+from the 328 bundled CC0 sounds and the user's own approved sounds (theirs win a tie) (see [references/step-5-render.md](references/step-5-render.md)).
 A music bed (`"music"` in `reel.json`, found in Step 2) goes under the master only, levelled and faded, and also
 alone as `music-bed.m4a`; the render says how many cuts landed on a beat. `"type"` sets every beat's type
 pairing; each clip carries only the bundled fonts it uses.
