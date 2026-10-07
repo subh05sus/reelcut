@@ -45,3 +45,17 @@ as Claude does. Answers from the owner, dated. Each question is asked once.
 - **Performance loop:** analytics screenshots or CSV exports, read by Claude; no platform logins.
 - **Integrations bar:** the Create page shows whether Higgsfield is connected, and later Adobe Premiere Pro and
   DaVinci Resolve, which reels will be orchestrated with.
+
+## Built (2026-10-08)
+
+- Edit beats (sheet per beat, drag to reorder) and frame comments (pins, timeline, send to Claude); a progress card,
+  header line and meter read from the reel folder.
+- Write it with Claude (three hooks → script → approve → reel); six recipes plus the owner's own; series with a shared
+  intro and outro; batches that run unattended, now or tonight.
+- Captions (.srt/.vtt; burned in for voiced reels, in the personality's type) and a Post tab: covers from the reel's
+  frames, the post kit per platform with limits and copy buttons.
+- Share for review: a separate review server on its own port, reached through a cloudflared quick tunnel only;
+  tokens expire and can be turned off; reviewers' comments become frame comments.
+- Performance: results from screenshots/CSV (read by Claude) or typed; a Performance page with differences between
+  reels and a conversation that proposes learnings for approval.
+- Drawn assets: SVG in the personality's style, checked, kept in the library as pending.

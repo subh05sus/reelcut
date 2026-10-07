@@ -37,6 +37,7 @@ import { HIGGSFIELD_SETTINGS, loadSettings, setHiggsfieldSetting, type Higgsfiel
 import { readGeneration } from "../generate/log.js";
 import { CreateManager, filesDir as createFilesDir, insideAllowed, reelState } from "../create/manager.js";
 import { readIntegrations } from "../create/integrations.js";
+import { drawPrompt } from "../create/draw.js";
 import { addPerformance, analysisPrompt, importPrompt, insights, latest, readPerformance, reelFacts, type PerfRow } from "../create/performance.js";
 import { cloudflaredPath, createShare, ensureTunnel, revokeShare, sharesFor, startReviewServer, stopTunnel, tunnelUrl, REVIEW_PORT, loadShares, liveShare } from "../create/share.js";
 import { writeCaptions } from "../create/captions.js";
@@ -1151,6 +1152,14 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
         const files = (b.files ?? []).filter((f) => typeof f.path === "string" && f.path.startsWith(createFilesDir(id)));
         if (!files.length) throw new HttpError(400, "add a screenshot or a CSV");
         cm.send(id, `Read the results from ${files.map((f) => f.name).join(", ")}`, files.map((f) => ({ ...f, kind: "results" })), importPrompt(reelPath(), files, b.platform || "any"));
+        return sendJson(res, 202, { ok: true });
+      }
+      if (method === "POST" && parts[3] === "draw" && parts.length === 4) {
+        const b = (await readBody(req)) as { what?: string; beat?: string };
+        const what = String(b.what ?? "").trim().slice(0, 500);
+        if (!what) throw new HttpError(400, "say what to draw");
+        const rp = cm.findReel(id);
+        cm.send(id, `Draw: ${what}${b.beat ? ` (for ${b.beat})` : ""}`, [], drawPrompt({ what, ...(b.beat && rp ? { beat: b.beat, reelPath: rp } : rp ? { reelPath: rp } : {}), personality: sess.settings.personality }));
         return sendJson(res, 202, { ok: true });
       }
       if (parts[3] === "comments") {

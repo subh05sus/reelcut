@@ -1449,7 +1449,7 @@ async function openBeat(r, beatId) {
       <div class="cr-acts3"><button data-act="redo">Another take</button><button data-act="calmer">Calmer</button><button data-act="punchier">Punchier</button></div>
       <div class="group" style="margin-top:12px">
         <label class="row-i"><span class="t grow">Style</span><select id="bt-style" class="sm-select"><option value="">${esc(b.style ? "Keep " + (cr.styles.find((s) => s[0] === b.style)?.[1] || b.style) : "Choose…")}</option>${cr.styles.filter((s) => s[0] !== b.style).map(([v, l]) => `<option value="${esc(v)}">${esc(l)}</option>`).join("")}</select></label>
-        <div class="row-i"><span class="t grow">Image</span><button class="sm" id="bt-image">Swap from library…</button></div>
+        <div class="row-i"><span class="t grow">Image</span><button class="sm" id="bt-image">From library…</button><button class="sm" id="bt-draw">Draw one…</button></div>
         <div class="row-i"><span class="t grow">Position</span><button class="sm" id="bt-earlier" ${i === 0 ? "disabled" : ""}>Earlier</button><button class="sm" id="bt-later" ${i === n - 1 ? "disabled" : ""}>Later</button></div>
       </div>
       <div class="cap">Words on screen</div>
@@ -1471,9 +1471,18 @@ async function openBeat(r, beatId) {
       note.addEventListener("keydown", (e) => { if (e.key === "Enter" && note.value.trim()) sendEdit(beatId, { kind: "note", text: note.value }); });
       ngo.addEventListener("click", () => sendEdit(beatId, { kind: "note", text: note.value }));
       $("#bt-image", sh).addEventListener("click", () => pickImage(beatId));
+      $("#bt-draw", sh).addEventListener("click", () => drawAsset(beatId));
       $("#bt-remove", sh).addEventListener("click", async () => { if (await ask({ title: `Remove beat ${i + 1}?`, detail: "Claude takes it out of the reel and rejoins the master. Its files stay in the folder.", ok: "Remove", danger: true })) sendEdit(beatId, { kind: "remove" }); });
     },
   });
+}
+/** Claude draws an SVG in the personality's style (for a beat, or for the library) and keeps it in Review. */
+async function drawAsset(beatId) {
+  closeSheet();
+  const what = await askText({ title: beatId ? "What should Claude draw for this beat?" : "What should Claude draw?", ok: "Draw it", placeholder: "e.g. a paper rocket taking off" });
+  if (!what) return;
+  try { await post(`/api/create/${cr.meta.id}/draw`, { what, ...(beatId ? { beat: beatId } : {}) }); toast("Claude is drawing it"); window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" }); }
+  catch (err) { toast(err.message); }
 }
 async function pickImage(beatId) {
   let assets = [];
@@ -1741,6 +1750,7 @@ function bindComposer(first) {
     { label: "Script (.txt or .srt)", act: () => pick("script", ".txt,.srt,.md,text/plain") },
     { label: "Voiceover (audio)", act: () => pick("voiceover", "audio/*,.wav,.mp3,.m4a") },
     { label: "Assets or footage", act: () => pick("asset", "image/*,video/*,.svg,.pdf") },
+    ...(cr.meta ? [{ sep: true }, { label: "Have Claude draw an asset…", act: () => drawAsset() }] : []),
   ]));
   $("#cr-file").addEventListener("change", (e) => {
     const kind = e.target.dataset.kind;

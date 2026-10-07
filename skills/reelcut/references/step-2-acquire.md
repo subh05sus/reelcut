@@ -165,6 +165,20 @@ downstream gate exactly as a fabricated statistic does.
 
 ### 4. Draw it — `generic` only
 
+Draw it as SVG in the personality's style: an icon, an object, an illustration, a background shape. Each style has
+its own way of drawing (`DRAWING` in `src/create/draw.ts`: layered shapes with offset shadows for Paper Cutout,
+gradient blobs for Claymation, hairlines for Linear, three face tones for Isometric…). Only the style's scheme
+colours and their tints; a viewBox; no text inside (words belong to the composition); `<g id>` around each part
+that moves. Save it in the reel's `drawn/` folder and keep it:
+
+```bash
+npm run draw -- out/drawn/rocket.svg --name "A paper rocket" --tags rocket,launch --style paper-cutout
+```
+
+The check refuses anything that runs or fetches, or has no viewBox, and warns about off-scheme colours and text.
+A kept drawing goes into the library as `drawn` and pending: this reel may use it at once, other reels only once
+the owner approves it in Review. Never draw an identity asset (logo, screenshot, a real person).
+
 A generic requirement that is atmosphere (a background, a mood) may be **generated with Higgsfield** instead
 when it is connected and the user agreed in Step 0 — see [generate.md](generate.md). A generated clip is never an
 answer to an `identity` or footage requirement, is registered as pending, and falls back to drawing or

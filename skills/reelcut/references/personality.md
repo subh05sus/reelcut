@@ -56,3 +56,15 @@ motion energy.
 | `npm run personality -- previews [--only a,b] [--kind sample\|showcase\|both]` | render the 20 style previews the page shows (once; saved in `~/.reelcut/style-previews`) |
 | `npm run personality -- patterns` | rewrite `assets/patterns/styles/` from the generator |
 | `npm run personality -- mini <id>` | render a mini beat per chosen style in that personality's colours, type and motion (the page's "Render mini beats") |
+
+## After the render: captions, post, results
+
+| | |
+|---|---|
+| `npm run captions -- out/reel.json [--burn] [--style karaoke\|key-words\|full]` | captions.srt / .vtt from the voiceover (or the words on screen); `--burn` makes master.captioned.mp4 in the personality's type (voiced reels) |
+| `npm run draw -- out/drawn/x.svg --name "…" [--style …]` | keep an SVG you drew in the personality's style (checked, pending in the library) |
+| `npm run performance -- add out/reel.json --platform instagram --views N …` | record a posted reel's analytics (only numbers the source shows) |
+| `npm run performance -- summary` | every reel with results, and what differs between them |
+
+The studio's Create page asks for these from its reel panel (Post tab, beat sheet, Performance page); the
+post kit is post-kit.json beside reel.json, in the shape the request gives.
