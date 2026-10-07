@@ -37,6 +37,7 @@ import { HIGGSFIELD_SETTINGS, loadSettings, setHiggsfieldSetting, type Higgsfiel
 import { readGeneration } from "../generate/log.js";
 import { CreateManager, filesDir as createFilesDir, insideAllowed, reelState } from "../create/manager.js";
 import { readIntegrations } from "../create/integrations.js";
+import { addComment, beatText, commentsPrompt, editPrompt, loadComments, readReel, removeComment, updateComment, type EditAction } from "../create/edits.js";
 import { FAMILIES, PAIRINGS, fontFaceCss, loadFontLibrary } from "../fonts/index.js";
 import { reelcutHome } from "../library/store.js";
 import {
@@ -934,7 +935,7 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
         req.on("close", () => { off(); clearInterval(beat); });
         return;
       }
-      if (read && parts[3] === "reel" && parts.length === 4) return sendJson(res, 200, { reel: reelState(cm.findReel(id)) });
+      if (read && parts[3] === "reel" && parts.length === 4) return sendJson(res, 200, { reel: reelState(cm.findReel(id)), progress: cm.progress(id) });
       if (method === "PATCH" && parts.length === 3) {
         const b = (await readBody(req)) as { title?: string };
         if (typeof b.title === "string") cm.rename(id, b.title);
@@ -992,6 +993,50 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
         return sendJson(res, 200, { ok: true });
       }
       if (method === "POST" && parts[3] === "stop" && parts.length === 4) { cm.stop(id); return sendJson(res, 200, { ok: true }); }
+
+      // Editing the finished reel: one beat at a time, or comments pinned to frames. Each becomes a message to Claude.
+      const reelPath = () => { const r = cm.findReel(id); if (!r) throw new HttpError(409, "this conversation has no reel yet"); return r; };
+      if (read && parts[3] === "beat" && parts.length === 5) {
+        const rp = reelPath(); const reel = readReel(rp);
+        const b = reel.beats.find((x) => x.id === parts[4]);
+        if (!b) throw new HttpError(404, "no such beat");
+        return sendJson(res, 200, { beat: b, index: reel.beats.indexOf(b), count: reel.beats.length, text: beatText(rp, b) });
+      }
+      if (method === "POST" && parts[3] === "edit" && parts.length === 4) {
+        const b = (await readBody(req)) as { beat?: string; action?: EditAction };
+        if (!b.beat || !b.action?.kind) throw new HttpError(400, "say which beat and what to do");
+        const rp = reelPath();
+        let action = b.action;
+        if (action.kind === "image") {
+          const a = findAsset(String((action.asset as { id?: string })?.id ?? ""));
+          if (!a) throw new HttpError(404, "no such asset");
+          action = { kind: "image", asset: { id: a.id, name: a.name, path: blobPath(a) } };
+        }
+        let msg;
+        try { msg = editPrompt(rp, readReel(rp), b.beat, action); } catch (error) { throw new HttpError(400, (error as Error).message); }
+        cm.send(id, msg.shown, [], msg.prompt);
+        return sendJson(res, 202, { ok: true, shown: msg.shown });
+      }
+      if (parts[3] === "comments") {
+        if (read && parts.length === 4) return sendJson(res, 200, { comments: loadComments(id) });
+        if (method === "POST" && parts.length === 4) {
+          const b = (await readBody(req)) as { t?: number; x?: number; y?: number; text?: string };
+          if (typeof b.t !== "number" || !String(b.text ?? "").trim()) throw new HttpError(400, "a comment needs a moment and some words");
+          return sendJson(res, 201, { comment: addComment(id, reelPath(), { t: b.t, x: b.x, y: b.y, text: String(b.text) }) });
+        }
+        if (method === "POST" && parts[4] === "send" && parts.length === 5) {
+          let msg;
+          try { msg = commentsPrompt(id, reelPath()); } catch (error) { throw new HttpError(409, (error as Error).message); }
+          for (const c of msg.sent) updateComment(id, c, { status: "sent" });
+          cm.send(id, msg.shown, [], msg.prompt);
+          return sendJson(res, 202, { ok: true, sent: msg.sent.length });
+        }
+        if (method === "PATCH" && parts.length === 5) {
+          const b = (await readBody(req)) as { text?: string; status?: "open" | "sent" | "resolved" };
+          try { return sendJson(res, 200, { comment: updateComment(id, parts[4]!, b) }); } catch (error) { throw new HttpError(404, (error as Error).message); }
+        }
+        if (method === "DELETE" && parts.length === 5) { removeComment(id, parts[4]!); return sendJson(res, 200, { ok: true }); }
+      }
     }
 
     // ---- runs

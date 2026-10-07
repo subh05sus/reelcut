@@ -597,7 +597,65 @@
   .cr-beat { border-radius: 10px; overflow: hidden; background: var(--fill-4); aspect-ratio: 1; position: relative; display: grid; place-items: center; font-size: 11px; color: var(--label-2); }
   .cr-beat img, .cr-beat video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .cr-beat b { position: absolute; left: 6px; bottom: 6px; z-index: 2; background: rgb(0 0 0 / .55); color: #fff; padding: 1px 6px; border-radius: 6px; font-size: 11px; }
-  .cr-panel video.master, .cr-panel img.cr-sheet { display: block; width: 100%; height: auto; border-radius: 12px; background: #000; }
+  .cr-panel img.cr-sheet { display: block; width: 100%; height: auto; border-radius: 12px; background: #000; }
+  button.cr-beat { padding: 0; height: auto; cursor: pointer; transition: transform 150ms var(--ease), box-shadow 150ms var(--ease); }
+  button.cr-beat:active { transform: scale(0.97); }
+  .cr-beat.lifted { opacity: .5; } .cr-beat.over { box-shadow: 0 0 0 2px var(--accent); }
+
+  /* Progress: what Claude is on, read from the reel folder. Content, so solid. */
+  .cr-prog { background: var(--fill-4); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .cr-prog .top { display: flex; align-items: baseline; gap: 8px; font-size: 13px; line-height: 18px; }
+  .cr-prog .line { flex: 1; font-weight: 600; min-width: 0; }
+  .cr-prog .pct { color: var(--label-2); font-variant-numeric: tabular-nums; }
+  .cr-prog .bar { height: 4px; border-radius: 2px; background: var(--fill-3); overflow: hidden; }
+  .cr-prog .bar i { display: block; height: 100%; border-radius: 2px; background: var(--accent); transition: width 600ms var(--ease); }
+  .cr-prog.live .bar i { background-image: linear-gradient(90deg, transparent, rgb(255 255 255 / .35), transparent); background-size: 60px 100%; background-repeat: no-repeat; animation: crsheen 1.6s linear infinite; background-color: var(--accent); }
+  @keyframes crsheen { from { background-position: -60px 0; } to { background-position: calc(100% + 60px) 0; } }
+  .cr-prog .stages { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; line-height: 16px; color: var(--label-3); }
+  .cr-prog .stages li { display: inline-flex; align-items: center; gap: 4px; }
+  .cr-prog .stages .d { width: 12px; height: 12px; border-radius: 50%; display: grid; place-items: center; box-shadow: inset 0 0 0 1.5px var(--label-3); color: var(--on-accent); }
+  .cr-prog .stages .done { color: var(--label-2); } .cr-prog .stages .done .d { background: var(--accent); box-shadow: none; }
+  .cr-prog .stages .now { color: var(--label); font-weight: 600; } .cr-prog .stages .now .d { box-shadow: inset 0 0 0 3.5px var(--accent); }
+  .cr-prog.live .stages .now .d { animation: crpulse 1.4s var(--ease) infinite; }
+  @keyframes crpulse { 50% { box-shadow: inset 0 0 0 3.5px var(--accent), 0 0 0 4px color-mix(in srgb, var(--accent) 25%, transparent); } }
+  .cr-prog .stages .n { color: var(--label-2); font-weight: 400; font-variant-numeric: tabular-nums; }
+  :where(.phead:has(.cr-progline)) { position: relative; }
+  .cr-progline { position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; pointer-events: none; }
+  .cr-progline i { display: block; height: 100%; width: 0; background: var(--accent); transition: width 600ms var(--ease); box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 60%, transparent); }
+  .cr-meter .prog { color: var(--label); font-weight: 500; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* The master with frame comments: pins on the frame, beats and comments on a timeline under it. */
+  .cr-stage { position: relative; width: 100%; border-radius: 12px; overflow: hidden; background: #000; }
+  .cr-stage video.master { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
+  .cr-stage.aiming { box-shadow: 0 0 0 2px var(--accent); }
+  .cr-catch { position: absolute; inset: 0; cursor: crosshair; z-index: 3; }
+  .cr-pins { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+  .cr-pin { position: absolute; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px rgb(255 255 255 / .9), 0 2px 8px rgb(0 0 0 / .5); z-index: 3; animation: crpin 300ms var(--ease-ios, var(--ease)); }
+  .cr-pin.sent { background: var(--orange); } .cr-pin.draft { background: var(--accent); }
+  @keyframes crpin { from { transform: scale(0.4); opacity: 0; } }
+  .cr-tl { position: relative; display: flex; gap: 2px; height: 20px; cursor: pointer; border-radius: 6px; overflow: hidden; }
+  .cr-tl .seg-b { background: var(--fill-3); }
+  .cr-tl .seg-b:nth-child(even) { background: var(--fill-2, var(--fill-3)); opacity: .7; }
+  .cr-tl .seg-b:hover { background: var(--fill-1, var(--label-3)); }
+  .cr-tl .ph { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--label); pointer-events: none; }
+  .cr-tl .marks { position: absolute; inset: 0; pointer-events: none; }
+  .cr-tl .marks i { position: absolute; top: 50%; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 1.5px var(--cell); }
+  .cr-tl .marks i.sent { background: var(--orange); } .cr-tl .marks i.resolved { background: var(--label-3); }
+  .cr-mbar { display: flex; align-items: center; gap: 8px; justify-content: space-between; min-height: 28px; }
+  .cr-mbar .sm-link { font-size: 13px; }
+  .cr-draft { background: var(--fill-4); border-radius: 12px; padding: 12px; }
+  .cr-draft .acts { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
+  .cr-cmts .row-i { gap: 10px; }
+  .cr-tc { height: 24px; padding: 0 8px; border-radius: 999px; background: var(--fill-3); color: var(--label); font-size: 12px; font-variant-numeric: tabular-nums; flex: none; }
+  .cr-cmts .t { white-space: normal; }
+  .cr-acts3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .cr-beat-pv { display: block; max-width: 100%; margin-inline: auto; max-height: 40vh; object-fit: contain; border-radius: 12px; margin-bottom: 12px; }
+  .cr-pick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; max-height: 50vh; overflow: auto; }
+  .cr-pick button { padding: 0; height: auto; aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: var(--fill-4); }
+  .cr-pick button:hover { box-shadow: 0 0 0 2px var(--accent); }
+  .cr-pick img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  @media (max-width: 899px) { .cr-acts3 button { height: 44px; } .cr-tl { height: 28px; } .cr-tc { height: 32px; } .cr-pick { grid-template-columns: repeat(3, 1fr); } }
+  @media (prefers-reduced-motion: reduce) { .cr-prog.live .bar i, .cr-prog.live .stages .now .d, .cr-pin { animation: none; } }
   .cr-list .row-i { cursor: pointer; }
 
   /* ================================================================ personality
@@ -989,7 +1047,7 @@ $("#more-tab").addEventListener("click", (e) => { e.preventDefault(); openMore()
 
 // ---------- create: make a reel by talking to Claude (Claude Code, with your login, running /reelcut)
 const cr = { list: null, meta: null, events: [], byId: new Map(), es: null, files: [], reelTimer: null, tick: null, view: "chat", draft: { settings: {}, model: "", effort: "" } };
-const media = (p) => `/files/create-media?path=${encodeURIComponent(p)}`;
+const media = (p) => { const [f, v] = String(p).split("#"); return `/files/create-media?path=${encodeURIComponent(f)}${v ? `&v=${v}` : ""}`; };
 const isVid = (p) => /\.(mp4|webm)$/i.test(p);
 
 /** A small, safe markdown: paragraphs, lists, code, bold, italics, headings, tables. Escaped first. */
@@ -1097,6 +1155,7 @@ function paintMeta() {
   const tok = m.usage.inputTokens + m.usage.outputTokens;
   const plan = m.usage.plan?.utilization != null ? `${Math.round(m.usage.plan.utilization * (m.usage.plan.utilization <= 1 ? 100 : 1))}% of your ${m.usage.plan.window === "seven_day" ? "week" : "5-hour"} limit` : "";
   $("#cr-meter").innerHTML = `<span class="badge ${st[1]}">${st[0]}</span><span>${Math.floor(secs / 60)}:${String(Math.floor(secs % 60)).padStart(2, "0")}</span>${tok ? `<span title="Includes context Claude re-reads from its cache on every step">${tok >= 1e6 ? (tok / 1e6).toFixed(1) + "M" : tok >= 1000 ? Math.round(tok / 1000) + "k" : tok} tokens</span>` : ""}${plan ? `<span>${plan}</span>` : ""}`;
+  if (live && cr.progress?.line) $("#cr-meter").insertAdjacentHTML("afterbegin", `<span class="prog" title="${esc(cr.progress.line)}">${esc(cr.progress.line)} · ${cr.progress.pct}%</span>`);
   const send = $("#cr-send");
   if (send) { send.classList.toggle("stop", live); send.innerHTML = ic(live && !$("#cr-text").value.trim() ? "stop" : "up", 18); send.title = live && !$("#cr-text").value.trim() ? "Stop" : "Send"; }
   $$(".composer .chips select").forEach((x) => { x.disabled = cr.events.length > 0; });
@@ -1131,28 +1190,220 @@ function openStream(id) {
   };
 }
 
+// The reel panel: progress while it is made, then the master (with comments pinned to frames) or the beats (each one
+// editable). Every edit and every comment goes to Claude in this chat; nothing is changed behind its back.
+const FMT_RATIO = { "9:16": "9 / 16", "4:5": "4 / 5", "16:9": "16 / 9" };
+const clockOf = (t) => `${Math.floor(t / 60)}:${(t % 60).toFixed(1).padStart(4, "0")}`;
+
+function progHtml(pg) {
+  // Only while there is something to follow: a finished reel speaks for itself.
+  if (!pg || (!pg.live && (pg.pct >= 100 || (pg.pct === 0 && !pg.line)))) return "";
+  return `<div class="cr-prog ${pg.live ? "live" : ""}" aria-label="Progress">
+    <div class="top"><span class="line">${esc(pg.line || (pg.pct >= 100 ? "Finished" : ""))}</span><span class="pct">${pg.pct}%</span></div>
+    <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pg.pct}"><i style="width:${pg.pct}%"></i></div>
+    <ol class="stages">${pg.stages.map((s) => `<li class="${s.state}"><span class="d">${s.state === "done" ? ic("check", 10) : ""}</span>${esc(s.label)}${s.state === "now" && s.of ? ` <span class="n">${s.n}/${s.of}</span>` : ""}</li>`).join("")}</ol></div>`;
+}
+function paintProgress(pg) {
+  cr.progress = pg;
+  const head = $(".phead");
+  if (head && !$("#cr-progline", head)) head.insertAdjacentHTML("beforeend", `<div class="cr-progline" id="cr-progline"><i></i></div>`);
+  const line = $("#cr-progline");
+  if (line) { line.hidden = !pg?.live; $("i", line).style.width = `${pg?.pct ?? 0}%`; }
+  const slot = $("#cr-prog-slot"); if (slot) slot.innerHTML = progHtml(pg);
+  paintMeta();
+}
+
 const refreshReel = debounce(async () => {
   if (!cr.meta || !$("#cr-panel")) return;
-  const r = (await api(`/api/create/${cr.meta.id}/reel`)).reel;
-  const p = $("#cr-panel");
-  if (!r) { p.innerHTML = `<h3>Reel</h3><p class="note">The reel appears here as Claude plans it: beats first, then frames, then the clips as they render.</p>`; return; }
+  const id = cr.meta.id;
   const live = cr.meta.status === "running" || cr.meta.status === "waiting";
-  // Master or beats: the finished reel when it exists, the beats while it is being made (the owner can switch).
+  clearTimeout(cr.reelTimer);
+  if (live) cr.reelTimer = setTimeout(refreshReel, 4000);
+  const { reel: r, progress } = await api(`/api/create/${id}/reel`);
+  if (cr.meta?.id !== id) return;
+  cr.reel = r;
+  const p = $("#cr-panel");
+  if (!r) { p.innerHTML = `<div id="cr-prog-slot"></div><h3>Reel</h3><p class="note">The reel appears here as Claude plans it: beats first, then frames, then the clips as they render.</p>`; paintProgress(progress); return; }
   const view = r.master ? (cr.panelView || "master") : "beats";
+  // Never pull the rug: leave the panel alone while the master plays, a comment is being written or a beat is dragged.
   const playing = $("video.master", p);
-  if (playing && !playing.paused && view === "master" && cr.panelShown === "master") return; // don't restart what is playing
+  const busy = (playing && !playing.paused && view === "master" && cr.panelShown === "master") || cr.commenting || cr.dragging;
+  if (busy && cr.panelShown === view) { paintProgress(progress); if (view === "master") paintComments(); return; }
   cr.panelShown = view;
-  p.innerHTML = `<h3>Reel <span class="note" style="font-weight:400">${r.beats.length} beat${r.beats.length === 1 ? "" : "s"} · ${Math.round(r.seconds)} s${r.format ? ` · ${esc(r.format)}` : ""}</span></h3>
+  p.innerHTML = `<div id="cr-prog-slot"></div>
+    <h3>Reel <span class="note" style="font-weight:400">${r.beats.length} beat${r.beats.length === 1 ? "" : "s"} · ${Math.round(r.seconds)} s${r.format ? ` · ${esc(r.format)}` : ""}</span></h3>
     ${r.master ? segHtml("cr-pv", [["master", "Master"], ["beats", "Beats"]], view, "full") : ""}
-    ${view === "master" ? `<video class="master" src="${media(r.master)}" ${r.poster ? `poster="${media(r.poster)}"` : ""} controls playsinline preload="metadata" style="aspect-ratio:${({ "9:16": "9 / 16", "4:5": "4 / 5", "16:9": "16 / 9" })[r.format] || "1 / 1"};object-fit:contain"></video>
-      <div class="row-i" style="padding:0;min-height:0;background:none"><a class="plain" href="${media(r.master)}" download>Download master.mp4</a></div>` : `
-    <div class="cr-beats">${r.beats.map((b, i) => `<div class="cr-beat">${b.clip ? `<video src="${media(b.clip)}" muted loop playsinline autoplay></video>` : b.frame ? `<img src="${media(b.frame)}">` : live ? `<span class="st run" style="width:16px;height:16px;border-radius:50%;border:2px solid var(--label-3);border-top-color:var(--accent);animation:spin 900ms linear infinite"></span>` : "—"}<b>${i + 1} · ${esc(b.id)}</b></div>`).join("")}</div>
-    ${r.contact ? `<a href="${media(r.contact)}" target="_blank"><img class="cr-sheet" src="${media(r.contact)}"></a>` : r.sheet ? `<a href="${media(r.sheet)}" target="_blank"><img class="cr-sheet" src="${media(r.sheet)}"></a>` : ""}`}
+    ${view === "master" ? masterHtml(r) : beatsHtml(r, live)}
     ${r.plan ? `<details><summary class="note" style="cursor:pointer">Plan</summary><div class="ev-text" style="font-size:13px;margin-top:8px">${md(r.plan)}</div></details>` : ""}
     <p class="foot-note">${esc(r.dir)}</p>`;
+  paintProgress(progress);
   if (r.master) bindSeg("cr-pv", (v) => { cr.panelView = v; cr.panelShown = null; refreshReel(); });
-  if (live) { clearTimeout(cr.reelTimer); cr.reelTimer = setTimeout(refreshReel, 5000); }
-}, 300);
+  if (view === "master") bindMaster(r); else bindBeats(r);
+}, 250);
+
+// ---- beats: tap one to change it, drag to reorder
+function beatsHtml(r, live) {
+  const spin = `<span class="st run" style="width:16px;height:16px;border-radius:50%;border:2px solid var(--label-3);border-top-color:var(--accent);animation:spin 900ms linear infinite"></span>`;
+  return `<div class="cr-beats">${r.beats.map((b, i) => `<button type="button" class="cr-beat" data-beat="${esc(b.id)}" data-i="${i}" draggable="${r.master ? "true" : "false"}" aria-label="Beat ${i + 1}, ${esc(b.id)}">${b.clip ? `<video src="${media(b.clip)}" muted loop playsinline autoplay></video>` : b.frame ? `<img src="${media(b.frame)}" alt="">` : live ? spin : "—"}<b>${i + 1} · ${esc(b.id)}</b></button>`).join("")}</div>
+    ${r.master ? `<p class="foot-note" style="margin:0">Tap a beat to change it, or drag one to move it.</p>` : ""}
+    ${r.contact ? `<a href="${media(r.contact)}" target="_blank"><img class="cr-sheet" src="${media(r.contact)}" alt="Contact sheet"></a>` : r.sheet ? `<a href="${media(r.sheet)}" target="_blank"><img class="cr-sheet" src="${media(r.sheet)}" alt="Contact sheet"></a>` : ""}`;
+}
+function bindBeats(r) {
+  $$(".cr-beat", $("#cr-panel")).forEach((t) => {
+    t.addEventListener("click", () => openBeat(r, t.dataset.beat));
+    if (!r.master) return;
+    t.addEventListener("dragstart", (e) => { cr.dragging = t.dataset.beat; t.classList.add("lifted"); e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", t.dataset.beat); });
+    t.addEventListener("dragend", () => { cr.dragging = null; t.classList.remove("lifted"); $$(".cr-beat.over").forEach((x) => x.classList.remove("over")); });
+    t.addEventListener("dragover", (e) => { if (!cr.dragging || cr.dragging === t.dataset.beat) return; e.preventDefault(); t.classList.add("over"); });
+    t.addEventListener("dragleave", () => t.classList.remove("over"));
+    t.addEventListener("drop", (e) => {
+      e.preventDefault(); t.classList.remove("over");
+      const from = e.dataTransfer.getData("text/plain"); cr.dragging = null;
+      if (from && from !== t.dataset.beat) sendEdit(from, { kind: "move", to: Number(t.dataset.i) });
+    });
+  });
+}
+async function sendEdit(beat, action) {
+  try {
+    const r = await post(`/api/create/${cr.meta.id}/edit`, { beat, action });
+    closeSheet(); toast(`Sent to Claude: ${r.shown}`);
+    if (innerWidth < 1100) { cr.view = "chat"; $(".cr").dataset.view = "chat"; const seg = $("#cr-view"); if (seg) { $$("button", seg).forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.v === "chat"))); placeThumb(seg, true); } }
+    window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+  } catch (err) { toast(err.message); }
+}
+async function openBeat(r, beatId) {
+  const b = r.beats.find((x) => x.id === beatId); if (!b) return;
+  if (!r.master) { if (b.clip || b.frame) window.open(media(b.clip || b.frame), "_blank"); return; }
+  let info = { text: [], index: r.beats.indexOf(b), count: r.beats.length };
+  try { info = await api(`/api/create/${cr.meta.id}/beat/${encodeURIComponent(beatId)}`); } catch { /* the sheet still works without the words */ }
+  if (!cr.styles) { try { cr.styles = (await api("/api/personality/catalog")).styles.map((s) => [s.id, s.name]); } catch { cr.styles = []; } }
+  const i = info.index, n = info.count;
+  const live = cr.meta.status === "running" || cr.meta.status === "waiting";
+  openSheet({
+    title: `Beat ${i + 1}`, label: `Change beat ${i + 1}`,
+    sub: [b.kind, b.style && (cr.styles.find((s) => s[0] === b.style)?.[1] || b.style), b.seconds != null && dur(b.seconds)].filter(Boolean).map(esc).join(" · "),
+    body: `${b.clip ? `<video class="cr-beat-pv" src="${media(b.clip)}" muted loop playsinline autoplay style="aspect-ratio:${FMT_RATIO[r.format] || "1 / 1"}"></video>` : ""}
+      ${live ? `<p class="foot-note" style="margin:0 0 12px">Claude is working: this reaches it at its next step.</p>` : ""}
+      <div class="cap">Change it</div>
+      <div class="cr-acts3"><button data-act="redo">Another take</button><button data-act="calmer">Calmer</button><button data-act="punchier">Punchier</button></div>
+      <div class="group" style="margin-top:12px">
+        <label class="row-i"><span class="t grow">Style</span><select id="bt-style" class="sm-select"><option value="">${esc(b.style ? "Keep " + (cr.styles.find((s) => s[0] === b.style)?.[1] || b.style) : "Choose…")}</option>${cr.styles.filter((s) => s[0] !== b.style).map(([v, l]) => `<option value="${esc(v)}">${esc(l)}</option>`).join("")}</select></label>
+        <div class="row-i"><span class="t grow">Image</span><button class="sm" id="bt-image">Swap from library…</button></div>
+        <div class="row-i"><span class="t grow">Position</span><button class="sm" id="bt-earlier" ${i === 0 ? "disabled" : ""}>Earlier</button><button class="sm" id="bt-later" ${i === n - 1 ? "disabled" : ""}>Later</button></div>
+      </div>
+      <div class="cap">Words on screen</div>
+      <textarea id="bt-text" rows="${Math.min(6, Math.max(2, info.text.length))}" style="width:100%" placeholder="One line per line">${esc(info.text.join("\n"))}</textarea>
+      <div class="acts" style="margin-top:8px"><button class="sm" id="bt-text-go" disabled>Use these words</button></div>
+      <div class="cap">Or tell Claude</div>
+      <div style="display:flex;gap:8px"><input id="bt-note" style="flex:1" placeholder="e.g. hold the headline longer, move the logo up"><button class="primary" id="bt-note-go" disabled>Send</button></div>
+      <div class="acts"><button class="plain" id="bt-remove" style="color:var(--red);margin-right:auto">Remove beat</button><button data-sclose>Done</button></div>`,
+    bind: (sh) => {
+      $$("[data-act]", sh).forEach((x) => x.addEventListener("click", () => sendEdit(beatId, { kind: x.dataset.act })));
+      $("#bt-style", sh).addEventListener("change", (e) => { if (e.target.value) sendEdit(beatId, { kind: "style", style: e.target.value }); });
+      $("#bt-earlier", sh).addEventListener("click", () => sendEdit(beatId, { kind: "move", to: i - 1 }));
+      $("#bt-later", sh).addEventListener("click", () => sendEdit(beatId, { kind: "move", to: i + 1 }));
+      const orig = info.text.join("\n"), ta = $("#bt-text", sh), go = $("#bt-text-go", sh);
+      ta.addEventListener("input", () => { go.disabled = !ta.value.trim() || ta.value.trim() === orig.trim(); });
+      go.addEventListener("click", () => sendEdit(beatId, { kind: "text", text: ta.value }));
+      const note = $("#bt-note", sh), ngo = $("#bt-note-go", sh);
+      note.addEventListener("input", () => { ngo.disabled = !note.value.trim(); });
+      note.addEventListener("keydown", (e) => { if (e.key === "Enter" && note.value.trim()) sendEdit(beatId, { kind: "note", text: note.value }); });
+      ngo.addEventListener("click", () => sendEdit(beatId, { kind: "note", text: note.value }));
+      $("#bt-image", sh).addEventListener("click", () => pickImage(beatId));
+      $("#bt-remove", sh).addEventListener("click", async () => { if (await ask({ title: `Remove beat ${i + 1}?`, detail: "Claude takes it out of the reel and rejoins the master. Its files stay in the folder.", ok: "Remove", danger: true })) sendEdit(beatId, { kind: "remove" }); });
+    },
+  });
+}
+async function pickImage(beatId) {
+  let assets = [];
+  try { assets = (await api("/api/assets?type=image&limit=120")).assets; } catch (err) { toast(err.message); return; }
+  openSheet({
+    title: "Swap the image", sub: "Pick one from your library; Claude frames it the way the beat framed the old one.",
+    body: assets.length ? `<input id="pk-q" placeholder="Search" style="width:100%;margin-bottom:12px"><div class="cr-pick">${assets.map((a) => `<button type="button" data-a="${esc(a.id)}" data-q="${esc((a.name + " " + a.tags.join(" ")).toLowerCase())}" title="${esc(a.name)}"><img src="${fileUrl(a)}" alt="${esc(a.name)}" loading="lazy"></button>`).join("")}</div>` : `<p class="note">No images in the library yet.</p>`,
+    bind: (sh) => {
+      $("#pk-q", sh)?.addEventListener("input", (e) => { const q = e.target.value.toLowerCase(); $$("[data-a]", sh).forEach((x) => { x.hidden = !!q && !x.dataset.q.includes(q); }); });
+      $$("[data-a]", sh).forEach((x) => x.addEventListener("click", () => sendEdit(beatId, { kind: "image", asset: { id: x.dataset.a } })));
+    },
+  });
+}
+
+// ---- master: play it, pin comments to frames, send them to Claude
+function masterHtml(r) {
+  return `<div class="cr-stage" id="cr-stage" style="aspect-ratio:${FMT_RATIO[r.format] || "1 / 1"}">
+      <video class="master" id="cr-master" src="${media(r.master)}" ${r.poster ? `poster="${media(r.poster)}"` : ""} controls playsinline preload="metadata"></video>
+      <div class="cr-pins" id="cr-pins"></div>
+      <div class="cr-catch" id="cr-catch" hidden></div>
+    </div>
+    <div class="cr-tl" id="cr-tl" aria-label="Timeline: beats and comments">${r.beats.map((b, i) => `<span class="seg-b" style="flex:${b.seconds || 1}" title="Beat ${i + 1}" data-t="${b.start}"></span>`).join("")}<span class="ph" id="cr-ph"></span><span class="marks" id="cr-marks"></span></div>
+    <div class="cr-mbar"><button class="sm" id="cr-comment">${ic("plus", 14)} Comment on a frame</button><a class="plain sm-link" href="${media(r.master)}" download>Download</a></div>
+    <div id="cr-comments"></div>`;
+}
+function bindMaster(r) {
+  const v = $("#cr-master"), tl = $("#cr-tl"), ph = $("#cr-ph"), total = r.seconds || 1;
+  const sync = () => { ph.style.left = `${Math.min(100, (v.currentTime / total) * 100)}%`; paintPins(); };
+  v.addEventListener("timeupdate", sync); v.addEventListener("seeked", sync);
+  tl.addEventListener("click", (e) => { const rc = tl.getBoundingClientRect(); v.currentTime = Math.max(0, Math.min(total - 0.05, ((e.clientX - rc.left) / rc.width) * total)); });
+  $("#cr-comment").addEventListener("click", () => startComment());
+  paintComments(true);
+}
+function startComment() {
+  const v = $("#cr-master"), c = $("#cr-catch"); if (!v || !c) return;
+  v.pause(); c.hidden = false; $("#cr-stage").classList.add("aiming");
+  $("#cr-comment").outerHTML = `<span class="note" id="cr-comment">Click the spot on the frame · <button class="plain sm" id="cr-aim-whole">Whole frame</button> <button class="plain sm" id="cr-aim-cancel">Cancel</button></span>`;
+  const done = () => { c.hidden = true; $("#cr-stage")?.classList.remove("aiming"); document.removeEventListener("keydown", esc_); const s = $("#cr-comment"); if (s) s.outerHTML = `<button class="sm" id="cr-comment">${ic("plus", 14)} Comment on a frame</button>`; $("#cr-comment")?.addEventListener("click", () => startComment()); };
+  const esc_ = (e) => { if (e.key === "Escape") { done(); closeDraft(); } };
+  document.addEventListener("keydown", esc_);
+  $("#cr-aim-cancel").addEventListener("click", () => { done(); closeDraft(); });
+  $("#cr-aim-whole").addEventListener("click", () => { done(); draftComment(v.currentTime); });
+  c.onclick = (e) => { const rc = c.getBoundingClientRect(); done(); draftComment(v.currentTime, (e.clientX - rc.left) / rc.width, (e.clientY - rc.top) / rc.height); };
+}
+function closeDraft() { $("#cr-draft")?.remove(); $("#cr-pin-draft")?.remove(); cr.commenting = false; }
+function draftComment(t, x, y) {
+  closeDraft(); cr.commenting = true;
+  const stage = $("#cr-stage");
+  if (x != null) stage.insertAdjacentHTML("beforeend", `<span class="cr-pin draft" id="cr-pin-draft" style="left:${x * 100}%;top:${y * 100}%"></span>`);
+  stage.insertAdjacentHTML("afterend", `<div class="cr-draft" id="cr-draft"><div class="note" style="margin-bottom:6px">${clockOf(t)}${x != null ? " · the spot you clicked" : " · the whole frame"}</div><textarea id="cr-draft-t" rows="2" style="width:100%" placeholder="What should change here?"></textarea><div class="acts"><button class="sm" id="cr-draft-x">Cancel</button><button class="sm primary" id="cr-draft-ok" disabled>Add comment</button></div></div>`);
+  const ta = $("#cr-draft-t"), ok = $("#cr-draft-ok");
+  ta.focus();
+  ta.addEventListener("input", () => { ok.disabled = !ta.value.trim(); });
+  const save = async () => {
+    if (!ta.value.trim()) return; ok.disabled = true;
+    try { await post(`/api/create/${cr.meta.id}/comments`, { t, x, y, text: ta.value }); closeDraft(); await paintComments(true); }
+    catch (err) { toast(err.message); ok.disabled = false; }
+  };
+  ta.addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey || !e.shiftKey)) { e.preventDefault(); save(); } if (e.key === "Escape") closeDraft(); });
+  ok.addEventListener("click", save); $("#cr-draft-x").addEventListener("click", closeDraft);
+}
+async function paintComments(fetchNow) {
+  const box = $("#cr-comments"); if (!box || !cr.meta) return;
+  if (fetchNow || !cr.comments || cr.comments.id !== cr.meta.id) { try { cr.comments = { id: cr.meta.id, list: (await api(`/api/create/${cr.meta.id}/comments`)).comments }; } catch { return; } }
+  const list = cr.comments.list, open = list.filter((c) => c.status === "open"), total = cr.reel?.seconds || 1;
+  $("#cr-marks").innerHTML = list.map((c) => `<i class="${c.status}" style="left:${(c.t / total) * 100}%" title="${esc(clockOf(c.t))}: ${esc(c.text)}"></i>`).join("");
+  box.innerHTML = list.length ? `<div class="cap" style="margin:4px 0 8px">Comments <span class="note">${open.length} open</span></div>
+    <div class="group cr-cmts">${list.map((c) => `<div class="row-i" data-c="${c.id}"><button class="cr-tc" data-seek="${c.t}">${clockOf(c.t)}</button><span class="col grow"><span class="t">${esc(c.text)}</span><span class="s">Beat ${c.beatIndex + 1}${c.x != null ? " · pinned" : ""}</span></span><span class="badge ${c.status === "resolved" ? "ok" : c.status === "sent" ? "running" : ""}">${{ open: "Open", sent: "With Claude", resolved: "Resolved" }[c.status]}</span><button class="icon sm-icon" data-more aria-label="More">${ic("more", 16)}</button></div>`).join("")}</div>
+    ${open.length ? `<button class="primary" id="cr-send-cmts" style="width:100%;margin-top:12px">Send ${open.length} comment${open.length > 1 ? "s" : ""} to Claude</button>` : ""}` : `<p class="foot-note" style="margin:0">Pause on a frame and comment on what should change; Claude fixes each one in its beat.</p>`;
+  $$("[data-seek]", box).forEach((b) => b.addEventListener("click", () => { const v = $("#cr-master"); if (v) { v.pause(); v.currentTime = Number(b.dataset.seek); } }));
+  $$("[data-c]", box).forEach((row) => rowActions(row, () => {
+    const c = list.find((x) => x.id === row.dataset.c);
+    return [
+      c.status === "resolved" ? { label: "Reopen", act: () => setComment(c.id, { status: "open" }) } : { label: "Mark resolved", act: () => setComment(c.id, { status: "resolved" }) },
+      { label: "Edit…", act: async () => { const t = await askText({ title: "Edit comment", value: c.text }); if (t) setComment(c.id, { text: t }); } },
+      { sep: true }, { label: "Delete", danger: true, act: async () => { await api(`/api/create/${cr.meta.id}/comments/${c.id}`, { method: "DELETE" }); paintComments(true); } },
+    ];
+  }));
+  $("#cr-send-cmts")?.addEventListener("click", async (e) => {
+    e.target.disabled = true;
+    try { const r = await post(`/api/create/${cr.meta.id}/comments/send`); toast(`Sent ${r.sent} to Claude`); await paintComments(true); window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" }); }
+    catch (err) { toast(err.message); e.target.disabled = false; }
+  });
+  paintPins();
+}
+async function setComment(cid, body) { try { await patch(`/api/create/${cr.meta.id}/comments/${cid}`, body); paintComments(true); } catch (err) { toast(err.message); } }
+function paintPins() {
+  const v = $("#cr-master"), box = $("#cr-pins"); if (!v || !box || !cr.comments) return;
+  const near = cr.comments.list.filter((c) => c.x != null && c.status !== "resolved" && Math.abs(c.t - v.currentTime) < 0.5);
+  box.innerHTML = near.map((c) => `<span class="cr-pin ${c.status}" style="left:${c.x * 100}%;top:${c.y * 100}%" title="${esc(c.text)}"></span>`).join("");
+}
 
 function composerHtml(first) {
   const pers = (cr.list?.personalities || []);
@@ -1311,7 +1562,23 @@ async function renderCreate(id) {
   $("#cr-rename").addEventListener("click", async () => { const v = await askText({ title: "Rename", value: cr.meta.title }); if (v) { await patch(`/api/create/${id}`, { title: v }); $(".phead h1").textContent = v; } });
   paintMeta(); refreshReel(); openStream(id); paintIntegrations();
   cr.tick = setInterval(paintMeta, 1000);
-  window.scrollTo(0, document.body.scrollHeight);
+  pinToBottom();
+}
+/**
+ * Open a conversation at its latest message, and keep it there while images, frames and fonts settle, until the owner
+ * scrolls. (The browser's own scroll restoration would put a reload back where the page used to be.)
+ */
+function pinToBottom(ms = 2500) {
+  try { history.scrollRestoration = "manual"; } catch { /* old browser */ }
+  const go = () => window.scrollTo(0, document.body.scrollHeight);
+  go(); requestAnimationFrame(go);
+  const box = $("#cr-events"); if (!box || !window.ResizeObserver) return;
+  let stop = false;
+  const quit = () => { stop = true; ro.disconnect(); ["wheel", "touchstart", "keydown", "pointerdown"].forEach((k) => window.removeEventListener(k, quit, true)); };
+  const ro = new ResizeObserver(() => { if (!stop) go(); });
+  ro.observe(box);
+  ["wheel", "touchstart", "keydown", "pointerdown"].forEach((k) => window.addEventListener(k, quit, { capture: true, passive: true }));
+  setTimeout(quit, ms);
 }
 
 // ---------- personality: the design crafter

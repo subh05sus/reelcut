@@ -394,6 +394,8 @@ export class CreateManager {
     return best?.p;
   }
 
+  progress(id: string): Progress | undefined { const s = this.sessions.get(id); return s ? progressOf(s, this.findReel(id)) : undefined; }
+
   /** "Title: …" on the first line of a reply names the conversation, and is not shown. */
   private takeTitle(s: Session, e: Ev): void {
     if (e.k !== "text") return;
@@ -425,23 +427,102 @@ export class CreateManager {
   }
 }
 
+export interface Stage { id: string; label: string; state: "done" | "now" | "todo"; n?: number; of?: number }
+export interface Progress { mode: "make" | "edit"; stages: Stage[]; pct: number; line: string; live: boolean }
+
+/**
+ * How far along a reel is, read from what exists on disk (and, before there is a reel, from the chat): the brief,
+ * the plan, a composition per beat, a measured frame per beat, a clip per beat, the master. A run on a reel that
+ * already has a master is an edit: changed beats, their new clips and the rejoined master since the run began.
+ */
+export function progressOf(s: Pick<Session, "status" | "runStartedAt" | "events">, reelPath: string | undefined): Progress {
+  const live = s.status === "running" || s.status === "waiting";
+  const waiting = s.events.some((e) => (e.k === "question" || e.k === "permission") && e.status === "waiting");
+  const mk = (stages: Stage[], weights: number[], line: string, mode: Progress["mode"]): Progress => {
+    let pct = 0;
+    stages.forEach((st, i) => { pct += weights[i]! * (st.state === "done" ? 1 : st.state === "now" && st.of ? (st.n ?? 0) / st.of : 0); });
+    return { mode, stages, pct: Math.round(Math.min(1, pct) * 100), line, live };
+  };
+  const labels = [["brief", "Brief"], ["plan", "Plan"], ["compose", "Compose"], ["check", "Check"], ["render", "Render"], ["master", "Master"]] as const;
+  const W = [0.08, 0.07, 0.35, 0.15, 0.3, 0.05];
+  if (!reelPath || !existsSync(reelPath)) {
+    const st: Stage[] = labels.map(([id, label], i) => ({ id, label, state: i === 0 && (live || waiting) ? "now" : "todo" }));
+    const line = waiting ? "Waiting for your answer" : live ? "Reading the script and your personality" : s.events.length ? "Not started on the reel yet" : "";
+    return mk(st, W, line, "make");
+  }
+  const dir = path.dirname(reelPath);
+  let beats: { id: string; composition?: string }[] = [];
+  try { beats = (JSON.parse(readFileSync(reelPath, "utf8")) as { beats?: typeof beats }).beats ?? []; } catch { /* being written */ }
+  const mtime = (p: string) => { try { return statSync(p).mtimeMs; } catch { return 0; } };
+  const comp = (b: { id: string; composition?: string }) => path.join(dir, b.composition ?? `compositions/${b.id}.html`);
+  const measureDir = path.join(dir, "measure");
+  const shots = existsSync(measureDir) ? readdirSync(measureDir) : [];
+  const since = s.runStartedAt ? Date.parse(s.runStartedAt) : 0;
+  const masterAt = mtime(path.join(dir, "master.mp4"));
+  const of = beats.length;
+
+  // An edit: the reel was finished before this run began.
+  if (masterAt && since && masterAt < since && live) {
+    const changed = beats.filter((b) => mtime(comp(b)) > since).length || (mtime(reelPath) > since ? 1 : 0);
+    const rendered = beats.filter((b) => mtime(path.join(dir, "clips", `${b.id}.mp4`)) > since).length;
+    const joined = masterAt > since;
+    const st: Stage[] = [
+      { id: "change", label: "Change", state: changed ? "done" : "now" },
+      { id: "render", label: "Re-render", state: rendered ? (joined ? "done" : "now") : changed ? "now" : "todo", n: rendered, of: Math.max(1, changed) },
+      { id: "master", label: "Rejoin", state: joined ? "done" : rendered ? "now" : "todo" },
+    ];
+    const line = waiting ? "Waiting for your answer" : !changed ? "Making the change" : !rendered ? "Re-rendering the changed beat" : !joined ? "Rejoining the master" : "Checking the result";
+    return mk(st, [0.4, 0.45, 0.15], line, "edit");
+  }
+
+  const composed = beats.filter((b) => existsSync(comp(b))).length;
+  const checked = beats.filter((b) => shots.some((f) => f.startsWith(`${b.id}-`))).length;
+  const clips = beats.filter((b) => existsSync(path.join(dir, "clips", `${b.id}.mp4`))).length;
+  const master = !!masterAt;
+  const planned = of > 0;
+  const state = (done: boolean, started: boolean): Stage["state"] => done ? "done" : started ? "now" : "todo";
+  const st: Stage[] = [
+    { id: "brief", label: "Brief", state: "done" },
+    { id: "plan", label: "Plan", state: state(planned && composed > 0, true), n: of, of: of || undefined },
+    { id: "compose", label: "Compose", state: state(planned && composed === of, composed > 0), n: composed, of },
+    { id: "check", label: "Check", state: state(planned && checked === of, checked > 0), n: checked, of },
+    { id: "render", label: "Render", state: state(planned && clips === of, clips > 0), n: clips, of },
+    { id: "master", label: "Master", state: master ? "done" : clips === of && planned ? "now" : "todo" },
+  ];
+  // Only one stage is "now": the furthest one started; anything before it that is unfinished reads as done enough.
+  const nowAt = st.map((x) => x.state).lastIndexOf("now");
+  st.forEach((x, i) => { if (x.state === "now" && i !== nowAt) x.state = "done"; });
+  if (!live && !master) st.forEach((x) => { if (x.state === "now") x.state = "todo"; });
+  const cur = st.find((x) => x.state === "now");
+  const line = master && !live ? "Finished" : waiting ? "Waiting for your answer"
+    : !cur ? (live ? "Working" : "Paused")
+    : cur.id === "plan" ? `Planned ${of} beat${of === 1 ? "" : "s"}; composing next`
+    : cur.id === "compose" ? `Composing beats · ${composed} of ${of}`
+    : cur.id === "check" ? `Checking frames · ${checked} of ${of}`
+    : cur.id === "render" ? `Rendering clips · ${clips} of ${of}`
+    : "Joining the master";
+  return mk(st, W, line, "make");
+}
+
 function meta(s: Session): SessionMeta { const { events: _e, ...m } = s; return m; }
 
 /** What the reel panel shows: the beats of reel.json and what exists for each so far. */
 export function reelState(reelPath: string | undefined): unknown {
   if (!reelPath || !existsSync(reelPath)) return null;
   const dir = path.dirname(reelPath);
-  let manifest: { beats?: { id: string; durationSeconds?: number; composition?: string }[]; format?: string } = {};
+  let manifest: { beats?: { id: string; durationSeconds?: number; composition?: string; style?: string; kind?: string }[]; format?: string } = {};
   try { manifest = JSON.parse(readFileSync(reelPath, "utf8")); } catch { return { dir, beats: [], error: "reel.json does not parse yet" }; }
-  const at = (rel: string) => { const p = path.join(dir, rel); return existsSync(p) ? p : undefined; };
+  // Each file carries its modified time, so a beat Claude re-renders reloads in the page instead of staying cached.
+  const at = (rel: string) => { const p = path.join(dir, rel); try { return `${p}#${Math.round(statSync(p).mtimeMs)}`; } catch { return undefined; } };
   const measureDir = path.join(dir, "measure");
   const shots = existsSync(measureDir) ? readdirSync(measureDir).filter((f) => /\.(png|jpe?g)$/.test(f)) : [];
+  let start = 0;
   const beats = (manifest.beats ?? []).map((b) => ({
-    id: b.id, seconds: b.durationSeconds,
+    id: b.id, seconds: b.durationSeconds, style: b.style, kind: b.kind, start: (start += b.durationSeconds ?? 0) - (b.durationSeconds ?? 0),
     clip: at(`clips/${b.id}.mp4`),
     frame: shots.filter((f) => f.startsWith(b.id)).sort().map((f) => path.join(measureDir, f)).at(-1),
   }));
-  const plan = at("plan.md");
+  const plan = existsSync(path.join(dir, "plan.md")) ? path.join(dir, "plan.md") : undefined;
   return {
     dir, format: manifest.format, beats,
     seconds: beats.reduce((a, b) => a + (b.seconds ?? 0), 0),
