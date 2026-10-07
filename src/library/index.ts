@@ -14,3 +14,4 @@ export * from "./sfx.js";
 export * from "./footage.js";
 export * from "./chroma.js";
 export * from "./key.js";
+export * from "./music.js";

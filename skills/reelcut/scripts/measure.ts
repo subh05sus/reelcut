@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { findMoment, footageLegibility, loadIndex } from "../../../src/library/index.js";
 import { formatMeasureReport, launchMeasureBrowser, measureComposition, parseMeasureArgs, reelTimes } from "../../../src/verify/measure.js";
 import type { Kit } from "../../../src/render/project.js";
+import { loadKit } from "../../../src/render/kit.js";
 import { stackSheets } from "../../../src/render/assemble.js";
 
 /**
@@ -69,7 +70,7 @@ async function main(): Promise<void> {
   if (raw[0] === "--all") {
     const here = path.dirname(fileURLToPath(import.meta.url));
     const kitDir = path.resolve(here, "..", "assets", "kit");
-    const kit = { css: readFileSync(path.join(kitDir, "kit.css"), "utf8"), js: readFileSync(path.join(kitDir, "kit.js"), "utf8") };
+    const kit = loadKit("inline");
     const base = process.env.INIT_CWD ?? process.cwd();
     if (!raw[1]) throw new Error("usage: measure.ts --all <reel.json> [--out dir]");
     const outAt = raw.indexOf("--out");
@@ -85,7 +86,7 @@ async function main(): Promise<void> {
   }
   const here = path.dirname(fileURLToPath(import.meta.url));
   const kitDir = path.resolve(here, "..", "assets", "kit");
-  const kit = { css: readFileSync(path.join(kitDir, "kit.css"), "utf8"), js: readFileSync(path.join(kitDir, "kit.js"), "utf8") };
+  const kit = loadKit("inline");
   const base = process.env.INIT_CWD ?? process.cwd();
 
   const file = path.resolve(base, args.file);

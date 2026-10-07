@@ -1,5 +1,5 @@
 import { spawn, type ChildProcess } from "node:child_process";
-import { createReadStream, readFileSync, rmSync, statSync } from "node:fs";
+import { createReadStream, existsSync, readFileSync, rmSync, statSync } from "node:fs";
 import http, { type IncomingMessage, type ServerResponse } from "node:http";
 import { createRequire } from "node:module";
 import path from "node:path";
@@ -27,6 +27,8 @@ import { IngestError, ingestBatch, maxFileBytes, streamToTemp, type IngestSource
 import { summarise } from "../library/journal.js";
 import { claudeQueue, needsClaude } from "../library/queue.js";
 import { blobPath, findAsset, LibraryError, libraryRoot, loadIndex, setReview, thumbBlobPath, updateAsset, type AssetPatch } from "../library/store.js";
+import { editPattern, loadPatterns, patternHtmlPath, patternThumbPath, rankPatterns, ratePatternUse, removePattern, savePatternFromBeat, unsaveFromBeat, type PersonalPattern } from "../patterns/mine.js";
+import { pairingIn } from "../fonts/index.js";
 import { detectKey, isKeyed, keyedBlob, keyingStatus, keyOf, patchKey, scheduleKey, wantsKey, type KeyPatch } from "../library/key.js";
 import { addMoment, findMoments, patchFootage, refreshFootageAnalysis, removeMoment, updateMoment, type FootagePatch, type MomentInput, type MomentPatch } from "../library/footage.js";
 import { PLATFORMS } from "../library/schema.js";
@@ -227,6 +229,10 @@ export function cleanRelPath(raw: string): string | undefined {
 }
 
 /** An asset as the page sees it: the index entry plus whether it is waiting for Claude and where its preview is. */
+export function publicPattern(p: PersonalPattern): PersonalPattern & { thumbUrl?: string; path: string } {
+  return { ...p, path: patternHtmlPath(p.id), ...(existsSync(patternThumbPath(p.id)) ? { thumbUrl: `/files/pattern-thumb/${p.id}?v=${encodeURIComponent(p.savedAt)}` } : {}) };
+}
+
 export function publicAsset(a: LibraryAsset): LibraryAsset & { queued: boolean; thumbUrl?: string; stripUrl?: string; keyedUrl?: string; keying?: { wanted: boolean; keyed: boolean; state: string; error?: string } } {
   const green = a.mediaType === "video" && (a.analysis.greenScreen !== undefined || keyOf(a).color !== undefined);
   return {
@@ -767,6 +773,23 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
       }
     }
 
+    // ---- your patterns: beats rated "Works", kept for the next reel
+    if (parts[0] === "api" && parts[1] === "patterns") {
+      if (read && parts.length === 2) return sendJson(res, 200, { patterns: rankPatterns(loadPatterns()).map(publicPattern) });
+      const id = parts[2] ?? "";
+      if (!loadPatterns().some((p) => p.id === id)) throw new HttpError(404, "no such pattern");
+      if (method === "PATCH" && parts.length === 3) {
+        const b = (await readBody(req)) as { name?: unknown; tags?: unknown };
+        if (b.name !== undefined && typeof b.name !== "string") throw new HttpError(400, "name must be text");
+        if (b.tags !== undefined && (!Array.isArray(b.tags) || b.tags.some((t) => typeof t !== "string"))) throw new HttpError(400, "tags must be a list of words");
+        return sendJson(res, 200, { pattern: publicPattern(editPattern(id, { ...(typeof b.name === "string" ? { name: b.name } : {}), ...(Array.isArray(b.tags) ? { tags: b.tags as string[] } : {}) })) });
+      }
+      if (method === "DELETE" && parts.length === 3) {
+        removePattern(id);
+        return sendJson(res, 200, { ok: true });
+      }
+    }
+
     // ---- runs
     if (parts[0] === "api" && parts[1] === "runs") {
       if (read && parts.length === 2) return sendJson(res, 200, { runs: listRuns() });
@@ -794,7 +817,31 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
         const at = new Date().toISOString();
         const brand = run.brand;
         recordSignals([rating ? thumbSignal({ reel: run.id, beat, rating, note, brand, at }) : noteSignal({ reel: run.id, beat, note, at })]);
-        return sendJson(res, 200, { ok: true });
+        // A beat that works becomes one of your patterns; one that does not is taken back out (unless you kept it).
+        let pattern: PersonalPattern | undefined;
+        let unsaved = false;
+        if (rating && !run.missing) {
+          safely(() => {
+            const manifest = JSON.parse(readFileSync(run.manifest, "utf8")) as { format?: string; type?: string; beats?: { id: string; composition: string; durationSeconds?: number; pattern?: string }[] };
+            const mb = manifest.beats?.find((x) => x.id === beat);
+            if (!mb) return;
+            if (mb.pattern?.startsWith("mine-")) ratePatternUse(mb.pattern, rating);
+            if (rating === "down") { unsaved = unsaveFromBeat(run.outDir, beat); return; }
+            const compositionPath = path.resolve(path.dirname(run.manifest), mb.composition);
+            if (!existsSync(compositionPath)) return;
+            const html = readFileSync(compositionPath, "utf8");
+            pattern = savePatternFromBeat({
+              run: run.id, outDir: run.outDir, beat, html,
+              clip: path.join(run.outDir, "clips", `${beat}.mp4`),
+              ...(/\bdata-look\s*=\s*["']([a-z]+)["']/i.exec(html)?.[1] ? { look: /\bdata-look\s*=\s*["']([a-z]+)["']/i.exec(html)![1]! } : {}),
+              ...((pairingIn(html)?.id ?? manifest.type) ? { type: pairingIn(html)?.id ?? manifest.type! } : {}),
+              ...(mb.pattern ? { basedOn: mb.pattern } : {}),
+              ...(manifest.format ? { format: manifest.format } : {}),
+              ...(mb.durationSeconds ? { durationSeconds: mb.durationSeconds } : {}),
+            });
+          });
+        }
+        return sendJson(res, 200, { ok: true, ...(pattern ? { pattern: publicPattern(pattern) } : {}), ...(unsaved ? { unsaved: true } : {}) });
       }
       if (method === "POST" && parts.length === 4 && parts[3] === "render" && run) {
         const body = (await readBody(req)) as { beat?: unknown };
@@ -848,6 +895,11 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
         const file = ref ? (parts[1] === "reference" ? referenceBlobPath(ref) : parts[1] === "reference-sheet" ? referenceSheetPath(ref) : referenceThumbPath(ref)) : undefined;
         if (!file) throw new HttpError(404, "no such file");
         return sendFile(req, res, file);
+      }
+      if (parts[1] === "pattern-thumb" && parts.length === 3) {
+        const id = parts[2]!.replace(/\.[a-z0-9]+$/i, "");
+        if (!loadPatterns().some((p) => p.id === id) || !existsSync(patternThumbPath(id))) throw new HttpError(404, "no picture");
+        return sendFile(req, res, patternThumbPath(id));
       }
       if (parts[1] === "keyed" && parts.length === 3) {
         const asset = findAsset(parts[2]!.replace(/\.[a-z0-9]+$/i, ""));

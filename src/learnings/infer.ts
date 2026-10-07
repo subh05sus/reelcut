@@ -56,6 +56,7 @@ export function templateText(kind: RuleKind, s: Subject): string {
   const prefer = kind === "prefer";
   switch (s.type) {
     case "look": return prefer ? `Prefer the "${v}" look.` : `Avoid the "${v}" look.`;
+    case "type": return prefer ? `Prefer the "${v}" type pairing.` : `Avoid the "${v}" type pairing.`;
     case "accent": return prefer ? `Prefer the accent colour ${v}.` : `Avoid the accent colour ${v}.`;
     case "motion": return prefer ? `Prefer ${v} motion.` : `Avoid ${v} motion.`;
     case "pattern": return prefer ? `Reach for the "${v}" pattern when a beat fits it.` : `Avoid the "${v}" pattern.`;
@@ -278,4 +279,4 @@ export function inferRules(signals: readonly Signal[], existing: readonly Rule[]
 
 const round = (n: number): number => Math.round(n * 1000) / 1000;
 
-export const SUBJECT_ORDER: SubjectType[] = ["look", "accent", "motion", "pattern", "text", "format", "sound", "pacing", "ground", "move", "typestyle"];
+export const SUBJECT_ORDER: SubjectType[] = ["look", "type", "accent", "motion", "pattern", "text", "format", "sound", "pacing", "ground", "move", "typestyle"];

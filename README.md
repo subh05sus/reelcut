@@ -412,6 +412,46 @@ shadow and edge controls; `npm run footage -- key <asset>` does the same from th
 `data-frame="cutout"` (see the `footage-cutout` pattern). Details, and the three ways it can go wrong, in
 [footage.md](skills/reelcut/references/footage.md).
 
+### Type — 66 bundled fonts, in 18 pairings
+
+Every font ships with the skill (open licences, files in `skills/reelcut/assets/fonts`), so a render needs no
+network and looks the same a year from now. Each clip carries only the fonts it uses. All 66 families draw
+German with their own glyphs (ä ö ü ß „ “ €), checked by `npm run fonts -- check`.
+
+A **pairing** sets the headline, body, accent and mono together: `studio`, `swiss`, `editorial`, `poster`,
+`tabloid`, `tech`, `startup`, `luxe`, `friendly`, `brutal`, `expressive`, `crafted`, `handmade`, `signage`,
+`classic`, `chunky`, `extended`, `fashion`. Step 0 shows three on your hook line (`npm run fonts -- sheet`) and
+the answer goes in `reel.json` as `"type"`. Learnings learn which pairings you keep.
+
+```bash
+npm run fonts -- list --kind display
+npm run fonts -- pairings
+npm run fonts -- sheet --pairings poster,editorial,swiss --text "Größere Ideen"
+```
+
+### Your patterns — beats you liked, kept
+
+Rate a beat **Works** in the studio and it is kept as your own pattern: its layout, motion and timing, with the
+words, numbers, assets and recordings marked as slots to replace. The next reel starts from your patterns first,
+best-rated first, and a pattern climbs when beats made from it are rated well. Rating the beat **Not quite** takes
+it back out, unless you renamed or tagged it. The studio has a Patterns view; `npm run patterns -- list` too.
+
+### Music — a bed that lands on the cut
+
+A track long enough to be a bed is measured when it comes in: tempo, every beat, bar lines, phrases, mood words.
+Step 2 finds one in this order: your library → a free-licence site (Pixabay Music, Free Music Archive CC0/CC-BY,
+Incompetech), saved with its page, licence and credit → generated with Higgsfield, labelled AI-generated.
+
+Two ways to lay it, chosen per reel: **fit** keeps every cut and starts the track where most cuts land on beats;
+**snap** also moves each cut onto the nearest beat (at most 0.15 s). It goes under the master only, at about
+-16 LUFS, and alone as `music-bed.m4a` so an editor can add a voiceover over the same bed.
+
+```bash
+npm run music -- find --mood upbeat --bpm 100-130 --min-seconds 60
+npm run music -- add track.mp3 --licence "Pixabay Content License" --url https://… --credit "Artist – Title"
+npm run music -- plan out/reel.json --sync snap
+```
+
 ### When something is missing
 
 It will not stall silently:

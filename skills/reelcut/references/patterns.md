@@ -63,6 +63,14 @@ palette and timings is the fallback. It beats no clip. It does not beat a compos
 | `terminal-type-in` | ink | is about a CLI or an install | a command is typed, a typo is backspaced, three results decode out of noise; the window lets go and "Ready." is all that is left |
 | `wordmark-handles` | cool | reveals a mark | the wordmark resolves; a cursor clicks; a selection box with eight handles and a size chip snaps round it, then lets go; the line arrives |
 
+## Yours
+
+Beats the user rated "Works" in the studio are kept as **their** patterns in `~/.reelcut/patterns`, ranked by how
+the beats made from them were rated, then by use. `npm run patterns -- list` shows them first; `show <id>` gives
+the file (its header lists the slots: words, numbers, library assets, recordings) to adapt like any pattern
+here. Rating the source beat "Not quite" takes it back out unless the user renamed or tagged it. The studio's
+Patterns view renames, tags and removes them.
+
 ## Footage
 
 Two more patterns live apart, in `assets/patterns/footage/`, because it needs a real recording in the library

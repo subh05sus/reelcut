@@ -3,6 +3,10 @@ import { closeSync, mkdirSync, openSync, readFileSync, readSync, statSync } from
 import path from "node:path";
 import { normaliseTags, type Analysis, type MediaType } from "./schema.js";
 import { detectGreen, sampleSmallFrames } from "./chroma.js";
+import { analyzeMusic } from "./music.js";
+
+/** An audio file at least this long is treated as music (a bed under a reel), not a sound effect. */
+export const MUSIC_MIN_SECONDS = 12;
 
 /**
  * The deterministic pass: what a file is and what can be measured about it, without understanding it.
@@ -505,7 +509,15 @@ export async function analyzeFile(file: string, options: AnalyzeOptions = {}): P
       if (!analysis.durationSeconds) analysis.durationSeconds = shape.durationSeconds;
       tags.push(...shape.tags);
     }
-    tags.push("sfx");
+    // Long enough to be a bed, not a cue: find its beat, so a reel can be laid on it.
+    if ((analysis.durationSeconds ?? 0) >= MUSIC_MIN_SECONDS) {
+      try {
+        analysis.music = analyzeMusic(file);
+        tags.push("music", ...analysis.music.mood);
+      } catch {
+        notes.push("its beat could not be measured");
+      }
+    } else tags.push("sfx");
   }
 
   const name = options.name ? nameFromFile(options.name) : nameFromFile(file);

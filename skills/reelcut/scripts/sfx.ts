@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync } from "node:fs";
+import { loadKit } from "../../../src/render/kit.js";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { isUsableSound, loadIndex, proposeCues, searchSfx, type CueProposal } from "../../../src/library/index.js";
@@ -67,10 +68,7 @@ async function suggest(argv: string[]): Promise<void> {
   const manifestPath = path.resolve(cwd, file);
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as Manifest;
   const base = path.dirname(manifestPath);
-  const kit = {
-    css: readFileSync(path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "assets", "kit", "kit.css"), "utf8"),
-    js: readFileSync(path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "assets", "kit", "kit.js"), "utf8"),
-  };
+  const kit = loadKit("inline");
   if (!loadIndex().assets.some(isUsableSound)) {
     console.log("No approved sounds in the library, so there is nothing to propose. Drop sounds into the studio (Library), approve them (Review), then run this again.");
     return;

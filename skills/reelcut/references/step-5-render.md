@@ -78,6 +78,18 @@ them, relaxes the frame checker's `blank_panel` for beats with footage, and reco
 the next match is not asked about again. It prints `footage: "download Claude" at 0.0s (1.48x)` for what it
 placed; copy that, with the recording's date, into `report.md`.
 
+### The type pairing and the music bed
+
+`"type": "<pairing>"` in `reel.json` gives every beat that pairing unless its root sets `data-type` itself.
+Each clip loads only the bundled fonts it uses; nothing is fetched while rendering.
+
+`"music": { "source": "library:<id>", "sync": "fit" | "snap", "volume": 1 }` lays a bed under the **master**
+(clips stay without it). **fit** keeps every cut and chooses where the track starts so its beats (bar lines
+most) land on cuts and the reel ends near a bar. **snap** then moves each cut onto the nearest beat, by at most
+0.15 s, so the beats' lengths change by a few frames. The bed is levelled to about -16 LUFS, fades out over the
+last 1.5 s, and is written alone as `music-bed.m4a` for the edit. The render prints how many cuts landed on a
+beat; put the track, its licence and credit (or "AI-generated") in `report.md`.
+
 ### Sound effects from the library
 
 A cue's `source` may be a file path, or `library:<id>` for a sound in the user's library. The render

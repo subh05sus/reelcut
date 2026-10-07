@@ -42,7 +42,8 @@ export interface SfxMatch {
 
 /** A sound a reel may use: audio, active, approved. */
 export function isUsableSound(a: LibraryAsset): boolean {
-  return a.mediaType === "audio" && a.status === "active" && a.review.state === "approved";
+  // A track with a beat grid is a music bed, not a cue: a three-minute song is never a whoosh.
+  return a.mediaType === "audio" && a.status === "active" && a.review.state === "approved" && !a.analysis.music && !a.tags.includes("music");
 }
 
 export function searchSfx(assets: readonly LibraryAsset[], query: SfxQuery): SfxMatch[] {

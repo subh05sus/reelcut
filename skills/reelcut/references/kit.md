@@ -146,7 +146,22 @@ exact value (`--bearings ".rc-head .ln"`).
 
 **Fixed pixels, not flow.** Anything a pen, a cursor, a handle or a leader line has to land on is laid
 out on fixed pixels (`position: absolute`, a height on every row), so its coordinates are exact
-whatever the font does. Measure from the pixels, not the boxes: the ink of a wordmark is not its box.
+whatever the font does.
+
+## Type
+
+66 open-licensed families ship with the skill in `assets/fonts` (sans, display, serif, handwritten, mono,
+rounded), all drawing German with their own glyphs (`npm run fonts -- check`). Nothing is fetched while rendering:
+a clip carries only the fonts it uses.
+
+A **pairing** sets the headline, body, accent and mono together, plus how the headline is set (weight,
+tracking, capitals). Put `data-type="<id>"` on a beat's root, or `"type"` in `reel.json` for every beat:
+`studio` (the default), `swiss`, `editorial`, `poster`, `tabloid`, `tech`, `startup`, `luxe`, `friendly`,
+`brutal`, `expressive`, `crafted`, `handmade`, `signage`, `classic`, `chunky`, `extended`, `fashion`
+(`npm run fonts -- pairings`, and `npm run fonts -- sheet` to see them). It reaches `.rc-head`, `.rc-display`,
+`em.rc`, `.rc-serif` and `.rc-mono`, and anything set in `var(--font-display)`, `var(--font-sans)`,
+`var(--font-serif)` or `var(--font-mono)`. A headline set in its own class with no font variable keeps the
+body font. Under a caps pairing the accent word keeps its own case; an accent family with no italics is set upright. Measure from the pixels, not the boxes: the ink of a wordmark is not its box.
 
 **The camera carries everything.** Put the headline *inside* the `.cam` layer with the objects, so
 the push of 1.03–1.06 moves them together and their edges stay flush the whole way.

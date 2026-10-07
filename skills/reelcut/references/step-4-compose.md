@@ -8,6 +8,19 @@ what register the beat is in. Build on the kit ([kit.md](kit.md)) — `data-look
 the fonts, grounds, texture, UI pieces and motion helpers — and open the pattern nearest your beat
 in `assets/patterns/` ([patterns.md](patterns.md)) to see the moves done properly.
 
+**Start from your own patterns first.** `npm run patterns -- list` puts the beats the user rated "Works" first,
+best-rated first, then the built-in ones. `npm run patterns -- show <id>` gives the file and the slots to
+replace (words, numbers, assets, recordings). Keep its layout, motion and timing; rename its composition id
+and timeline key to the beat's id; write `"pattern": "<id>"` on the beat in `reel.json`, so the studio knows
+which patterns keep working.
+
+**Type comes from the pairing.** Set headlines with `.rc-head` or `.rc-display` (or
+`font-family: var(--font-display)` with `var(--display-weight)`, `var(--display-tracking)` and
+`var(--display-case)`), body in `var(--font-sans)`, the accent word in `em.rc` or `.rc-serif`, and code in
+`.rc-mono`, so the reel's `"type"` pairing reaches every beat. A beat may name a bundled family directly
+(`font-family: 'Caveat'`) for one element. Never load a font from the web: only bundled families exist
+(`npm run fonts -- list`).
+
 Then the HyperFrames skills. **`hyperframes-registry` before you hand-build any named visual**: a
 chart, a terminal, a device frame, film grain, a shimmer sweep — roughly 400 are already written
 and seek-safe, and search costs nothing. `hyperframes-core` for the composition contract and the

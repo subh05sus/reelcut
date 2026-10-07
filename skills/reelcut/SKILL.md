@@ -77,7 +77,8 @@ Run `npm run beats` on the script first, then read what the studio has learned
 (`npm run learnings -- brief --script <script>`, see [references/learnings.md](references/learnings.md)),
 then ask the user — with the AskUserQuestion tool, at most
 two rounds — about everything the invocation left open: how much text goes on screen, the length,
-the look and palette, motion, format, sound, and whether to open the studio. Options are tailored
+the look and palette, the type pairing (show three with `npm run fonts -- sheet --pairings …`), motion,
+format, sound effects, a music bed (fits the cut, or cuts snap to its beat), and whether to open the studio. Options are tailored
 to *this* script, the recommended one first. Never ask about what a flag or the freeform direction
 already answered, and skip the questions when the run is unattended.
 
@@ -176,6 +177,11 @@ and [references/step-4-compose.md](references/step-4-compose.md). Compose on the
 motion helpers) and open the nearest pattern ([references/patterns.md](references/patterns.md))
 before you start a beat of its kind.
 
+**Start from the user's own patterns.** `npm run patterns -- list` lists the beats they rated "Works", best-rated
+first, before the built-in patterns; `npm run patterns -- show <id>` gives the file and the slots to replace.
+Write `"pattern": "<id>"` on a beat that started from one. Set headlines in `.rc-head`/`.rc-display` (or the
+`--font-display` variables) so the reel's type pairing reaches them.
+
 **Read the HyperFrames skills** — `hyperframes-registry` **first**, because roughly 400 blocks and
 components already exist and searching is free; `hyperframes-core` for the composition contract and
 the `data-*` timing attributes; `hyperframes-animation` for motion rules, blueprints, transitions
@@ -221,8 +227,12 @@ clips that passed) and bakes the hook's strongest settled frame in as the thumbn
 hold up the others; render it later with `--only`, and the master is joined then. Look at `contact.jpg` (a row
 of five frames per beat) instead of re-opening compositions in a browser. Add `--sfx` for sound effects: `npm run sfx -- suggest reel.json --apply` proposes cues
 from the user's own approved sounds (see [references/step-5-render.md](references/step-5-render.md)).
+A music bed (`"music"` in `reel.json`, found in Step 2) goes under the master only, levelled and faded, and also
+alone as `music-bed.m4a`; the render says how many cuts landed on a beat. `"type"` sets every beat's type
+pairing; each clip carries only the bundled fonts it uses.
 Write the report. The run is recorded; open the studio
-(http://localhost:5198) or not, as the user chose in Step 0.
+(http://localhost:5198) or not, as the user chose in Step 0. Every beat the user rates "Works" there is kept
+as their pattern, and the next reel starts from it (Step 4).
 
 **Gate:** every clip passes `checkVideo.ts` with zero findings, and `report.md` has a provenance
 line for every asset and every number.

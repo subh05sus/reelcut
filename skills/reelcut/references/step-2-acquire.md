@@ -92,6 +92,23 @@ question in one message, before any composing starts, so nothing waits for an an
 render.** A render that uses a moment records the yes; after that a fresh, exact match is used without asking.
 Only a recording the user rejected is refused.
 
+### Music, when Step 0 chose a bed
+
+In this order, and stop at the first that fits the reel's length, tempo and mood:
+
+1. **Your library.** `npm run music -- find --mood upbeat --bpm 100-130 --min-seconds <reel length>`. Tracks are
+   measured when they come in (tempo, beats, bars, phrases, mood words).
+2. **A free-licence site.** Search Pixabay Music, Free Music Archive (CC0 or CC-BY only) or Incompetech for the
+   mood and tempo. Only a licence that allows commercial use without asking. Download the file, then
+   `npm run music -- add <file> --licence "<licence name>" --url <the track's page> --credit "<artist – title>"`.
+   It refuses a track without a licence. A CC-BY credit line goes in `report.md` and in the post's caption.
+3. **Generate it.** When Higgsfield is connected (and the reel may use it): generate a bed of the reel's length
+   and mood with its audio tool, then `npm run music -- add <file> --generated --model <model> --prompt "<prompt>"`.
+   Labelled AI-generated in `report.md`.
+
+Put it in `reel.json`: `"music": { "source": "library:<id>", "sync": "fit" | "snap" }`. `npm run music -- plan
+reel.json` shows where it starts and how many cuts land on a beat before anything renders.
+
 A recording on a **green screen** is found when it comes in and keyed in the background into a transparent
 copy the render uses (see [footage.md](footage.md#green-screens)). Nothing to ask; mention it in the report.
 

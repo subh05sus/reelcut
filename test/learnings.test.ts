@@ -242,7 +242,7 @@ describe("the brief Claude reads", () => {
 
   it("lists only active rules, grouped, with ids to record, and counts what is waiting", () => {
     const text = formatBrief(buildBrief(file([active({ id: "r_1" }), active({ id: "r_2", status: "proposed" }), active({ id: "r_3", subject: { type: "motion", value: "restrained" }, text: "Prefer restrained motion." })])));
-    expect(text).toContain("Look and palette");
+    expect(text).toContain("Look, type and palette");
     expect(text).toContain("r_1");
     expect(text).toContain("Motion and sound");
     expect(text).not.toContain("r_2");

@@ -22,7 +22,10 @@
     "generate": "tsx skills/reelcut/scripts/generate.ts",
     "learnings": "tsx skills/reelcut/scripts/learnings.ts",
     "library": "tsx skills/reelcut/scripts/library.ts",
-    "studio": "tsx skills/reelcut/scripts/library.ts serve"
+    "studio": "tsx skills/reelcut/scripts/library.ts serve",
+    "fonts": "tsx skills/reelcut/scripts/fonts.ts",
+    "patterns": "tsx skills/reelcut/scripts/patterns.ts",
+    "music": "tsx skills/reelcut/scripts/music.ts"
   },
   "dependencies": {
     "zod": "^3.23.8",

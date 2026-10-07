@@ -518,6 +518,7 @@
       <a class="nav-i" href="#review" data-tab="review" title="Review"><span data-ic="review"></span><span class="lab">Review</span><span class="n" data-count="review"></span></a>
       <a class="nav-i" href="#folders" data-tab="folders" title="Folders"><span data-ic="folders"></span><span class="lab">Folders</span><span class="n" data-count="folders"></span></a>
       <a class="nav-i" href="#references" data-tab="references" title="References"><span data-ic="references"></span><span class="lab">References</span><span class="n" data-count="references"></span></a>
+      <a class="nav-i" href="#patterns" data-tab="patterns" title="Your patterns"><span data-ic="patterns"></span><span class="lab">Patterns</span><span class="n" data-count="patterns"></span></a>
       <a class="nav-i" href="#learnings" data-tab="learnings" title="Learnings"><span data-ic="learnings"></span><span class="lab">Learnings</span><span class="n" data-count="learnings"></span></a>
       <a class="nav-i" href="#jobs" data-tab="jobs" title="Jobs"><span data-ic="jobs"></span><span class="lab">Jobs</span><span class="n" data-count="jobs"></span></a>
     </nav>
@@ -546,7 +547,7 @@ const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "
 const IMG = new Set(["png", "jpg", "jpeg", "gif", "webp", "avif", "svg"]);
 const VID = new Set(["mp4", "webm", "mov"]);
 const TYPES = [["", "All"], ["image", "Images"], ["vector", "Vectors"], ["video", "Video"], ["audio", "Sounds"], ["document", "Docs"]];
-const state = { tagFilter: new Set(), q: "", type: "", selected: null, assets: [], counts: { all: 0, pending: 0, queue: 0, audio: 0 }, tags: {}, runs: [], jobs: [], folders: [], ingest: null, picked: new Set(), uploads: [], dropKind: "generic", dropPrivate: false, learn: null, videos: [], fsel: null, ffmt: "1:1", refs: [], rbrief: null, rcounts: { all: 0, included: 0, queue: 0 }, rcommand: "/reelcut study-references", rsel: null, ruploads: [], tab: "library" };
+const state = { patterns: [], tagFilter: new Set(), q: "", type: "", selected: null, assets: [], counts: { all: 0, pending: 0, queue: 0, audio: 0 }, tags: {}, runs: [], jobs: [], folders: [], ingest: null, picked: new Set(), uploads: [], dropKind: "generic", dropPrivate: false, learn: null, videos: [], fsel: null, ffmt: "1:1", refs: [], rbrief: null, rcounts: { all: 0, included: 0, queue: 0 }, rcommand: "/reelcut study-references", rsel: null, ruploads: [], tab: "library" };
 const isPhone = () => window.matchMedia("(max-width: 899px)").matches;
 
 // ---------- icons (Lucide shapes, 1.8 stroke: San Francisco's regular weight)
@@ -559,6 +560,7 @@ const ICONS = {
   references: '<path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>',
   learnings: '<path d="M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2Z"/><path d="M19 3v4M17 5h4"/>',
   jobs: '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+  patterns: '<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',
   settings: '<path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"/>',
   more: '<circle cx="5" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.6" fill="currentColor" stroke="none"/>',
   search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
@@ -762,7 +764,7 @@ $("#rail").addEventListener("click", () => setRail(document.documentElement.data
 function openMore() {
   const c = (n) => (n ? `<span class="badge">${n}</span>` : "");
   const s = state.ingest?.status;
-  openSheet({ title: "More", body: `<div class="group">${[["review", "Review", state.counts.pending], ["folders", "Folders", state.folders.length], ["references", "References", state.rcounts.all], ["learnings", "Learnings", (state.learn?.rules || []).filter((r) => r.status === "proposed" && !r.conflictWith.length).length], ["jobs", "Jobs", state.jobs.filter((j) => j.status === "running").length]]
+  openSheet({ title: "More", body: `<div class="group">${[["review", "Review", state.counts.pending], ["patterns", "Patterns", state.patterns.length], ["folders", "Folders", state.folders.length], ["references", "References", state.rcounts.all], ["learnings", "Learnings", (state.learn?.rules || []).filter((r) => r.status === "proposed" && !r.conflictWith.length).length], ["jobs", "Jobs", state.jobs.filter((j) => j.status === "running").length]]
       .map(([k, l, n]) => `<a class="row-i" href="#${k}" data-sclose style="color:var(--label);text-decoration:none"><span class="tile" style="background:var(--fill-1);color:var(--label)">${ic(k, 17)}</span><span class="t grow">${l}</span>${c(n)}<span style="color:var(--label-3)">${ic("back", 14).replace("m15 18-6-6 6-6", "m9 18 6-6-6-6")}</span></a>`).join("")}</div>
     <div class="group"><button class="row-i" id="more-set" style="width:100%;border-radius:0;justify-content:flex-start;height:auto;font-size:var(--fs-b);font-weight:400"><span class="tile" style="background:#8e8e93">${ic("settings", 17)}</span><span class="t grow" style="text-align:left">Settings</span></button>
       <div class="row-i"><span class="dot ${s?.paused ? "off" : s?.scanning ? "busy" : ""}"></span><span class="s grow">${esc($("#sync-text").textContent)}</span><button class="sm" id="more-pause">${s?.paused ? "Resume" : "Pause"}</button></div></div>`,
@@ -821,7 +823,7 @@ function assetCard(a) {
     <div class="thumb ${a.mediaType === "audio" ? "wave" : ""}">${preview(a)}</div>
     <div class="meta">
       <div class="name" title="${esc(a.name)}">${esc(a.name)}</div>
-      <div class="sub">${a.assetKind === "identity" ? `<span class="badge identity">identity</span>` : ""}${a.review.state !== "approved" ? `<span class="badge ${a.review.state}">${a.review.state}</span>` : ""}${a.queued ? `<span class="badge queued">needs Claude</span>` : ""}${a.provenance && a.provenance.source === "generated" ? `<span class="badge warn" title="Made by a model, not recorded">AI-generated</span>` : ""}${a.status !== "active" ? `<span class="badge ${a.status}">${a.status}</span>` : ""}${tagHtml(a, 3)}</div>
+      <div class="sub">${a.assetKind === "identity" ? `<span class="badge identity">identity</span>` : ""}${a.review.state !== "approved" ? `<span class="badge ${a.review.state}">${a.review.state}</span>` : ""}${a.queued ? `<span class="badge queued">needs Claude</span>` : ""}${a.analysis && a.analysis.music ? `<span class="badge" title="${esc(a.analysis.music.mood.join(", "))}">♪ ${Math.round(a.analysis.music.bpm)} BPM</span>` : ""}${a.provenance && a.provenance.source === "generated" ? `<span class="badge warn" title="Made by a model, not recorded">AI-generated</span>` : ""}${a.status !== "active" ? `<span class="badge ${a.status}">${a.status}</span>` : ""}${tagHtml(a, 3)}</div>
     </div>
   </div>`;
 }
@@ -1055,7 +1057,7 @@ async function renderFolders() {
 
 // ---------- learnings
 async function loadLearn() { state.learn = await api("/api/learnings"); }
-const SUBJECTS = { look: ["paper", "ink", "flood", "sky", "cinema", "poster", "cool"], motion: ["restrained", "default", "energetic"], text: ["full", "key-lines", "minimal", "none"], format: ["1:1", "9:16", "16:9", "4:5"], sound: ["effects", "silent"], pattern: [], accent: [] };
+const SUBJECTS = { look: ["paper", "ink", "flood", "sky", "cinema", "poster", "cool"], motion: ["restrained", "default", "energetic"], text: ["full", "key-lines", "minimal", "none"], format: ["1:1", "9:16", "16:9", "4:5"], sound: ["effects", "silent"], type: ["studio", "swiss", "editorial", "poster", "tabloid", "tech", "startup", "luxe", "friendly", "brutal", "expressive", "crafted", "handmade", "signage", "classic", "chunky", "extended", "fashion"], pattern: [], accent: [] };
 function ruleRow(r) {
   const conflict = r.conflictWith.length > 0;
   return `<div class="row-i swipe" data-rule="${r.id}"><div class="row-c">
@@ -1129,6 +1131,37 @@ $("#import").addEventListener("change", async (e) => {
   try { const r = await api("/api/learnings/import", { method: "POST", body: await file.text() }); toast(`Imported ${r.added} new, ${r.replaced} replaced, ${r.skipped} skipped`); renderLearnings(); } catch (err) { toast(err.message); }
 });
 
+// ---------- your patterns: beats rated "Works", kept for the next reel
+async function loadPatterns() { state.patterns = (await api("/api/patterns")).patterns; }
+function renderPatterns() {
+  const list = state.patterns;
+  $("#main").innerHTML = `
+    ${pageHead("Patterns")}
+    <p class="lede">Every beat you rate “Works” is kept here: its layout and motion, with its words and pictures marked to be replaced. Claude starts new beats from these first, best-rated first.</p>
+    ${list.length === 0 ? emptyState("patterns", "No patterns yet", "Open a reel and press Works on a beat you like. It is saved here, and the next reel can start from it.", `<a href="#reels"><button class="primary">Open a reel</button></a>`) : `<div class="grid">${list.map((p) => `
+      <div class="card" data-pat="${p.id}">
+        <div class="thumb">${p.thumbUrl ? `<img src="${p.thumbUrl}" alt="" loading="lazy">` : `<span class="ext">${esc(p.look || "beat")}</span>`}</div>
+        <div class="meta"><div class="name" title="${esc(p.name)}">${esc(p.name)}</div>
+          <div class="sub">${p.likes ? `<span class="badge ok">${p.likes} works</span>` : ""}${p.dislikes ? `<span class="badge failed">${p.dislikes} not quite</span>` : ""}<span>${[p.look, p.type, `${p.uses} use${p.uses === 1 ? "" : "s"}`].filter(Boolean).join(" · ")}</span>${p.tags.map((t) => `<span class="tag">#${esc(t)}</span>`).join(" ")}</div>
+          <div class="sub"><a href="#reels/${p.from.run}">from ${esc(p.from.beat)}</a><span class="grow"></span><button class="icon sm" data-more aria-label="More for ${esc(p.name)}">${ic("more", 16)}</button></div></div>
+      </div>`).join("")}</div>`}`;
+  $$("[data-pat]").forEach((card) => {
+    const p = list.find((x) => x.id === card.dataset.pat);
+    const items = () => [
+      { label: "Rename…", act: async () => { const name = await askText({ title: "Rename pattern", value: p.name }); if (!name) return; try { await patch(`/api/patterns/${p.id}`, { name }); await loadPatterns(); renderPatterns(); toast("Renamed"); } catch (e) { toast(e.message); } } },
+      { label: "Tags…", act: async () => { const t = await askText({ title: "Tags", value: p.tags.join(", "), placeholder: "comparison, hook, numbers" }); if (t === null) return; try { await patch(`/api/patterns/${p.id}`, { tags: t.split(",") }); await loadPatterns(); renderPatterns(); toast("Saved"); } catch (e) { toast(e.message); } } },
+      { label: "Copy its file path", act: () => { navigator.clipboard?.writeText(p.path); toast("Path copied"); } },
+      { sep: true },
+      { label: "Remove", danger: true, act: async () => {
+        if (!(await ask({ title: "Remove this pattern?", detail: "The beat it came from stays in its reel.", ok: "Remove", danger: true }))) return;
+        try { await api(`/api/patterns/${p.id}`, { method: "DELETE" }); await loadPatterns(); renderPatterns(); updateBadges(); toast("Removed"); } catch (e) { toast(e.message); }
+      } },
+    ];
+    rowActions(card, items);
+    card.addEventListener("click", (e) => { if (e.target.closest("button, a")) return; openMenu({ x: e.clientX, y: e.clientY }, items()); });
+  });
+}
+
 // ---------- reels
 async function loadRuns() { state.runs = (await api("/api/runs")).runs; }
 function runFile(run, rel) { return `/files/run/${run.id}/${rel.split("/").map(encodeURIComponent).join("/")}`; }
@@ -1171,7 +1204,7 @@ async function renderReel(id) {
   }));
   $$(".clip").forEach((card) => {
     const beat = card.dataset.beat;
-    const send = async (body, msg) => { try { await post(`/api/runs/${run.id}/feedback`, { beat, ...body }); toast(msg); } catch (e) { toast(e.message); } };
+    const send = async (body, msg) => { try { const r = await post(`/api/runs/${run.id}/feedback`, { beat, ...body }); toast(r.pattern ? `${msg} · kept in your patterns` : r.unsaved ? `${msg} · removed from your patterns` : msg); if (r.pattern || r.unsaved) { await loadPatterns(); updateBadges(); } } catch (e) { toast(e.message); } };
     $$("[data-rate]", card).forEach((b) => b.addEventListener("click", async () => {
       $$("[data-rate]", card).forEach((x) => x.setAttribute("aria-pressed", String(x === b))); placeThumb($(".seg", card), true);
       await send({ rating: b.dataset.rate, note: $("[data-note]", card).value }, b.dataset.rate === "up" ? "Noted: this works" : "Noted: not quite");
@@ -1504,6 +1537,7 @@ async function updateBadges() {
   const waiting = (state.learn?.rules || []).filter((r) => r.status === "proposed" && !r.conflictWith.length).length;
   setCount("learnings", waiting);
   setCount("reels", state.runs.length);
+  try { await loadPatterns(); setCount("patterns", state.patterns.length); } catch { /* the page still works */ }
   setCount("jobs", state.jobs.filter((j) => j.status === "running").length ? "●" : "");
   setCount("more", (state.counts.pending || 0) + waiting || "");
 }
@@ -1530,6 +1564,7 @@ async function route() {
     else if (tab === "review") await renderReview();
     else if (tab === "folders") await renderFolders();
     else if (tab === "learnings") await renderLearnings();
+    else if (tab === "patterns") { await loadPatterns(); renderPatterns(); }
     else { await loadLibrary(); renderLibrary(); }
   } catch (e) { $("#main").innerHTML = `${pageHead("Something went wrong")}${emptyState("x", "This page could not load", esc(e.message), `<button class="primary" id="retry">Retry</button>`)}`; $("#retry")?.addEventListener("click", route); }
   clearTimeout(slow);

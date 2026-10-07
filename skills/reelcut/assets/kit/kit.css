@@ -9,7 +9,8 @@
  * serif for the word that matters, mono for anything a machine says, real-looking UI at real size,
  * depth from blur and shadow, and texture under everything.
  */
-@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,300..900;1,300..900&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;700&family=Archivo:wdth,wght@62..125,100..900&display=block');
+/* Fonts are not imported here: the render injects @font-face rules for exactly the bundled families a beat uses
+   (assets/fonts, see src/fonts). Nothing is fetched while rendering. */
 
 /* ---------------------------------------------------------------- looks */
 

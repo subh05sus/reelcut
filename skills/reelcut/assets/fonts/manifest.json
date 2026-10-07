@@ -1,0 +1,1203 @@
+{
+  "version": 1,
+  "fetchedAt": "2026-10-07T05:11:38.375Z",
+  "subset": "latin",
+  "families": [
+    {
+      "family": "Inter Tight",
+      "slug": "inter-tight",
+      "kind": "sans",
+      "note": "the kit's default: tight, neutral, product",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "inter-tight/LICENSE.txt",
+      "faces": [
+        {
+          "style": "italic",
+          "weight": "100 900",
+          "file": "inter-tight/inter-tight-italic.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        },
+        {
+          "style": "normal",
+          "weight": "100 900",
+          "file": "inter-tight/inter-tight-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Inter",
+      "slug": "inter",
+      "kind": "sans",
+      "note": "the most readable UI sans",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "inter/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "100 900",
+          "file": "inter/inter-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Geist",
+      "slug": "geist",
+      "kind": "sans",
+      "note": "Vercel's: crisp, technical, modern",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "geist/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "100 900",
+          "file": "geist/geist-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Manrope",
+      "slug": "manrope",
+      "kind": "sans",
+      "note": "geometric warmth, open shapes",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "manrope/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "200 800",
+          "file": "manrope/manrope-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Space Grotesk",
+      "slug": "space-grotesk",
+      "kind": "sans",
+      "note": "quirky grotesk with character",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "space-grotesk/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "300 700",
+          "file": "space-grotesk/space-grotesk-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Plus Jakarta Sans",
+      "slug": "plus-jakarta-sans",
+      "kind": "sans",
+      "note": "friendly startup sans",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "plus-jakarta-sans/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "200 800",
+          "file": "plus-jakarta-sans/plus-jakarta-sans-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "DM Sans",
+      "slug": "dm-sans",
+      "kind": "sans",
+      "note": "low-contrast geometric, calm",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "dm-sans/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "100 1000",
+          "file": "dm-sans/dm-sans-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Figtree",
+      "slug": "figtree",
+      "kind": "sans",
+      "note": "clean and friendly",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "figtree/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "300 900",
+          "file": "figtree/figtree-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Onest",
+      "slug": "onest",
+      "kind": "sans",
+      "note": "even, contemporary grotesk",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "onest/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "100 900",
+          "file": "onest/onest-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Schibsted Grotesk",
+      "slug": "schibsted-grotesk",
+      "kind": "sans",
+      "note": "newsroom grotesk, confident",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "schibsted-grotesk/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "400 900",
+          "file": "schibsted-grotesk/schibsted-grotesk-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Hanken Grotesk",
+      "slug": "hanken-grotesk",
+      "kind": "sans",
+      "note": "light-footed grotesk",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "hanken-grotesk/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "100 900",
+          "file": "hanken-grotesk/hanken-grotesk-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Instrument Sans",
+      "slug": "instrument-sans",
+      "kind": "sans",
+      "note": "precise, with width axis",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "instrument-sans/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "400 700",
+          "stretch": "75% 100%",
+          "file": "instrument-sans/instrument-sans-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Sora",
+      "slug": "sora",
+      "kind": "sans",
+      "note": "techy geometric",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "sora/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "100 800",
+          "file": "sora/sora-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Outfit",
+      "slug": "outfit",
+      "kind": "sans",
+      "note": "rounded geometric, punchy",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "outfit/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "100 900",
+          "file": "outfit/outfit-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Red Hat Display",
+      "slug": "red-hat-display",
+      "kind": "sans",
+      "note": "corporate but human",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "red-hat-display/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "300 900",
+          "file": "red-hat-display/red-hat-display-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Rubik",
+      "slug": "rubik",
+      "kind": "sans",
+      "note": "softly rounded corners",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "rubik/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "300 900",
+          "file": "rubik/rubik-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Familjen Grotesk",
+      "slug": "familjen-grotesk",
+      "kind": "sans",
+      "note": "Scandinavian grotesk with ink traps",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "familjen-grotesk/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "400 700",
+          "file": "familjen-grotesk/familjen-grotesk-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Work Sans",
+      "slug": "work-sans",
+      "kind": "sans",
+      "note": "workhorse grotesk",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "work-sans/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "100 900",
+          "file": "work-sans/work-sans-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Chivo",
+      "slug": "chivo",
+      "kind": "sans",
+      "note": "sturdy grotesk, strong at heavy weights",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "chivo/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "100 900",
+          "file": "chivo/chivo-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Archivo",
+      "slug": "archivo",
+      "kind": "display",
+      "note": "width axis: condensed to extended caps (flood, poster)",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "archivo/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "100 900",
+          "stretch": "62% 125%",
+          "file": "archivo/archivo-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Anton",
+      "slug": "anton",
+      "kind": "display",
+      "note": "tall condensed impact",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "anton/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "400",
+          "file": "anton/anton-normal-400.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Bebas Neue",
+      "slug": "bebas-neue",
+      "kind": "display",
+      "caps": true,
+      "note": "the classic condensed all-caps",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "bebas-neue/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "400",
+          "file": "bebas-neue/bebas-neue-normal-400.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Oswald",
+      "slug": "oswald",
+      "kind": "display",
+      "note": "condensed gothic, many weights",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "oswald/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "200 700",
+          "file": "oswald/oswald-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Archivo Black",
+      "slug": "archivo-black",
+      "kind": "display",
+      "note": "heavy and wide",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "archivo-black/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "400",
+          "file": "archivo-black/archivo-black-normal-400.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Big Shoulders",
+      "slug": "big-shoulders",
+      "kind": "display",
+      "note": "Chicago condensed signage",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "big-shoulders/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "100 900",
+          "file": "big-shoulders/big-shoulders-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Unbounded",
+      "slug": "unbounded",
+      "kind": "display",
+      "note": "wide, rounded, futuristic",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "unbounded/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "200 900",
+          "file": "unbounded/unbounded-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Syne",
+      "slug": "syne",
+      "kind": "display",
+      "note": "art-school extended",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "syne/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "400 800",
+          "file": "syne/syne-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Bricolage Grotesque",
+      "slug": "bricolage-grotesque",
+      "kind": "display",
+      "note": "expressive grotesk with optical sizes",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "bricolage-grotesque/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "200 800",
+          "stretch": "75% 100%",
+          "file": "bricolage-grotesque/bricolage-grotesque-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "League Gothic",
+      "slug": "league-gothic",
+      "kind": "display",
+      "note": "narrow American gothic",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "league-gothic/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "400",
+          "stretch": "75% 100%",
+          "file": "league-gothic/league-gothic-normal-400.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Barlow Condensed",
+      "slug": "barlow-condensed",
+      "kind": "display",
+      "note": "road-sign condensed",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "barlow-condensed/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "300",
+          "file": "barlow-condensed/barlow-condensed-normal-300.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        },
+        {
+          "style": "normal",
+          "weight": "400",
+          "file": "barlow-condensed/barlow-condensed-normal-400.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        },
+        {
+          "style": "normal",
+          "weight": "700",
+          "file": "barlow-condensed/barlow-condensed-normal-700.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        },
+        {
+          "style": "normal",
+          "weight": "900",
+          "file": "barlow-condensed/barlow-condensed-normal-900.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Darker Grotesque",
+      "slug": "darker-grotesque",
+      "kind": "display",
+      "note": "tall, tight, fashion",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "darker-grotesque/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "300 900",
+          "file": "darker-grotesque/darker-grotesque-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Shrikhand",
+      "slug": "shrikhand",
+      "kind": "display",
+      "note": "fat italic, retro",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "shrikhand/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "400",
+          "file": "shrikhand/shrikhand-normal-400.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Dela Gothic One",
+      "slug": "dela-gothic-one",
+      "kind": "display",
+      "note": "chunky, poster-weight",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "dela-gothic-one/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "400",
+          "file": "dela-gothic-one/dela-gothic-one-normal-400.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Gabarito",
+      "slug": "gabarito",
+      "kind": "display",
+      "note": "bold geometric, playful",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "gabarito/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "400 900",
+          "file": "gabarito/gabarito-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Righteous",
+      "slug": "righteous",
+      "kind": "display",
+      "note": "streamlined retro",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "righteous/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "400",
+          "file": "righteous/righteous-normal-400.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Bungee",
+      "slug": "bungee",
+      "kind": "display",
+      "caps": true,
+      "note": "vertical signage caps, heavy",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "bungee/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "400",
+          "file": "bungee/bungee-normal-400.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Climate Crisis",
+      "slug": "climate-crisis",
+      "kind": "display",
+      "caps": true,
+      "note": "melting heavy caps, one-off",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "climate-crisis/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "400",
+          "file": "climate-crisis/climate-crisis-normal-400.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Instrument Serif",
+      "slug": "instrument-serif",
+      "kind": "serif",
+      "note": "the kit's accent: condensed, elegant italic",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "instrument-serif/LICENSE.txt",
+      "faces": [
+        {
+          "style": "italic",
+          "weight": "400",
+          "file": "instrument-serif/instrument-serif-italic-400.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        },
+        {
+          "style": "normal",
+          "weight": "400",
+          "file": "instrument-serif/instrument-serif-normal-400.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Fraunces",
+      "slug": "fraunces",
+      "kind": "serif",
+      "note": "soft, wonky old-style with optical sizes",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "fraunces/LICENSE.txt",
+      "faces": [
+        {
+          "style": "italic",
+          "weight": "100 900",
+          "file": "fraunces/fraunces-italic.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        },
+        {
+          "style": "normal",
+          "weight": "100 900",
+          "file": "fraunces/fraunces-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Playfair Display",
+      "slug": "playfair-display",
+      "kind": "serif",
+      "note": "high-contrast didone",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "playfair-display/LICENSE.txt",
+      "faces": [
+        {
+          "style": "italic",
+          "weight": "400 900",
+          "file": "playfair-display/playfair-display-italic.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        },
+        {
+          "style": "normal",
+          "weight": "400 900",
+          "file": "playfair-display/playfair-display-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "DM Serif Display",
+      "slug": "dm-serif-display",
+      "kind": "serif",
+      "note": "punchy display serif",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "dm-serif-display/LICENSE.txt",
+      "faces": [
+        {
+          "style": "italic",
+          "weight": "400",
+          "file": "dm-serif-display/dm-serif-display-italic-400.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        },
+        {
+          "style": "normal",
+          "weight": "400",
+          "file": "dm-serif-display/dm-serif-display-normal-400.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Newsreader",
+      "slug": "newsreader",
+      "kind": "serif",
+      "note": "reading serif with optical sizes",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "newsreader/LICENSE.txt",
+      "faces": [
+        {
+          "style": "italic",
+          "weight": "200 800",
+          "file": "newsreader/newsreader-italic.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        },
+        {
+          "style": "normal",
+          "weight": "200 800",
+          "file": "newsreader/newsreader-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Libre Caslon Text",
+      "slug": "libre-caslon-text",
+      "kind": "serif",
+      "note": "classic book Caslon",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "libre-caslon-text/LICENSE.txt",
+      "faces": [
+        {
+          "style": "italic",
+          "weight": "400",
+          "file": "libre-caslon-text/libre-caslon-text-italic-400.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        },
+        {
+          "style": "normal",
+          "weight": "400",
+          "file": "libre-caslon-text/libre-caslon-text-normal-400.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        },
+        {
+          "style": "normal",
+          "weight": "700",
+          "file": "libre-caslon-text/libre-caslon-text-normal-700.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Young Serif",
+      "slug": "young-serif",
+      "kind": "serif",
+      "note": "heavy, warm display serif",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "young-serif/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "400",
+          "file": "young-serif/young-serif-normal-400.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Libre Bodoni",
+      "slug": "libre-bodoni",
+      "kind": "serif",
+      "note": "crisp Bodoni",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "libre-bodoni/LICENSE.txt",
+      "faces": [
+        {
+          "style": "italic",
+          "weight": "400 700",
+          "file": "libre-bodoni/libre-bodoni-italic.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        },
+        {
+          "style": "normal",
+          "weight": "400 700",
+          "file": "libre-bodoni/libre-bodoni-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Cormorant Garamond",
+      "slug": "cormorant-garamond",
+      "kind": "serif",
+      "note": "airy luxury Garamond",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "cormorant-garamond/LICENSE.txt",
+      "faces": [
+        {
+          "style": "italic",
+          "weight": "300 700",
+          "file": "cormorant-garamond/cormorant-garamond-italic.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        },
+        {
+          "style": "normal",
+          "weight": "300 700",
+          "file": "cormorant-garamond/cormorant-garamond-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "EB Garamond",
+      "slug": "eb-garamond",
+      "kind": "serif",
+      "note": "the scholarly Garamond",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "eb-garamond/LICENSE.txt",
+      "faces": [
+        {
+          "style": "italic",
+          "weight": "400 800",
+          "file": "eb-garamond/eb-garamond-italic.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        },
+        {
+          "style": "normal",
+          "weight": "400 800",
+          "file": "eb-garamond/eb-garamond-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Gloock",
+      "slug": "gloock",
+      "kind": "serif",
+      "note": "high-contrast display serif",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "gloock/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "400",
+          "file": "gloock/gloock-normal-400.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Bodoni Moda",
+      "slug": "bodoni-moda",
+      "kind": "serif",
+      "note": "fashion Bodoni with optical sizes",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "bodoni-moda/LICENSE.txt",
+      "faces": [
+        {
+          "style": "italic",
+          "weight": "400 900",
+          "file": "bodoni-moda/bodoni-moda-italic.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        },
+        {
+          "style": "normal",
+          "weight": "400 900",
+          "file": "bodoni-moda/bodoni-moda-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Hedvig Letters Serif",
+      "slug": "hedvig-letters-serif",
+      "kind": "serif",
+      "note": "quirky contemporary serif",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "hedvig-letters-serif/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "400",
+          "file": "hedvig-letters-serif/hedvig-letters-serif-normal-400.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Caveat",
+      "slug": "caveat",
+      "kind": "hand",
+      "note": "quick marker handwriting",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "caveat/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "400 700",
+          "file": "caveat/caveat-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Kalam",
+      "slug": "kalam",
+      "kind": "hand",
+      "note": "loose felt-pen",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "kalam/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "300",
+          "file": "kalam/kalam-normal-300.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        },
+        {
+          "style": "normal",
+          "weight": "400",
+          "file": "kalam/kalam-normal-400.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        },
+        {
+          "style": "normal",
+          "weight": "700",
+          "file": "kalam/kalam-normal-700.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Permanent Marker",
+      "slug": "permanent-marker",
+      "kind": "hand",
+      "note": "thick marker caps",
+      "licence": "Apache 2.0",
+      "licenceFile": "permanent-marker/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "400",
+          "file": "permanent-marker/permanent-marker-normal-400.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Patrick Hand",
+      "slug": "patrick-hand",
+      "kind": "hand",
+      "note": "neat print handwriting",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "patrick-hand/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "400",
+          "file": "patrick-hand/patrick-hand-normal-400.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Reenie Beanie",
+      "slug": "reenie-beanie",
+      "kind": "hand",
+      "note": "scribbled ballpoint",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "reenie-beanie/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "400",
+          "file": "reenie-beanie/reenie-beanie-normal-400.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Gochi Hand",
+      "slug": "gochi-hand",
+      "kind": "hand",
+      "note": "playful school hand",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "gochi-hand/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "400",
+          "file": "gochi-hand/gochi-hand-normal-400.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "JetBrains Mono",
+      "slug": "jetbrains-mono",
+      "kind": "mono",
+      "note": "the kit's code and HUD mono",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "jetbrains-mono/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "100 800",
+          "file": "jetbrains-mono/jetbrains-mono-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Space Mono",
+      "slug": "space-mono",
+      "kind": "mono",
+      "note": "retro-future mono",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "space-mono/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "400",
+          "file": "space-mono/space-mono-normal-400.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        },
+        {
+          "style": "normal",
+          "weight": "700",
+          "file": "space-mono/space-mono-normal-700.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "IBM Plex Mono",
+      "slug": "ibm-plex-mono",
+      "kind": "mono",
+      "note": "corporate engineering mono",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "ibm-plex-mono/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "300",
+          "file": "ibm-plex-mono/ibm-plex-mono-normal-300.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        },
+        {
+          "style": "normal",
+          "weight": "400",
+          "file": "ibm-plex-mono/ibm-plex-mono-normal-400.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        },
+        {
+          "style": "normal",
+          "weight": "700",
+          "file": "ibm-plex-mono/ibm-plex-mono-normal-700.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Geist Mono",
+      "slug": "geist-mono",
+      "kind": "mono",
+      "note": "Vercel's mono",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "geist-mono/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "100 900",
+          "file": "geist-mono/geist-mono-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "DM Mono",
+      "slug": "dm-mono",
+      "kind": "mono",
+      "note": "light, friendly mono",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "dm-mono/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "300",
+          "file": "dm-mono/dm-mono-normal-300.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        },
+        {
+          "style": "normal",
+          "weight": "400",
+          "file": "dm-mono/dm-mono-normal-400.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        },
+        {
+          "style": "normal",
+          "weight": "500",
+          "file": "dm-mono/dm-mono-normal-500.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Fira Code",
+      "slug": "fira-code",
+      "kind": "mono",
+      "note": "code mono",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "fira-code/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "300 700",
+          "file": "fira-code/fira-code-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Sometype Mono",
+      "slug": "sometype-mono",
+      "kind": "mono",
+      "note": "typewriter-ish mono",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "sometype-mono/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "400 700",
+          "file": "sometype-mono/sometype-mono-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Nunito",
+      "slug": "nunito",
+      "kind": "round",
+      "note": "rounded terminals, friendly",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "nunito/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "200 1000",
+          "file": "nunito/nunito-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Fredoka",
+      "slug": "fredoka",
+      "kind": "round",
+      "note": "bubbly rounded",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "fredoka/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "300 700",
+          "stretch": "75% 125%",
+          "file": "fredoka/fredoka-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    },
+    {
+      "family": "Lexend",
+      "slug": "lexend",
+      "kind": "round",
+      "note": "made for reading ease",
+      "licence": "SIL OFL 1.1",
+      "licenceFile": "lexend/LICENSE.txt",
+      "faces": [
+        {
+          "style": "normal",
+          "weight": "100 900",
+          "file": "lexend/lexend-normal.woff2",
+          "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD"
+        }
+      ]
+    }
+  ]
+}

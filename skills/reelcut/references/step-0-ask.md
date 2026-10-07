@@ -27,7 +27,8 @@ skip the user's say:
 - an answer the user gives now, or a flag, beats any learned rule, always.
 
 Carry the ids of the rules you applied into `reel.json` as `appliedLearnings`, and record the answers
-in `reel.json` as `direction` (`text`, `motion`, `look`) so the studio can learn from the choices.
+in `reel.json` as `direction` (`text`, `motion`, `look`) and `"type"` (the pairing) so the studio can learn
+from the choices.
 
 ## What to ask
 
@@ -47,6 +48,7 @@ would pick first, marked `(Recommended)`, and make every option's description sa
 | **Length** | no `--short`, and the full script runs over ~30s | The whole script (say its length) · a 15–25s short cut (say which beats it keeps). |
 | **Look and palette** | no `--palette` and no `--look` | 2–3 of the kit's looks (`paper`, `ink`, `flood`, `sky`, `cinema`, `poster` — see [design-system.md](design-system.md#grounds--commit-to-one-per-reel)), each with the accent it would use and a one-line register tied to this script. If the script names a product or brand, the first option uses *its* colour as the accent. Use `preview` to show ground, ink and accent side by side. "Other" lets the user type their own. |
 | **Motion** | no `--motion` | `restrained` · `default` · `energetic`, each described against this script ("energetic suits the list in beats 4–7"). |
+| **Type** | no `--type` | Three of the 18 pairings (`npm run fonts -- pairings`) that suit this brand and look, each described in a line ("poster: tall condensed caps for the hook"). A learned `type` rule goes first. Show them: `npm run fonts -- sheet --pairings a,b,c --text "<the hook line>" --out out/type.png`, then read the image and describe it. If the brand has its own font and it is bundled, offer it by name. The answer goes in `reel.json` as `"type"`. |
 
 ### Round 2 — production
 
@@ -55,6 +57,7 @@ would pick first, marked `(Recommended)`, and make every option's description sa
 | **Format** | no `--format` | `1:1` · `9:16` · `16:9` · `4:5`, described by where it will be posted. |
 | **Visual register** | no `--visuals`, and the script names a real product or states figures | "Real product screens" · "Data-forward" · "Typographic" — only the ones this script could actually support. |
 | **Sound effects** | always, unless `--sfx` was given | With effects · Silent (default). |
+| **Music** | always, unless `--music` was given | **Music bed, fits the cut** (the voiceover's timing stays exact; the track is placed so its beats land on cuts) · **Music bed, cuts snap to the beat** (each cut moves up to 0.15 s onto a beat; for music-led reels) · **No music**. Say what `npm run music -- find` already has that fits ("a 118 BPM upbeat track in your library"). The answer goes in `reel.json` as `"music": { "sync": … }`; the track itself is found in Step 2. |
 | **Studio** | always | See below. |
 
 If round 1 already covered everything that matters and nothing in round 2 is open except the

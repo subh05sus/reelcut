@@ -3,7 +3,12 @@ import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSyn
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { frameSizeFor, isOutputFormat } from "../../../src/core/constants.js";
-import { assertComposition, buildProject, ProjectError, SFX_DEFAULT_VOLUME, type Kit, type ProjectBeat, type ProjectFile, type SfxCue } from "../../../src/render/project.js";
+import { assertComposition, buildProject, ProjectError, SFX_DEFAULT_VOLUME, type ProjectBeat, type ProjectFile, type SfxCue } from "../../../src/render/project.js";
+import { loadKit, PROJECT_FONT_DIR } from "../../../src/render/kit.js";
+import { recordPatternUses } from "../../../src/patterns/mine.js";
+import { mixMusic, resolveMusic, type MusicSpec, type ResolvedMusic } from "../../../src/render/music.js";
+import { durationsFromCuts, planMusic, type MusicPlan } from "../../../src/library/music.js";
+import { applyDefaultPairing, fontFilesFor, pairingById, pairingIn, PAIRINGS } from "../../../src/fonts/index.js";
 import { bakePoster, contactSheet, joinClips, planJobs, runPool, SHEET_AT, stackSheets } from "../../../src/render/assemble.js";
 import { recordSignals, usedSignals, type BeatUse, type Choices } from "../../../src/learnings/index.js";
 import { resolveCue } from "../../../src/library/sfx.js";
@@ -48,11 +53,6 @@ import { expandFootage, linkOrCopy, type FootageUse, type HoldFrame } from "../.
  * so the studio can list it.
  */
 
-/** The design kit ships beside this script; a composition with `data-look` gets it injected. */
-function loadKit(): Kit {
-  const dir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "assets", "kit");
-  return { css: readFileSync(path.join(dir, "kit.css"), "utf8"), js: readFileSync(path.join(dir, "kit.js"), "utf8") };
-}
 
 interface ManifestBeat {
   id: string;
@@ -75,9 +75,13 @@ interface Manifest {
   direction?: { text?: string; motion?: string; look?: string };
   /** Ids of the learned rules Claude applied (from `npm run learnings -- brief`). */
   appliedLearnings?: string[];
+  /** The type pairing every beat uses unless it sets `data-type` itself (`npm run fonts -- pairings`). */
+  type?: string;
   /** What happened to each beat that could have been generated with Higgsfield. Written by `npm run generate -- record`; the render leaves it as it is. */
   generation?: { beat: string; outcome: string; reason?: string; assetId?: string }[];
   beats: ManifestBeat[];
+  /** A music bed under the master: `{ "source": "library:<id>", "sync": "fit" | "snap" }` (see `npm run music`). */
+  music?: MusicSpec;
 }
 
 interface Args {
@@ -278,7 +282,37 @@ async function main(): Promise<void> {
   if (!isOutputFormat(format)) throw new Error(`unknown format ${format}`);
   const { width, height } = frameSizeFor(format);
   const fps = manifest.fps ?? 30;
-  const projectOptions = { width, height, fps, kit: loadKit(), ...(manifest.ground ? { ground: manifest.ground } : {}) };
+  // The music bed is planned before anything is placed: in snap mode the cuts move onto its beats, which changes
+  // the beats' lengths, and so every clip's.
+  let music: { resolved: ResolvedMusic; plan: MusicPlan; length: number } | undefined;
+  if (manifest.music) {
+    try {
+      const resolved = resolveMusic(manifest.music, base, loadIndex().assets, blobPath);
+      const durations = manifest.beats.map((b) => b.durationSeconds);
+      const length = durations.reduce((a, b) => a + b, 0);
+      const cuts = durations.slice(0, -1).map((_, i) => durations.slice(0, i + 1).reduce((a, b) => a + b, 0));
+      const sync = manifest.music.sync ?? "fit";
+      const plan = planMusic(resolved.analysis, cuts, length, sync, manifest.music.start !== undefined ? { start: manifest.music.start } : {});
+      if (sync === "snap") durationsFromCuts(plan.cuts, length).forEach((d, i) => { manifest.beats[i]!.durationSeconds = d; });
+      music = { resolved, plan, length };
+      const movedBy = plan.moved.filter((m) => m !== 0);
+      console.log(`  music … "${resolved.name}" ${resolved.analysis.bpm} BPM from ${plan.offset.toFixed(2)}s · ${plan.onBeat} of ${cuts.length} cuts on a beat${sync === "snap" ? ` (${movedBy.length} moved, at most ${Math.max(0, ...movedBy.map(Math.abs)).toFixed(2)}s)` : ""}${plan.short ? " · the track is shorter than the reel and fades out early" : ""}${resolved.analysis.confidence < 0.25 ? " · its beat is not clear, so the grid is a guess" : ""}`);
+      const prov = resolved.asset?.provenance;
+      if (resolved.asset && prov && prov.source !== "user" && prov.source !== "generated" && !prov.licence) console.warn(`  warning: music "${resolved.name}" has no licence recorded: add it before posting (npm run music -- add … --licence)`);
+    } catch (error) {
+      console.error(error instanceof Error ? error.message : String(error));
+      process.exitCode = 1;
+      return;
+    }
+  }
+
+  const kit = loadKit("project");
+  const projectOptions = { width, height, fps, kit, ...(manifest.ground ? { ground: manifest.ground } : {}) };
+  if (manifest.type && !pairingById(manifest.type)) {
+    console.error(`reel.json: no type pairing "${manifest.type}" (one of ${PAIRINGS.map((p) => p.id).join(", ")})`);
+    process.exitCode = 1;
+    return;
+  }
 
   // Everything that can stop a beat is collected per beat, not thrown at the first one: one beat
   // waiting on something must not hold up the other thirteen, and --preflight lists them all at once.
@@ -317,7 +351,7 @@ async function main(): Promise<void> {
       block(b.id, `composition not found at ${compositionPath}`);
       return { id: b.id, durationSeconds: b.durationSeconds, compositionHtml: "", sfx: [] };
     }
-    const html = readFileSync(compositionPath, "utf8");
+    const html = applyDefaultPairing(readFileSync(compositionPath, "utf8"), manifest.type);
     let sfx: SfxCue[] = [];
     if (args.sfx) {
       try {
@@ -444,6 +478,12 @@ async function main(): Promise<void> {
       copyAssets(dir, built.assets);
       copyLibraryAssets(dir, libraryFor(refsByBeat.get(beat.id) ?? []));
       copyHoldFrames(dir, holdCache, footageByBeat.get(beat.id)?.holds ?? []);
+      // Only the fonts this beat uses, from the bundled library: nothing is fetched while it renders.
+      if (kit.fonts) for (const file of fontFilesFor(beat.compositionHtml, kit.fonts.lib)) {
+        const target = path.join(dir, PROJECT_FONT_DIR, file);
+        mkdirSync(path.dirname(target), { recursive: true });
+        copyFileSync(path.join(kit.fonts.lib.dir, file), target);
+      }
       const outcome = await renderOne(beat.id, dir, path.join(clipsOut, `${beat.id}.mp4`), args.quality, footageByBeat.has(beat.id), plan.jobs > 1 ? plan.workersPerJob : undefined, sheetDir);
       console.log(`  ${beat.id} … ${outcome.status === "ok" ? "ok" : `${outcome.status}: ${outcome.detail}`}${outcome.seconds ? `  (${outcome.seconds.toFixed(1)}s)` : ""}`);
       return outcome;
@@ -470,9 +510,13 @@ async function main(): Promise<void> {
         outcomes.push({ id: "master", status: "render_failed", detail: joined.detail });
         console.log(`join failed: ${joined.detail}`);
       } else {
+        console.log(`joined (${joined.detail})`);
+        if (music) {
+          const mixed = mixMusic(masterFile, music.resolved, music.plan, built.totalSeconds, manifest.music?.volume);
+          console.log(`  music … mixed under the master at ×${mixed.gain}, and alone in ${path.basename(mixed.stem)}`);
+        }
         const report = checkVideo(masterFile, { samplesPerSecond: 4, footage: footageByBeat.size > 0 });
         outcomes.push({ id: "master", status: "ok", file: masterFile, report });
-        console.log(`joined (${joined.detail})`);
         // The first beat is the hook, and the hook is the beat whose job is to say what this is.
         const first = built.placements[0]!;
         const choice = choosePosterTime(report, manifest.poster, { from: first.startSeconds, to: first.startSeconds + first.durationSeconds });
@@ -501,6 +545,7 @@ async function main(): Promise<void> {
       format,
       sound: args.sfx ? "effects" : "silent",
       look: manifest.direction?.look,
+      type: manifest.type,
     },
     beats: manifest.beats.map((mb): BeatUse => {
       const html = beats.find((b) => b.id === mb.id)?.compositionHtml ?? "";
@@ -510,9 +555,18 @@ async function main(): Promise<void> {
         accent: /--accent\s*:\s*(#[0-9a-f]{3,8})\b/i.exec(html)?.[1],
         pattern: mb.pattern,
         motion: manifest.direction?.motion,
+        type: pairingIn(html)?.id,
       };
     }),
   });
+
+  const renderedBeat = (id: string) => outcomes.some((o) => o.id === id && o.status === "ok");
+  // Your patterns that rendered into this reel: each counts a use, which ranks it in Step 4.
+  try {
+    recordPatternUses(manifest.beats.filter((b) => b.pattern?.startsWith("mine-") && renderedBeat(b.id)).map((b) => b.pattern!));
+  } catch (error) {
+    console.warn(`  (pattern uses not recorded: ${error instanceof Error ? error.message : String(error)})`);
+  }
 
   // A moment that rendered has been used on purpose: from now on a fresh, exact match is used without asking.
   const renderedIds = new Set(outcomes.filter((o) => o.status === "ok").map((o) => o.id));

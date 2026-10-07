@@ -20,6 +20,8 @@ export interface BeatUse {
   accent?: string | undefined;
   pattern?: string | undefined;
   motion?: string | undefined;
+  /** The type pairing on the beat's root. */
+  type?: string | undefined;
 }
 
 /** The choices made in Step 0, as the render finds them in the manifest. */
@@ -30,6 +32,8 @@ export interface Choices {
   /** "effects" when the reel was rendered with sound effects, "silent" otherwise. */
   sound?: string | undefined;
   look?: string | undefined;
+  /** The reel's type pairing. */
+  type?: string | undefined;
 }
 
 export function usedSignals(args: { reel: string; brand?: string | undefined; choices?: Choices | undefined; beats: readonly BeatUse[]; at: string }): Signal[] {
@@ -47,6 +51,7 @@ export function usedSignals(args: { reel: string; brand?: string | undefined; ch
     push("used", subjectOf("accent", b.accent), b.id);
     push("used", subjectOf("pattern", b.pattern), b.id);
     push("used", subjectOf("motion", b.motion), b.id);
+    push("used", subjectOf("type", b.type), b.id);
   }
   return out;
 }

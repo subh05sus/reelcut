@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PAIRINGS } from "../fonts/catalog.js";
 import { GROUNDS, MOVES, PACING, TEXT_STYLES } from "../references/vocab.js";
 
 /**
@@ -19,7 +20,7 @@ import { GROUNDS, MOVES, PACING, TEXT_STYLES } from "../references/vocab.js";
  * because a person wrote it.
  */
 
-export const SubjectTypeSchema = z.enum(["look", "accent", "motion", "pattern", "text", "format", "sound", "pacing", "ground", "move", "typestyle"]);
+export const SubjectTypeSchema = z.enum(["look", "accent", "motion", "pattern", "text", "format", "sound", "pacing", "ground", "move", "typestyle", "type"]);
 export type SubjectType = z.infer<typeof SubjectTypeSchema>;
 
 /** Values are plain tokens — no spaces, nothing that can carry a sentence. */
@@ -39,6 +40,8 @@ const ALLOWED: Record<SubjectType, (v: string) => boolean> = {
   ground: (v) => (GROUNDS as readonly string[]).includes(v),
   move: (v) => (MOVES as readonly string[]).includes(v),
   typestyle: (v) => (TEXT_STYLES as readonly string[]).includes(v),
+  // The type pairing a reel or a beat was set in (`npm run fonts -- pairings`).
+  type: (v) => PAIRINGS.some((p) => p.id === v),
 };
 
 export const SubjectSchema = z

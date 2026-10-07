@@ -1,3 +1,5 @@
+import { fontCss, type FontLibrary } from "../fonts/index.js";
+
 /**
  * Beats plus their compositions, in; a HyperFrames project, out.
  *
@@ -48,10 +50,12 @@ export interface ProjectOptions {
   kit?: Kit;
 }
 
-/** `skills/reelcut/assets/kit/`: shared CSS and motion helpers. */
+/** `skills/reelcut/assets/kit/`: shared CSS and motion helpers, and the bundled fonts. */
 export interface Kit {
   css: string;
   js: string;
+  /** The bundled type library, and where its files are served from for this kind of page. */
+  fonts?: { lib: FontLibrary; url: (file: string) => string };
 }
 
 /** A composition opts into the kit by choosing a look on its root. */
@@ -63,16 +67,19 @@ export function usesKit(html: string): boolean {
  * Put the kit at the top of a composition's `<template>`.
  *
  * Inside the template, because a sub-composition's styles and scripts outside it are discarded;
- * first, so the helpers exist before the composition's own script runs and the font `@import` is
- * the stylesheet's first rule. A composition that already carries the kit is left alone.
+ * first, so the helpers exist before the composition's own script runs. A composition that already
+ * carries the kit is left alone.
  */
 export function injectKit(html: string, kit: Kit): string {
   if (!usesKit(html) || html.includes("data-rc-kit")) return html;
+  // Only the fonts this composition uses (its pairing and the families it names), after the kit so a pairing
+  // wins over a look's own font choice.
+  const fonts = kit.fonts ? fontCss(html, kit.fonts.lib, kit.fonts.url) : "";
   // `$` in the kit's text must not be read as a replacement pattern.
   return html.replace(/<template(\s[^>]*)?>/i, (open) => `${open}
 <style data-rc-kit>
 ${kit.css}
-</style>
+</style>${fonts ? `\n<style data-rc-fonts>\n${fonts}\n</style>` : ""}
 <script data-rc-kit>
 ${kit.js}
 </script>
