@@ -283,12 +283,24 @@ async function stopOrRestart(what: "stop" | "restart"): Promise<void> {
     return;
   }
   if (wait) while ((await sessions()).some(busy)) await sleep(15_000);
-  await fetch(`${b}/api/shutdown`, { method: "POST" }).catch(() => undefined);
-  for (let i = 0; i < 20 && (await findRunningStudio(PORT)); i++) await sleep(250);
-  base = "";
+  if (!(await shutdown(b))) throw new Error(`the studio on port ${PORT} did not stop; see /reelcut logs`);
   if (what === "stop") { out(`Stopped the studio${live.length ? ` (${live.map((s) => `"${s.title}"`).join(", ")} stopped; continue later with /reelcut continue)` : ""}. Review links keep working.`); return; }
   const nb = await studio();
   out(`Restarted the studio: ${nb}${live.length && now ? ` (${live.map((s) => `"${s.title}"`).join(", ")} stopped; /reelcut continue picks it up)` : ""}`);
+}
+
+/**
+ * Stops the studio: it is asked first (/api/shutdown); a studio from before that existed is ended by its process, the
+ * one listening on its port, after it has answered as reelcut's studio. True once the port is free.
+ */
+async function shutdown(b: string): Promise<boolean> {
+  const gone = async () => { for (let i = 0; i < 20; i++) { if (!(await findRunningStudio(PORT))) return true; await sleep(250); } return false; };
+  await fetch(`${b}/api/shutdown`, { method: "POST" }).catch(() => undefined);
+  base = "";
+  if (await gone()) return true;
+  const pids = spawnSync("lsof", ["-t", `-iTCP:${PORT}`, "-sTCP:LISTEN"], { encoding: "utf8" }).stdout.trim().split("\n").map(Number).filter(Boolean);
+  for (const pid of pids) try { process.kill(pid, "SIGTERM"); } catch { /* already gone */ }
+  return gone();
 }
 
 function help(): void {
@@ -351,9 +363,8 @@ async function update(): Promise<void> {
   const b = await studio(false);
   if (!b) { out("Done. The studio is not running; /reelcut start starts it."); return; }
   if ((await sessions()).some(busy)) { out("Done. A reel is being made, so the studio keeps the old version until /reelcut restart."); return; }
-  await fetch(`${b}/api/shutdown`, { method: "POST" }).catch(() => undefined);
-  for (let i = 0; i < 20 && (await findRunningStudio(PORT)); i++) await sleep(250);
-  base = ""; out(`Done, and restarted the studio on the new version: ${await studio()}`);
+  if (!(await shutdown(b))) throw new Error("updated, but the studio did not stop: run /reelcut restart");
+  out(`Done, and restarted the studio on the new version: ${await studio()}`);
 }
 
 function sizeOf(p: string): number {
