@@ -37,6 +37,9 @@ import { HIGGSFIELD_SETTINGS, loadSettings, setHiggsfieldSetting, type Higgsfiel
 import { readGeneration } from "../generate/log.js";
 import { CreateManager, filesDir as createFilesDir, insideAllowed, reelState } from "../create/manager.js";
 import { readIntegrations } from "../create/integrations.js";
+
+/** The Personality wizard's steps, in order (the page's PZ_STEPS). */
+const PZ_STEP_IDS = ["start", "styles", "mixer", "colours", "fonts", "motion", "texture", "signature", "copy", "sound", "pacing", "guardrails", "review"];
 import { drawPrompt } from "../create/draw.js";
 import { addPerformance, analysisPrompt, importPrompt, insights, latest, readPerformance, reelFacts, type PerfRow } from "../create/performance.js";
 import { cloudflaredPath, createShare, daemonState, ensureReviewDaemon, liveShare, loadShares, reviewUrl, revokeShare, sharesFor, stopReviewDaemon } from "../create/share.js";
@@ -880,7 +883,8 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
       if (method === "POST" && parts[3] === "finish" && parts.length === 4) {
         const errors = checkPersonality(current).filter((f) => f.level === "error");
         if (errors.length) return sendJson(res, 409, { error: "fix the red findings first", findings: errors });
-        const done = [...new Set([...current.done, "review"])];
+        // Finishing settles every step: the ones the owner skipped keep their defaults, which are real choices.
+        const done = [...new Set([...current.done, ...PZ_STEP_IDS])];
         return sendJson(res, 200, { personality: withFindings(savePersonality({ ...current, done })) });
       }
       // Mini beats: one 4-second beat per chosen style in this personality's colours, type and motion, rendered and saved.

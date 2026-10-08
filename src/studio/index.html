@@ -2017,6 +2017,11 @@ async function renderPersonality(id, step) {
   const r = await api(`/api/personalities/${id}`);
   pz.p = r.personality; pz.findings = r.personality.findings; delete pz.p.findings;
   pz.step = PZ_STEPS.some(([k]) => k === step) ? step : pz.p.styles.length ? "review" : "start";
+  // A step is done once the owner has been through it, however they left it (Next, Back or the rail): every step's
+  // defaults are real choices. A finished personality has been through them all.
+  if (pz.left?.id === id && pz.left.step !== pz.step && !pz.p.done.includes(pz.left.step)) { pz.p.done.push(pz.left.step); pzSave(); }
+  pz.left = { id, step: pz.step };
+  if (pz.p.done.includes("review")) for (const [k] of PZ_STEPS) if (!pz.p.done.includes(k)) pz.p.done.push(k);
   if (!pz.style || !pz.p.styles.some((s) => s.id === pz.style)) pz.style = pz.p.styles[0]?.id || null;
   const i = PZ_STEPS.findIndex(([k]) => k === pz.step);
   $("#main").innerHTML = `${pageHead(esc(pz.p.name), { back: `<a class="back" href="#personality">${ic("back", 18)}Personalities</a>`,
@@ -2030,7 +2035,7 @@ async function renderPersonality(id, step) {
     </div>`;
   const go = (k) => { location.hash = `#personality/${id}/${k}`; };
   $("#pz-back")?.addEventListener("click", () => go(PZ_STEPS[i - 1][0]));
-  $("#pz-next")?.addEventListener("click", () => { if (!pz.p.done.includes(pz.step)) { pz.p.done.push(pz.step); pzSave(); } go(PZ_STEPS[i + 1][0]); });
+  $("#pz-next")?.addEventListener("click", () => go(PZ_STEPS[i + 1][0]));
   $("#pz-finish")?.addEventListener("click", finishPz);
   $("#pz-sum").addEventListener("click", () => openSheet({ title: "Summary", body: `<div class="pz-side" style="position:static;padding:0">${pzSummaryHtml()}</div>` }));
   $("#pz-rename").addEventListener("click", async () => { const v = await askText({ title: "Rename", value: pz.p.name }); if (v) { pz.p.name = v; pzSave(); $(".phead h1").textContent = v; } });
