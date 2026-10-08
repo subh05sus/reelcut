@@ -1,6 +1,6 @@
 ---
 name: reelcut
-description: Turn a spoken script into a set of motion-graphics clips — one per beat, plus a master cut. Finds and verifies the assets the script needs, captures real product screens, sources data for charts, and composes each beat as HTML + GSAP. Use when someone says "/reelcut", gives you a script or an SRT and wants video out of it, or asks for clips for a reel.
+description: Turn a spoken script into a set of motion-graphics clips — one per beat, plus a master cut. Finds and verifies the assets the script needs, captures real product screens, sources data for charts, and composes each beat as HTML + GSAP. Use when someone says "/reelcut", gives you a script or an SRT and wants video out of it, or asks for clips for a reel. "/reelcut" with nothing after it opens the studio's Create page (the dashboard) instead.
 ---
 
 # /reelcut
@@ -15,6 +15,33 @@ on a quarter of the frame and read as generic. **You compose each beat**, on the
 `assets/kit/`, looking at the patterns in `assets/patterns/` for how each move is done properly.
 
 ## Invocation
+
+### `/reelcut` alone opens the studio
+
+With **nothing after it** (no script, no option, no words), `/reelcut` opens the studio's Create page, where the owner
+makes reels by chatting with Claude: the script, the options as chips, questions as cards, the reel playing as it
+renders, beat edits, captions, sharing. Run, from the project root:
+
+```bash
+npm run dashboard
+```
+
+It starts the studio in the background when it is not running (it keeps running after the command exits) and opens
+the browser. Say the address in one line and **stop**: the reel is made there, not in this conversation.
+
+To hand a script over to the studio instead of making it here, add `--studio`:
+
+```
+/reelcut script.txt --studio --format 9:16 make it calm
+```
+
+→ `npm run dashboard -- script.txt --format 9:16 make it calm` (everything but `--studio`). It opens a new Create chat
+with the script, its options and the words, already started. Say the address and stop.
+
+A message the studio itself sends ("driven from the reelcut studio's Create page", or "one of a batch running
+unattended") is never bare and never handed back: make the reel here, as below.
+
+### `/reelcut <script>` makes the reel here, as it always has
 
 ```
 /reelcut script.txt

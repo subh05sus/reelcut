@@ -1,4 +1,3 @@
-import { spawn } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { AssetKindSchema, AssetRequirementSchema, type AssetRequirement } from "../../../src/brief/assetRequirementTypes.js";
@@ -20,6 +19,7 @@ import { addFolder, annotateAsset, claudeQueue, IngestManager, ingestBatch, isIn
 import { assetSignals, recordSignals, suppressedTags } from "../../../src/learnings/index.js";
 import { lstatSync } from "node:fs";
 import { DEFAULT_PORT, findRunningStudio, startStudio } from "../../../src/studio/server.js";
+import { openBrowser } from "../../../src/studio/open.js";
 
 /**
  * The asset library, from the command line.
@@ -153,11 +153,6 @@ function tag(argv: string[]): void {
   console.log(line(updateAsset(id, { addTags, removeTags })));
 }
 
-function openBrowser(url: string): void {
-  const [cmd, args]: [string, string[]] =
-    process.platform === "win32" ? ["cmd", ["/c", "start", "", url]] : process.platform === "darwin" ? ["open", [url]] : ["xdg-open", [url]];
-  spawn(cmd, args, { stdio: "ignore", detached: true }).unref();
-}
 
 async function serve(argv: string[]): Promise<void> {
   const port = Number(flag(argv, "--port") ?? DEFAULT_PORT);

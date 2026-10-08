@@ -96,10 +96,19 @@ Or copy `skills/reelcut/` into `~/.claude/skills/reelcut/` and restart. The repo
 ### 3. Run it
 
 ```text
+/reelcut
+```
+
+On its own, `/reelcut` opens the studio's **Create** page (starting the studio if it is not running): paste the
+script, set the options as chips, and make the reel by chatting with Claude there. The same from a terminal:
+`npm run dashboard`.
+
+```text
 /reelcut script.txt
 ```
 
-That is the whole invocation. Everything else is optional.
+With a script, it makes the reel right here in the conversation, as always; everything else is optional. Add
+`--studio` to hand the script and its options to a new Create chat in the dashboard instead.
 
 ---
 

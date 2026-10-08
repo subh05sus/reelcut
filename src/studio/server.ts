@@ -1039,7 +1039,10 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
         const prompt = cm.firstPrompt(sess, { text: scriptPath && !script ? "" : text, scriptPath, voiceoverPath: vo?.path, assetsDir: assets, settings: sess.settings, personalityName: pers?.name, recipeLines: recipe ? recipePrompt(recipe) : undefined, seriesLines, unattended });
         // A placeholder until Claude names the reel: the script's first sentence, without markdown.
         if (!sess.named) {
-          const first = text.replace(/^[#>*\s-]+/gm, "").split(/(?<=[.!?])\s|\n/).map((x) => x.trim()).find((x) => x.length > 3);
+          // From the script when there is one (the typed words may only be direction, "make it calm"), else from the words.
+          let source = text;
+          if (script) { try { source = readFileSync(script.path, "utf8").replace(/^\d+\s*$|^[\d:,.]+\s*-->.*$/gm, ""); } catch { /* keep the words */ } }
+          const first = source.replace(/^[#>*\s-]+/gm, "").split(/(?<=[.!?])\s|\n/).map((x) => x.trim()).find((x) => x.length > 3);
           const name = first ? first.split(/\s+/).slice(0, 6).join(" ") : script?.name.replace(/\.[a-z0-9]+$/i, "") || "New reel";
           cm.rename(id, series ? `${series.name} ${sess.episode!.n}: ${name}` : name, false);
         }
