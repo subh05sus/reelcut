@@ -919,6 +919,17 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
     }
 
     // ---- create: a reel made from the dashboard, Claude Code driving /reelcut, the conversation streamed here
+    // Every live review link, for `reelcut shares` and `status`.
+    if (read && parts[0] === "api" && parts[1] === "shares" && parts.length === 2) {
+      const u = reviewUrl();
+      return sendJson(res, 200, { tunnel: u ?? null, shares: loadShares().filter((x) => liveShare(x)).map((x) => ({ token: x.token, conversation: x.conversation, title: x.title, expiresAt: x.expiresAt, url: u ? `${u}/r/${x.token}` : null })) });
+    }
+    // `reelcut stop`: the studio ends itself (it listens on this Mac only). Review links live on in their own process.
+    if (method === "POST" && parts[0] === "api" && parts[1] === "shutdown" && parts.length === 2) {
+      sendJson(res, 202, { ok: true });
+      setTimeout(() => process.exit(0), 200);
+      return;
+    }
     // The tools reels are orchestrated with (MCP servers): connected or not, read from Claude Code itself.
     if (read && parts[0] === "api" && parts[1] === "integrations" && parts.length === 2) {
       return sendJson(res, 200, await readIntegrations(REPO, 60_000, url.searchParams.has("refresh")));

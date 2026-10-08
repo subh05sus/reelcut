@@ -57,6 +57,7 @@ export type EditAction =
   | { kind: "image"; asset: { id: string; name: string; path: string } }
   | { kind: "move"; to: number }
   | { kind: "remove" }
+  | { kind: "rerender" }
   | { kind: "note"; text: string };
 
 const renderTail = (reel: string, beat: string, audio: boolean) => [
@@ -90,6 +91,7 @@ export function editPrompt(reelPath: string, reel: ReelFile, beatId: string, act
       return { shown: `Move beat ${i + 1} to position ${to + 1}`, prompt: `Move ${where} so it becomes beat ${to + 1} of ${reel.beats.length}: reorder "beats" in reel.json. Check that the cut into and out of it still matches (exit direction to entry edge) and fix only what breaks.${voice}\nNo beat needs re-rendering unless you changed it; rejoin the master: \`npm run render -- ${reelPath} --master-only${audio ? " --sfx" : ""}\`. Reply in one line.` };
     }
     case "remove": return { shown: `Remove beat ${i + 1}`, prompt: `Remove ${where} from the reel: take it out of "beats" in reel.json (keep its files). Check the cut between the beats on either side still works, fix only what breaks, and rejoin the master: \`npm run render -- ${reelPath} --master-only${audio ? " --sfx" : ""}\`. Reply in one line.` };
+    case "rerender": return { shown: `${label}: render again`, prompt: `Render ${where} again exactly as it is (no changes to it): \`npm run render -- ${reelPath} --only ${b.id} --clips-only${audio ? " --sfx" : ""}\`, check the clip, and rejoin the master: \`npm run render -- ${reelPath} --master-only${audio ? " --sfx" : ""}\`. Reply in one line.` };
     case "note": return { shown: `${label}: ${action.text.trim()}`, prompt: `For ${where}: ${action.text.trim()}\n${keep}\n${renderTail(reelPath, b.id, audio)}` };
   }
 }

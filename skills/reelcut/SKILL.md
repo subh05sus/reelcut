@@ -41,6 +41,40 @@ with the script, its options and the words, already started. Say the address and
 A message the studio itself sends ("driven from the reelcut studio's Create page", or "one of a batch running
 unattended") is never bare and never handed back: make the reel here, as below.
 
+### `/reelcut <command>`: the studio and reels, from here
+
+When the first word after `/reelcut` is one of these, it is a command, not a script. Run it from the project root
+and relay what it prints, briefly:
+
+```bash
+npm run -s reelcut -- <command> [arguments]        # /reelcut status → npm run -s reelcut -- status
+```
+
+| | |
+|---|---|
+| `start`, `stop`, `restart` | the studio in the background; stop and restart ask first while a reel is being made |
+| `status` | the studio, reels being made with their progress, the batch, review links, the tools |
+| `open [page \| reel]` | create, library, reels, personality, performance, learnings…, or a reel's chat |
+| `list`, `continue [reel] [message]` | recent reels, numbered; carry one on in the studio |
+| `new <script> …`, `batch <folder> [--tonight]` | hand a script to a Create chat; queue a folder of scripts |
+| `share [reel] [--days N]`, `shares`, `unshare [reel \| --all]` | review links |
+| `edit <beat> <change>`, `rerender <beats>` | change or re-render beats of the latest (or a named) reel, in its chat |
+| `doctor`, `update`, `clean`, `logs [studio\|review\|render]`, `help` | upkeep |
+
+The same commands are offered as `/reelcut:<command>` when reelcut is installed as a plugin (one skill each in
+`skills/<command>/`, written by `npm run reelcut -- _skills` from `src/create/commands.ts`).
+
+A reel is named by its number from `list`, by part of its title, or left out for the latest. The tool never asks
+anything itself: when the decision is the owner's, its last line says so, and you ask with AskUserQuestion:
+
+- `DECIDE {...}` (exit 3): a reel is being made. Say which and how far along; offer "Wait until it finishes
+  (Recommended)" → run again with `--wait` (it waits in the background), "Stop it now" → `--now` (the chat can be
+  continued later), "Cancel".
+- `CHOOSE {...}` (exit 4): the name matched several reels, or none. Offer its `reels` and run again with the chosen
+  `id` in place of the name.
+- `CONFIRM {...}` (exit 5): something would be deleted (`clean`). Offer its `options` (multiSelect, plus "Nothing")
+  and run again with `--yes <id>,<id>`. Never pass `--yes` without the owner's choice.
+
 ### `/reelcut <script>` makes the reel here, as it always has
 
 ```

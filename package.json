@@ -32,7 +32,8 @@
     "captions": "tsx skills/reelcut/scripts/captions.ts",
     "performance": "tsx skills/reelcut/scripts/performance.ts",
     "draw": "tsx skills/reelcut/scripts/draw.ts",
-    "dashboard": "tsx skills/reelcut/scripts/dashboard.ts"
+    "dashboard": "tsx skills/reelcut/scripts/dashboard.ts",
+    "reelcut": "tsx skills/reelcut/scripts/cmd.ts"
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.3.293",

@@ -110,6 +110,27 @@ script, set the options as chips, and make the reel by chatting with Claude ther
 With a script, it makes the reel right here in the conversation, as always; everything else is optional. Add
 `--studio` to hand the script and its options to a new Create chat in the dashboard instead.
 
+### Commands
+
+`/reelcut <command>` or, with reelcut installed as a plugin, `/reelcut:<command>` (same thing, with autocomplete).
+From a terminal: `npm run reelcut -- <command>`, or `~/.reelcut/bin/reelcut <command>` from any folder.
+
+| Command | |
+|---|---|
+| `start` · `stop` · `restart` | the studio, in the background; stop and restart ask first while a reel is being made (wait, stop now, cancel) |
+| `status` | the studio, reels being made with their progress, the batch, review links, the tools |
+| `open [page \| reel]` | `open performance`, `open slop` |
+| `list` · `continue [reel] [message]` | recent reels, numbered; carry one on in the studio |
+| `new <script>` · `batch <folder> [--tonight]` | hand a script to a Create chat; queue a folder of scripts, unattended |
+| `share [reel] [--days 1\|7\|30]` · `shares` · `unshare` | review links (copied to the clipboard) |
+| `edit <beat> <change>` · `rerender <beats>` | `edit 3 calmer`, `edit 5 style swiss`, `edit 2 text "Ship it"`, `rerender 3,5` |
+| `doctor` · `update` · `clean` · `logs` · `help` | check what reelcut needs; pull, install, test, restart; free disk space (asks what); read logs |
+
+A reel is named by its number from `list`, by part of its title, or left out for the latest.
+
+Install as a plugin from a checkout: `ln -s "$PWD" ~/.claude/skills/reelcut` (Claude Code loads it as
+`reelcut@skills-dir`, live from the checkout).
+
 ---
 
 ## Invocation and every option
