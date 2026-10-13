@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 import { GROUNDS, MOVES, PACING, TEXT_STYLES } from "./vocab.js";
 
 /**

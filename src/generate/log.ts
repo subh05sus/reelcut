@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync } from "node:fs";
-import { z } from "zod";
+import { z } from "zod/v3";
 
 /**
  * What happened to each beat that could have been generated, kept in `reel.json`.

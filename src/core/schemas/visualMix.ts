@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 import type { BeatIntent, VisualType } from "./visualType.js";
 
 /**

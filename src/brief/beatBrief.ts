@@ -1,5 +1,5 @@
 import { MIN_ENTRANCE_SECONDS, readingFloorSeconds } from "../core/index.js";
-import { z } from "zod";
+import { z } from "zod/v3";
 
 /**
  * What the director hands over once it stops choosing slots.

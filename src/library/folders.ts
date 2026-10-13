@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { existsSync, readdirSync, realpathSync, statSync, type Dirent } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { AssetKindSchema } from "../brief/assetRequirementTypes.js";
 import { LibraryError, readValidated, reelcutHome, withLock, writeAtomic } from "./store.js";
 

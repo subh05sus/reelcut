@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import path from "node:path";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { readValidated, reelcutHome, withLock, writeAtomic } from "../library/store.js";
 import { PersonalitySchema, type Personality, type PersonalityInput } from "./schema.js";
 

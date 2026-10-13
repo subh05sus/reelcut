@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { reelcutHome } from "../library/store.js";
 
 /**

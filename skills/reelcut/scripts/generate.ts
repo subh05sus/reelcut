@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { buildPrompt, formatPlan, planGeneration, recordGeneration, registerGenerated, MAX_CLIPS_PER_REEL, type BeatInput } from "../../../src/generate/index.js";
 import { GENERATION_MODES, HIGGSFIELD_SETTINGS, getHiggsfieldSetting, loadIndex, setHiggsfieldSetting, type HiggsfieldSetting } from "../../../src/library/index.js";
 

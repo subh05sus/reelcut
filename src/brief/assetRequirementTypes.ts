@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 
 /**
  * Phase J, Tier 2 (spec sections 7-9): a deeper, per-asset pass scoped to the *selected*
