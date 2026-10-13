@@ -34,10 +34,32 @@ export const EVENT_TAGS: Record<string, string[]> = {
   slide: ["slide", "swipe", "swoosh"],
   boom: ["boom", "sub", "impact"],
   toggle: ["toggle", "switch", "click"],
+  // Clawd's moves (RC.clawd records them): its own 8-bit blips first, then the nearest ordinary sound.
+  "clawd-step": ["clawd-step", "tick", "blip"],
+  "clawd-hop": ["clawd-hop", "pop", "boing"],
+  "clawd-land": ["clawd-land", "thud", "drop"],
+  "clawd-tap": ["clawd-tap", "tap", "click"],
+  "clawd-pop": ["clawd-pop", "pop", "blip"],
+  "clawd-cheer": ["clawd-cheer", "success", "chime"],
+  "clawd-confetti": ["clawd-confetti", "sparkle", "success"],
+  "clawd-plug": ["clawd-plug", "click", "zap"],
+  "clawd-key": ["clawd-key", "keystroke", "tick"],
+  "clawd-crack": ["clawd-crack", "break", "hit"],
+  "clawd-hatch": ["clawd-hatch", "success", "pop"],
+  "clawd-zz": ["clawd-zz", "soft"],
+  "clawd-sparkle": ["clawd-sparkle", "sparkle", "shimmer"],
+  "clawd-lift": ["clawd-lift", "thud"],
+  "clawd-stomp": ["clawd-stomp", "thud", "hit"],
+  "clawd-drop": ["clawd-drop", "drop", "pop"],
+  "clawd-done": ["clawd-done", "success", "ding"],
+  "clawd-wave": ["clawd-wave", "blip"],
 };
 
+/** Clawd's moves, loudest-to-hear first: when a beat has more than its share, these win over the rest. */
+const CLAWD_RANK = ["clawd-land", "clawd-hop", "clawd-tap", "clawd-plug", "clawd-drop", "clawd-confetti", "clawd-cheer", "clawd-hatch", "clawd-crack", "clawd-pop", "clawd-done", "clawd-wave", "clawd-lift", "clawd-stomp", "clawd-sparkle", "clawd-key", "clawd-zz", "clawd-step"];
+
 /** How long a sound for each moment is allowed to be, in seconds. */
-const MAX_SECONDS: Record<string, number> = { keystroke: 0.7, click: 0.5, type: 3.5, count: 2, roll: 0.8, pop: 0.8, reveal: 2.5, whoosh: 2.5, hit: 3, cut: 3, ding: 2, success: 2.5, error: 1.5, glitch: 1.5, shimmer: 2.5, riser: 3.5, slide: 1.2, boom: 3, toggle: 0.5 };
+const MAX_SECONDS: Record<string, number> = { ...Object.fromEntries(CLAWD_RANK.map((e) => [e, 0.7])), keystroke: 0.7, click: 0.5, type: 3.5, count: 2, roll: 0.8, pop: 0.8, reveal: 2.5, whoosh: 2.5, hit: 3, cut: 3, ding: 2, success: 2.5, error: 1.5, glitch: 1.5, shimmer: 2.5, riser: 3.5, slide: 1.2, boom: 3, toggle: 0.5 };
 
 export interface SfxQuery {
   event?: string;
@@ -66,8 +88,11 @@ export function searchSfx(assets: readonly LibraryAsset[], query: SfxQuery): Sfx
   if (wanted.length === 0) return [];
   const max = query.maxSeconds ?? (query.event ? MAX_SECONDS[query.event] : undefined);
   const out: SfxMatch[] = [];
+  const forClawd = query.event?.startsWith("clawd-") ?? false;
   for (const asset of assets) {
     if (!isUsableSound(asset)) continue;
+    // Clawd's 8-bit blips are its voice: never offered for an ordinary click or pop in a reel without it.
+    if (!forClawd && asset.tags.includes("clawd")) continue;
     const seconds = asset.analysis.durationSeconds;
     if (max !== undefined && seconds !== undefined && seconds > max) continue;
     // The first words of the list are the best fit: a "click" for a click, a "tick" as a second choice.
@@ -153,6 +178,37 @@ export interface ProposeOptions {
   seed?: string;
   /** Typing as a strike per few letters (the default when the text is known), not one long typing sound. */
   keystrokes?: boolean;
+  /** Most of Clawd's own blips in one beat (default 8), counted apart from the rest. */
+  clawdPerBeat?: number;
+}
+
+/**
+ * Clawd's blips for one beat: a move of the same kind within a quarter second is one moment (a walk's steps become a
+ * light patter, every other step), the strongest few are kept in time order, each step a touch higher or lower than
+ * the last so a walk does not sound like a loop.
+ */
+function clawdCues(beat: string, events: readonly RcEvent[], assets: readonly LibraryAsset[], budget: number): CueProposal[] {
+  const picked: RcEvent[] = [];
+  for (const e of [...events].sort((a, b) => a.at - b.at)) {
+    if (picked.some((p) => p.type === e.type && e.at - p.at < (e.type === "clawd-step" ? 0.28 : 0.25))) continue;
+    picked.push(e);
+  }
+  const rank = (t: string): number => { const i = CLAWD_RANK.indexOf(t); return i < 0 ? CLAWD_RANK.length : i; };
+  const kept = [...picked].sort((a, b) => rank(a.type) - rank(b.type) || a.at - b.at).slice(0, budget).sort((a, b) => a.at - b.at);
+  const out: CueProposal[] = [];
+  kept.forEach((e, k) => {
+    const best = searchSfx(assets, { event: e.type })[0];
+    if (!best) return;
+    out.push({
+      beat, at: e.at, event: e.type, soundId: best.asset.id,
+      source: isPackId(best.asset.id) ? best.asset.id : `library:${best.asset.id}`,
+      name: best.asset.name,
+      ...(best.asset.analysis.gainDb !== undefined ? { gainDb: best.asset.analysis.gainDb } : {}),
+      ...(e.type === "clawd-step" ? { rate: Math.round((1 + 0.04 * (((k * 5) % 3) - 1)) * 1000) / 1000 } : {}),
+      why: `Clawd: ${e.type.slice(6)} at ${e.at}s`,
+    });
+  });
+  return out;
 }
 
 /** A small stable hash, for choosing among equals without randomness. */
@@ -176,7 +232,10 @@ export function proposeCues(beats: readonly { id: string; durationSeconds: numbe
   const out: CueProposal[] = [];
 
   beats.forEach((beat, index) => {
-    const events: RcEvent[] = [...beat.events].filter((e) => e.at >= 0 && e.at < beat.durationSeconds - 0.1);
+    const all: RcEvent[] = [...beat.events].filter((e) => e.at >= 0 && e.at < beat.durationSeconds - 0.1);
+    // Clawd's moves have a budget of their own, so its footsteps never crowd out a click.
+    const events = all.filter((e) => !e.type.startsWith("clawd-"));
+    out.push(...clawdCues(beat.id, all.filter((e) => e.type.startsWith("clawd-")), assets, options.clawdPerBeat ?? 8));
     if (options.cuts && index > 0) events.push({ type: "cut", at: 0 });
     events.sort((a, b) => a.at - b.at);
     const picked: RcEvent[] = [];

@@ -139,7 +139,9 @@ skill". Don't guess it — a plugin install, a `~/.claude/skills/` copy and this
 
 Run `npm run beats` on the script first, then read the owner's personality (`npm run personality -- brief`, see
 [references/personality.md](references/personality.md)): when there is a default one, confirm it in one line and skip every
-question it answers. Then read what the studio has learned
+question it answers. Its **Mascot** line says whether Clawd, the Claude mascot, is in this reel: run
+`npm run clawd -- check <script>` and say it in the same line ("Clawd hosts this one: it is about Claude Code and
+MCP"). It is not a question; the owner can still say no. See [references/clawd.md](references/clawd.md). Then read what the studio has learned
 (`npm run learnings -- brief --script <script>`, see [references/learnings.md](references/learnings.md)),
 then ask the user — with the AskUserQuestion tool, at most
 two rounds — about everything the invocation left open: how much text goes on screen, the length,
@@ -223,7 +225,8 @@ to the user as a proposal the first time and used as it was recorded: trimmed, f
 speeded up 2x, never redrawn. A step with no recording is a gap — record it, mark a moment in a recording
 you have, or compose an animation as a stand-in. See [references/footage.md](references/footage.md).
 
-**Gate:** no `identity` requirement is satisfied by a drawn asset. Ever.
+**Gate:** no `identity` requirement is satisfied by a drawn asset. Ever. (Clawd is not a requirement: the kit draws it,
+from its one fixed spec, and nothing else ever draws it.)
 
 ---
 
@@ -255,6 +258,11 @@ before you start a beat of its kind.
 When a beat shows an iPhone, a Mac, an app or a confirmation, build it from the Apple UI kit — controls, sheets,
 the Dynamic Island, Messages, Calendar, Maps, the Dock, a check that draws — and start from its pattern in
 `assets/patterns/apple/` ([apple-ui.md](references/apple-ui.md)).
+
+**Clawd hosts the reels about Claude.** When Step 0 put Clawd in the reel, read [references/clawd.md](references/clawd.md)
+and start from `assets/patterns/clawd/`: Clawd opens the hook, acts out each step (plugs in the connector, carries the
+skill over, taps Post), celebrates the payoff and holds up the CTA's word, and sits out the beats that need the whole
+frame. Same size, ground line and costume in every beat; an exit matched to the next beat's entry.
 
 **Make each beat in its personality style.** With a personality in `reel.json`, a beat's kind picks its style, and the
 style its colours, type, look, moves and motion (`data-style` on the root draws the beat in it); signature moves, copy rules and guardrails hold in every beat
@@ -309,7 +317,7 @@ time, checks every file, joins the passing clips into the master (no second rend
 clips that passed) and bakes the hook's strongest settled frame in as the thumbnail. A blocked beat does not
 hold up the others; render it later with `--only`, and the master is joined then. Look at `contact.jpg` (a row
 of five frames per beat) instead of re-opening compositions in a browser. Add `--sfx` for sound effects: `npm run sfx -- suggest reel.json --apply` proposes cues
-from the 377 bundled CC0 sounds and the user's own approved sounds (theirs win a tie); typing becomes a keystroke
+from the 395 bundled CC0 sounds (Clawd's 8-bit blips among them, only ever for Clawd) and the user's own approved sounds (theirs win a tie); typing becomes a keystroke
 per few letters, each a different key (see [references/step-5-render.md](references/step-5-render.md)).
 The sound is mixed by the render, not the browser: cues land by their transient, peak or end, the voiceover sits
 on top with effects (7 dB) and the music bed (`"music"`, found in Step 2; 9 dB) ducking under it, and a reel with
@@ -428,6 +436,10 @@ tried. Continuity comes from matching the outgoing exit direction to the incomin
 **Frame 0 of every beat is legible.** Opacity leads position: full opacity within a few frames while
 the move keeps easing. An entrance from `opacity: 0` makes the first frame of a hard cut blank, and
 frame 0 of the first beat is the thumbnail.
+
+**Clawd is drawn only by the kit.** It is Anthropic's character, and the one reelcut draws: pose it, animate it, dress
+it, light it in the style's material, never redraw, recolour or reshape it, and never draw any other mascot or logo the
+way it is drawn.
 
 **A generated clip is never the real thing.** Higgsfield output is atmosphere under real type: never a product
 screen, a logo or lettering, never `identity`, always labelled

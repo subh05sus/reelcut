@@ -106,8 +106,17 @@ export function personalityBrief(p: Personality): string {
   const g = p.guardrails;
   const never = [...g.bannedColors.map((c) => `colour ${c}`), ...g.bannedFonts.map((f) => `font ${f}`), ...g.bannedMoves.map((m) => `move ${m}`), ...(g.noGlass ? ["glass"] : []), ...(g.noConfetti ? ["confetti"] : [])];
   lines.push(`  Never: ${never.length ? never.join(", ") : "nothing banned"}; at most ${g.maxFonts} type families; text contrast ≥ ${g.contrast}:1${g.notes ? `; ${g.notes}` : ""}`);
+  lines.push(`  Mascot: ${mascotLine(p.mascot)}`);
   if (p.brand.name || p.brand.url) lines.push(`  Brand: ${p.brand.name}${p.brand.url ? ` (${p.brand.url})` : ""}${p.brand.colors.length ? `, colours ${p.brand.colors.join(" ")}` : ""}`);
   return lines.join("\n");
+}
+
+/** The personality's mascot, as a line: "Clawd hosts reels about Claude (acts out the steps), medium". */
+export function mascotLine(m: Personality["mascot"]): string {
+  if (m.character === "none") return "none";
+  const when = { claude: "reels about Claude", always: "every reel", asked: "reels that ask for it" }[m.when];
+  const role = { host: "hosts", cameo: "cameos in", corner: "sits in the corner of", director: "appears where a beat wants it in" }[m.role];
+  return `Clawd ${role} ${when}${m.role === "host" ? " (acts out the steps)" : ""}, ${m.size}${m.wear ? `, wears ${m.wear}` : ""}. Look up its acts with npm run clawd -- brief`;
 }
 
 function brief(argv: string[]): number {

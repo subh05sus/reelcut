@@ -123,7 +123,7 @@ const commands: Record<string, { line: string; run: () => Promise<void> }> = {
 
   open: { line: COMMAND_LINES.open!, run: async () => {
     const what = argv.join(" ").trim();
-    const pages = ["create", "library", "footage", "reels", "personality", "performance", "learnings", "review", "folders", "references", "sounds", "patterns", "jobs"];
+    const pages = ["create", "library", "footage", "reels", "personality", "clawd", "performance", "learnings", "review", "folders", "references", "sounds", "patterns", "jobs"];
     const b = await studio();
     let hash = "#create";
     if (what && pages.includes(what.toLowerCase())) hash = `#${what.toLowerCase()}`;

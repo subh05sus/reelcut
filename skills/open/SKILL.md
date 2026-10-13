@@ -1,6 +1,6 @@
 ---
 name: open
-description: "reelcut: open a page (create, library, reels, personality, performance, learnings, review, jobs) or a reel. For when the owner types /reelcut:open."
+description: "reelcut: open a page (create, library, reels, personality, clawd, performance, learnings, review, jobs) or a reel. For when the owner types /reelcut:open."
 argument-hint: "[page | reel]"
 disable-model-invocation: true
 allowed-tools: Bash(~/.reelcut/bin/reelcut:*)
@@ -8,7 +8,7 @@ allowed-tools: Bash(~/.reelcut/bin/reelcut:*)
 
 # /reelcut:open
 
-Open a page (create, library, reels, personality, performance, learnings, review, jobs) or a reel. Run:
+Open a page (create, library, reels, personality, clawd, performance, learnings, review, jobs) or a reel. Run:
 
 ```bash
 ~/.reelcut/bin/reelcut open $ARGUMENTS

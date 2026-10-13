@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* CLAWD SKILL. "Give it my skill": Clawd carries SKILL.md overhead to the chat and tosses it in; on the frame it lands
+     (c.marks.drop) the chat shows it attached and Claude's reply resolves. The file is Clawd's pixel prop with a mono
+     label; the chat is the kit's bubbles on a card. */
+  #root .cam { position: absolute; inset: 0; }
+  #root .chat { position: absolute; left: 84px; top: 360px; width: 520px; height: 560px; border-radius: 36px; background: var(--card); box-shadow: var(--shadow); padding: 30px; display: flex; flex-direction: column; gap: 16px; }
+  #root .chat .hd { font: 600 22px var(--font-mono); color: var(--card-muted); }
+  #root .chat .rc-bubble { font-size: 28px; max-width: 420px; }
+  #root .chat .me { align-self: flex-end; }
+  #root .file { align-self: flex-end; display: flex; align-items: center; gap: 12px; padding: 14px 20px; border-radius: 20px; background: var(--faint); font: 600 24px var(--font-mono); color: var(--card-ink); }
+  #root .file i { width: 26px; height: 32px; border-radius: 4px; background: var(--accent); display: block; }
+  #root .file b { color: #1f8f4e; font-weight: 600; }
+  #root .ground { position: absolute; left: 640px; right: 84px; top: 920px; height: 4px; border-radius: 2px; background: var(--ink); opacity: .1; }
+</style>
+<div id="root" data-look="paper" data-composition-id="clawd-skill" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--m1x: 80%; --m1y: 72%; --m2x: 18%; --m2y: 96%"></div>
+  <div class="cam">
+    <div class="rc-head"><span class="ln" style="--ox:-3px">Give it</span><span class="ln"><em class="rc">your skill.</em></span></div>
+    <div class="chat">
+      <div class="hd">Claude</div>
+      <div class="rc-bubble rc-user me">Here's how I post.</div>
+      <div class="file"><i></i>SKILL.md <b>added</b></div>
+      <div class="rc-bubble reply">Got it. I'll post the way you do.</div>
+    </div>
+    <div class="ground"></div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  RC.words(tl, "#root .rc-head", 0, { lead: true, stagger: 0.09 });
+  RC.rise(tl, "#root .chat", 0.1, { lead: true, y: 40 });
+  RC.rise(tl, "#root .me", 0.4, { y: 20 });
+  const c = RC.clawd("#root .cam", { x: 860, y: 920, size: 240 });
+  RC.clawd.enter(tl, c, 0, { from: "right" });
+  RC.clawd.carry(tl, c, c.free + 0.1, { prop: "file", label: "SKILL.md", to: "#root .chat" });
+  // The chat answers when the file lands.
+  const at = c.marks.drop;
+  RC.pop(tl, "#root .file", at);
+  RC.rise(tl, "#root .reply", at + 0.35, { y: 20 });
+  RC.clawd.react(tl, c, at + 0.2, "yes");
+  RC.clawd.life(tl, c, 0, 5.2);
+  RC.camera(tl, "#root .cam", 0, { duration: 5.2 });
+  RC.hold(tl, 5.2);
+  window.__timelines["clawd-skill"] = tl;
+})();
+</script>
+</template>
+</body></html>

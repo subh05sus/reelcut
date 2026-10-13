@@ -47,6 +47,10 @@ one line ("Using the gptmarlon personality: Claymation, Swiss and UI / Product")
 palette, Motion, Type, Format, Sound effects or Music: it answers them. Write `"personality": "<id>"` into `reel.json`.
 An answer the user volunteers still wins for this reel. See [personality.md](personality.md).
 
+**Clawd** is part of that line, never a question: the personality's Mascot setting (by default, Clawd hosts reels about
+Claude) and `npm run clawd -- check <script>` decide it. Say it ("Clawd hosts this one: it is about Claude Code and
+MCP") and write `"mascot"` into `reel.json`. A "no Clawd" from the owner wins for this reel. See [clawd.md](clawd.md).
+
 | Question | Ask when | Options — tailored to the script |
 |---|---|---|
 | **Text on screen** | no `--text` | `full` · `key-lines` · `minimal` · `none`. Recommend by voiceover: an `.srt` → `key-lines`, a `.txt` → `full`. Name the count: "key-lines puts about 5 of the 14 lines on screen". |

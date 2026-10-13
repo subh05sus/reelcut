@@ -50,6 +50,9 @@ import { addEpisode, getSeries, listSeries, removeSeries, saveSeries, seriesProm
 import { addComment, beatText, commentsPrompt, editPrompt, loadComments, readReel, removeComment, updateComment, type EditAction } from "../create/edits.js";
 import { FAMILIES, PAIRINGS, fontFaceCss, loadFontLibrary } from "../fonts/index.js";
 import { reelcutHome } from "../library/store.js";
+import { clawdCatalog, setFavourite, sheetPage } from "../clawd/index.js";
+import { readKitSources } from "../render/kit.js";
+import { GSAP_URL } from "../render/project.js";
 import {
   STYLES, STYLE_TENSIONS, brandPalette, checkPersonality, deletePersonality, fromTaste, getPersonality, importBrand, loadPersonalities,
   PersonalitySchema, savePersonality, setDefaultPersonality, styleById, surprise, type Locks,
@@ -534,6 +537,33 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
         if (typeof b.value !== "string" || !(HIGGSFIELD_SETTINGS as readonly string[]).includes(b.value)) throw new HttpError(400, `value must be one of ${HIGGSFIELD_SETTINGS.join(", ")}`);
         return sendJson(res, 200, { higgsfield: setHiggsfieldSetting(b.value as HiggsfieldSetting).higgsfield });
       }
+    }
+
+    // ---- Clawd: the mascot's moves and the pack's poses, played live on the Clawd page, and the ones the owner starred.
+    if (parts[0] === "api" && parts[1] === "clawd") {
+      if (read && parts.length === 2) return sendJson(res, 200, clawdCatalog());
+      if (method === "POST" && parts[2] === "favourites" && parts.length === 3) {
+        const b = (await readBody(req)) as { id?: unknown; star?: unknown };
+        if (typeof b.id !== "string" || !/^(move|pose):[\w-]+$/.test(b.id) || typeof b.star !== "boolean") throw new HttpError(400, "id must be move:<id> or pose:<id>, and star true or false");
+        return sendJson(res, 200, { favourites: setFavourite(b.id, b.star) });
+      }
+    }
+    // The sheet itself: a page of small scenes, one per move or pose, each looping in the chosen style and look.
+    if (read && parts[0] === "clawd" && parts[1] === "sheet" && parts.length === 2) {
+      const kind = url.searchParams.get("kind") ?? "moves", style = url.searchParams.get("style") ?? "", look = url.searchParams.get("look") ?? "paper";
+      const tag = (url.searchParams.get("tag") ?? "").toLowerCase();
+      if (style && !STYLES.some((s) => s.id === style)) throw new HttpError(400, `no style ${style}`);
+      if (!/^(paper|ink|flood|sky|cinema|poster|cool)$/.test(look)) throw new HttpError(400, `no look ${look}`);
+      const cat = clawdCatalog(), favs = new Set(cat.favourites);
+      const matches = (id: string, tags: string[]): boolean => !tag || id.includes(tag) || tags.some((t) => t.includes(tag));
+      const ids = (url.searchParams.get("ids") ?? "").split(",").filter((x) => /^(move|pose):[\w-]+$/.test(x));
+      const shots = ids.length ? ids.map((f) => ({ what: f, label: f.replace(/^(move|pose):/, ""), starred: favs.has(f) }))
+        : kind === "poses" ? cat.poses.filter((p) => matches(p.id, p.tags)).map((p) => ({ what: `pose:${p.id}`, label: p.id, starred: favs.has(`pose:${p.id}`) }))
+        : kind === "starred" ? cat.favourites.map((f) => ({ what: f, label: f.replace(/^(move|pose):/, ""), starred: true }))
+        : cat.moves.filter((m) => matches(m.id, m.tags)).map((m) => ({ what: `move:${m.id}`, label: m.name, starred: favs.has(`move:${m.id}`) }));
+      const kit = readKitSources();
+      res.writeHead(200, { "Content-Type": TYPES[".html"]!, "Cache-Control": "no-store" });
+      return void res.end(sheetPage({ shots, ...(style ? { style } : {}), look, kitCss: kit.css, kitJs: kit.js, gsapUrl: GSAP_URL }));
     }
 
     // ---- references: other people's films, kept to learn from. Their own index; nothing here is an asset.

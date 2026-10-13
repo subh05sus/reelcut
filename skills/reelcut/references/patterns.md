@@ -43,7 +43,7 @@ palette and timings is the fallback. It beats no clip. It does not beat a compos
 | `isometric-stack` | ink | shows how layers fit | four slabs resolve into a stack, pull apart, each gets a leader line and a label |
 | `glyph-swarm` | paper | is many-into-one | nine outline glyphs scatter and regroup around the one in the accent colour |
 | `flat-scene` | paper | is a new day, "now open" | a sun climbs behind four drifting hill layers under a dark headline |
-| `mascot-hop` | paper | wants a character | a blob hops with squash and stretch, blinks, says one word |
+| `mascot-hop` | paper | wants a character | a blob hops with squash and stretch, blinks, says one word (in a reel about Claude, the character is Clawd: `patterns/clawd/`) |
 | `paper-plane` | paper | sends, ships, reaches | a plane flies a dotted route and leaves a trail; a Delivered receipt answers it |
 | `line-waves` | cinema | turns noise into signal | thirty sine lines swell, then collapse to one line under the word |
 | `notification-stack` | paper | shows a product staying quiet until it matters | four notifications arrive; each push sends the rest back into a depth stack; a glass count says how many are behind |
@@ -128,6 +128,21 @@ first entrance with `lead: true`, pass `hyperframes check` with a non-zero sampl
 the pattern reel, and be named for what the beat does.
 
 More moves not yet built as patterns are catalogued in [motion-ideas.md](motion-ideas.md).
+
+## Clawd — `patterns/clawd/`
+
+Clawd, the Claude mascot, as the host of a reel about Claude ([clawd.md](clawd.md)). Each shows one recurring beat of
+those reels with Clawd doing it, on the grid, passing `hyperframes check`.
+
+| pattern | look | for a beat that | the move |
+|---|---|---|---|
+| `clawd-hook` | paper, Claymation | opens a reel about Claude | headline resolves; Clawd walks in under it, looks up at it, hops for joy, waves; clay, on held frames |
+| `clawd-connector` | cool | says "connect X to Claude" | Clawd carries the service's cable over and plugs it in; the row flips to Connected on `c.marks.plug` |
+| `clawd-skill` | paper | says "give it my skill" | Clawd carries SKILL.md overhead and tosses it into the chat; the chat answers on `c.marks.drop` |
+| `clawd-payoff` | flood | is the payoff | big statement; Clawd drops in and does the confetti stomp; outlined by itself on the brand ground |
+| `clawd-cta` | paper | is the call to action | Clawd holds up the one word to comment, then waves |
+| `clawd-subagents` | ink | says it works in parallel | mini Clawds pop out, work under spinners, get checks, come back |
+| `clawd-hatch` | paper | announces something new | an egg cracks, Clawd pops out with sparkles and a party hat |
 
 ## Apple UI — `patterns/apple/`
 

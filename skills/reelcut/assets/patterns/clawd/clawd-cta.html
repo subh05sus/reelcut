@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* CLAWD CTA. The call to action: the one word the viewer has to type goes on a sign Clawd holds up, for at least
+     its reading floor, then Clawd waves goodbye. The headline says the instruction; the sign is the word itself. */
+  #root .cam { position: absolute; inset: 0; }
+  #root .ground { position: absolute; left: 84px; right: 84px; top: 940px; height: 4px; border-radius: 2px; background: var(--ink); opacity: .1; }
+</style>
+<div id="root" data-look="paper" data-composition-id="clawd-cta" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--m1x: 80%; --m1y: 72%; --m2x: 18%; --m2y: 96%"></div>
+  <div class="cam">
+    <div class="rc-head"><span class="ln" style="--ox:-3px">Comment</span><span class="ln"><em class="rc">and I'll send it.</em></span></div>
+    <div class="ground"></div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  RC.words(tl, "#root .rc-head", 0, { lead: true, stagger: 0.08 });
+  const c = RC.clawd("#root .cam", { x: 540, y: 940, size: 300 });
+  RC.clawd.enter(tl, c, 0, { from: "pop" });
+  RC.clawd.sign(tl, c, 0.4, { text: "POST", dur: 2.2 });
+  RC.clawd.wave(tl, c, c.free + 0.1);
+  RC.clawd.life(tl, c, 0, 4.6);
+  RC.hold(tl, 4.6);
+  window.__timelines["clawd-cta"] = tl;
+})();
+</script>
+</template>
+</body></html>

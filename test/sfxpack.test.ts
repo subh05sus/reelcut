@@ -11,9 +11,17 @@ describe("the bundled sound pack", () => {
     for (const s of pack.sounds) {
       expect(existsSync(packSoundPath(pack, s)), s.file).toBe(true);
       expect(s.source.licence).toBe("CC0 1.0");
-      expect(s.source.url).toMatch(/^https:\/\/(kenney\.nl|opengameart\.org)\//);
+      // Kenney's and OpenGameArt's CC0 sets, and Clawd's blips, which reelcut synthesises itself.
+      expect(s.source.url).toMatch(/^https:\/\/(kenney\.nl|opengameart\.org)\/|^https:\/\/github\.com\/subh05sus\/reelcut$/);
     }
     for (const c of SFX_CATEGORIES) expect(pack.sounds.filter((s) => s.category === c).length, c).toBeGreaterThanOrEqual(10);
+  });
+
+  it("gives every Clawd move its own 8-bit blip, found first for that move", () => {
+    for (const event of Object.keys(EVENT_TAGS).filter((e) => e.startsWith("clawd-"))) {
+      const top = searchSfx(packAssets, { event })[0];
+      expect(top?.asset.id, event).toBe(`pack:${event}`);
+    }
   });
 
   it("never clips, and knows how loud each sound is", () => {

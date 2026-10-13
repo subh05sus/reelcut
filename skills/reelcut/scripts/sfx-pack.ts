@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, readdirSync, rmSync, statSync, writeFileSync } f
 import os from "node:os";
 import path from "node:path";
 import { describeAudio, gainFor } from "../../../src/library/analyze.js";
+import { buildClawdSounds, clawdCreditLine, CLAWD_SOUND_SOURCE } from "../../../src/clawd/soundpack.js";
 import { packDir, SFX_CATEGORIES, type PackManifest, type PackSound, type SfxCategory } from "../../../src/library/sfxpack.js";
 
 /**
@@ -282,11 +283,14 @@ function build(argv: string[]): void {
     add(`typing-run-${String(k + 1).padStart(2, "0")}`, `Typing run ${len} s`, "ui", ["type", "typing", "keyboard"], inputs, "oga-keyboard", graph, `${hits.length} keypresses from Keyboard Soundpack #1`);
   });
 
+  // Clawd's own 8-bit blips, synthesised here (src/clawd/sounds.ts): ours, so CC0 with the rest.
+  sounds.push(...buildClawdSounds(out));
+
   // Sounds that came out silent (a trim took everything) are dropped.
   const kept = sounds.filter((s) => s.durationSeconds >= 0.03 && Number.isFinite(peakOf(path.join(out, s.file))));
   const manifest: PackManifest = { version: 1, builtAt: new Date().toISOString(), licence: "CC0 1.0 (public domain); see CREDITS.md", sounds: kept };
   writeFileSync(path.join(out, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
-  const lines = SOURCES.map((s) => `- **${s.title}** by ${s.author}: ${s.page} (CC0 1.0). ${kept.filter((k) => k.source.pack === s.title).length} sound(s).`);
+  const lines = [...SOURCES.map((s) => `- **${s.title}** by ${s.author}: ${s.page} (CC0 1.0). ${kept.filter((k) => k.source.pack === s.title).length} sound(s).`), clawdCreditLine(kept.filter((k) => k.source.pack === CLAWD_SOUND_SOURCE.pack).length)];
   writeFileSync(path.join(out, "CREDITS.md"), `# The bundled sound pack\n\nEvery sound here is CC0 1.0 (public domain): free for any use, commercial included, with no attribution required. These creators made them; credit them anyway when you can.\n\n${lines.join("\n")}\n\nTrimmed, peak-normalised and re-encoded (Opus) by reelcut. Risers, reverse swells and typing runs are derived from the CC0 sounds above (reversed, slowed or layered); each says what it was made from in manifest.json.\n`);
   console.log(`${kept.length} sounds in ${out}`);
   for (const c of SFX_CATEGORIES) console.log(`  ${c.padEnd(11)} ${kept.filter((s) => s.category === c).length}`);

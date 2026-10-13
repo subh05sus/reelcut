@@ -23,10 +23,11 @@ const kitDir = path.join(root, "skills", "reelcut", "assets", "kit");
 /** The kit as a composition receives it: kit.css and kit.js, then every family in ui/. */
 const kit = readKitSources(kitDir);
 const core = { js: readFileSync(path.join(kitDir, "kit.js"), "utf8") };
-/** The built-in patterns: the moves at the top level, the Apple UI pieces in apple/. */
+/** The built-in patterns: the moves at the top level, the Apple UI pieces in apple/, Clawd's beats in clawd/. */
 const files = [
   ...readdirSync(patternsDir).filter((f) => f.endsWith(".html")),
   ...readdirSync(path.join(patternsDir, "apple")).filter((f) => f.endsWith(".html")).map((f) => `apple/${f}`),
+  ...readdirSync(path.join(patternsDir, "clawd")).filter((f) => f.endsWith(".html")).map((f) => `clawd/${f}`),
 ].sort();
 const patterns = files.map((f) => ({ id: path.basename(f, ".html"), file: f, html: readFileSync(path.join(patternsDir, f), "utf8") }));
 const reel = JSON.parse(readFileSync(path.join(root, "examples", "patterns", "reel.json"), "utf8")) as { beats: { id: string; composition: string; durationSeconds: number }[] };

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* CLAWD CONNECTOR. The step "connect it to Claude" acted out: Clawd takes the cable from the service and plugs it into
+     the app; on the frame the plug goes in (c.marks.plug) the app answers: the row flips to Connected and its check
+     draws. The app is the kit's window, in the reel's colours; the service is a name in a chip, never a drawn logo. */
+  #root .cam { position: absolute; inset: 0; }
+  #root .rc-window { position: absolute; left: 84px; top: 380px; width: 470px; height: 520px; }
+  #root .rc-window .rc-body { padding: 26px 28px; display: flex; flex-direction: column; gap: 14px; }
+  #root .cap { font: 600 20px var(--font-mono); color: var(--card-muted); letter-spacing: 0.02em; }
+  #root .row { display: flex; align-items: center; gap: 14px; height: 78px; padding: 0 22px; border-radius: 22px; background: var(--faint); font-size: 30px; font-weight: 600; color: var(--card-ink); }
+  #root .row .st { margin-left: auto; font: 600 20px var(--font-mono); color: var(--card-ink); }
+  #root .row .ok { position: absolute; right: 22px; display: flex; align-items: center; gap: 8px; font: 600 20px var(--font-mono); color: #11612f; }
+  #root .row.ig { position: relative; }
+  #root .socket { position: absolute; left: 550px; top: 730px; width: 22px; height: 64px; border-radius: 0 8px 8px 0; background: var(--ink); }
+  #root .svc { position: absolute; left: 716px; top: 392px; padding: 16px 26px; border-radius: 20px; background: var(--card); box-shadow: var(--shadow); font: 650 30px var(--font-sans); color: var(--card-ink); }
+  #root .ground { position: absolute; left: 600px; right: 84px; top: 940px; height: 4px; border-radius: 2px; background: var(--ink); opacity: .1; }
+</style>
+<div id="root" data-look="cool" data-composition-id="clawd-connector" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--m1x: 80%; --m1y: 72%; --m2x: 18%; --m2y: 96%"></div>
+  <div class="cam">
+    <div class="rc-head"><span class="ln" style="--ox:-3px">Connect it</span><span class="ln"><em class="rc">once.</em></span></div>
+    <div class="rc-window"><div class="rc-bar"></div><div class="rc-body">
+      <div class="cap">CONNECTORS</div>
+      <div class="row">Gmail<span class="st">Connected</span></div>
+      <div class="row ig">Instagram<span class="st add">Add</span><span class="ok" style="opacity:0">✓ Connected</span></div>
+      <div class="row">Calendar<span class="st">Add</span></div>
+    </div></div>
+    <div class="socket"></div>
+    <div class="svc">Instagram</div>
+    <div class="ground"></div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  RC.words(tl, "#root .rc-head", 0, { lead: true, stagger: 0.09 });
+  RC.rise(tl, "#root .rc-window", 0.1, { lead: true, y: 40 });
+  RC.pop(tl, "#root .svc", 0.35);
+  const c = RC.clawd("#root .cam", { x: 860, y: 940, size: 230 });
+  RC.clawd.enter(tl, c, 0, { from: "pop" });
+  RC.clawd.plug(tl, c, 0.6, { from: "#root .svc", to: "#root .socket" });
+  // The app answers on the frame the plug goes in.
+  const at = c.marks.plug;
+  tl.to("#root .ig .add", { opacity: 0, duration: 0.15, ease: "apple.out" }, at);
+  tl.fromTo("#root .ig .ok", { opacity: 0, x: 10 }, { opacity: 1, x: 0, duration: RC.spring("default").duration, ease: "spring.default" }, at + 0.05);
+  tl.fromTo("#root .ig", { backgroundColor: "rgba(31,143,78,.0)" }, { backgroundColor: "rgba(31,143,78,.12)", duration: 0.3, ease: "apple.out" }, at);
+  RC.clawd.life(tl, c, 0, 4.6);
+  RC.camera(tl, "#root .cam", 0, { duration: 4.6 });
+  RC.hold(tl, 4.6);
+  window.__timelines["clawd-connector"] = tl;
+})();
+</script>
+</template>
+</body></html>

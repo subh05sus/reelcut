@@ -297,6 +297,41 @@
       "id": "mac-menu",
       "durationSeconds": 5.4,
       "composition": "../../skills/reelcut/assets/patterns/apple/mac-menu.html"
+    },
+    {
+      "id": "clawd-hook",
+      "durationSeconds": 4.8,
+      "composition": "../../skills/reelcut/assets/patterns/clawd/clawd-hook.html"
+    },
+    {
+      "id": "clawd-connector",
+      "durationSeconds": 4.6,
+      "composition": "../../skills/reelcut/assets/patterns/clawd/clawd-connector.html"
+    },
+    {
+      "id": "clawd-skill",
+      "durationSeconds": 5.2,
+      "composition": "../../skills/reelcut/assets/patterns/clawd/clawd-skill.html"
+    },
+    {
+      "id": "clawd-payoff",
+      "durationSeconds": 4.6,
+      "composition": "../../skills/reelcut/assets/patterns/clawd/clawd-payoff.html"
+    },
+    {
+      "id": "clawd-cta",
+      "durationSeconds": 4.6,
+      "composition": "../../skills/reelcut/assets/patterns/clawd/clawd-cta.html"
+    },
+    {
+      "id": "clawd-subagents",
+      "durationSeconds": 5.2,
+      "composition": "../../skills/reelcut/assets/patterns/clawd/clawd-subagents.html"
+    },
+    {
+      "id": "clawd-hatch",
+      "durationSeconds": 4.6,
+      "composition": "../../skills/reelcut/assets/patterns/clawd/clawd-hatch.html"
     }
   ]
 }

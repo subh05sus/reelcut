@@ -140,7 +140,7 @@ along its path, a still frame stays exactly as sharp. About twice the render tim
 
 ### Sound effects: the bundled pack and the library
 
-377 CC0 motion-graphics sounds ship with the skill (`assets/sfx`, credits in `CREDITS.md`): whooshes, swishes,
+395 CC0 motion-graphics sounds ship with the skill (`assets/sfx`, credits in `CREDITS.md`): whooshes, swishes,
 risers, reverse swells, card slides, page flips; clicks, taps, ticks, toggles, single keystrokes, typewriter
 strikes, typing runs, dings, success chimes,
 error buzzes; pops and bloops; punches, thuds, booms and clangs; glitches, zaps, lasers, shimmers and power-ups.

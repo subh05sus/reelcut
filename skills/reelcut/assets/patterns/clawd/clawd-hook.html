@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* CLAWD HOOK. The hook of a reel about Claude, in a personality style (Claymation here): the headline resolves,
+     Clawd walks in under it, looks up at what it says, hops for joy and waves. Clawd moves on its own character timing
+     (a crouch before the hop, a gravity arc) and takes the style's material; the type stays on Apple's springs, and
+     the whole beat steps on Claymation's held frames through RC.cadence. Clawd stands on the ground line, inside the
+     content region, never under the headline's words. */
+  #root { --ground: #fdf1d6; --ink: #2d2a4a; --muted: #5d5872; --accent: #d64545; --accent-2: #2f8f85; }
+  #root .cam { position: absolute; inset: 0; }
+  #root .ground { position: absolute; left: 84px; right: 84px; top: 900px; height: 4px; border-radius: 2px; background: var(--ink); opacity: .12; }
+</style>
+<div id="root" data-look="paper" data-style="claymation" data-composition-id="clawd-hook" data-width="1080" data-height="1080">
+  <div class="rc-mesh" style="--mesh-1: rgba(214,69,69,.12); --mesh-2: rgba(47,143,133,.1); --m1x: 80%; --m1y: 72%; --m2x: 18%; --m2y: 96%"></div>
+  <div class="cam">
+    <div class="rc-head"><span class="ln" style="--ox:-3px">Claude posts</span><span class="ln"><em class="rc">for you.</em></span></div>
+    <div class="ground"></div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  RC.words(tl, "#root .rc-head", 0, { lead: true, stagger: 0.09 });
+  const c = RC.clawd("#root .cam", { x: 640, y: 900, size: 300 });
+  RC.clawd.enter(tl, c, 0.25, { from: "right" });
+  RC.clawd.look(tl, c, c.free + 0.1, { at: "#root .rc-head", lean: false });
+  RC.clawd.jump(tl, c, c.free + 0.35, { cheer: true });
+  RC.clawd.wave(tl, c, c.free + 0.1);
+  RC.clawd.life(tl, c, 0, 4.8);
+  RC.camera(tl, "#root .cam", 0, { duration: 4.8 });
+  RC.hold(tl, 4.8);
+  window.__timelines["clawd-hook"] = RC.cadence(tl, "#root");
+})();
+</script>
+</template>
+</body></html>

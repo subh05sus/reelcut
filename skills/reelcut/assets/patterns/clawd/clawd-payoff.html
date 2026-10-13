@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* CLAWD PAYOFF. The payoff, held long: a big statement, and under it Clawd's confetti stomp (Anthropic's "Confetti
+     Claude": eight held poses, a burst from each raised hand). On the brand-colour ground of `flood`, Clawd's orange
+     is too close to the ground to read, so the kit gives it an ink outline by itself. The reel's one earned overshoot
+     can be the statement's key word; Clawd's bounce is its own character motion, not that overshoot. */
+  #root .cam { position: absolute; inset: 0; }
+  #root .big { position: absolute; left: 84px; top: 150px; font-size: 128px; font-weight: 700; letter-spacing: -0.05em; line-height: 0.98; color: var(--ink); }
+  #root .big em.rc { font-size: 1.08em; }
+</style>
+<div id="root" data-look="flood" data-composition-id="clawd-payoff" data-width="1080" data-height="1080">
+  <div class="cam">
+    <div class="big"><span class="ln" style="display:block">Your week,</span><span class="ln" style="display:block"><em class="rc">planned.</em></span></div>
+  </div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  RC.words(tl, "#root .big", 0, { lead: true, stagger: 0.1 });
+  const c = RC.clawd("#root .cam", { x: 540, y: 930, size: 320 });
+  RC.clawd.enter(tl, c, 0.2, { from: "top" });
+  RC.clawd.confetti(tl, c, c.free + 0.1, { cycles: 2 });
+  RC.clawd.life(tl, c, 0, 4.6);
+  RC.camera(tl, "#root .cam", 0, { duration: 4.6 });
+  RC.hold(tl, 4.6);
+  window.__timelines["clawd-payoff"] = tl;
+})();
+</script>
+</template>
+</body></html>

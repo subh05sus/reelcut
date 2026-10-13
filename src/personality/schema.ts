@@ -74,6 +74,20 @@ export const PersonalitySchema = z.object({
     noConfetti: z.boolean().default(false),
     notes: z.string().max(500).default(""),
   }).default({}),
+  /**
+   * The mascot: Clawd, Anthropic's Claude mascot, drawn by the kit. By default it hosts the reels that are about Claude
+   * and acts out their steps (owner's decision, 2026-10-13; docs/design/clawd-decisions.md).
+   */
+  mascot: z.object({
+    character: z.enum(["clawd", "none"]).default("clawd"),
+    /** "claude": in reels about Claude and its tools; "always": every reel; "asked": only when the direction says so. */
+    when: z.enum(["claude", "always", "asked"]).default("claude"),
+    /** "host" acts out the steps; "cameo" is the hook, a celebration and the CTA; "corner" sits in a corner throughout; "director" is per beat. */
+    role: z.enum(["host", "cameo", "corner", "director"]).default("host"),
+    size: z.enum(["small", "medium", "large"]).default("medium"),
+    /** Something it always wears: a hat or an accessory from RC.clawd.WEARS ("" for nothing). */
+    wear: z.string().max(40).default(""),
+  }).default({}),
   brand: z.object({
     name: z.string().max(60).default(""),
     url: z.string().max(300).default(""),

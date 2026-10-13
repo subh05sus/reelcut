@@ -54,6 +54,8 @@ export interface HyperframesRenderOptions {
   fps?: number;
   /** A HyperFrames resolution preset, e.g. `square-4k`: the same layout at a higher pixel density. */
   resolution?: string;
+  /** `mov` (ProRes 4444) and `webm` (VP9) keep transparency, for a clip laid over other footage; the default is mp4. */
+  format?: "mp4" | "webm" | "mov";
 }
 
 export interface HyperframesRenderResult {
@@ -173,8 +175,8 @@ export function parseCheckReport(stdout: string): CheckReport {
 }
 
 export async function renderHyperframesProject(options: HyperframesRenderOptions): Promise<HyperframesRenderResult> {
-  const { projectDir, outputPath, quality = "looks", samples = 24, skipCheck = false, timeoutMs = DEFAULT_TIMEOUT_MS, videoFrameFormat, workers, fps, resolution } = options;
-  const extra = { ...(workers ? { workers } : {}), ...(fps ? { fps } : {}), ...(resolution ? { resolution } : {}) };
+  const { projectDir, outputPath, quality = "looks", samples = 24, skipCheck = false, timeoutMs = DEFAULT_TIMEOUT_MS, videoFrameFormat, workers, fps, resolution, format } = options;
+  const extra = { ...(workers ? { workers } : {}), ...(fps ? { fps } : {}), ...(resolution ? { resolution } : {}), ...(format ? { format } : {}) };
   try {
     await access(path.join(projectDir, "index.html"));
   } catch {
@@ -219,12 +221,13 @@ async function renderOnly(args: {
   workers?: number;
   fps?: number;
   resolution?: string;
+  format?: "mp4" | "webm" | "mov";
 }): Promise<HyperframesRenderResult> {
-  const { projectDir, outputPath, quality, timeoutMs, checkSamples, videoFrameFormat, workers, fps, resolution } = args;
+  const { projectDir, outputPath, quality, timeoutMs, checkSamples, videoFrameFormat, workers, fps, resolution, format } = args;
   await mkdir(path.dirname(path.resolve(outputPath)), { recursive: true });
 
   try {
-    await run(cliLine(["render", "--quality", quality, ...(videoFrameFormat ? ["--video-frame-format", videoFrameFormat] : []), ...(workers ? ["--workers", String(workers)] : []), ...(fps ? ["--fps", String(fps)] : []), ...(resolution ? ["--resolution", resolution] : []), "--output", path.resolve(outputPath)]), {
+    await run(cliLine(["render", "--quality", quality, ...(videoFrameFormat ? ["--video-frame-format", videoFrameFormat] : []), ...(workers ? ["--workers", String(workers)] : []), ...(fps ? ["--fps", String(fps)] : []), ...(resolution ? ["--resolution", resolution] : []), ...(format && format !== "mp4" ? ["--format", format] : []), "--output", path.resolve(outputPath)]), {
       cwd: projectDir,
       timeout: timeoutMs,
       maxBuffer: 64 * 1024 * 1024,

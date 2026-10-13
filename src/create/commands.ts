@@ -9,7 +9,7 @@ export const COMMAND_LINES: Record<string, string> = {
   stop: "stop the studio (asks first if a reel is being made)",
   restart: "restart the studio, to load new code (asks first if a reel is being made)",
   status: "the studio, reels being made, the batch, links and tools",
-  open: "open a page (create, library, reels, personality, performance, learnings, review, jobs) or a reel",
+  open: "open a page (create, library, reels, personality, clawd, performance, learnings, review, jobs) or a reel",
   list: "recent reels and chats, numbered for the other commands",
   continue: "carry on a chat in the studio: continue [reel] [message]",
   new: "hand a script to a new Create chat: new script.txt [--format 9:16 …] [words]",

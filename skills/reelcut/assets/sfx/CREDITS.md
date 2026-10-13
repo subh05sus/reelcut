@@ -27,5 +27,6 @@ Every sound here is CC0 1.0 (public domain): free for any use, commercial includ
 - **Keyboard Soundpack #1** by Unicae Games: https://opengameart.org/content/keyboard-soundpack-1-typing-and-single-keystrokes (CC0 1.0). 45 sound(s).
 - **Typewriter sounds** by cassie-orbitgames: https://opengameart.org/content/typewriter-sounds (CC0 1.0). 8 sound(s).
 - **18 random video game sound effects** by Bart: https://opengameart.org/content/18-random-video-game-sound-effects (CC0 1.0). 12 sound(s).
+- **Clawd's 8-bit blips** by reelcut, synthesised for it from square waves and seeded noise: https://github.com/subh05sus/reelcut (CC0 1.0). 18 sound(s).
 
 Trimmed, peak-normalised and re-encoded (Opus) by reelcut. Risers, reverse swells and typing runs are derived from the CC0 sounds above (reversed, slowed or layered); each says what it was made from in manifest.json.

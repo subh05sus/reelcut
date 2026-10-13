@@ -63,7 +63,7 @@ describe("the compatibility checks", () => {
       id: "p", name: "t", isDefault: true, styles: [{ id: "minimal", weight: 60 }, { id: "brutalist", weight: 40 }], beatStyles: {},
       palettes: { minimal: styleById("minimal")!.palettes[0]! }, fonts: {}, motion: {} as never, texture: {}, signature: {} as never, copy: {} as never, sound: {} as never,
       pacing: {} as never, guardrails: { bannedColors: ["#f5f3ee"], bannedFonts: [], bannedMoves: [], maxFonts: 3, contrast: 4.5, noGlass: false, noConfetti: false, notes: "" },
-      brand: {} as never, done: [], createdAt: now, updatedAt: now,
+      mascot: {} as never, brand: {} as never, done: [], createdAt: now, updatedAt: now,
     });
     expect(findings.some((f) => f.code === "tension")).toBe(true);
     expect(findings.some((f) => f.code === "banned-colour" && f.level === "error")).toBe(true);

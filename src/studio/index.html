@@ -826,6 +826,7 @@
       <a class="nav-i" href="#footage" data-tab="footage" title="Footage"><span data-ic="footage"></span><span class="lab">Footage</span><span class="n" data-count="footage"></span></a>
       <a class="nav-i" href="#reels" data-tab="reels" title="Reels"><span data-ic="reels"></span><span class="lab">Reels</span><span class="n" data-count="reels"></span></a>
       <a class="nav-i" href="#personality" data-tab="personality" title="Personality"><span data-ic="personality"></span><span class="lab">Personality</span><span class="n" data-count="personality"></span></a>
+      <a class="nav-i" href="#clawd" data-tab="clawd" title="Clawd, the Claude mascot"><span data-ic="clawd"></span><span class="lab">Clawd</span></a>
       <div class="cap">Manage</div>
       <a class="nav-i" href="#review" data-tab="review" title="Review"><span data-ic="review"></span><span class="lab">Review</span><span class="n" data-count="review"></span></a>
       <a class="nav-i" href="#folders" data-tab="folders" title="Folders"><span data-ic="folders"></span><span class="lab">Folders</span><span class="n" data-count="folders"></span></a>
@@ -899,6 +900,7 @@ const ICONS = {
   unlock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.8-1.2"/>',
   chart: '<path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 6-7"/>',
   wand: '<path d="m15 4 5 5M4 20 15 9M17 3v2M21 7h-2M19 11v1M11 3h1"/>',
+  clawd: '<path d="M4.5 5h15v10h-15Z M2 9h2.5v3H2Z M19.5 9H22v3h-2.5Z M6 15v4M9 15v4M15 15v4M18 15v4"/><path d="M8 8.2v1.6M16 8.2v1.6" stroke-width="2.4"/>',
 };
 function ic(name, size = 18) { return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ""}</svg>`; }
 function paintIcons(root = document) { $$("[data-ic]", root).forEach((el) => { el.outerHTML = ic(el.dataset.ic, Number(el.dataset.sz) || 18); }); }
@@ -1923,7 +1925,7 @@ function pinToBottom(ms = 2500) {
 // ---------- personality: the design crafter
 const PZ_STEPS = [
   ["start", "Start"], ["styles", "Styles"], ["mixer", "Mixer"], ["colours", "Colours"], ["fonts", "Fonts"], ["motion", "Motion"], ["texture", "Texture"],
-  ["signature", "Signature moves"], ["copy", "Copy & voice"], ["sound", "Sound"], ["pacing", "Pacing"], ["guardrails", "Guardrails"], ["review", "Review"],
+  ["signature", "Signature moves"], ["mascot", "Mascot"], ["copy", "Copy & voice"], ["sound", "Sound"], ["pacing", "Pacing"], ["guardrails", "Guardrails"], ["review", "Review"],
 ];
 const BEATS = [["hook", "Hook"], ["statement", "Statement"], ["data", "Data"], ["product", "Product"], ["quote", "Quote"], ["cta", "Call to action"]];
 const pz = { cat: null, p: null, findings: [], saving: null, seed: 0, locks: { styles: false, palettes: false, fonts: false }, style: null };
@@ -2147,6 +2149,19 @@ function renderPzStep() {
         ${seg("Captions", "signature.captions", [["none", "None"], ["key-words", "Key words"], ["karaoke", "Karaoke"], ["full", "Full"]])}
         <div class="group"><div class="row-i"><span class="t grow">Tagline on the end card</span><input id="pz-tag" value="${esc(p.signature.tagline)}" placeholder="optional" style="max-width:300px"></div></div>`;
       break;
+    case "mascot": {
+      const lead = p.styles[0]?.id || "";
+      const q = new URLSearchParams({ ids: "move:wave,move:plug,move:confetti,pose:idea-lightbulb", look: "paper", ...(lead ? { style: lead } : {}) });
+      h = `<h2>Mascot</h2><p class="lede">Clawd, the Claude mascot, drawn by the kit as Anthropic draws it. By default it hosts the reels that are about Claude and its tools, and acts out their steps: it plugs in the connector, carries the skill in, taps Post, and celebrates the payoff. It takes the material of your styles.</p>
+        ${seg("Mascot", "mascot.character", [["clawd", "Clawd"], ["none", "None"]])}
+        ${seg("In", "mascot.when", [["claude", "Reels about Claude"], ["always", "Every reel"], ["asked", "Only when asked"]])}
+        ${seg("Role", "mascot.role", [["host", "Host: acts out the steps"], ["cameo", "Cameo"], ["corner", "Corner"], ["director", "Per beat"]])}
+        ${seg("Size", "mascot.size", [["small", "Small"], ["medium", "Medium"], ["large", "Large"]])}
+        ${seg("Always wears", "mascot.wear", [["", "Nothing"], ["headset", "Headset"], ["cap", "Cap"], ["party-hat", "Party hat"], ["crown", "Crown"], ["wizard", "Wizard hat"], ["shades", "Shades"], ["bandana", "Bandana"]])}
+        <iframe src="/clawd/sheet?${q}" title="Clawd in your lead style" style="width:100%;height:340px;border:0;margin-top:8px"></iframe>
+        <p class="foot-note">Every move and pose, in any style, with stars: <a href="#clawd">the Clawd page</a>.</p>`;
+      break;
+    }
     case "copy":
       h = `<h2>Copy & voice</h2><p class="lede">How on-screen words are written.</p>
         ${seg("Case", "copy.case", [["sentence", "Sentence"], ["title", "Title Case"], ["upper", "CAPS"], ["lower", "lower"]])}
@@ -2667,6 +2682,35 @@ $("#import").addEventListener("change", async (e) => {
 const SOUND_CATS = [["transition", "Transitions"], ["ui", "UI and clicks"], ["pop", "Pops"], ["hit", "Hits"], ["texture", "Glitch and texture"]];
 async function loadPackSounds() { if (!state.packSounds.length) state.packSounds = (await api("/api/sfx-pack")).sounds; }
 let soundPlayer;
+// ---- Clawd: the mascot's moves and the pack's poses, playing live in any style, with stars.
+const cw = { kind: "moves", style: "", look: "paper", tag: "", cat: null };
+function cwSheetUrl(extra = {}) {
+  const q = new URLSearchParams({ kind: cw.kind, look: cw.look, ...(cw.style ? { style: cw.style } : {}), ...(cw.tag ? { tag: cw.tag } : {}), ...extra });
+  return `/clawd/sheet?${q}`;
+}
+async function renderClawd() {
+  cw.cat = await api("/api/clawd");
+  const c = cw.cat, looks = ["paper", "ink", "flood", "sky", "cinema", "poster", "cool"];
+  $("#main").innerHTML = `
+    ${pageHead("Clawd")}
+    <p class="lede">Clawd, the Claude mascot, as the kit draws it: Anthropic's Clawd, never redrawn. Here is every move it can do and every pose from the mascot pack, playing in the style and look you pick. Click one to star it; Claude reaches for starred ones first. Whether Clawd is in a reel is the personality's Mascot step.</p>
+    <div class="bar" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      ${segHtml("cw-kind", [["moves", `Moves <span class="n">${c.moves.length}</span>`], ["poses", `Poses <span class="n">${c.poses.length}</span>`], ["starred", `Starred <span class="n">${c.favourites.length}</span>`]], cw.kind)}
+      <select id="cw-style" aria-label="Style">${[["", "Flat"], ...c.styles.map((s) => [s.id, s.name])].map(([v, l]) => `<option value="${esc(v)}" ${v === cw.style ? "selected" : ""}>${esc(l)}</option>`).join("")}</select>
+      <select id="cw-look" aria-label="Look">${looks.map((l) => `<option ${l === cw.look ? "selected" : ""}>${l}</option>`).join("")}</select>
+      <input id="cw-tag" type="search" placeholder="Filter: connect, sleep, error…" value="${esc(cw.tag)}" style="max-width:240px">
+    </div>
+    ${cw.kind === "starred" && !c.favourites.length ? emptyState("clawd", "Nothing starred yet", "Star moves and poses in the other two tabs.") : `<iframe id="cw-sheet" src="${cwSheetUrl()}" title="Clawd's moves and poses" style="width:100%;min-height:640px;border:0;border-radius:var(--r-l, 18px)"></iframe>`}
+    <p class="foot-note">Overlay clips for your own editor: <code>npm run clawd -- overlay &lt;move&gt; --style ${esc(cw.style || "claymation")} --format mov</code>. Clawd is Anthropic's character; reelcut draws it for reels about Claude.</p>`;
+  bindSeg("cw-kind", (v) => { cw.kind = v; renderClawd(); });
+  const reload = () => { const f = $("#cw-sheet"); if (f) f.src = cwSheetUrl(); };
+  $("#cw-style").addEventListener("change", (e) => { cw.style = e.target.value; reload(); });
+  $("#cw-look").addEventListener("change", (e) => { cw.look = e.target.value; reload(); });
+  $("#cw-tag").addEventListener("input", debounce((e) => { cw.tag = e.target.value.trim().toLowerCase(); reload(); }, 300));
+}
+// The sheet says how tall it is, so the page scrolls rather than the frame.
+window.addEventListener("message", (e) => { if (e.origin === location.origin && e.data && e.data.clawdSheetHeight) { const f = $("#cw-sheet"); if (f) f.style.height = `${e.data.clawdSheetHeight}px`; } });
+
 function renderSounds() {
   const list = state.packSounds.filter((s) => s.category === state.soundCat);
   const families = [...new Set(list.map((s) => s.id.replace(/-\d+$/, "")))];
@@ -3126,6 +3170,7 @@ async function route() {
     else if (tab === "patterns") { await loadPatterns(); renderPatterns(); }
     else if (tab === "sounds") { await loadPackSounds(); renderSounds(); }
     else if (tab === "personality") await renderPersonality(id, sub);
+    else if (tab === "clawd") await renderClawd();
     else if (tab === "create") { if (id && sub) cr.panelView = sub; await renderCreate(id); }
     else if (tab === "performance") await renderPerformance();
     else { await loadLibrary(); renderLibrary(); }

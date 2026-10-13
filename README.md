@@ -341,7 +341,9 @@ files from the library or from a recorded reel's folder.
   Conversations are saved and resume the same session ("make beat 3 calmer"); runs keep going if you close
   the tab, with a notification when Claude needs you or the reel is done.
 - **Personality** — how every reel looks, moves and sounds: up to three of twenty styles with their colours
-  and type, motion, texture, signature moves, voice, sound, pacing and guardrails.
+  and type, motion, texture, signature moves, mascot, voice, sound, pacing and guardrails.
+- **Clawd** — the Claude mascot's moves and the mascot pack's poses, all playing live in any style and look; star
+  the ones you like and Claude reaches for them first. See *Clawd* below.
 - **Library** — every asset, filterable by type (images, vectors, video, sounds) and tag, with its
   source, preview, measurements and editable name, tags, kind and status. **Drop files or whole folders
   on the page** and each one is checked (by its bytes, never its extension), previewed, measured and
@@ -476,11 +478,43 @@ Motion blur renders four sub-frames per frame and blends them like a camera's 18
 along their path, still frames stay sharp. 4K renders the same layout at twice the pixels (1:1, 9:16, 16:9).
 Both are Step 0 questions, stored in `reel.json` as `"render"`, and `--no-blur` / `--hd` make a quick draft.
 
-### Sounds — 377 CC0 motion-graphics sound effects, bundled
+### Clawd — the Claude mascot, as the host of reels about Claude
+
+Most of these reels are about Claude and its tools, so Clawd, Anthropic's Claude mascot, can host them: it walks in under
+the hook, acts out each step — plugs in the connector, carries `SKILL.md` into the chat, taps Post, jumps to reach a
+button out of reach — celebrates the payoff with a confetti stomp, and holds up the word of the call to action. The
+kit draws it from one fixed spec (Anthropic's minimal Clawd: an 8 × 6 body, square eyes, no mouth, `#d97757`) and moves
+it the way Anthropic's own Clawd clips do — a crouch before a hop, a gravity arc, legs that step, poses that hold —
+while everything around it stays on Apple's springs. It never redraws it.
+
+- **When:** the personality's Mascot step; by default Clawd hosts the reels that are about Claude (`npm run clawd --
+  check script.txt` says whether one is, and what Clawd could do in each beat). Step 0 says so in one line.
+- **Any style:** it takes the beat's material — clay in Claymation, a cut card in Paper Cutout, an outline in Linear, a
+  voxel in 3D, goo in Liquid, a chroma split in Glitch — and an ink outline by itself on a ground too close to its orange.
+- **More than 30 acts:** walk, hop, look, wave, point, tap, plug, carry, type, say, sign, think, the confetti stomp, a
+  flag, a workout, sleep and wake, reactions, costumes (party hat, headset, crown…) and props (phone, laptop, plug,
+  calendar…), subagents as mini Clawds, a hatching egg, and acts on the voiceover's words.
+- **70 poses** from the mascot pack, re-cast onto the minimal Clawd with their props and effects animated: a lightbulb
+  that pulses, Z's that rise, an alert that flashes.
+- **Its own 8-bit blips** for every act, synthesised for reelcut (CC0), placed by `sfx suggest`.
+- **Overlay clips** for your own editor: `npm run clawd -- overlay wave --style claymation --format mov` (ProRes 4444
+  with alpha).
+
+```bash
+npm run clawd -- check script.txt        # is it about Claude, and Clawd's part in each beat
+npm run clawd -- poses --tag sleep       # the pack's poses
+npm run clawd -- overlay all --format webm
+```
+
+How to compose with it: [references/clawd.md](skills/reelcut/references/clawd.md); seven beats with Clawd in
+`skills/reelcut/assets/patterns/clawd/`. Clawd is Anthropic's character; reelcut draws it for reels about Claude and is
+not affiliated with Anthropic.
+
+### Sounds — 395 CC0 motion-graphics sound effects, bundled
 
 Whooshes, risers, reverse swells, slides; clicks, single keystrokes, typewriter strikes, typing runs, toggles, dings, chimes, error buzzes; pops; punches,
-thuds, booms; glitches, zaps, shimmers. All CC0 (Kenney's audio packs and CC0 sets from OpenGameArt, each licence
-checked; credits in `skills/reelcut/assets/sfx/CREDITS.md`), trimmed, normalised so nothing clips, and measured so
+thuds, booms; glitches, zaps, shimmers; and Clawd's own 8-bit blips. All CC0 (Kenney's audio packs and CC0 sets from
+OpenGameArt, each licence checked, and the blips reelcut synthesises itself; credits in `skills/reelcut/assets/sfx/CREDITS.md`), trimmed, normalised so nothing clips, and measured so
 each sits at the same level in the mix. `npm run sfx -- suggest reel.json` picks them for the moments the kit
 records (clicks, typing, counts, reveals, cuts) alongside your own approved sounds, which win a tie. Typing is
 placed as keystrokes, about one per 2.6 letters with a human swing, each a different key. Hear them on the
@@ -730,6 +764,8 @@ npm run typecheck
   blank frame.
 - **Determinism.** No clocks, no unseeded random, no infinite repeats. Every frame reproducible
   from its time alone.
+- **Clawd is drawn only by the kit.** It is Anthropic's character: posed, animated, dressed and lit in the
+  style's material, never redrawn, recoloured or reshaped.
 
 ---
 
@@ -751,6 +787,7 @@ npm run typecheck
 | Higgsfield (optional AI backgrounds) | ⚠️ plan, gates, registering, placement and fallback tested and rendered with a stand-in clip; the live MCP call is untried |
 | Footage (recorded steps, as recorded) | ✅ tested; a recorded moment rendered into a real clip, trimmed, retimed and zoomed, and its frames viewed |
 | Sound effects (`--sfx`) | ⚠️ placement and mixing tested; no sound library ships |
+| Clawd, the Claude mascot | ✅ 30+ acts in every style, 70 pack poses, seven patterns rendered and passing every gate, transparent overlays, its own sounds |
 | Data sourcing and charts | ⚠️ specified, not built |
 
 ---
@@ -761,8 +798,9 @@ npm run typecheck
 skills/reelcut/
   SKILL.md              the router: the steps and the hard rules
   references/           steps 0–5, design system, kit, patterns, direction, sourcing
-  assets/kit/           shared looks, UI pieces and motion helpers, injected via data-look
-  assets/patterns/      forty-one reference compositions, one per recurring move
+  assets/kit/           shared looks, UI pieces and motion helpers, injected via data-look (ui/80–82: Clawd)
+  assets/patterns/      reference compositions, one per recurring move (clawd/: Clawd's beats)
+  assets/clawd-pack/    the mascot pack's 75 pixel poses, re-cast onto Clawd by `npm run clawd -- import`
   scripts/              beats, intake, capture, render, measure, check-video, library (+ studio), sfx, footage, references, generate, learnings
 src/
   core/                 reading floor, frame sizes, the Beat schema
@@ -776,6 +814,7 @@ src/
   references/           reference films: measurements, tags, and the signals they give the learnings
   library/              the asset library, its reuse and review policy, ingest, watched folders, sound search, and the record of every run
   learnings/            signals, proposed rules, and the brief Claude reads
+  clawd/                the mascot pack's conversion, Clawd's moves, its sounds, whether a script is about Claude
   studio/               the local server and its one page
 examples/               a script to try it on, and a composed, renderable reel from it
 ```
@@ -786,3 +825,7 @@ out of a larger Remotion pipeline; what came across is the part that was never e
 ## Credits
 
 - Rendering by [HyperFrames](https://hyperframes.heygen.com/).
+- Clawd is Anthropic's Claude mascot. Its motion follows Anthropic's own Clawd clips, as taken apart in Ayotomiwa
+  Wale-Durojaye's [Codrops article](https://tympanus.net/codrops/2026/05/05/reverse-engineering-claude-ais-mascot-animations-with-svg-and-gsap/);
+  its moods and accessories were first seen in [clawd-react](https://github.com/stevysmith/clawd-react); the 70 poses
+  come from the mascot pack the owner provided.

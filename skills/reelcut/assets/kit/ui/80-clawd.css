@@ -1,0 +1,6 @@
+/*
+ * Clawd, the Claude mascot: the layer its rig is drawn on. Drawn and moved by 80-clawd.js.
+ * The rig sits on a layer the size of its container, so positions are the container's pixels.
+ */
+[data-look] svg.rc-clawd { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+[data-look] svg.rc-clawd.rc-cw-crisp .cw-skin, [data-look] svg.rc-clawd.rc-cw-crisp .cw-facetree, [data-look] svg.rc-clawd.rc-cw-crisp .cw-props { shape-rendering: crispEdges; }

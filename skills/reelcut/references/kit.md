@@ -67,6 +67,12 @@ pops overshoot ~2%. Reels render at **60 fps** by default (`DEFAULT_FPS`); a 0.4
 iPhone controls and surfaces, the Dynamic Island, the Mac, app mockups (Messages, Calendar, Maps, Music, the home
 screen) and feedback moments live in `assets/kit/ui/` and load with the kit: [apple-ui.md](apple-ui.md).
 
+## Clawd — the Claude mascot
+
+`RC.clawd(layer, { x, y, size })` draws Anthropic's Clawd and returns a rig that every act moves (`RC.clawd.walk`,
+`.hop`, `.look`, `.wave`, `.tap`, `.plug`, `.carry`, `.say`, `.sign`, `.confetti`, `.minis`, `.hatch`, `.pose`, `.life`…).
+Its material follows `data-style`; it moves on its own character timing. All of it is in [clawd.md](clawd.md).
+
 ## Styles — the twenty personality styles
 
 `data-style="<id>"` on the root (beside `data-look` and `data-type`) draws a beat in one of the twenty styles of

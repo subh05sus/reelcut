@@ -33,6 +33,7 @@
     "performance": "tsx skills/reelcut/scripts/performance.ts",
     "draw": "tsx skills/reelcut/scripts/draw.ts",
     "dashboard": "tsx skills/reelcut/scripts/dashboard.ts",
+    "clawd": "tsx skills/reelcut/scripts/clawd.ts",
     "reelcut": "tsx skills/reelcut/scripts/cmd.ts"
   },
   "dependencies": {

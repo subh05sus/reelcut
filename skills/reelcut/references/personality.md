@@ -47,6 +47,9 @@ motion energy.
 - **Sound:** effect flavour and loudness for `sfx suggest`, the music mood and tempo for `npm run music -- find`.
 - **Guardrails:** banned colours, fonts and moves never appear; no glass or confetti when they are off; the contrast
   floor for text; the owner's notes.
+- **Mascot:** Clawd, the Claude mascot (`mascot` in the personality): in reels about Claude by default, as a host that acts
+  out the steps, in the style's material, with one thing it always wears if the owner chose one. `none` keeps it out.
+  See [clawd.md](clawd.md).
 
 ## Commands
 
