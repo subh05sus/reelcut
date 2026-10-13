@@ -2158,7 +2158,7 @@ function renderPzStep() {
         ${seg("Role", "mascot.role", [["host", "Host: acts out the steps"], ["cameo", "Cameo"], ["corner", "Corner"], ["director", "Per beat"]])}
         ${seg("Size", "mascot.size", [["small", "Small"], ["medium", "Medium"], ["large", "Large"]])}
         ${seg("Always wears", "mascot.wear", [["", "Nothing"], ["headset", "Headset"], ["cap", "Cap"], ["party-hat", "Party hat"], ["crown", "Crown"], ["wizard", "Wizard hat"], ["shades", "Shades"], ["bandana", "Bandana"]])}
-        <iframe src="/clawd/sheet?${q}" title="Clawd in your lead style" style="width:100%;height:340px;border:0;margin-top:8px"></iframe>
+        <iframe id="cw-sheet" src="/clawd/sheet?${q}" title="Clawd in your lead style" style="width:100%;min-height:300px;border:0;margin-top:8px"></iframe>
         <p class="foot-note">Every move and pose, in any style, with stars: <a href="#clawd">the Clawd page</a>.</p>`;
       break;
     }

@@ -28,6 +28,7 @@ not from pouring text into templates. Rendering is [HyperFrames](https://hyperfr
 ## Contents
 
 - [Getting started](#getting-started)
+- [Connect reelcut to Claude](#connect-reelcut-to-claude)
 - [Invocation and every option](#invocation-and-every-option)
 - [Creative direction](#creative-direction)
 - [The steps](#the-steps)
@@ -76,22 +77,12 @@ so a machine set up to render is set up to capture.
 ### 2. Install the skill
 
 ```bash
-/plugin marketplace add subh05sus/reelcut
-/plugin install reelcut@reelcut
+claude plugin install reelcut --marketplace subh05sus/reelcut
 ```
 
-Restart Claude Code, then type `/reelcut` to confirm it loaded.
-
-<details>
-<summary>Other agents, or no plugin system</summary>
-
-```bash
-npx skills add https://github.com/subh05sus/reelcut --skill reelcut
-```
-
-Or copy `skills/reelcut/` into `~/.claude/skills/reelcut/` and restart. The repo also ships
-`.claude/skills/reelcut` and `.agents/skills/reelcut` symlinks for agents that scan those paths.
-</details>
+Or, in a Claude Code session, `/plugin marketplace add subh05sus/reelcut` then `/plugin install reelcut@reelcut`,
+then `/reload-plugins`. The desktop app, VS Code, claude.ai and other agents:
+[Connect reelcut to Claude](#connect-reelcut-to-claude).
 
 ### 3. Run it
 
@@ -128,8 +119,172 @@ From a terminal: `npm run reelcut -- <command>`, or `~/.reelcut/bin/reelcut <com
 
 A reel is named by its number from `list`, by part of its title, or left out for the latest.
 
-Install as a plugin from a checkout: `ln -s "$PWD" ~/.claude/skills/reelcut` (Claude Code loads it as
-`reelcut@skills-dir`, live from the checkout).
+---
+
+## Connect reelcut to Claude
+
+reelcut renders on your own computer: it needs Node, FFmpeg, Chrome and HyperFrames next to it. Where Claude
+runs decides how much of it works.
+
+| Where | Install with | What works |
+|---|---|---|
+| **Claude Code in a terminal** | `claude plugin install` | everything: reels, the studio, captures |
+| **Claude desktop app, Code tab** (local session) | **+** → **Plugins** | everything, same as the terminal |
+| **VS Code** · **JetBrains** | `/plugins` · the terminal steps | everything |
+| **claude.ai**, the desktop app's **Chat**, mobile | **Customize → Plugins** | planning and writing scripts; it can't render there |
+| **Claude Code on the web** (claude.ai/code) | the repo itself | untested, not recommended (see below) |
+| **Other agents** (Codex, Cursor, …) | `npx skills add` | the skill; the studio's Create page needs Claude Code |
+
+Everything below assumes the [prerequisites](#1-prerequisites) are installed. Check them at any time with
+`/reelcut doctor`.
+
+### Claude Code in a terminal
+
+In a shell (Claude Code 2.1.292 or later):
+
+```bash
+claude plugin install reelcut --marketplace subh05sus/reelcut
+claude plugin list        # reelcut@reelcut … enabled
+claude                    # then, in the session: /reelcut
+```
+
+<p align="center">
+  <img src="docs/images/connect/terminal-install.png" width="720" alt="A terminal: claude plugin install reelcut --marketplace subh05sus/reelcut adds the marketplace and installs reelcut@reelcut; claude plugin list shows it enabled." />
+</p>
+
+Or inside a Claude Code session:
+
+```text
+/plugin marketplace add subh05sus/reelcut
+/plugin install reelcut@reelcut
+/reload-plugins
+```
+
+`/plugin install` asks where to install it: **user** (every project — pick this one), **project** (shared with
+everyone on this repo, through `.claude/settings.json`) or **local** (this repo, only you). Since Claude Code
+2.1.275 the two lines can be one: `/plugin install reelcut --marketplace subh05sus/reelcut`.
+
+Then type `/reelcut`. Its commands also autocomplete as `/reelcut:<command>` (`/reelcut:doctor`,
+`/reelcut:status`, …).
+
+**Updates.** Marketplaces you add yourself don't update on their own. Run
+`claude plugin update reelcut@reelcut` (or `/plugin` → **Marketplaces** → turn on auto-update), then
+`/reload-plugins`. `/reelcut update` does the same for a checkout.
+
+### Claude desktop app — the Code tab
+
+The Code tab runs its own Claude Code, and it reads the same settings as the terminal, so **a user-scope install
+from the terminal is already there**. To install from the app instead:
+
+1. Open the **Code** tab and start a **Local** session in any project folder (plugins don't load in cloud or
+   WSL sessions).
+2. Click **+** next to the prompt box → **Plugins** → **Add plugin**.
+3. Add the marketplace `subh05sus/reelcut`, pick **reelcut**, and install it for **user**.
+4. Type `/reelcut` in the prompt.
+
+**+** → **Plugins** → **Manage plugins** turns it off, updates or removes it.
+
+### VS Code and JetBrains
+
+**VS Code** (the Claude Code extension): type `/plugins` in the prompt → **Manage plugins** → **Marketplaces** tab,
+add `subh05sus/reelcut` → **Plugins** tab, install **reelcut** for **user**. It shares its settings with the
+terminal and the desktop app, so a plugin installed in one is in all three.
+
+**JetBrains**: the plugin runs Claude Code in the IDE's terminal, so use the [terminal steps](#claude-code-in-a-terminal).
+
+### claude.ai, the desktop app's Chat tab, and mobile
+
+Here Claude runs in Anthropic's sandbox, which has no FFmpeg, Chrome or HyperFrames, so **it can't render**. It
+is still useful for planning a reel: segmenting a script into beats, choosing options, writing the hook. Install it
+once on your account and it is in every chat, on the web, the desktop app and mobile:
+
+1. Turn on **Settings → Capabilities → Cloud code execution and file creation** (skills need it).
+
+   <img src="docs/images/connect/claude-ai-code-execution.png" width="620" alt="Settings, Capabilities: the Cloud code execution and file creation switch, turned on. Its note says it is required for skills." />
+
+2. Open **Customize → Plugins** ([claude.ai/customize/plugins](https://claude.ai/customize/plugins)) and click
+   **Add → Add marketplace**.
+
+   <img src="docs/images/connect/claude-ai-add-menu.png" width="720" alt="Customize, Plugins: the Add menu is open with Add marketplace, Upload plugin, Create a plugin and Create with Claude." />
+
+3. Choose **Add from a repository**, type `subh05sus/reelcut` and pick **Use "subh05sus/reelcut"**. Leave
+   **Sync automatically** on so new versions arrive by themselves, and click **Sync**.
+
+   <img src="docs/images/connect/claude-ai-add-marketplace.png" width="560" alt="The Add marketplace dialog with subh05sus/reelcut as the URL and Sync automatically switched on, above Cancel and Sync." />
+
+4. Find **reelcut** in the marketplace's plugins and add it. In a chat, ask for it by name: *"Use reelcut to
+   cut this script into beats."*
+
+No GitHub access, or a fork of your own? **Add → Upload plugin** takes a zip of the repo (one
+`.claude-plugin/plugin.json` at its top; uploads are limited to 5,000 files and 200 MB, and reelcut is well
+under). A plugin installed on your account also syncs to Claude Code as `reelcut@synced` at its next session;
+if you already installed it there as `reelcut@reelcut`, turn one of the two off.
+
+### Claude Code on the web
+
+Sessions at claude.ai/code run in a fresh Linux VM that clones the repo you pick. It doesn't load plugins you
+installed locally, but it does load a repo's own `.claude/skills/`, and the reelcut repo ships
+`.claude/skills/reelcut`, so a session on a clone or fork of reelcut has the skill. To give it something to render
+with, set the environment's setup script to:
+
+```bash
+apt update && apt install -y ffmpeg
+npx -y hyperframes browser ensure || true
+```
+
+(the session then runs `npm ci` in the repo) and its network access to **Custom**, with the defaults plus `cdn.jsdelivr.net` (renders load GSAP from it). The
+studio isn't reachable from there and the clips stay on the VM, so this is untested and not recommended: use the
+terminal or the desktop app.
+
+### Other agents, or a checkout
+
+```bash
+npx skills add https://github.com/subh05sus/reelcut --skill reelcut
+```
+
+Or copy `skills/reelcut/` into `~/.claude/skills/reelcut/` and restart. The repo also ships `.claude/skills/reelcut`
+and `.agents/skills/reelcut` symlinks for agents that scan those paths.
+
+Working on reelcut itself: `ln -s "$PWD" ~/.claude/skills/reelcut` from the checkout (Claude Code loads it as
+`reelcut@skills-dir`, live from the checkout), or `claude --plugin-dir .` for one session.
+
+### The studio: your Claude login, and what it connects to
+
+`/reelcut` opens the studio at http://localhost:5198. Its **Create** page makes reels by talking to Claude Code
+through the Agent SDK with **your own Claude login** — no API key. If it says you are signed out, run `claude` in a
+terminal once and use `/login`.
+
+<p align="center">
+  <img src="docs/images/connect/studio-create.png" width="820" alt="The studio's Create page: a script box with option chips, and a bar of integrations listing Claude Code with its version, Claude in Chrome connected, Higgsfield not added, and Premiere and Resolve coming. It reads: Runs on your Claude login." />
+</p>
+
+The bar above the chat shows what reelcut can reach. Hover an item for how to set it up:
+
+- **Claude Code** — the CLI the studio drives. `claude --version` must work in the terminal that started the studio.
+- **Claude in Chrome** — real screen captures of web products. Install the Claude in Chrome extension, sign in,
+  then run `/chrome` in a Claude Code session to connect and turn it on.
+- **Higgsfield** (optional) — AI video for atmosphere beats. Add the Higgsfield MCP to Claude Code
+  (`claude mcp add …` with the server address from Higgsfield), then `/mcp` in a session to sign in.
+
+Then set up how your reels look on **Personality** (styles, motion, sound, and the mascot), and meet Clawd on its
+own page:
+
+<p align="center">
+  <img src="docs/images/connect/studio-mascot.png" width="820" alt="Personality, the Mascot step: whether Clawd appears, in which reels, its role and size, with a live preview." />
+  <br />
+  <img src="docs/images/connect/studio-clawd.png" width="820" alt="The Clawd page: the mascot pack's poses playing live in the Claymation style, each with a star." />
+</p>
+
+### If it doesn't show up
+
+| Symptom | Fix |
+|---|---|
+| `/reelcut` isn't in the list | `/reload-plugins`, or start a new session; `claude plugin list` should say *enabled* |
+| `claude plugin install` is an unknown command | update Claude Code (`claude update`), or use the `/plugin` steps in a session |
+| the install says its packages are not installed | `claude plugin update reelcut@reelcut`; from a checkout, `npm install` |
+| the studio's Create page says you are signed out | `claude` in a terminal, then `/login` |
+| a render fails at once | `/reelcut doctor`, then `npx hyperframes doctor` |
+| plugins are missing in the desktop app | the session is in the cloud or WSL; start a **Local** one |
 
 ---
 
