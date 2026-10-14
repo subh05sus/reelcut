@@ -171,6 +171,11 @@ Then type `/reelcut`. Its commands also autocomplete as `/reelcut:<command>` (`/
 `claude plugin update reelcut@reelcut` (or `/plugin` → **Marketplaces** → turn on auto-update), then
 `/reload-plugins`. `/reelcut update` does the same for a checkout.
 
+**Releasing (maintainers).** Claude Code keeps one copy of an installed plugin per version, so new commits reach
+people who already installed reelcut only when the version changes. Bump `version` in
+`.claude-plugin/plugin.json` and `package.json` together (`npm version minor --no-git-tag-version` sets
+`package.json` and the lockfile); `test/plugin.test.ts` fails while they disagree.
+
 ### Claude desktop app — the Code tab
 
 The Code tab runs its own Claude Code, and it reads the same settings as the terminal, so **a user-scope install
