@@ -28,7 +28,7 @@ export interface Settings {
   personality?: string; format?: string; length?: "full" | "short"; resolution?: "hd" | "4k";
   text?: "full" | "key-lines" | "minimal" | "none"; sfx?: "on" | "off"; music?: "fits" | "snap" | "none"; blur?: "on" | "off";
   /** "write": the owner gave a topic, a link or notes, and Claude writes the script first. "watch": the owner asks about a video. */
-  mode?: "script" | "write" | "watch";
+  mode?: "script" | "write" | "watch" | "brief";
   /** How hard Claude looks at a video it is asked about: the frame budget of a watch session. */
   depth?: "quick" | "normal" | "deep";
   /** Target length in seconds for a script Claude writes. */
@@ -213,6 +213,7 @@ export class CreateManager {
     if (i.voiceoverPath) flags.push(`--voiceover ${i.voiceoverPath}`);
     if (i.assetsDir) flags.push(`--assets ${i.assetsDir}`);
     if (i.settings?.mode === "watch") return watchPrompt(i);
+    if (i.settings?.mode === "brief") return briefPrompt(s, i);
     const write = i.settings?.mode === "write" && !i.scriptPath;
     const head = `/reelcut ${i.scriptPath ?? ""} ${flags.join(" ")}`.replace(/\s+/g, " ").trim();
     const lines = write ? [] : [head, ""];
@@ -534,6 +535,37 @@ export class CreateManager {
     if (!later) return write();
     this.saveTimers.set(s.id, setTimeout(write, 800));
   }
+}
+
+/**
+ * The first message of a "From a brief" chat: the brief (or a campaign's big idea) becomes visual directions first,
+ * chosen by the owner as cards, and only then a script and a reel. The directions come from the techniques catalog
+ * (`npm run techniques -- ideas`), made concrete for this brief.
+ */
+export function briefPrompt(s: SessionMeta, i: StartInput): string {
+  const secs = Number(i.settings?.target) || 45;
+  const scriptOut = path.join(filesDir(s.id), "script.txt");
+  const flags = [i.settings?.format && `--format ${i.settings.format}`, i.settings?.blur === "on" ? "--blur" : "--no-blur"].filter(Boolean).join(" ");
+  return [
+    "Turn the owner's brief into visual directions first, then make the reel from the directions they pick.",
+    "",
+    "The brief:",
+    i.text.trim(),
+    "",
+    `1. Run \`npm run techniques -- ideas "<the brief in one line>" --json\` and read references/techniques.md. It proposes operations (what the`,
+    "   visuals must do) and techniques for each, with examples. Treat them as a starting point, not the answer.",
+    "2. Offer three to five directions with AskUserQuestion (one question, header \"Direction\", multiSelect): each option's label is",
+    "   the technique and what it does for THIS brief in a few words; its description says concretely what the viewer would see;",
+    "   its preview is the path (operation/domain/technique/timing). Your favourite first, marked (Recommended).",
+    `3. Then write the script on the chosen directions (about ${secs} seconds, about ${Math.round(secs * 2.5)} spoken words; the default personality's`,
+    `   voice from \`npm run personality -- brief\`), save it to ${scriptOut}, show it as a quote block, and say which beat carries which`,
+    "   direction. Ask with AskUserQuestion: \"Make the reel from this script?\" with \"Make the reel (Recommended)\", \"Tighten it\" and \"Another angle\".",
+    `4. Then make the reel: invoke the reelcut skill (Skill tool) with the arguments \`${`${scriptOut} ${flags}`.trim()}\`, and give every beat the`,
+    "   technique path of the direction it carries (beats[].technique and techniqueWhy in reel.json).",
+    "",
+    "This run is driven from the reelcut studio's Create page: the owner answers your questions there as cards. Never ask whether",
+    "to open the studio. Start your first reply with one line `Title: <a short name for this reel, 2 to 6 words>`.",
+  ].join("\n");
 }
 
 /**

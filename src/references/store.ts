@@ -11,7 +11,10 @@ import { syncReferenceSignals } from "../learnings/store.js";
  *
  * Its own folder and its own index, written the way the library is (under a lock, via a temp file),
  * and deliberately **not** part of the library: nothing in the matcher, the footage finder or the
- * renderer reads this index, so a reference cannot end up in a reel however it is described.
+ * renderer reads this index, so a reference cannot end up in a reel however it is described. The one exception is
+ * deliberate (owner's decision, 2026-10-20): `npm run graph -- atlas --refs` may take frames of a reference film as
+ * graph thumbnails, and the render refuses an atlas holding them unless the reel opted in (`"referenceThumbnails":
+ * true`, asked in Step 0) and lists every one for report.md (src/graph/atlas.ts).
  */
 
 export function referencesRoot(): string {

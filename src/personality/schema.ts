@@ -95,6 +95,14 @@ export const PersonalitySchema = z.object({
     fonts: z.array(z.string()).max(6).default([]),
     logo: z.string().max(500).default(""),
   }).default({}),
+  /**
+   * Techniques (src/taxonomy/catalog.ts) this personality reaches for first, and ones it never uses. Step 1 ranks a
+   * beat's suggested techniques with them; a banned technique is never suggested.
+   */
+  techniques: z.object({
+    favour: z.array(z.string().max(40)).max(20).default([]),
+    ban: z.array(z.string().max(40)).max(20).default([]),
+  }).default({}),
   /** Wizard steps the owner has confirmed. */
   done: z.array(z.string()).default([]),
   createdAt: z.string(),

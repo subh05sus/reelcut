@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* GRAPH WORLD. A whole system as one world: six hubs on an inner ring, their categories, their members, and a cloud
+     of examples at the rim. The camera starts close on the hubs while the branches draw out, then pulls back to show
+     how much hangs off them, and the world turns slowly under the headline. For "there is a system behind this",
+     a taxonomy, an ecosystem, "hundreds of…". Tiles here are seeded colour fields: a real reel uses its atlas. */
+  #root .cam { position: absolute; inset: 0; }
+  #root .rc-head { z-index: 5; }
+  #root .cap { position: absolute; left: 84px; top: 318px; z-index: 5; font: 500 22px/1 var(--font-mono); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+</style>
+<div id="root" data-look="ink" data-style="atlas" data-composition-id="graph-world" data-width="1080" data-height="1080">
+  <div class="cam"></div>
+  <div class="rc-head"><span class="ln" style="--ox:0px">Every image,</span><span class="ln" style="--ox:-1px">by <em class="rc">how</em> it works.</span></div>
+  <div class="cap">6 operations · 12 domains · 180 examples</div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  const ops = [["d", "Differentiate"], ["g", "Group"], ["s", "Sequence"], ["i", "Infer"], ["r", "Reveal"], ["t", "Transform"]];
+  const doms = ["Feature", "Space", "Semantic", "Social", "Cultural", "Grouping", "Typographic", "Interface", "Sound"];
+  const tiles = RC.graphTiles(180, 11);
+  const nodes = [];
+  let k = 0;
+  ops.forEach(([id, name], oi) => {
+    nodes.push({ id, label: name, kind: "hub", group: id });
+    for (let d = 0; d < 2; d++) {
+      const did = id + d;
+      nodes.push({ id: did, parent: id, kind: "chip", label: doms[(oi * 2 + d) % doms.length], group: id });
+      for (let t = 0; t < 3; t++) {
+        const tid = did + "t" + t;
+        nodes.push({ id: tid, parent: did, kind: "dot", group: id });
+        for (let x = 0; x < 5; x++) nodes.push({ id: tid + "x" + x, parent: tid, kind: "tile", image: tiles[k++], group: id, size: 22 });
+      }
+    }
+  });
+  const g = RC.graph("#root .cam", { nodes }, { layout: "radial", radii: [176, 310, 398, 478], squash: 0.94, leafJitter: 24, center: [540, 600], startAngle: -60, hub: 112 });
+  RC.graphFrame(tl, g, 0, { to: [540, 600], zoom: 2.1 });
+  RC.graphDraw(tl, g, 0.1, { levelGap: 0.38, duration: 0.6 });
+  RC.graphCamera(tl, g, 1.25, { to: [540, 600], screen: [540, 690], zoom: 0.68, duration: 1.9, ease: "spring.soft" });
+  RC.graphDrift(tl, g, 0, 5.4, { rotate: 6 });
+  // The headline waits for the pull-back: while the camera is close, the graph fills the frame.
+  tl.set("#root .rc-head, #root .cap", { opacity: 0 }, 0);
+  tl.set("#root .rc-head", { opacity: 1 }, 2.5);
+  RC.words(tl, "#root .rc-head", 2.5, { stagger: 0.08 });
+  RC.blurIn(tl, "#root .cap", 3.0, { blur: 8, y: 8 });
+  RC.hold(tl, 5.2);
+  window.__timelines["graph-world"] = tl;
+})();
+</script>
+</template>
+</body></html>

@@ -27,7 +27,7 @@ export interface PreviewOptions {
 
 /** How the three shapes are made in each style: the kit's .rc-shape in the style's material, or the style's own art. */
 type ShapeKind = "shape" | "slab" | "blob" | "brush" | "none";
-const SHAPES: Record<string, ShapeKind> = { isometric: "slab", liquid: "blob", "ink-paint": "brush", "kinetic-type": "none", cinematic: "none", "ui-product": "none" };
+const SHAPES: Record<string, ShapeKind> = { isometric: "slab", liquid: "blob", "ink-paint": "brush", "kinetic-type": "none", cinematic: "none", "ui-product": "none", atlas: "none" };
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 
@@ -70,6 +70,8 @@ function decoHtml(style: StyleSpec): string {
     case "ink-paint": return `<svg class="art" viewBox="0 0 1080 1080"><path class="sweep" d="M 70 360 C 260 330, 460 380, 640 340" filter="url(#rc-rough)"/></svg>`;
     case "collage": return `<div class="sticker">NEW!</div>`;
     case "3d": return `<i class="rc-floor-shadow f1"></i><i class="rc-floor-shadow f2"></i>`;
+    // A small specimen tree: one root ring, three hairline branches, three tagged ends.
+    case "atlas": return `<svg class="art" viewBox="0 0 1080 1080"><circle class="at-ring" cx="790" cy="470" r="46"/><path class="at a1" d="M 790 516 C 790 610, 650 600, 650 700"/><path class="at a2" d="M 790 516 C 790 610, 790 600, 790 700"/><path class="at a3" d="M 790 516 C 790 610, 930 600, 930 700"/><rect class="at-tag" x="608" y="704" width="84" height="26" rx="4"/><rect class="at-tag" x="748" y="704" width="84" height="26" rx="4"/><rect class="at-tag" x="888" y="704" width="84" height="26" rx="4"/></svg>`;
     default: return "";
   }
 }
@@ -116,6 +118,8 @@ const CSS = (style: StyleSpec, p: Palette) => {
   #root .art { position:absolute; inset:0; width:1080px; height:1080px; z-index:3; pointer-events:none; }
   #root .dd { fill:none; stroke:var(--accent); stroke-width:8; stroke-linecap:round; stroke-linejoin:round; filter:url(#rc-wobble); }
   #root .br { fill:none; stroke:var(--accent); stroke-width:46; stroke-linecap:round; } #root .br.s2 { stroke:var(--accent-2); } #root .br-dot { fill:var(--ink); }
+  #root .at, #root .at-ring { fill:none; stroke:var(--accent); stroke-width:2.5; stroke-linecap:round; }
+  #root .at.a2 { stroke:var(--accent-2); } #root .at-tag { fill:none; stroke:var(--ink); stroke-width:1.5; opacity:.55; }
   #root .sweep { fill:none; stroke:var(--accent); stroke-width:120; stroke-linecap:round; opacity:.35; }
   #root .rc-floor-shadow { z-index:2; } #root .rc-floor-shadow.f1 { left:660px; top:610px; width:200px; } #root .rc-floor-shadow.f2 { left:750px; top:810px; width:170px; }
   #root .redsq { position:absolute; right:84px; top:96px; width:300px; height:300px; background:var(--accent); z-index:2; }
@@ -182,6 +186,7 @@ export function previewComposition(style: StyleSpec, kind: PreviewKind, o: Previ
   else if (s.length) RC.styleEnter(tl, s, 0.3);
   if (has(".dd")) RC.draw(tl, R + ".dd", 1.0, { duration: 0.7, stagger: 0.3 });
   if (has(".sweep")) RC.draw(tl, R + ".sweep", 0.1, { duration: 0.8 });
+  if (has(".at")) { RC.draw(tl, R + ".at-ring", 0.3, { duration: 0.6 }); RC.draw(tl, R + ".at", 0.7, { duration: 0.7, stagger: 0.15 }); }
   if (has(".sticker")) RC.pop(tl, R + ".sticker", 1.4, { reward: true });
   if (has(".redsq")) RC.rise(tl, R + ".redsq", 0, { lead: true, y: 0 });
   // The number, the label, the extra, the confirmation.

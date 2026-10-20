@@ -923,6 +923,27 @@ Create page has an **Ask about a video** mode, with a **Watch** panel that shows
 is in [`skills/reelcut/references/watch.md`](skills/reelcut/references/watch.md). The same thing as a standalone
 skill, for any Claude Code: [subh05sus/video-understanding-skill](https://github.com/subh05sus/video-understanding-skill).
 
+### `npm run techniques` and `npm run graph` — what a beat must do, and graphs of systems
+
+Every beat names a technique path, `operation/domain/technique/timing`: what it must **do** (differentiate, group,
+sequence, infer, reveal, transform), through which channel, by which move, played how. About 70 techniques are written
+in our own words from Gestalt and semiotics, mapped onto the moves and patterns, and scored by your Works ratings.
+The framework is inspired by Iris™, *A Taxonomy of Visuals*, by Modern Art Direction; nothing of theirs is used.
+
+```bash
+npm run techniques -- suggest --kind data "Über 71.000 Follower in sechs Monaten"
+npm run techniques -- ideas "Make our scheduler stand out: it replaces three tools"
+npm run techniques -- plan out/reel.json
+npm run graph -- atlas --tags screenshot --reels 6       # up to 500 images in one sheet for a graph
+```
+
+The kit's graph engine (`RC.graph`) draws systems: worlds the camera flies through, trees whose branches light,
+path cards that roll, members that bloom out of a node, and ripples of light that spread from one idea. Five patterns
+show it (`graph-world`, `graph-tree`, `graph-path-card`, `graph-bloom`, `graph-pulse`), and the new **Atlas** style is
+made for them. The studio has a **Techniques** page (the live graph, examples, pin a technique to a chat), a
+**From a brief** mode on Create, and a Techniques step in the Personality. See
+[`skills/reelcut/references/techniques.md`](skills/reelcut/references/techniques.md).
+
 ### `npm test`
 
 ```bash
@@ -972,6 +993,7 @@ npm run typecheck
 | Footage (recorded steps, as recorded) | ✅ tested; a recorded moment rendered into a real clip, trimmed, retimed and zoomed, and its frames viewed |
 | Sound effects (`--sfx`) | ⚠️ placement and mixing tested; no sound library ships |
 | Watching video (agentic: map, search, any-fps looks, zoom, OCR, transcript, sound) | ✅ tested; a real master watched beat by beat, the studio Watch panel shown from a recorded watch session (a live studio run is untried) |
+| Techniques taxonomy and graph engine | ✅ tested; five graph patterns rendered and passing every gate, the studio's Techniques page and brief mode shown in screenshots (a live studio run is untried) |
 | Clawd, the Claude mascot | ✅ 30+ acts in every style, 70 pack poses, seven patterns rendered and passing every gate, transparent overlays, its own sounds |
 | Data sourcing and charts | ⚠️ specified, not built |
 

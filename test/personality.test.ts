@@ -9,8 +9,8 @@ import {
 } from "../src/personality/index.js";
 
 describe("the style catalog", () => {
-  it("has the twenty styles, each with six curated schemes and real type pairings", () => {
-    expect(STYLES).toHaveLength(20);
+  it("has the twenty-one styles, each with six curated schemes and real type pairings", () => {
+    expect(STYLES).toHaveLength(21);
     for (const s of STYLES) {
       expect(s.palettes.length, s.id).toBe(6);
       for (const id of [...s.fonts.best, ...s.fonts.avoid]) expect(PAIRINGS.some((p) => p.id === id), `${s.id}: ${id}`).toBe(true);
@@ -63,7 +63,7 @@ describe("the compatibility checks", () => {
       id: "p", name: "t", isDefault: true, styles: [{ id: "minimal", weight: 60 }, { id: "brutalist", weight: 40 }], beatStyles: {},
       palettes: { minimal: styleById("minimal")!.palettes[0]! }, fonts: {}, motion: {} as never, texture: {}, signature: {} as never, copy: {} as never, sound: {} as never,
       pacing: {} as never, guardrails: { bannedColors: ["#f5f3ee"], bannedFonts: [], bannedMoves: [], maxFonts: 3, contrast: 4.5, noGlass: false, noConfetti: false, notes: "" },
-      mascot: {} as never, brand: {} as never, done: [], createdAt: now, updatedAt: now,
+      mascot: {} as never, brand: {} as never, techniques: { favour: [], ban: [] }, done: [], createdAt: now, updatedAt: now,
     });
     expect(findings.some((f) => f.code === "tension")).toBe(true);
     expect(findings.some((f) => f.code === "banned-colour" && f.level === "error")).toBe(true);
@@ -135,7 +135,7 @@ describe("the style previews", () => {
 });
 
 describe("the kit's style layer", () => {
-  it("draws all twenty styles, with the catalog's textures and frame cadence", async () => {
+  it("draws all twenty-one styles, with the catalog's textures and frame cadence", async () => {
     const { readKitSources } = await import("../src/render/kit.js");
     const kit = readKitSources();
     const win: Record<string, unknown> = { gsap: { registerEase: () => undefined, defaults: () => undefined } };

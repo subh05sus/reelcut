@@ -19,6 +19,8 @@ import { resolveCue } from "../../../src/library/sfx.js";
 import { renderHyperframesProject } from "../../../src/render/hyperframes.js";
 import { checkVideo, type VideoReport } from "../../../src/verify/checkVideo.js";
 import { choosePosterTime } from "../../../src/render/poster.js";
+import { checkGraphRefs, copyGraphAssets, graphProvenance, graphRefsIn } from "../../../src/graph/atlas.js";
+import { checkPath } from "../../../src/taxonomy/paths.js";
 import { LIBRARY_ASSET_DIR, loadSfxPack, acceptMoments, blobPath, detectKey, ensureKeyed, isKeyed, keyedBlob, libraryRefsIn, loadIndex, recordRun, recordUse, wantsKey, type LibraryAsset } from "../../../src/library/index.js";
 import { expandFootage, linkOrCopy, type FootageUse, type HoldFrame } from "../../../src/render/footage.js";
 import { bedFor } from "../../../src/render/music.js";
@@ -80,6 +82,9 @@ interface ManifestBeat {
   sfx?: { source: string; at: number; volume?: number; durationSeconds?: number; pan?: number; rate?: number; align?: "onset" | "peak" | "end" | "raw" }[];
   /** The words spoken while this beat is on screen. With a voiceover, they set its length. */
   text?: string;
+  /** What the beat does, as `operation/domain/technique/timing` (npm run techniques), and why. Scored by its rating. */
+  technique?: string;
+  techniqueWhy?: string;
 }
 
 interface Manifest {
@@ -108,6 +113,8 @@ interface Manifest {
   voiceover?: VoiceoverSpec;
   /** Asked in Step 0. `motionBlur`: true (4 sub-frames) or a number of sub-frames. `resolution`: "4k" or "hd". */
   render?: { motionBlur?: boolean | number; resolution?: "4k" | "hd" };
+  /** Asked in Step 0 (default no): reference-film frames may appear as graph thumbnails, each listed in report.md. */
+  referenceThumbnails?: boolean;
 }
 
 interface Args {
@@ -425,6 +432,17 @@ async function main(): Promise<void> {
   // waiting on something must not hold up the other thirteen, and --preflight lists them all at once.
   const blocked = new Map<string, string[]>();
   const block = (id: string, reason: string) => blocked.set(id, [...(blocked.get(id) ?? []), reason]);
+  // Each beat names what it does (Step 1). Reported, never gated: the owner chose steering, not a gate.
+  {
+    const unnamed = manifest.beats.filter((b) => !b.technique).map((b) => b.id);
+    for (const b of manifest.beats) {
+      if (!b.technique) continue;
+      const c = checkPath(b.technique);
+      if (!c.ok) console.warn(`  warning: ${b.id}'s technique ${b.technique}: ${c.errors.join("; ")}`);
+      else for (const w of c.warnings) console.warn(`  note: ${b.id}: ${w}`);
+    }
+    if (unnamed.length) console.warn(`  note: ${unnamed.length} beat${unnamed.length === 1 ? " names" : "s name"} no technique (${unnamed.join(", ")}): npm run techniques -- plan ${args.manifest}`);
+  }
   const own = (id: string, message: string) => message.replace(new RegExp(`^${id}: `), "");
 
   // Recordings on a green screen are keyed first, once: the copy is saved in the library and reused. A recording
@@ -529,6 +547,13 @@ async function main(): Promise<void> {
       libraryById.set(id, asset);
     }
   }
+  // Graph atlases: each must exist, and one holding reference-film frames needs the reel's opt-in.
+  for (const beat of beats) for (const reason of checkGraphRefs(beat.compositionHtml, manifest)) block(beat.id, reason);
+  const graphProv = graphProvenance(beats.filter((b) => !blocked.has(b.id)).map((b) => ({ id: b.id, html: b.compositionHtml })));
+  if (graphProv) {
+    writeFileSync(path.join(base, "graph-sources.md"), graphProv);
+    console.log(`  graph images … listed in graph-sources.md: copy it into report.md`);
+  }
   const allRefs = [...libraryById.keys()];
   const libraryFor = (ids: readonly string[]) => ids.flatMap((id) => (libraryById.has(id) ? [libraryById.get(id)!] : []));
 
@@ -627,6 +652,7 @@ async function main(): Promise<void> {
       writeFiles(dir, built.clips[beat.id]!);
       copyAssets(dir, built.assets);
       copyLibraryAssets(dir, libraryFor(refsByBeat.get(beat.id) ?? []));
+      copyGraphAssets(dir, graphRefsIn(beat.compositionHtml));
       copyHoldFrames(dir, holdCache, footageByBeat.get(beat.id)?.holds ?? []);
       // Only the fonts this beat uses, from the bundled library: nothing is fetched while it renders.
       if (kit.fonts) for (const file of fontFilesFor(beat.compositionHtml, kit.fonts.lib)) {

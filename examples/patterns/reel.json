@@ -332,6 +332,31 @@
       "id": "clawd-hatch",
       "durationSeconds": 4.6,
       "composition": "../../skills/reelcut/assets/patterns/clawd/clawd-hatch.html"
+    },
+    {
+      "id": "graph-world",
+      "durationSeconds": 5.2,
+      "composition": "../../skills/reelcut/assets/patterns/graph-world.html"
+    },
+    {
+      "id": "graph-tree",
+      "durationSeconds": 4.9,
+      "composition": "../../skills/reelcut/assets/patterns/graph-tree.html"
+    },
+    {
+      "id": "graph-path-card",
+      "durationSeconds": 4.8,
+      "composition": "../../skills/reelcut/assets/patterns/graph-path-card.html"
+    },
+    {
+      "id": "graph-bloom",
+      "durationSeconds": 4.4,
+      "composition": "../../skills/reelcut/assets/patterns/graph-bloom.html"
+    },
+    {
+      "id": "graph-pulse",
+      "durationSeconds": 5.4,
+      "composition": "../../skills/reelcut/assets/patterns/graph-pulse.html"
     }
   ]
 }

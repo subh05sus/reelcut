@@ -1,5 +1,5 @@
 /*
- * The twenty personality styles: their world, their finish, their motion, their cadence. With data-style on the root:
+ * The twenty-one personality styles: their world, their finish, their motion, their cadence. With data-style on the root:
  *
  *   RC.styleWorld(root, o)           the style's decorations and the filters its shapes use (call once, after layout);
  *                                    o.grid / o.hairlines / o.letterbox / o.sun / o.floor / o.osd / o.slices: false turns one off
@@ -38,6 +38,7 @@
     "retro-vhs": { verb: "glitch", fps: 0, world: { sun: true, floor: true, osd: true }, texture: T({ scanlines: 0.6, chroma: 0.45, grain: 0.35, vignette: 0.35, glow: 0.3 }) },
     glitch: { verb: "glitch", fps: 0, world: { slices: true }, texture: T({ chroma: 0.7, scanlines: 0.3, grain: 0.3, glow: 0.2 }) },
     cinematic: { verb: "rise", fps: 0, world: { letterbox: true }, texture: T({ grain: 0.5, leaks: 0.35, vignette: 0.45 }) },
+    atlas: { verb: "draw", fps: 0, world: { atlas: true }, texture: T({ paper: 0.2, grain: 0.1 }) },
   };
   function rootOf(el) { var e = RC.one(el); return (e && e.closest && e.closest("[data-style]")) || document.querySelector("[data-look][data-style]"); }
   function spec(el) { var r = rootOf(el); return (r && STYLE[r.getAttribute("data-style")]) || { verb: "rise", fps: 0, texture: T({}) }; }
@@ -62,6 +63,7 @@
     root.insertBefore(world, root.firstChild);
     var W = root.offsetWidth || 1080, H = root.offsetHeight || 1080;
     if (w.grid) { var g = layer(world, "rc-w-grid"); for (var i = 1; i < 12; i++) { var x = document.createElement("i"); x.style.left = (84 + i * (W - 168) / 12) + "px"; g.appendChild(x); } }
+    if (w.atlas) layer(world, "rc-atlas-grid");
     if (w.hairlines) { var h = layer(world, "rc-w-hair"); for (var j = 1; j < 9; j++) { var y = document.createElement("i"); y.style.top = (j * H / 9) + "px"; h.appendChild(y); } }
     if (w.sun) layer(world, "rc-w-sun");
     if (w.floor) layer(world, "rc-w-floor");

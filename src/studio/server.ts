@@ -37,6 +37,9 @@ import { HIGGSFIELD_SETTINGS, loadSettings, setHiggsfieldSetting, type Higgsfiel
 import { readGeneration } from "../generate/log.js";
 import { CreateManager, filesDir as createFilesDir, insideAllowed, reelState } from "../create/manager.js";
 import { watchedIn, watchHome } from "../watch/index.js";
+import { acceptPatternTags, checkPath, pinTechnique, setAssetTags, setPatternTags, TaxonomyError, TECHNIQUES, techniqueById } from "../taxonomy/index.js";
+import { catalogJson, ideasFor } from "../taxonomy/examples.js";
+import { techniquesGraphPage } from "../taxonomy/page.js";
 import { readIntegrations } from "../create/integrations.js";
 
 /** The Personality wizard's steps, in order (the page's PZ_STEPS). */
@@ -541,6 +544,54 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
       }
     }
 
+    // ---- techniques: the catalog (operation → domain → technique → timing → execution), its tags, pins and ideas
+    if (parts[0] === "api" && parts[1] === "techniques") {
+      if (read && parts.length === 2) {
+        const chats = (create ??= new CreateManager()).list().slice(0, 20).map((x) => ({ id: x.id, title: x.title, status: x.status }));
+        return sendJson(res, 200, { ...catalogJson(), chats });
+      }
+      try {
+        if (method === "POST" && parts[2] === "accept" && parts.length === 3) {
+          const b = (await readBody(req)) as { pattern?: unknown };
+          return sendJson(res, 200, { accepted: acceptPatternTags(typeof b.pattern === "string" ? b.pattern : undefined) });
+        }
+        if (method === "POST" && parts[2] === "tag" && parts.length === 3) {
+          const b = (await readBody(req)) as { kind?: unknown; id?: unknown; techniques?: unknown };
+          if (typeof b.id !== "string" || !Array.isArray(b.techniques) || !b.techniques.every((t) => typeof t === "string")) throw new HttpError(400, "send { kind: pattern|asset, id, techniques: [...] }");
+          const tag = b.kind === "asset" ? setAssetTags(b.id, b.techniques as string[], "user") : b.kind === "pattern" ? setPatternTags(b.id, b.techniques as string[], "user") : undefined;
+          if (!tag) throw new HttpError(400, "kind must be pattern or asset");
+          return sendJson(res, 200, { tag });
+        }
+        if (method === "POST" && parts[2] === "pin" && parts.length === 3) {
+          const b = (await readBody(req)) as { path?: unknown; conversation?: unknown; note?: unknown };
+          const c = checkPath(String(b.path ?? ""));
+          if (!c.ok || !c.path) throw new HttpError(400, c.errors.join("; ") || "not a technique path");
+          const conversation = typeof b.conversation === "string" && b.conversation ? b.conversation : undefined;
+          const note = typeof b.note === "string" ? b.note.slice(0, 300) : undefined;
+          pinTechnique(String(b.path), conversation, note);
+          if (conversation) {
+            const cm = (create ??= new CreateManager());
+            if (!cm.get(conversation)) throw new HttpError(404, "no such conversation");
+            const t = techniqueById(c.path.technique)!;
+            cm.send(conversation, `Pinned from Techniques: ${t.name} (${String(b.path)})${note ? ` — ${note}` : ""}`,
+              [], `The owner pinned a technique to this reel from the studio's Techniques page: ${t.name}, path ${String(b.path)}. ${t.does}${note ? ` Their note: ${note}` : ""}\nUse it for the beat it fits best (say which, and why), write it as that beat's "technique" in reel.json, and recompose that beat if it is already made. If no beat fits, say so and suggest where it would.`);
+          }
+          return sendJson(res, 200, { ok: true });
+        }
+        if (read && parts[2] === "ideas" && parts.length === 3) return sendJson(res, 200, { ideas: ideasFor(url.searchParams.get("brief") ?? "") });
+      } catch (error) {
+        if (error instanceof TaxonomyError) throw new HttpError(400, error.message);
+        throw error;
+      }
+    }
+    // The live graph of the catalog, drawn by the kit's graph engine (embedded in the Techniques page).
+    if (read && parts[0] === "techniques" && parts[1] === "graph" && parts.length === 2) {
+      const look = url.searchParams.get("look") === "ink" ? "ink" : "paper";
+      const kit = readKitSources();
+      res.writeHead(200, { "Content-Type": TYPES[".html"]!, "Cache-Control": "no-store" });
+      return void res.end(techniquesGraphPage({ catalog: catalogJson(), kitCss: kit.css, kitJs: kit.js, gsapUrl: GSAP_URL, look }));
+    }
+
     // ---- Clawd: the mascot's moves and the pack's poses, played live on the Clawd page, and the ones the owner starred.
     if (parts[0] === "api" && parts[1] === "clawd") {
       if (read && parts.length === 2) return sendJson(res, 200, clawdCatalog());
@@ -867,7 +918,8 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
     if (parts[0] === "api" && parts[1] === "personality") {
       if (read && parts[2] === "catalog" && parts.length === 3) {
         const previews = Object.fromEntries(STYLES.map((st) => [st.id, Object.fromEntries((["sample", "showcase"] as const).map((k) => [k, existsSync(path.join(stylePreviewDir(), `${st.id}-${k}.mp4`))]))]));
-        return sendJson(res, 200, { styles: STYLES, tensions: STYLE_TENSIONS, pairings: PAIRINGS, families: FAMILIES.map((f) => ({ family: f.family, kind: f.kind })), previews });
+        return sendJson(res, 200, { styles: STYLES, tensions: STYLE_TENSIONS, pairings: PAIRINGS, families: FAMILIES.map((f) => ({ family: f.family, kind: f.kind })), previews,
+          techniques: TECHNIQUES.map((t) => ({ id: t.id, name: t.name, domain: t.domain, operations: t.operations })) });
       }
       if (read && parts[2] === "taste" && parts.length === 3) {
         return sendJson(res, 200, { suggestions: fromTaste(loadReferences().references, loadPatterns()) });
@@ -1070,7 +1122,7 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
         const pers = sess.settings.personality ? getPersonality(sess.settings.personality) : undefined;
         const write = sess.settings.mode === "write" && !script;
         // "Ask about a video": the words are a question, never a script.
-        const watching = sess.settings.mode === "watch";
+        const watching = sess.settings.mode === "watch" || sess.settings.mode === "brief";
         // A pasted script becomes a file, so /reelcut gets a path like any other script.
         let scriptPath = script?.path;
         if (!write && !watching && !scriptPath && text.trim().split(/\s+/).length > 25) { scriptPath = path.join(createFilesDir(id), "script.txt"); writeFileSyncSafe(scriptPath, text.trim()); }

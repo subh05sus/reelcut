@@ -106,6 +106,8 @@ export function personalityBrief(p: Personality): string {
   const g = p.guardrails;
   const never = [...g.bannedColors.map((c) => `colour ${c}`), ...g.bannedFonts.map((f) => `font ${f}`), ...g.bannedMoves.map((m) => `move ${m}`), ...(g.noGlass ? ["glass"] : []), ...(g.noConfetti ? ["confetti"] : [])];
   lines.push(`  Never: ${never.length ? never.join(", ") : "nothing banned"}; at most ${g.maxFonts} type families; text contrast ≥ ${g.contrast}:1${g.notes ? `; ${g.notes}` : ""}`);
+  const tq = p.techniques;
+  if (tq.favour.length || tq.ban.length) lines.push(`  Techniques: favour ${tq.favour.length ? tq.favour.join(", ") : "nothing in particular"}; never ${tq.ban.length ? tq.ban.join(", ") : "nothing banned"} (npm run techniques -- suggest ranks by these)`);
   lines.push(`  Mascot: ${mascotLine(p.mascot)}`);
   if (p.brand.name || p.brand.url) lines.push(`  Brand: ${p.brand.name}${p.brand.url ? ` (${p.brand.url})` : ""}${p.brand.colors.length ? `, colours ${p.brand.colors.join(" ")}` : ""}`);
   return lines.join("\n");

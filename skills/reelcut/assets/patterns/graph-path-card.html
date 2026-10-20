@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* GRAPH PATH CARD. The route through a system, written as it is taken: a card whose numbered rows stack in (what
+     you want, through what, by which move, done how) while the matching branch lights in the tree below. Then the
+     choice changes and only the rows that differ roll to their new values; the last row lands with the count of
+     examples. For a decision path, a configuration, "here is how we choose". */
+  #root .cam { position: absolute; inset: 0; }
+</style>
+<div id="root" data-look="paper" data-style="atlas" data-composition-id="graph-path-card" data-width="1080" data-height="1080">
+  <div class="cam"></div>
+  <div class="card-layer"></div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  const nodes = [
+    { id: "dif", label: "Differentiate", kind: "hub" },
+    { id: "fea", parent: "dif", label: "Feature", kind: "chip" }, { id: "sem", parent: "dif", label: "Semantic", kind: "chip" }, { id: "spa", parent: "dif", label: "Space", kind: "chip" },
+    { id: "cp", parent: "fea", label: "Pairing", kind: "dot" }, { id: "sd", parent: "fea", label: "Scale", kind: "dot" },
+    { id: "sc", parent: "sem", label: "Contrast", kind: "dot" }, { id: "vm", parent: "sem", label: "Metaphor", kind: "dot" },
+    { id: "iv", parent: "spa", label: "Void", kind: "dot" }, { id: "fr", parent: "spa", label: "Frame", kind: "dot" },
+  ];
+  const g = RC.graph("#root .cam", { nodes }, { layout: "tree", top: 560, levelGap: 170, margin: 150 });
+  const card = RC.pathCard("#root .card-layer", [
+    { level: "01 Operation", value: "Differentiate", icon: "◧" },
+    { level: "02 Domain", value: "Feature", icon: "●○" },
+    { level: "03 Technique", value: "Complementary pairing", icon: "▮▮", tone: "mono" },
+    { level: "04 Execution", value: "19 recorded examples", icon: "▦", tone: "italic" },
+  ], { left: 84, top: 84, width: 600 });
+  RC.graphDraw(tl, g, 0, { levelGap: 0.3, duration: 0.55 });
+  RC.pathCardIn(tl, card, 0.4, { count: 3, stagger: 0.36 });
+  RC.graphFocus(tl, g, 0.6, "dif", { mode: "path", dim: 0.18 });
+  RC.graphFocus(tl, g, 1.0, "cp", { mode: "path", dim: 0.18 });
+  // The choice changes: only the domain and the technique roll; the operation stays where it is.
+  RC.pathCardSet(tl, card, 2.4, 1, "Semantic", { icon: "○→◆" });
+  RC.pathCardSet(tl, card, 2.6, 2, "Semantic contrast", { icon: "●▲", tone: "mono" });
+  RC.graphFocus(tl, g, 2.4, "sc", { mode: "path", dim: 0.18 });
+  RC.pathCardSet(tl, card, 3.3, 3, "19 recorded examples", { tone: "italic" });
+  RC.hold(tl, 4.8);
+  window.__timelines["graph-path-card"] = tl;
+})();
+</script>
+</template>
+</body></html>

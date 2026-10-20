@@ -35,6 +35,7 @@ export const DRAWING: Record<StyleId, string> = {
   "retro-vhs": "80s geometry: sunset stripes, chrome-ish gradients, grid floors, bold outlines, warm neon accents",
   glitch: "sharp blocky shapes with offset colour channels (a red and a cyan copy shifted 3–6 units), scanline bars",
   cinematic: "silhouettes and strong light: dark shapes against a lit gradient, a glow, minimal detail",
+  atlas: "a specimen plate: hairline outlines (1.5 units) with sparse flat fills, a small numbered label, like a drawing in a field guide",
 };
 
 export interface SvgCheck { ok: boolean; errors: string[]; warnings: string[]; colours: string[] }

@@ -513,6 +513,21 @@
   .cr-panel .note, .cr-panel .foot-note { margin: 0; }
   .cr-panel h3 { margin: 0; font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
   .cr-tabs { display: none; }
+  /* Techniques: the live graph beside the list or the chosen technique. */
+  .tq { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 24px; align-items: start; }
+  .tq-graph { position: sticky; top: 72px; aspect-ratio: 1; width: 100%; max-height: calc(100vh - 120px); }
+  .tq-graph iframe { width: 100%; height: 100%; border: 0; border-radius: 28px; background: var(--cell); }
+  .tq-side { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .tq-side .cap { margin-top: 14px; }
+  .tq-path { display: inline-block; font: 13px/1.3 var(--mono, ui-monospace, monospace); color: var(--label-2); overflow-wrap: anywhere; }
+  .tq-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .tq-ex { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .tq-ex a { position: relative; display: block; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: var(--fill-3); }
+  .tq-ex img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .tq-ex .ph { display: grid; place-items: center; height: 100%; font-size: 12px; color: var(--label-2); }
+  .tq-ex i.ok { position: absolute; right: 6px; top: 6px; width: 20px; height: 20px; border-radius: 10px; background: var(--green); color: #fff; display: grid; place-items: center; }
+  .tq-row { width: 100%; border-radius: 0; height: auto; min-height: 44px; font-size: var(--fs-b); font-weight: 400; gap: 10px; }
+  @media (max-width: 1099px) { .tq { grid-template-columns: minmax(0, 1fr); } .tq-graph { position: static; max-height: none; } }
   /* The Watch panel: a video Claude watched, the lanes of what is in it, and where Claude looked (darker = higher fps). */
   .w-sm { display: none; }
   @media (max-width: 520px) { .w-lg { display: none; } .w-sm { display: inline; } }
@@ -849,6 +864,7 @@
       <a class="nav-i" href="#footage" data-tab="footage" title="Footage"><span data-ic="footage"></span><span class="lab">Footage</span><span class="n" data-count="footage"></span></a>
       <a class="nav-i" href="#reels" data-tab="reels" title="Reels"><span data-ic="reels"></span><span class="lab">Reels</span><span class="n" data-count="reels"></span></a>
       <a class="nav-i" href="#personality" data-tab="personality" title="Personality"><span data-ic="personality"></span><span class="lab">Personality</span><span class="n" data-count="personality"></span></a>
+      <a class="nav-i" href="#techniques" data-tab="techniques" title="Techniques: what a visual must do, and how"><span data-ic="techniques"></span><span class="lab">Techniques</span></a>
       <a class="nav-i" href="#clawd" data-tab="clawd" title="Clawd, the Claude mascot"><span data-ic="clawd"></span><span class="lab">Clawd</span></a>
       <div class="cap">Manage</div>
       <a class="nav-i" href="#review" data-tab="review" title="Review"><span data-ic="review"></span><span class="lab">Review</span><span class="n" data-count="review"></span></a>
@@ -899,6 +915,7 @@ const ICONS = {
   learnings: '<path d="M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2Z"/><path d="M19 3v4M17 5h4"/>',
   jobs: '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
   sounds: '<path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/>',
+  techniques: '<circle cx="12" cy="5" r="2.5"/><circle cx="5" cy="19" r="2.5"/><circle cx="12" cy="19" r="2.5"/><circle cx="19" cy="19" r="2.5"/><path d="M12 7.5v9M12 10c-5 0-7 3-7 6.5M12 10c5 0 7 3 7 6.5"/>',
   patterns: '<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',
   settings: '<path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"/>',
   more: '<circle cx="5" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.6" fill="currentColor" stroke="none"/>',
@@ -1114,7 +1131,7 @@ $("#rail").addEventListener("click", () => setRail(document.documentElement.data
 function openMore() {
   const c = (n) => (n ? `<span class="badge">${n}</span>` : "");
   const s = state.ingest?.status;
-  openSheet({ title: "More", body: `<div class="group">${[["footage", "Footage", state.counts.footage], ["personality", "Personality", 0], ["review", "Review", state.counts.pending], ["sounds", "Sounds", state.packSounds.length], ["patterns", "Patterns", state.patterns.length], ["folders", "Folders", state.folders.length], ["references", "References", state.rcounts.all], ["performance", "Performance", 0], ["learnings", "Learnings", (state.learn?.rules || []).filter((r) => r.status === "proposed" && !r.conflictWith.length).length], ["jobs", "Jobs", state.jobs.filter((j) => j.status === "running").length]]
+  openSheet({ title: "More", body: `<div class="group">${[["footage", "Footage", state.counts.footage], ["personality", "Personality", 0], ["techniques", "Techniques", 0], ["review", "Review", state.counts.pending], ["sounds", "Sounds", state.packSounds.length], ["patterns", "Patterns", state.patterns.length], ["folders", "Folders", state.folders.length], ["references", "References", state.rcounts.all], ["performance", "Performance", 0], ["learnings", "Learnings", (state.learn?.rules || []).filter((r) => r.status === "proposed" && !r.conflictWith.length).length], ["jobs", "Jobs", state.jobs.filter((j) => j.status === "running").length]]
       .map(([k, l, n]) => `<a class="row-i" href="#${k}" data-sclose style="color:var(--label);text-decoration:none"><span class="tile" style="background:var(--fill-1);color:var(--label)">${ic(k, 17)}</span><span class="t grow">${l}</span>${c(n)}<span style="color:var(--label-3)">${ic("back", 14).replace("m15 18-6-6 6-6", "m9 18 6-6-6-6")}</span></a>`).join("")}</div>
     <div class="group"><button class="row-i" id="more-set" style="width:100%;border-radius:0;justify-content:flex-start;height:auto;font-size:var(--fs-b);font-weight:400"><span class="tile" style="background:#8e8e93">${ic("settings", 17)}</span><span class="t grow" style="text-align:left">Settings</span></button>
       <div class="row-i"><span class="dot ${s?.paused ? "off" : s?.scanning ? "busy" : ""}"></span><span class="s grow">${esc($("#sync-text").textContent)}</span><button class="sm" id="more-pause">${s?.paused ? "Resume" : "Pause"}</button></div></div>`,
@@ -1742,13 +1759,15 @@ function renderLanding() {
   const mode = d.settings.mode || "script";
   const queued = list.filter((s) => s.status === "queued");
   $("#main").innerHTML = `${pageHead("Create")}<div class="intbar" id="intbar"></div>
-    <div class="cr-land"><h2>${mode === "write" ? "What should the reel be about?" : mode === "watch" ? "What do you want to know about the video?" : "What should the reel say?"}</h2>
+    <div class="cr-land"><h2>${mode === "write" ? "What should the reel be about?" : mode === "watch" ? "What do you want to know about the video?" : mode === "brief" ? "What's the brief?" : "What should the reel say?"}</h2>
       <p class="lede" style="margin:0 auto 16px">${mode === "write"
         ? "Give Claude a topic, a link or your notes. It offers three hooks, writes the script in your voice and, once you approve it, makes the reel."
+        : mode === "brief"
+        ? "Paste a brief or a campaign's big idea. Claude turns it into visual directions first (what the visuals must do, and the techniques that do it, with examples), you pick, and then it writes the script and makes the reel."
         : mode === "watch"
         ? "Drop a video or paste a link, and ask. Claude watches it the way you would: a map first, then it jumps to what matters, re-watches the fast parts frame by frame, zooms in to read and listens. The answer comes with the frames that prove it."
         : "Paste your script or drop a .txt or .srt (drop several to make a batch), add a voiceover or assets, and say how it should feel. Claude makes the reel with /reelcut and asks what it needs right here."}</p>
-      <div style="display:flex;justify-content:center;margin-bottom:24px">${segHtml("cr-mode", [["script", `<span class="w-lg">I have a script</span><span class="w-sm">Script</span>`], ["write", `<span class="w-lg">Write it with Claude</span><span class="w-sm">Write it</span>`], ["watch", `<span class="w-lg">Ask about a video</span><span class="w-sm">Ask a video</span>`]], mode)}</div></div>
+      <div style="display:flex;justify-content:center;margin-bottom:24px">${segHtml("cr-mode", [["script", `<span class="w-lg">I have a script</span><span class="w-sm">Script</span>`], ["write", `<span class="w-lg">Write it with Claude</span><span class="w-sm">Write</span>`], ["brief", `<span class="w-lg">From a brief</span><span class="w-sm">Brief</span>`], ["watch", `<span class="w-lg">Ask about a video</span><span class="w-sm">Video</span>`]], mode)}</div></div>
     ${mode === "watch" ? `<div class="cr-sec"><div class="cap">Ask it to</div>
       <div class="cr-recipes">${WATCH_ASKS.map(([t, s2, q]) => `<button type="button" class="cr-recipe" data-ask="${esc(q)}"><span class="t">${esc(t)}</span><span class="s">${esc(s2)}</span></button>`).join("")}</div></div>` : `<div class="cr-sec"><div class="cap">Start from a recipe</div>
       <div class="cr-recipes">${recipes.map((r) => `<button type="button" class="cr-recipe ${d.settings.recipe === r.id ? "on" : ""}" data-recipe="${esc(r.id)}" aria-pressed="${d.settings.recipe === r.id}"><span class="t">${esc(r.name)}</span><span class="s">${esc(r.line || r.structure.slice(0, 3).join(", "))}</span>${r.builtIn ? "" : `<span class="own">Yours</span>`}</button>`).join("")}
@@ -1756,7 +1775,7 @@ function renderLanding() {
     ${queued.length ? `<div class="cr-sec"><div class="cap">Batch <span class="note">${queued.length} waiting · one at a time</span></div><div class="group cr-list">${queued.map(sessionRow).join("")}</div></div>` : ""}
     ${list.filter((s) => s.status !== "queued").length ? `<div class="cr-sec" style="margin-bottom:300px"><div class="cap">Recent</div><div class="group cr-list">${list.filter((s) => s.status !== "queued").map(sessionRow).join("")}</div></div>` : `<div style="height:300px"></div>`}
     ${composerHtml(true)}`;
-  bindSeg("cr-mode", (v) => { d.settings.mode = v === "write" || v === "watch" ? v : undefined; const keep = $("#cr-text").value; renderLanding(); $("#cr-text").value = keep; });
+  bindSeg("cr-mode", (v) => { d.settings.mode = v === "write" || v === "watch" || v === "brief" ? v : undefined; const keep = $("#cr-text").value; renderLanding(); $("#cr-text").value = keep; });
   $$("[data-ask]").forEach((b) => b.addEventListener("click", () => { const ta = $("#cr-text"); ta.value = b.dataset.ask; ta.focus(); ta.dispatchEvent(new Event("input")); }));
   $$("[data-recipe]").forEach((b) => {
     b.addEventListener("click", () => applyRecipe(b.dataset.recipe));
@@ -1842,12 +1861,12 @@ function composerHtml(first) {
       ${sel("cr-sfx", [["", "Sound: ask"], ["on", "Sound effects"], ["off", "No effects"]], d.settings.sfx, "Sound effects")}
       ${sel("cr-music", [["", "Music: ask"], ["fits", "Music, fitted"], ["snap", "Music, on the beat"], ["none", "No music"]], d.settings.music, "Music")}
       ${sel("cr-blur", [["", "Blur: off"], ["on", "Motion blur"]], d.settings.blur, "Motion blur")}
-      ${d.settings.mode === "write" ? sel("cr-target", [["", "About 45 s"], ["15", "About 15 s"], ["30", "About 30 s"], ["60", "About 60 s"], ["90", "About 90 s"]], d.settings.target, "Target length") : ""}
+      ${d.settings.mode === "write" || d.settings.mode === "brief" ? sel("cr-target", [["", "About 45 s"], ["15", "About 15 s"], ["30", "About 30 s"], ["60", "About 60 s"], ["90", "About 90 s"]], d.settings.target, "Target length") : ""}
       ${sel("cr-series", [["", "No series"], ...(cr.list?.series || []).map((x) => [x.id, `Series: ${x.name}`]), ["+new", "New series…"]], d.settings.series, "Series")}</div>` : ""}
     ${first ? `<div class="cr-batch" id="cr-batch" hidden></div>` : ""}
     <div class="files" id="cr-files">${cr.files.map((f, i) => `<span class="chip" data-rmfile="${i}">${ic("attach", 12)} ${esc(f.name)} <span style="color:var(--label-2)">${f.kind}</span> ${ic("x", 11)}</span>`).join("")}</div>
     <div class="row"><button class="icon" id="cr-attach" title="Add a script, a voiceover or assets" aria-label="Attach">${ic("attach", 18)}</button>
-      <textarea id="cr-text" rows="1" placeholder="${!first ? "Reply, or ask for a change…" : d.settings.mode === "write" ? "A topic, a link or your notes…" : d.settings.mode === "watch" ? "Ask about the video you drop here, or paste a link…" : "Paste a script, or say what the reel should be about…"}"></textarea>
+      <textarea id="cr-text" rows="1" placeholder="${!first ? "Reply, or ask for a change…" : d.settings.mode === "write" ? "A topic, a link or your notes…" : d.settings.mode === "watch" ? "Ask about the video you drop here, or paste a link…" : d.settings.mode === "brief" ? "The brief, or the campaign's big idea…" : "Paste a script, or say what the reel should be about…"}"></textarea>
       <button class="send" id="cr-send" title="Send" aria-label="Send">${ic("up", 18)}</button></div>
     <div class="meta"><button class="plain sm" id="cr-model">${esc((cr.list?.models || []).find(([k]) => k === (cr.meta?.model ?? d.model))?.[1] || "Default model")} · ${esc((cr.list?.efforts || []).find(([k]) => k === (cr.meta?.effort ?? d.effort))?.[1] || "default")} effort</button><span class="grow"></span><span>Runs on your Claude login</span></div>
     <input type="file" id="cr-file" multiple hidden></div>`;
@@ -2048,7 +2067,7 @@ function pinToBottom(ms = 2500) {
 // ---------- personality: the design crafter
 const PZ_STEPS = [
   ["start", "Start"], ["styles", "Styles"], ["mixer", "Mixer"], ["colours", "Colours"], ["fonts", "Fonts"], ["motion", "Motion"], ["texture", "Texture"],
-  ["signature", "Signature moves"], ["mascot", "Mascot"], ["copy", "Copy & voice"], ["sound", "Sound"], ["pacing", "Pacing"], ["guardrails", "Guardrails"], ["review", "Review"],
+  ["signature", "Signature moves"], ["mascot", "Mascot"], ["copy", "Copy & voice"], ["sound", "Sound"], ["pacing", "Pacing"], ["techniques", "Techniques"], ["guardrails", "Guardrails"], ["review", "Review"],
 ];
 const BEATS = [["hook", "Hook"], ["statement", "Statement"], ["data", "Data"], ["product", "Product"], ["quote", "Quote"], ["cta", "Call to action"]];
 const pz = { cat: null, p: null, findings: [], saving: null, seed: 0, locks: { styles: false, palettes: false, fonts: false }, style: null };
@@ -2309,6 +2328,17 @@ function renderPzStep() {
           <div class="row-i"><span class="t" style="min-width:140px">Payoff holds</span><input type="range" min="8" max="40" value="${Math.round(p.pacing.payoffHold * 10)}" id="pz-hold" class="grow"><span class="tnum" style="width:52px;text-align:right" id="pz-hold-v">${p.pacing.payoffHold.toFixed(1)} s</span></div></div>
         <p class="foot-note">The reading floor still applies: a line is never on screen for less time than it takes to read.</p>`;
       break;
+    case "techniques": {
+      const tqs = pz.cat.techniques || [], tsel = (key) => `<select id="pz-t-${key}"><option value="">Add a technique…</option>${tqs.filter((t) => !p.techniques[key].includes(t.id)).map((t) => `<option value="${t.id}">${esc(t.name)} · ${esc(t.domain)}</option>`).join("")}</select>`;
+      const chips = (key) => p.techniques[key].map((id, n) => `<span class="chip" data-t-${key}="${n}">${esc(tqs.find((t) => t.id === id)?.name || id)} ${ic("x", 12)}</span>`).join("");
+      h = `<h2>Techniques</h2><p class="lede">The moves this personality reaches for first, and the ones it never uses. Every beat names a technique (what it must do, and how); these rank the suggestions. See them all, with examples, on the <a href="#techniques">Techniques</a> page.</p>
+        <div class="group">
+          <div class="row-i wrap"><span class="t" style="min-width:160px">Favour</span>${chips("favour")}${tsel("favour")}</div>
+          <div class="row-i wrap"><span class="t" style="min-width:160px">Never use</span>${chips("ban")}${tsel("ban")}</div>
+        </div>
+        <p class="foot-note">A banned technique is never suggested. A favoured one is offered first when it fits the line; it is never forced onto a beat it does not suit.</p>`;
+      break;
+    }
     case "guardrails":
       h = `<h2>Guardrails</h2><p class="lede">What your reels never do.</p><div id="pz-findings"></div>
         <div class="group">
@@ -2383,6 +2413,10 @@ function renderPzStep() {
   on("#pz-maxf", "change", (e) => { p.guardrails.maxFonts = Math.max(1, Math.min(4, Number(e.target.value) || 3)); pzChange(false); });
   on("[data-g]", "change", (e) => { p.guardrails[e.target.dataset.g] = e.target.checked; pzChange(false); });
   on("#pz-notes", "input", (e) => { p.guardrails.notes = e.target.value; pzChange(false); });
+  for (const key of ["favour", "ban"]) {
+    on(`#pz-t-${key}`, "change", (e) => { const v = e.target.value; if (!v) return; p.techniques ??= { favour: [], ban: [] }; p.techniques[key] = [...p.techniques[key].filter((x) => x !== v), v]; const other = key === "favour" ? "ban" : "favour"; p.techniques[other] = p.techniques[other].filter((x) => x !== v); pzChange(true); });
+    on(`[data-t-${key}]`, "click", (e) => { p.techniques[key].splice(Number(e.currentTarget.dataset[`t${key[0].toUpperCase()}${key.slice(1)}`]), 1); pzChange(true); });
+  }
   on("#pz-mini", "click", async (e) => {
     e.target.disabled = true;
     try { await post(`/api/personalities/${p.id}/render`); toast("Rendering your mini beats. They appear here when done."); pollMini(); }
@@ -2833,6 +2867,71 @@ async function renderClawd() {
 }
 // The sheet says how tall it is, so the page scrolls rather than the frame.
 window.addEventListener("message", (e) => { if (e.origin === location.origin && e.data && e.data.clawdSheetHeight) { const f = $("#cw-sheet"); if (f) f.style.height = `${e.data.clawdSheetHeight}px`; } });
+
+// ---------- techniques: operation → domain → technique → timing → execution, drawn by the reels' own graph engine
+const tq = { cat: null, sel: null, op: "", q: "" };
+const tqLook = () => (document.documentElement.dataset.theme === "dark" || (!document.documentElement.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches) ? "ink" : "paper");
+async function renderTechniques(id) {
+  tq.cat = await api("/api/techniques");
+  if (id) tq.sel = decodeURIComponent(id);
+  const c = tq.cat;
+  $("#main").innerHTML = `${pageHead("Techniques")}
+    <p class="lede">What a visual must <b>do</b>, the channel it works through, the move that does it, how it plays, and where it has been done. Every beat names one; your Works ratings teach reelcut which ones land.</p>
+    ${c.proposedPatterns.length ? `<div class="group" style="margin-bottom:16px"><div class="row-i"><span class="grow">Claude tagged <b>${c.proposedPatterns.length} patterns</b> with the techniques they perform. They are used already; accept them to make them yours.</span><button class="sm" id="tq-accept">Accept all</button></div></div>` : ""}
+    <div class="bar" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
+      <select id="tq-op" aria-label="Operation"><option value="">All operations</option>${c.operations.map((o) => `<option value="${o.id}" ${tq.op === o.id ? "selected" : ""}>${esc(o.name)}</option>`).join("")}</select>
+      <input id="tq-q" type="search" placeholder="Search: contrast, cursor, metaphor…" value="${esc(tq.q)}" style="max-width:280px">
+    </div>
+    <div class="tq">
+      <div class="tq-graph"><iframe id="tq-frame" src="/techniques/graph?look=${tqLook()}" title="The techniques, as a graph"></iframe></div>
+      <aside class="tq-side" id="tq-side"></aside>
+    </div>
+    <p class="foot-note">${esc(c.credit)}</p>`;
+  $("#tq-accept")?.addEventListener("click", async () => { try { const r = await post("/api/techniques/accept", {}); toast(`Accepted ${r.accepted} pattern tag sets`); renderTechniques(); } catch (e) { toast(e.message); } });
+  $("#tq-op").addEventListener("change", (e) => { tq.op = e.target.value; paintTqSide(); });
+  $("#tq-q").addEventListener("input", debounce((e) => { tq.q = e.target.value.trim().toLowerCase(); paintTqSide(); }, 200));
+  paintTqSide();
+  if (tq.sel) $("#tq-frame").addEventListener("load", () => $("#tq-frame").contentWindow.postMessage({ focusTechnique: tq.sel }, location.origin), { once: true });
+}
+function tqMatch(t) {
+  if (tq.op && !t.operations.includes(tq.op)) return false;
+  return !tq.q || `${t.name} ${t.id} ${t.does} ${t.when} ${t.domain}`.toLowerCase().includes(tq.q);
+}
+function paintTqSide() {
+  const box = $("#tq-side"), c = tq.cat; if (!box || !c) return;
+  const t = tq.sel ? c.techniques.find((x) => x.id === tq.sel.split("/").pop() || x.id === tq.sel.split("/")[2]) : null;
+  if (t) {
+    const op = tq.sel.split("/")[0] && c.operations.find((o) => o.id === tq.sel.split("/")[0]) ? tq.sel.split("/")[0] : t.operations[0];
+    const path = `${op}/${t.domain}/${t.id}/${t.timing}`;
+    const ex = t.examples, sc = t.score;
+    box.innerHTML = `<button class="plain sm" id="tq-back">${ic("back", 14)} All techniques</button>
+      <h3 style="margin:8px 0 2px">${esc(t.name)}</h3><code class="tq-path">${esc(path)}</code>
+      <p style="margin:10px 0 4px">${esc(t.does)}</p><p class="note" style="margin:0">For ${esc(t.when)}.</p>
+      <div class="tq-meta"><span class="chip">${esc(c.domains.find((d) => d.id === t.domain)?.name || t.domain)}</span>${t.operations.map((o) => `<span class="chip">${esc(c.operations.find((x) => x.id === o)?.name || o)}</span>`).join("")}<span class="chip">plays: ${esc(t.timing)}</span>${t.moves.map((m) => `<span class="chip">${esc(m)}</span>`).join("")}</div>
+      <div class="cap">How it has done for you</div><p class="note" style="margin:0">${sc.uses ? `Used in ${sc.uses} beat${sc.uses === 1 ? "" : "s"} · ${sc.up} rated Works · ${sc.down} rated down` : "Not used in a rendered beat yet."}</p>
+      ${ex.beats.length ? `<div class="cap">Your beats</div><div class="tq-ex">${ex.beats.slice(0, 6).map((b) => `<a href="#reels/${encodeURIComponent(b.run)}" title="${esc(b.beat)}${b.rating === "up" ? " · Works" : b.rating === "down" ? " · rated down" : ""}">${b.frame ? `<img src="${media(b.frame)}" alt="">` : `<span class="ph">${esc(b.beat)}</span>`}${b.rating === "up" ? `<i class="ok">${ic("check", 11)}</i>` : ""}</a>`).join("")}</div>` : ""}
+      ${ex.assets.length ? `<div class="cap">In your library</div><div class="tq-ex">${ex.assets.slice(0, 6).map((a) => `<a href="#library" title="${esc(a.name)}"><img src="/files/thumb/${a.id}" alt=""></a>`).join("")}</div>` : ""}
+      <div class="cap">Patterns that do it</div><div class="tq-meta">${ex.patterns.length ? ex.patterns.map((p) => `<span class="chip" title="${p.state === "proposed" ? "tagged by Claude" : "accepted"}">${esc(p.id)}${p.state === "proposed" ? " ·" : ""}</span>`).join("") : `<span class="note">None yet: compose it.</span>`}</div>
+      <div class="cap">Pin to a reel</div>
+      <div class="group"><div class="row-i"><select id="tq-chat" class="grow" aria-label="Conversation">${(c.chats || []).map((x) => `<option value="${esc(x.id)}">${esc(x.title)}</option>`).join("") || `<option value="">No chats yet</option>`}</select></div>
+        <div class="row-i"><input id="tq-note" class="grow" placeholder="Optional: for the hook, for the price beat…"></div></div>
+      <div class="acts" style="justify-content:flex-start"><button class="primary sm" id="tq-pin" ${(c.chats || []).length ? "" : "disabled"}>Pin to this chat</button></div>`;
+    $("#tq-back").addEventListener("click", () => { tq.sel = null; history.replaceState(null, "", "#techniques"); $("#tq-frame")?.contentWindow.postMessage({ focusOut: true }, location.origin); paintTqSide(); });
+    $("#tq-pin")?.addEventListener("click", async () => {
+      const conversation = $("#tq-chat").value; if (!conversation) return;
+      try { await post("/api/techniques/pin", { path, conversation, note: $("#tq-note").value }); toast("Pinned: Claude is on it in that chat"); } catch (e) { toast(e.message); }
+    });
+    return;
+  }
+  const list = c.techniques.filter(tqMatch);
+  box.innerHTML = `${c.domains.map((d) => { const ts = list.filter((x) => x.domain === d.id); return ts.length ? `<div class="cap">${esc(d.name)} <span class="note" style="font-weight:400">${esc(d.does)}</span></div><div class="group">${ts.map((x) => `<button class="row-i tq-row" data-t="${esc(x.operations[0])}/${esc(x.domain)}/${esc(x.id)}"><span class="t grow" style="text-align:left">${esc(x.name)}</span>${x.score.up ? `<span class="badge ok">${x.score.up} Works</span>` : ""}<span class="s">${esc(x.operations.map((o) => c.operations.find((y) => y.id === o)?.name || o).join(" · "))}</span></button>`).join("")}</div>` : ""; }).join("") || emptyState("techniques", "Nothing matches", "Try another word or all operations.")}`;
+  $$(".tq-row", box).forEach((b) => b.addEventListener("click", () => { tq.sel = b.dataset.t; history.replaceState(null, "", `#techniques/${encodeURIComponent(tq.sel)}`); $("#tq-frame")?.contentWindow.postMessage({ focusTechnique: tq.sel }, location.origin); paintTqSide(); }));
+}
+// The graph says which technique was clicked; the side panel follows it.
+window.addEventListener("message", (e) => {
+  if (e.origin !== location.origin || !e.data?.techniquePick || state.tab !== "techniques") return;
+  tq.sel = e.data.techniquePick.path; history.replaceState(null, "", `#techniques/${encodeURIComponent(tq.sel)}`); paintTqSide();
+});
 
 function renderSounds() {
   const list = state.packSounds.filter((s) => s.category === state.soundCat);
@@ -3294,6 +3393,7 @@ async function route() {
     else if (tab === "sounds") { await loadPackSounds(); renderSounds(); }
     else if (tab === "personality") await renderPersonality(id, sub);
     else if (tab === "clawd") await renderClawd();
+    else if (tab === "techniques") await renderTechniques(id);
     else if (tab === "create") { if (id && sub) cr.panelView = sub; await renderCreate(id); }
     else if (tab === "performance") await renderPerformance();
     else { await loadLibrary(); renderLibrary(); }

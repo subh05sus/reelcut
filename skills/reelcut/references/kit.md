@@ -73,12 +73,43 @@ screen) and feedback moments live in `assets/kit/ui/` and load with the kit: [ap
 `.hop`, `.look`, `.wave`, `.tap`, `.plug`, `.carry`, `.say`, `.sign`, `.confetti`, `.minis`, `.hatch`, `.pose`, `.life`…).
 Its material follows `data-style`; it moves on its own character timing. All of it is in [clawd.md](clawd.md).
 
-## Styles — the twenty personality styles
+## The graph engine
 
-`data-style="<id>"` on the root (beside `data-look` and `data-type`) draws a beat in one of the twenty styles of
+For a beat about a system (a taxonomy, an ecosystem, categories and members, many examples, a decision path):
+`assets/kit/ui/90-graph.*`. Write the structure from the script as data; the engine lays it out and every move is a
+tween on the beat's timeline, so any frame is a pure function of time. Up to ~500 nodes: the camera moves one world
+layer, links are paths in one SVG, image tiles share one atlas (`npm run graph -- atlas`, [techniques.md](techniques.md#images-in-a-graph-atlases)).
+
+```js
+const g = RC.graph("#root .cam", { nodes: [
+  { id: "dif", label: "Differentiate", kind: "hub" },
+  { id: "fea", parent: "dif", label: "Feature", kind: "chip" },
+  { id: "sd", parent: "fea", label: "Scale", kind: "dot" },
+  { id: "x1", parent: "sd", kind: "tile", image: img(0) },       // or RC.graphTiles(n, seed)[i]
+] }, { layout: "tree", top: 420, levelGap: 205 });                 // "radial" (radii, squash, leafJitter, hub) · "cluster" (spacing, start)
+RC.graphDraw(tl, g, 0.3, { levelGap: 0.4 });                       // nodes appear, links draw, level by level
+RC.graphFocus(tl, g, 2.0, "dif", { mode: "branch", dim: 0.14 });   // light one branch ("branch" · "path" · "both"); RC.graphClear undoes it
+RC.graphCamera(tl, g, 1.2, { to: [540, 600], screen: [540, 690], zoom: 0.7 });   // fly; RC.graphFrame sets it at once
+RC.graphBloom(tl, g, 0.7, "sc", { stagger: 0.03 });                // a node's children burst out along their links
+RC.graphPulse(tl, g, 1.1, { from: "dif", duration: 1.5 });         // a ripple: a ring of light leaves a node; what it reaches lights in its colour (reach: px keeps it local)
+RC.graphDrift(tl, g, 0, 5, { rotate: 6 });                         // the world turns slowly under the camera
+const card = RC.pathCard("#root .card-layer", [{ level: "01 Operation", value: "Differentiate", icon: "◧" }], { left: 84, top: 84 });
+RC.pathCardIn(tl, card, 0.4, { count: 1 }); RC.pathCardSet(tl, card, 2.4, 1, "Semantic");   // rows stack in; a value rolls
+const wall = RC.graphWall("#root .wall", images, { cols: 8, tile: 104 }); RC.graphWallIn(tl, wall, 0.5, { from: "centre" });
+```
+
+Node kinds: `hub` (a ring with a name), `chip` (a labelled tag), `dot` (a technique or a leaf), `tile` (an image),
+`label`. Groups (each root's branch, or `group`) take `--rcg-1…6`, made from the look's accent and second colour.
+Light one branch at a time; keep labels ≥ 16 px at the zoom the viewer sees. Patterns: `graph-world`, `graph-tree`,
+`graph-path-card`, `graph-bloom`, `graph-pulse`.
+
+## Styles — the twenty-one personality styles
+
+`data-style="<id>"` on the root (beside `data-look` and `data-type`) draws a beat in one of the twenty-one styles of
 [personality.md](personality.md): Paper Cutout, Claymation, Stop Motion, Hand-Drawn, Flat Vector, Linear, Kinetic
 Typography, Editorial, Collage, Brutalist, Swiss, Minimal, 3D, Isometric, Liquid, Ink / Paint, UI / Product,
-Retro / VHS, Glitch, Cinematic (`assets/kit/ui/70-styles.*`). Set the scheme as `--ground --ink --accent --accent-2`.
+Retro / VHS, Glitch, Cinematic, Atlas (`assets/kit/ui/70-styles.*`; Atlas, the specimen look for graphs, also styles
+`ui/90-graph.css`). Set the scheme as `--ground --ink --accent --accent-2`.
 
 | | |
 |---|---|

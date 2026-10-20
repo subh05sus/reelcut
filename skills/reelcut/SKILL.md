@@ -198,6 +198,13 @@ screen), and run `npm run voice -- reel.json`: it transcribes the read on this m
 rewrites every beat's length so each cut sits in the pause before its first word. Compose against those lengths,
 and put entrances on the words themselves with `RC.word("Claude")` (see [references/kit.md](references/kit.md#the-voiceover)).
 
+**Name what each beat does.** Every beat gets a technique path, `operation/domain/technique/timing` (what it must
+do, through which channel, by which move, played how), with why: `"technique"` and `"techniqueWhy"` on the beat in
+`reel.json`, and in plan.md. `npm run techniques -- suggest --kind <kind> "<line>"` ranks them by the line, the
+personality's favoured and banned techniques, and how they were rated before; you choose. A technique pinned from
+the studio's Techniques page arrives as a message: give it to the beat it fits. Vary the operations across the reel
+(`npm run techniques -- plan reel.json`). See [references/techniques.md](references/techniques.md).
+
 You are the director. There is no model API in this pipeline — the brief is yours to write.
 
 **Gate:** every beat has a brief that passes `validateBeatBrief`. That check enforces the reading
@@ -280,6 +287,13 @@ frame. Same size, ground line and costume in every beat; an exit matched to the 
 **Make each beat in its personality style.** With a personality in `reel.json`, a beat's kind picks its style, and the
 style its colours, type, look, moves and motion (`data-style` on the root draws the beat in it); signature moves, copy rules and guardrails hold in every beat
 ([references/personality.md](references/personality.md)).
+
+**Compose to the beat's technique.** `npm run techniques -- show <technique>` lists the patterns that perform it;
+open the first, lift the move, recompose the frame. For a **system** (a taxonomy, an ecosystem, many examples, a
+decision path) use the graph engine: `RC.graph` with the structure written from the script, and the
+`graph-world` / `graph-tree` / `graph-path-card` / `graph-bloom` patterns; its images come from one atlas
+(`npm run graph -- atlas`). Reference-film frames only with the reel's opt-in, each listed in `report.md`
+(`graph-sources.md`). See [references/techniques.md](references/techniques.md#graphs).
 
 **Start from the user's own patterns.** `npm run patterns -- list` lists the beats they rated "Works", best-rated
 first, before the built-in patterns; `npm run patterns -- show <id>` gives the file and the slots to replace.

@@ -1,18 +1,18 @@
 /**
- * The twenty design styles a personality chooses from (up to three), each with what it is, what it is best at, how it
+ * The twenty-one design styles a personality chooses from (up to three), each with what it is, what it is best at, how it
  * moves, the textures it wears, six curated colour schemes (every one contrast-checked by the tests) and the type
  * pairings that suit it, best first.
  *
  * `render` says how far the kit draws the style itself: "render" means the kit has the style's own look
  * (assets/kit/ui/70-styles.*: its shape material, world, textures, entrances and frame cadence, switched on with
  * data-style="<id>"); "direction" would mean a reel in it is composed on the existing looks, steered by the rest.
- * All twenty are rendered.
+ * All twenty-one are rendered.
  */
 
 export type StyleId =
   | "paper-cutout" | "claymation" | "stop-motion" | "hand-drawn" | "flat-vector" | "linear" | "kinetic-type" | "editorial"
   | "collage" | "brutalist" | "swiss" | "minimal" | "3d" | "isometric" | "liquid" | "ink-paint" | "ui-product" | "retro-vhs"
-  | "glitch" | "cinematic";
+  | "glitch" | "cinematic" | "atlas";
 
 export interface Palette {
   id: string;
@@ -340,6 +340,19 @@ export const STYLES: readonly StyleSpec[] = [
       P("dusk", "Dusk", "#0f0c14", "#ece4f2", "#c98bb9", "#e8c26b"), P("desert", "Desert", "#14100b", "#f1e6d3", "#d08c45", "#8a9a8a"),
       P("moonlight", "Moonlight", "#080b12", "#e3e9f2", "#9fb8d8", "#e8c26b"), P("ember", "Ember", "#100805", "#f3e7da", "#c47a4f", "#8a6b5a")],
     fonts: { best: ["editorial", "classic", "luxe", "fashion"], avoid: ["chunky", "friendly", "handmade", "tabloid"], why: "film titles are set in serifs or quiet grotesks; bubbly or tabloid type turns it into an ad" },
+  },
+  {
+    id: "atlas", name: "Atlas", blurb: "A specimen atlas: systems and taxonomies drawn as hairline trees, rings of nodes and walls of examples.",
+    bestAt: "explaining a system, a taxonomy, an ecosystem or many examples at once", beats: ["statement", "data", "product"], render: "render", look: "paper",
+    ground: "any", chroma: "soft", neon: false, hues: 6,
+    why: { chroma: "many branches each carry a colour; soft colours keep a dense graph readable", neon: "glowing colours bleed across hundreds of fine lines" },
+    motion: { energy: "default", cadence: "smooth", camera: "drift", overshoot: false, note: "branches draw level by level, the camera flies and pulls back, examples bloom along their links" },
+    texture: T({ paper: 0.2, grain: 0.1 }),
+    moves: { prefer: ["fly", "icon", "hud"], avoid: ["bub", "mesh"] }, sound: "soft ticks as branches draw, a low swell on the pull-back",
+    palettes: [P("specimen", "Specimen", "#efede6", "#1b1b19", "#b2361f", "#2f5fa8"), P("night-atlas", "Night atlas", "#111311", "#eceae2", "#e2694f", "#7fa6e8"),
+      P("herbarium", "Herbarium", "#eef0e6", "#1d2219", "#4f7a28", "#a6532c"), P("cyanotype", "Cyanotype", "#0f2a44", "#e8f0f7", "#f2b84b", "#8fc1e8"),
+      P("folio", "Folio", "#f6f1e7", "#24201b", "#7b3fa0", "#b07a12"), P("slate-atlas", "Slate", "#1c1f24", "#e9ecef", "#53b38f", "#e0a03a")],
+    fonts: { best: ["editorial", "tech", "classic", "swiss"], avoid: ["chunky", "handmade", "brutal"], why: "a specimen wants a serif for names and a mono for labels; heavy or hand-made letters crowd the fine lines" },
   },
 ];
 

@@ -58,6 +58,11 @@ palette and timings is the fallback. It beats no clip. It does not beat a compos
 | `dashboard-tiles` | cool | says "everything at a glance" | four tiles settle from a tilt with their figures on; a glass range control moves 30D to 90D and every figure counts to its new value |
 | `ranking-race` | cool | shows a lead changing | six bars race over twelve weeks and swap places; the accent follows whoever is in front; rank numbers change as rows cross |
 | `flow-diagram` | ink | explains how it works | a pulse runs a right-angled trace from webhook to filter and forks to two destinations, lighting each; a glass receipt: Delivered |
+| `graph-world` | ink, Atlas | is about a whole system, "hundreds of…" | six hubs, their branches and a cloud of examples; the camera starts close and pulls back; the world turns under the headline |
+| `graph-tree` | paper, Atlas | says "pick what it must do", a decision, how a whole is organised | choices along the top draw down level by level; one branch lights in its colour, then another takes over |
+| `graph-path-card` | paper, Atlas | shows a decision path or a configuration | a card's numbered rows stack in while the matching branch lights; when the choice changes only the rows that differ roll |
+| `graph-bloom` | ink, Atlas | is "examples of…", what a category holds | members burst out of one node along its links onto a spiral; the camera eases in; a count lands |
+| `graph-pulse` | ink, Atlas | says "everything here comes from this", influence spreading | the world waits, dimmed; a ring of light leaves the centre idea and every node and link it reaches lights in its colour, pops and keeps the colour; a second, local wave follows |
 | `text-effect-wall` | paper | is about type, motion or craft | six hairline cells, each a different arrival (blur, roll, decode, mask, spread, type), each on its own beat |
 | `testimonial` | paper | gives social proof | one quote resolves word by word, its key phrase in the italic serif; then the rule, the face, the name, five stars one by one |
 | `terminal-type-in` | ink | is about a CLI or an install | a command is typed, a typo is backspaced, three results decode out of noise; the window lets go and "Ready." is all that is left |

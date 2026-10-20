@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* GRAPH TREE. A structure drawn top-down: choices along the top, what each one opens up below, the members at the
+     foot. The tree draws in level by level; then one choice is picked and its branch lights in its colour while the
+     rest falls back; then a second choice takes over. For "pick what it must do", a decision, how a whole is
+     organised. The highlight is the point: never light two branches at once. */
+  #root .cam { position: absolute; inset: 0; }
+  #root .foot { position: absolute; left: 84px; right: 84px; bottom: 84px; display: flex; justify-content: space-between; font: 500 20px/1 var(--font-mono); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+</style>
+<div id="root" data-look="paper" data-style="atlas" data-composition-id="graph-tree" data-width="1080" data-height="1080">
+  <div class="rc-head"><span class="ln" style="--ox:-2px">Pick what it</span><span class="ln" style="--ox:-1px">must <em class="rc">do</em>.</span></div>
+  <div class="cam"></div>
+  <div class="foot"><span>Operation</span><span>Domain</span><span>Technique</span></div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  const tree = [
+    ["dif", "Differentiate", [["Feature", ["Scale", "Colour"]], ["Semantic", ["Contrast", "Metaphor"]]]],
+    ["grp", "Group", [["Grouping", ["Cluster", "Hub"]], ["Space", ["Frame", "Stack"]]]],
+    ["seq", "Sequence", [["Interface", ["Cursor", "Prompt"]], ["Typographic", ["Build", "Roll"]]]],
+  ];
+  const nodes = [];
+  tree.forEach(([id, name, doms]) => {
+    nodes.push({ id, label: name, kind: "hub", group: id });
+    doms.forEach(([dn, techs], di) => {
+      const did = id + di;
+      nodes.push({ id: did, parent: id, label: dn, kind: "chip", group: id });
+      techs.forEach((tn, ti) => nodes.push({ id: did + ti, parent: did, label: tn, kind: "dot", group: id }));
+    });
+  });
+  const g = RC.graph("#root .cam", { nodes }, { layout: "tree", top: 420, levelGap: 205, margin: 130 });
+  RC.words(tl, "#root .rc-head", 0, { lead: true, stagger: 0.08 });
+  RC.graphDraw(tl, g, 0.35, { levelGap: 0.42, duration: 0.6 });
+  RC.blurIn(tl, "#root .foot span", 0.6, { blur: 6, y: 6, stagger: 0.42 });
+  RC.graphFocus(tl, g, 2.0, "dif", { mode: "branch", dim: 0.14 });
+  RC.graphFocus(tl, g, 3.4, "seq", { mode: "branch", dim: 0.14 });
+  tl.to(g.nodes.dif.el, { "--on": 0, duration: 0.5, ease: "apple.out" }, 3.4);
+  RC.hold(tl, 4.9);
+  window.__timelines["graph-tree"] = tl;
+})();
+</script>
+</template>
+</body></html>

@@ -1,8 +1,8 @@
 # The personality — how every reel looks, moves and sounds
 
-The owner sets it up once in the studio's Personality page (http://localhost:5198/#personality): up to three of twenty
+The owner sets it up once in the studio's Personality page (http://localhost:5198/#personality): up to three of twenty-one
 design styles, a colour scheme and a type pairing per style, motion, texture, signature moves, copy and voice, sound,
-pacing and guardrails. Several can be saved; one is the default. Decisions behind it:
+pacing, techniques (favoured and banned) and guardrails. Several can be saved; one is the default. Decisions behind it:
 `docs/design/apple-glass/personality-decisions.md`.
 
 ## Step 0: confirm it, don't ask it again
@@ -32,13 +32,15 @@ motion energy.
   `palettes[style]` (or the style's first curated scheme). Never mix two styles' schemes in one beat.
 - **That style's type:** `data-type="<fonts[style]>"` on the root.
 - **That style's world:** `data-style="<style>"` on the root draws the beat in it — its shape material, world, textures,
-  entrances and frame cadence ([kit.md](kit.md#styles--the-twenty-personality-styles)); open
+  entrances and frame cadence ([kit.md](kit.md#styles--the-twenty-one-personality-styles)); open
   `assets/patterns/styles/<style>.html` first. Also its look (`look` in the catalog), its preferred moves
   (`moves.prefer`) and never its avoided ones, its motion note. Its saved preview (`~/.reelcut/style-previews/`) shows it:
   card shapes and layered shadows for Paper Cutout, matte bevelled clay with squash and stretch on held 12 fps frames,
   outlines that draw for Hand-Drawn and Linear, slabs for Isometric, gooey blobs for Liquid, a letterbox and grain for
   Cinematic, scanlines and a striped sunset for Retro / VHS, RGB split and slices for Glitch, a grid and one red block
-  for Swiss. All twenty are drawn by the kit.
+  for Swiss, a dotted specimen grid and hairline trees for Atlas (made for graphs). All twenty-one are drawn by the kit.
+- **Techniques:** `techniques.favour` are offered first when they fit a line; `techniques.ban` are never used
+  ([techniques.md](techniques.md)). `personality -- brief` prints both.
 - **Signature moves:** the intro, logo reveal, lower third, end card, how a key word is emphasised, captions, the
   tagline: the same in every reel.
 - **Copy and voice:** case, full stops, quote marks, numbers, emoji, the voice. Apply them to every word on screen.

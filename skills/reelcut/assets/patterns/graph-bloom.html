@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* GRAPH BLOOM. One idea, and everything it contains bursting out of it: the members fly out of the node along their
+     links and settle on a spiral, the camera eases in, and a count says how many. For "examples of…", what a
+     category holds, a library behind one name. Bloom one node at a time. */
+  #root .cam { position: absolute; inset: 0; }
+  #root .count { position: absolute; right: 84px; bottom: 90px; z-index: 5; text-align: right; }
+  #root .count b { display: block; font: 700 88px/1 var(--font-display); letter-spacing: -0.04em; color: var(--ink); font-variant-numeric: tabular-nums; }
+  #root .count span { font: 500 20px/1 var(--font-mono); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+</style>
+<div id="root" data-look="ink" data-style="atlas" data-composition-id="graph-bloom" data-width="1080" data-height="1080">
+  <div class="cam"></div>
+  <div class="rc-head"><span class="ln" style="--ox:0px">One technique,</span><span class="ln" style="--ox:-1px"><em class="rc">many</em> ways.</span></div>
+  <div class="count"><b>41</b><span>recorded examples</span></div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  const tiles = RC.graphTiles(41, 23);
+  const nodes = [{ id: "sc", label: "Semantic contrast", kind: "hub", group: "a" }];
+  tiles.forEach((im, i) => nodes.push({ id: "e" + i, parent: "sc", kind: "tile", image: im, group: "a", size: 48 }));
+  const g = RC.graph("#root .cam", { nodes }, { layout: "cluster", center: [540, 660], spacing: 44, start: 5.2 });
+  RC.words(tl, "#root .rc-head", 0, { lead: true, stagger: 0.08 });
+  RC.graphDraw(tl, g, 0.2, { levels: 0, duration: 0.6 });
+  RC.graphBloom(tl, g, 0.7, "sc", { stagger: 0.03, duration: 0.9 });
+  RC.graphCamera(tl, g, 0.7, { to: [540, 660], screen: [540, 660], zoom: 1.05, duration: 3.2, ease: "sine.inOut", from: { to: [540, 660], zoom: 1 } });
+  RC.count(tl, "#root .count b", 0.8, { from: 0, to: 41, duration: 1.6, ease: "spring.gentle" });
+  RC.blurIn(tl, "#root .count span", 1.2, { blur: 6, y: 6 });
+  RC.hold(tl, 4.4);
+  window.__timelines["graph-bloom"] = tl;
+})();
+</script>
+</template>
+</body></html>

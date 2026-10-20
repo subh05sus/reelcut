@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /></head><body>
+<template>
+<style>
+  /* GRAPH PULSE. A ripple through a system: the whole world waits, dimmed; then a wave leaves one idea at the centre
+     and everything it reaches lights in that idea's colour, pops and settles, a soft ring of light riding the front.
+     A second, smaller wave in another colour shows a second idea reaching the same members. For "everything here comes
+     from this", influence spreading, a system coming alive. One wave at a time: let the first settle first. */
+  #root { --accent: #ff7a45; }
+  #root .cam { position: absolute; inset: 0; }
+  #root .cap { position: absolute; left: 84px; top: 318px; z-index: 5; font: 500 22px/1 var(--font-mono); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+</style>
+<div id="root" data-look="ink" data-style="atlas" data-composition-id="graph-pulse" data-width="1080" data-height="1080">
+  <div class="cam"></div>
+  <div class="rc-head"><span class="ln" style="--ox:0px">One idea</span><span class="ln" style="--ox:-1px">lights up <em class="rc">everything</em>.</span></div>
+  <div class="cap">Differentiate → 6 domains → 150 examples</div>
+  <div class="rc-grain"></div>
+</div>
+<script>
+(function () {
+  const tl = gsap.timeline({ paused: true });
+  const doms = ["Feature", "Semantic", "Space", "Typographic", "Social", "Cultural"];
+  const tiles = RC.graphTiles(150, 31);
+  const nodes = [{ id: "dif", label: "Differentiate", kind: "hub" }];
+  let k = 0;
+  doms.forEach((dn, d) => {
+    const did = "d" + d;
+    nodes.push({ id: did, parent: "dif", label: dn, kind: "chip", group: did });
+    for (let t = 0; t < 5; t++) {
+      const tid = did + "t" + t;
+      nodes.push({ id: tid, parent: did, kind: "dot", group: did });
+      for (let x = 0; x < 5; x++) nodes.push({ id: tid + "x" + x, parent: tid, kind: "tile", image: tiles[k++], group: did, size: 24 });
+    }
+  });
+  const g = RC.graph("#root .cam", { nodes }, { layout: "radial", radii: [0, 200, 330, 450], squash: 0.94, leafJitter: 22, center: [540, 600], startAngle: -90, hub: 128 });
+  RC.graphFrame(tl, g, 0, { to: [540, 600], screen: [540, 690], zoom: 0.7 });
+  // The world draws in dim, already waiting for the wave; nothing lights before it does.
+  RC.graphDraw(tl, g, 0, { levelGap: 0.16, duration: 0.5, opacity: 0.28 });
+  RC.words(tl, "#root .rc-head", 0.1, { lead: true, stagger: 0.08 });
+  // The wave leaves the hub; a second, smaller one follows from one domain in the second colour.
+  RC.graphPulse(tl, g, 1.1, { from: "dif", color: "var(--accent)", duration: 1.6 });
+  RC.graphPulse(tl, g, 3.4, { from: "d1", color: "var(--accent-2)", duration: 0.9, pop: 1.08, reach: 260 });
+  RC.graphDrift(tl, g, 0, 5.6, { rotate: 4 });
+  RC.blurIn(tl, "#root .cap", 2.6, { blur: 8, y: 8 });
+  RC.hold(tl, 5.4);
+  window.__timelines["graph-pulse"] = tl;
+})();
+</script>
+</template>
+</body></html>

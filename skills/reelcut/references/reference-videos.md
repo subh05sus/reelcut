@@ -14,6 +14,11 @@ A reference is **someone else's film**. So:
 - it lives in `~/.reelcut/references/`, with its **own index, apart from the asset library**. Nothing that
   matches assets, finds footage, places a recording or renders a reel reads that index, so a reference cannot
   end up in a reel however it is described;
+- **one exception, on purpose** (owner's decision, 2026-10-20): frames of a reference film may appear as small
+  thumbnails in a graph (`npm run graph -- atlas --refs N`, see [techniques.md](techniques.md#graphs)), only when
+  the reel opted in (`"referenceThumbnails": true` in `reel.json`, asked in Step 0, default no). The render refuses
+  an atlas with reference frames otherwise, and writes every one (film, moment, beat) to `graph-sources.md`, which
+  goes into `report.md`. It is still someone else's work: the opt-in makes it a choice, not a licence;
 - it stays on this computer: the learnings export carries rules, never references;
 - what the studio keeps from it is **numbers and a few fixed words**, never the pictures and never a sentence.
 
