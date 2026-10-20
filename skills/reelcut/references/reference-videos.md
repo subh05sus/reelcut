@@ -34,7 +34,9 @@ picture a lot (a score over 0.3): a shade of cream to another shade of cream is 
 ## What Claude sees (`/reelcut study-references`)
 
 Measurement cannot tell a product demo from a kinetic-type film. So each reference also gets a **contact
-sheet** — 24 frames across it — and Claude tags what it sees, in the fixed words only:
+sheet** — 24 frames across it — for the person, and Claude **watches** it ([watch.md](watch.md#reference-study):
+the map, then its fast parts at 10 fps, where word-by-word builds and kinetic type actually happen, then
+`npm run watch -- forget <file>`, so nothing of the film is kept) and tags what it saw, in the fixed words only:
 
 ```bash
 npm run references -- queue --json          # id, name, sheet (an image), pacing, ground

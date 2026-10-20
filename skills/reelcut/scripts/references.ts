@@ -9,6 +9,7 @@ import {
   ingestReference,
   loadReferences,
   MOVES,
+  referenceBlobPath,
   referenceSheetPath,
   removeReference,
   studyQueue,
@@ -97,7 +98,7 @@ async function main(): Promise<void> {
       const json = bool(rest, "--json");
       const items = studyQueue(loadReferences().references);
       if (json) {
-        console.log(JSON.stringify(items.map((r) => ({ id: r.id, name: r.name, sheet: referenceSheetPath(r), seconds: r.analysis.durationSeconds, pacing: r.analysis.pacing, ground: r.analysis.ground })), null, 2));
+        console.log(JSON.stringify(items.map((r) => ({ id: r.id, name: r.name, file: referenceBlobPath(r), sheet: referenceSheetPath(r), seconds: r.analysis.durationSeconds, pacing: r.analysis.pacing, ground: r.analysis.ground })), null, 2));
         return;
       }
       console.log(`${items.length} reference(s) waiting for Claude`);

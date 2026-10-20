@@ -75,6 +75,16 @@ anything itself: when the decision is the owner's, its last line says so, and yo
 - `CONFIRM {...}` (exit 5): something would be deleted (`clean`). Offer its `options` (multiSelect, plus "Nothing")
   and run again with `--yes <id>,<id>`. Never pass `--yes` without the owner's choice.
 
+### `/reelcut watch <video | url> [question]` watches a video and answers
+
+Any video, not only ours: a file, a screen recording, or a link (YouTube, Instagram, TikTok, X; downloaded once).
+Watch it in the Think-Act-Observe loop of [references/watch.md](references/watch.md): `npm run watch -- overview`
+first, then targeted looks (search, frames at any fps, zoom, ocr, transcript, audio) where the answer lives,
+within the depth's frame budget. The answer comes with timestamped evidence. With no question, give a summary
+with chapters. The studio's Create page has the same as a mode, *Ask about a video*, with a Watch panel that
+shows where you looked. A video the owner drops into any reel chat with a question about it is watched the same
+way. Never make a reel from a watch unless the owner asks for one.
+
 ### `/reelcut <script>` makes the reel here, as it always has
 
 ```
@@ -224,6 +234,9 @@ requirement with `"form": "footage"` and the step as its name ("Download Claude"
 to the user as a proposal the first time and used as it was recorded: trimmed, framed, zoomed and at most
 speeded up 2x, never redrawn. A step with no recording is a gap — record it, mark a moment in a recording
 you have, or compose an animation as a stand-in. See [references/footage.md](references/footage.md).
+**When a recording has the step but no moment marked for it, find the moment yourself, automatically:**
+watch the recording ([watch.md, Footage moments](references/watch.md#footage-moments)), set the exact in and out
+at 10 fps, `npm run footage -- propose` it, and show the in and out frames as its proof in the Step 2 message.
 
 **Gate:** no `identity` requirement is satisfied by a drawn asset. Ever. (Clawd is not a requirement: the kit draws it,
 from its one fixed spec, and nothing else ever draws it.)
@@ -324,12 +337,19 @@ on top with effects (7 dB) and the music bed (`"music"`, found in Step 2; 9 dB) 
 a voice or music is normalised to -14 LUFS. Every clip carries its slice of that mix, the master all of it, and
 `mix/` holds the stems. `"render"` in `reel.json` turns on motion blur and 4K, as asked in Step 0. `"type"` sets every beat's type
 pairing; each clip carries only the bundled fonts it uses.
+**Then watch the master yourself, before telling the owner it is done**: the self-review in
+[references/watch.md](references/watch.md#self-review-of-a-render) (`npm run watch -- overview out/master.mp4 --beats
+out/reel.json --depth deep`, then the hook at 10 fps, every text card read back against its script line, every fast
+part and every cut re-watched, the voice against the cuts). It is **report-only**: put the findings in your reply under
+**Self-review** (beat, time, what is wrong, the fix you would make, worst first) and in `report.md`, and change nothing
+unless the owner asks.
 Write the report. The run is recorded; open the studio
 (http://localhost:5198) or not, as the user chose in Step 0. Every beat the user rates "Works" there is kept
 as their pattern, and the next reel starts from it (Step 4).
 
-**Gate:** every clip passes `checkVideo.ts` with zero findings, and `report.md` has a provenance
-line for every asset and every number.
+**Gate:** every clip passes `checkVideo.ts` with zero findings, `report.md` has a provenance
+line for every asset and every number, and the master has been watched (the Self-review section exists, even if it
+says "nothing to fix").
 
 ---
 
@@ -366,10 +386,13 @@ The studio's References tab holds films the user admires. Each is measured autom
 Claude adds what a measurement cannot see.
 
 ```bash
-npm run references -- queue --json     # id, name, sheet (a 24-frame contact sheet image), pacing, ground
+npm run references -- queue --json     # id, name, file, sheet (a 24-frame contact sheet image), pacing, ground
 ```
 
-For each, **view the `sheet`** (Read tool) and tag what you see in the fixed words only:
+For each, **watch the `file`** ([watch.md, Reference study](references/watch.md#reference-study)): `npm run watch --
+overview <file>`, then re-watch its fast parts at 10 fps. Word-by-word builds, kinetic type and rolling numbers
+happen between a contact sheet's frames. Then `npm run watch -- forget <file>`, so no picture or sentence of
+someone else's film is kept. Tag what you saw in the fixed words only:
 
 ```bash
 npm run references -- annotate <id> --moves ui,cur,num --text key-lines --note "product demo, then a counter"
@@ -392,14 +415,16 @@ lists them. This mode is how Claude helps.
 npm run footage -- queue --json      # unmarked recordings: id, length, a filmstrip image, tags
 ```
 
-For each, **view the filmstrip** (Read tool: eight frames across the recording) and index the steps you can see:
+For each, **watch the `file`** ([watch.md, Footage moments](references/watch.md#footage-moments)): the motion
+map and `ocr --changes` find the steps, and 10 fps looks set each step's exact in and out. Then index them:
 
 ```bash
-npm run footage -- propose <asset> --label "download Claude" --in 2 --out 8.5 --tags claude,download,mac
+npm run footage -- propose <asset> --label "download Claude" --in 2.3 --out 8.6 --tags claude,download,mac
 ```
 
-A label is what the viewer sees happen, in the words a script would use for it. The boundaries are coarse —
-eight frames — and that is fine: the user can tighten them in the Footage tab. What you index applies at once;
+A label is what the viewer sees happen, in the words a script would use for it. The boundaries are
+frame-checked, so they need no tightening. (Without ffmpeg, fall back to the filmstrip: eight frames, so coarse
+boundaries the user can tighten in the Footage tab.) What you index applies at once;
 there is nothing for anyone to confirm. If a filmstrip shows something that looks private (a tab strip,
 a notification, an email), say so in the report: nothing checks for it any more.
 

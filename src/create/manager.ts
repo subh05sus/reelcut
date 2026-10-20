@@ -27,8 +27,10 @@ export interface Question { question: string; header?: string; multiSelect?: boo
 export interface Settings {
   personality?: string; format?: string; length?: "full" | "short"; resolution?: "hd" | "4k";
   text?: "full" | "key-lines" | "minimal" | "none"; sfx?: "on" | "off"; music?: "fits" | "snap" | "none"; blur?: "on" | "off";
-  /** "write": the owner gave a topic, a link or notes, and Claude writes the script first. */
-  mode?: "script" | "write";
+  /** "write": the owner gave a topic, a link or notes, and Claude writes the script first. "watch": the owner asks about a video. */
+  mode?: "script" | "write" | "watch";
+  /** How hard Claude looks at a video it is asked about: the frame budget of a watch session. */
+  depth?: "quick" | "normal" | "deep";
   /** Target length in seconds for a script Claude writes. */
   target?: string;
   recipe?: string;
@@ -210,6 +212,7 @@ export class CreateManager {
     if (i.settings?.blur === "on") flags.push("--blur"); else flags.push("--no-blur");
     if (i.voiceoverPath) flags.push(`--voiceover ${i.voiceoverPath}`);
     if (i.assetsDir) flags.push(`--assets ${i.assetsDir}`);
+    if (i.settings?.mode === "watch") return watchPrompt(i);
     const write = i.settings?.mode === "write" && !i.scriptPath;
     const head = `/reelcut ${i.scriptPath ?? ""} ${flags.join(" ")}`.replace(/\s+/g, " ").trim();
     const lines = write ? [] : [head, ""];
@@ -369,6 +372,8 @@ export class CreateManager {
     // The owner's Claude login, never an API key: drop one from the environment so Claude Code cannot prefer it.
     const env: Record<string, string> = {};
     for (const [k, v] of Object.entries(process.env)) if (v !== undefined && k !== "ANTHROPIC_API_KEY" && k !== "CLAUDECODE") env[k] = v;
+    // What `npm run watch` looks at in this run belongs to this conversation, so its Watch panel can show it.
+    env.REELCUT_CONVERSATION = s.id;
     queue.push(first);
     const q = (this.opts.queryFn ?? query)({
       prompt: queue.iter,
@@ -529,6 +534,31 @@ export class CreateManager {
     if (!later) return write();
     this.saveTimers.set(s.id, setTimeout(write, 800));
   }
+}
+
+/**
+ * The first message of an "Ask about a video" chat: watch the video in reelcut's loop and answer, with the frames that
+ * prove it. No reel is made unless the owner asks for one.
+ */
+export function watchPrompt(i: StartInput): string {
+  const videos = (i.files ?? []).filter((f) => f.kind === "video" || /\.(mp4|mov|m4v|webm|mkv|avi)$/i.test(f.name));
+  const depth = i.settings?.depth ?? "normal";
+  return [
+    "Watch the video the owner gave you and answer what they asked. First read skills/reelcut/references/watch.md (the",
+    `loop and the commands), then run it: \`npm run watch -- overview <video> --question "…" --depth ${depth}\`, then targeted looks.`,
+    "",
+    "What the owner asked:",
+    i.text.trim() || "(no question: give a summary with chapters and key moments, the \"Summary + chapters\" recipe)",
+    "",
+    ...(videos.length ? [`The video${videos.length > 1 ? "s" : ""}: ${videos.map((f) => f.path).join(", ")}`, ""] : ["No file was added: the video is a link or a path in what the owner wrote (`npm run watch` downloads a link).", ""]),
+    "This chat is in the reelcut studio, and the owner is watching it:",
+    "- Every frame grid you look at appears in the chat, and the Watch panel beside it shows where you looked, at what fps.",
+    "- Pass `--why \"…\"` on every look: it is the line the owner reads in the panel.",
+    "- Answer in the owner's language: the direct answer first, then the evidence (timestamp, and seen / read on screen / heard /",
+    "  inferred), then 3–8 lines of how you watched, then your confidence. Hand over a clip (`npm run watch -- clip`) when it helps.",
+    "- Ask with AskUserQuestion only when the question really is ambiguous. Never make a reel unless the owner asks for one.",
+    "- Start your first reply with one line `Title: <a short name for this chat, 2 to 6 words>`; the chat is named after it.",
+  ].join("\n");
 }
 
 export interface Stage { id: string; label: string; state: "done" | "now" | "todo"; n?: number; of?: number }

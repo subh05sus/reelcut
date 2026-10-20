@@ -44,7 +44,7 @@
     --field: #ffffff; --field-edge: rgb(60 60 67 / 0.18);
     --thumb: #ffffff;
     --accent: #c2410c; --accent-text: #c2410c; --on-accent: #ffffff;
-    --green: #186a2e; --orange: #a34a00; --red: #d70015; --blue: #0066cc;
+    --green: #186a2e; --orange: #a34a00; --red: #d70015; --blue: #0066cc; --purple: #8944ab; --teal: #0071a4;
     --scrim: rgb(0 0 0 / 0.32);
     --shadow-pop: 0 16px 40px -14px rgb(0 0 0 / 0.22), 0 2px 6px -2px rgb(0 0 0 / 0.06);
     --ring: var(--accent);
@@ -60,7 +60,7 @@
     --field: rgb(118 118 128 / 0.24); --field-edge: transparent;
     --thumb: #636366;
     --accent: #ff9230; --accent-text: #ffa04f; --on-accent: #2a1300;
-    --green: #30d158; --orange: #ff9230; --red: #ff4245; --blue: #409cff;
+    --green: #30d158; --orange: #ff9230; --red: #ff4245; --blue: #409cff; --purple: #bf5af2; --teal: #64d2ff;
     --scrim: rgb(0 0 0 / 0.5);
     --shadow-pop: 0 20px 48px -14px rgb(0 0 0 / 0.6), 0 2px 6px -2px rgb(0 0 0 / 0.3);
     color-scheme: dark;
@@ -513,6 +513,29 @@
   .cr-panel .note, .cr-panel .foot-note { margin: 0; }
   .cr-panel h3 { margin: 0; font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
   .cr-tabs { display: none; }
+  /* The Watch panel: a video Claude watched, the lanes of what is in it, and where Claude looked (darker = higher fps). */
+  .w-sm { display: none; }
+  @media (max-width: 520px) { .w-lg { display: none; } .w-sm { display: inline; } }
+  #cr-wbody { display: flex; flex-direction: column; gap: 10px; }
+  .cr-wv { width: 100%; max-height: 300px; background: #000; border-radius: var(--r-card); display: block; }
+  .cr-wmeta { font-size: 13px; color: var(--label-2); margin: 0; }
+  .cr-wq { font-size: 13px; margin: 0; }
+  .cr-wtl { position: relative; cursor: pointer; }
+  .cr-wtl svg { width: 100%; height: auto; display: block; }
+  .cr-wtl .ph { position: absolute; top: 0; bottom: 0; width: 1.5px; background: var(--accent); pointer-events: none; left: 0; }
+  .cr-wtl .mot { fill: var(--orange); } .cr-wtl .cut { fill: var(--label); } .cr-wtl .sp { fill: var(--blue); } .cr-wtl .mu { fill: var(--purple); }
+  .cr-wtl .lk { fill: var(--green); } .cr-wtl .sb { fill: var(--label-3); } .cr-wtl .zm { fill: var(--red); } .cr-wtl .oc { fill: var(--teal); } .cr-wtl .ot { fill: var(--orange); }
+  .cr-wtl .lane { font-size: 9px; fill: var(--label-3); }
+  .cr-wkey { display: flex; flex-wrap: wrap; gap: 2px 10px; font-size: 11px; color: var(--label-2); }
+  .cr-wkey i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; }
+  .cr-wsteps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .cr-wsteps li { background: var(--elev); border-radius: var(--r-card); padding: 10px 12px; font-size: 13px; }
+  .cr-wsteps li.now { box-shadow: inset 0 0 0 1.5px var(--accent); }
+  .cr-wsteps .h { display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; }
+  .cr-wsteps .n { font-variant-numeric: tabular-nums; color: var(--label-3); min-width: 18px; }
+  .cr-wsteps .why { color: var(--label-2); margin-top: 2px; }
+  .cr-wsteps img { width: 100%; border-radius: 8px; margin-top: 8px; display: block; }
+  .cr-wsteps button.ts { all: unset; cursor: pointer; color: var(--blue); font-variant-numeric: tabular-nums; }
   @media (max-width: 1099px) { .cr { grid-template-columns: minmax(0, 1fr); } .cr-panel { display: none; position: static; max-height: none; } .cr[data-view="reel"] .cr-panel { display: flex; } .cr[data-view="reel"] .cr-chat { display: none; } .cr-tabs { display: block; margin-bottom: 12px; } }
   .ev-user { align-self: flex-end; max-width: 82%; background: var(--fill-2); border-radius: 20px 20px 6px 20px; padding: 10px 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
   .ev-user.long .ut { max-height: 176px; overflow: hidden; -webkit-mask: linear-gradient(#000 60%, transparent); mask: linear-gradient(#000 60%, transparent); }
@@ -1250,7 +1273,7 @@ function openStream(id) {
     if (i == null) { cr.byId.set(e.id, cr.events.length); cr.events.push(e); } else cr.events[i] = e;
     if (e.k === "question" && e.status === "waiting") notify("Claude has a question", e.questions[0]?.question || "");
     if (e.k === "permission" && e.status === "waiting") notify("Claude needs your permission", `${e.tool}: ${e.reason}`);
-    if (e.k === "tool" && e.status !== "running" && /render|measure|reel\.json/i.test(e.input)) refreshReel();
+    if (e.k === "tool" && e.status !== "running" && /render|measure|reel\.json|run watch|watch\.ts/i.test(e.input)) refreshReel();
     if (e.k === "tool" && e.status !== "running" && /post-kit\.json/i.test(e.input) && cr.panelShown === "post") paintPost();
     if (e.k === "status" && /left a review comment/.test(e.text) && cr.panelShown === "master") paintComments(true);
     // Streaming text arrives many times a second: paint it once a frame.
@@ -1282,18 +1305,101 @@ function paintProgress(pg) {
   paintMeta();
 }
 
+// ---- the Watch panel: the videos Claude watched in this chat, the lanes of what is in each, and every look it took.
+const W_HEAD = { frames: "Looked", storyboard: "Storyboard", zoom: "Zoomed", ocr: "Read the text", transcript: "Listened", audio: "Listened to the sound", motion: "Motion map", scenes: "Cut list", search: "Searched", note: "Noted", observe: "Saw", clip: "Cut a clip" };
+const W_CLS = { frames: "lk", storyboard: "sb", zoom: "zm", ocr: "oc" };
+const W_LANES = ["frames", "storyboard", "zoom", "ocr", "transcript", "audio", "motion"];
+const wSig = (vs) => vs.map((x) => `${x.id}:${x.looks.length}:${x.notes.length}:${x.updatedAt}`).join("|");
+function watchSel() { const vs = cr.watch || []; return vs.find((x) => x.id === cr.watchSel) || vs[0]; }
+function watchLanes(w) {
+  const d = w.meta.duration || 1, W = 360, X = (t) => Math.round((t / d) * W * 100) / 100, out = [];
+  w.motion.forEach((m, i) => { const op = m < 0.004 ? 0 : m < 0.02 ? 0.25 : m < 0.06 ? 0.55 : 0.95; if (op) out.push(`<rect x="${X(i * w.bin)}" y="0" width="${Math.max(0.6, X(w.bin))}" height="8" class="mot" opacity="${op}"/>`); });
+  for (const c of w.cuts) out.push(`<rect x="${X(c)}" y="10" width="0.8" height="7" class="cut"/>`);
+  for (const [a, b] of w.speech) out.push(`<rect x="${X(a)}" y="19" width="${Math.max(0.6, X(b) - X(a))}" height="5" class="sp"/>`);
+  for (const [a, b] of w.sound) out.push(`<rect x="${X(a)}" y="19" width="${Math.max(0.6, X(b) - X(a))}" height="5" class="mu"/>`);
+  let y = 29;
+  w.looks.forEach((l, n) => {
+    if (!W_LANES.includes(l.kind)) return;
+    const a = l.frm ?? 0, b = l.to ?? d;
+    const op = l.kind === "frames" ? Math.min(1, 0.35 + (l.fps || 1) / 12) : 0.8;
+    out.push(`<rect x="${X(a)}" y="${y}" width="${Math.max(2.5, X(b) - X(a))}" height="5" rx="1.5" class="${W_CLS[l.kind] || "ot"}" opacity="${op.toFixed(2)}" data-step="${n}"><title>${esc(`${W_HEAD[l.kind] || l.kind} ${clockOf(a)}${b !== a ? `–${clockOf(b)}` : ""}${l.fps ? ` at ${l.fps} fps` : ""}${l.why ? ` — ${l.why}` : ""}`)}</title></rect>`);
+    y += 7;
+  });
+  return `<svg viewBox="0 0 ${W} ${y + 2}" preserveAspectRatio="none" role="img" aria-label="Where Claude looked">${out.join("")}</svg><span class="ph" id="cr-wph"></span>`;
+}
+function watchSteps(w) {
+  return w.looks.map((l, n) => {
+    const when = l.frm != null ? `<span><button class="ts" data-t="${l.frm}">${clockOf(l.frm)}</button>${l.to != null && l.to !== l.frm ? `–${clockOf(l.to)}` : ""}</span>` : "";
+    const detail = [l.fps && `${l.fps} fps`, l.frames && `${l.frames} frame${l.frames === 1 ? "" : "s"}`, l.region && l.region !== "full" && l.region, l.query && `“${l.query.join("”, “")}”`].filter(Boolean).join(" · ");
+    const img = (l.files || []).filter((f) => /\.jpe?g$/i.test(f)).slice(0, 2).map((f) => `<a href="${media(f)}" target="_blank"><img src="${media(f)}" loading="lazy" alt="${esc(W_HEAD[l.kind] || l.kind)}"></a>`).join("");
+    return `<li data-step="${n}"><div class="h"><span class="n">${n + 1}</span><b>${esc(W_HEAD[l.kind] || l.kind)}</b>${when}<span class="note">${esc(detail)}</span></div>${l.why ? `<div class="why">${esc(l.why)}</div>` : ""}${l.text ? `<div>${esc(l.text)}</div>` : ""}${img}</li>`;
+  }).join("");
+}
+function watchBodyHtml(w) {
+  const s = w.session;
+  return `<p class="cr-wmeta">${esc(w.meta.title || w.meta.name)} · ${clockOf(w.meta.duration)} · ${w.meta.width}×${w.meta.height} · ${esc(s.depth)} · ${s.used} of ${s.budget} frames looked at</p>
+    ${s.question ? `<p class="cr-wq">${esc(s.question)}</p>` : ""}
+    <div class="cr-wtl" id="cr-wtl">${watchLanes(w)}</div>
+    <div class="cr-wkey"><span><i style="background:var(--orange)"></i>motion</span><span><i style="background:var(--blue)"></i>speech</span><span><i style="background:var(--purple)"></i>music</span><span><i style="background:var(--green)"></i>looked</span><span><i style="background:var(--red)"></i>zoomed</span><span><i style="background:var(--teal)"></i>read</span></div>
+    ${w.notes.length ? `<details><summary class="note" style="cursor:pointer">${w.notes.length} note${w.notes.length === 1 ? "" : "s"} kept on this video</summary><ul style="margin:6px 0 0;padding-left:18px;font-size:13px">${w.notes.map((x) => `<li>${x.t != null ? `<button class="ts" data-t="${x.t}" style="all:unset;cursor:pointer;color:var(--blue)">${clockOf(x.t)}</button> ` : ""}${esc(x.text)}</li>`).join("")}</ul></details>` : ""}
+    <ol class="cr-wsteps" id="cr-wsteps">${watchSteps(w) || `<li class="note">Nothing looked at yet.</li>`}</ol>`;
+}
+function watchHtml() {
+  const vs = cr.watch || [], w = watchSel();
+  if (!w) return `<p class="note">The videos Claude watches in this chat appear here, with where it looked.</p>`;
+  return `${vs.length > 1 ? `<select id="cr-wsel" aria-label="Video">${vs.map((x) => `<option value="${x.id}" ${x.id === w.id ? "selected" : ""}>${esc(x.meta.title || x.meta.name)}</option>`).join("")}</select>` : ""}
+    <video class="cr-wv" id="cr-wv" data-id="${w.id}" src="/files/watch-video/${w.id}" controls playsinline preload="metadata"></video>
+    <div id="cr-wbody">${watchBodyHtml(w)}</div>`;
+}
+function bindWatchBody(w) {
+  const v = $("#cr-wv"), tl = $("#cr-wtl"), ph = $("#cr-wph"), d = w.meta.duration || 1;
+  if (!v || !tl) return;
+  const seek = (t) => { v.currentTime = Math.max(0, Math.min(d - 0.05, Number(t))); v.play().catch(() => {}); };
+  tl.addEventListener("click", (e) => { const step = e.target.closest("[data-step]"); if (step) { const l = w.looks[Number(step.dataset.step)]; return seek(l.frm ?? 0); } const rc = tl.getBoundingClientRect(); seek(((e.clientX - rc.left) / rc.width) * d); });
+  $$("#cr-wbody button.ts").forEach((b) => b.addEventListener("click", () => seek(b.dataset.t)));
+  if (ph) { const sync = () => { ph.style.left = `${Math.min(100, (v.currentTime / d) * 100)}%`; }; v.ontimeupdate = sync; v.onseeked = sync; sync(); }
+}
+/** Repaint the Watch view; a video that is playing keeps playing, only what is around it is redrawn. */
+function paintWatch(p) {
+  const w = watchSel();
+  const v = $("#cr-wv", p);
+  if (w && v && v.dataset.id === w.id && $("#cr-wbody", p)) { $("#cr-wbody", p).innerHTML = watchBodyHtml(w); bindWatchBody(w); return; }
+  const slot = $("#cr-watch", p); if (!slot) return;
+  slot.innerHTML = watchHtml();
+  $("#cr-wsel", slot)?.addEventListener("change", (e) => { cr.watchSel = e.target.value; slot.innerHTML = ""; paintWatch(p); });
+  if (w) bindWatchBody(w);
+}
+
 const refreshReel = debounce(async () => {
   if (!cr.meta || !$("#cr-panel")) return;
   const id = cr.meta.id;
   const live = cr.meta.status === "running" || cr.meta.status === "waiting";
   clearTimeout(cr.reelTimer);
   if (live) cr.reelTimer = setTimeout(refreshReel, 4000);
-  const { reel: r, progress } = await api(`/api/create/${id}/reel`);
+  const [{ reel: r, progress }, wv] = await Promise.all([api(`/api/create/${id}/reel`), api(`/api/create/${id}/watch`).catch(() => ({ videos: [] }))]);
   if (cr.meta?.id !== id) return;
   cr.reel = r;
+  const watchChanged = wSig(wv.videos || []) !== wSig(cr.watch || []);
+  cr.watch = wv.videos || [];
   const p = $("#cr-panel");
-  if (!r) { p.innerHTML = `<div id="cr-prog-slot"></div><h3>Reel</h3><p class="note">The reel appears here as Claude plans it: beats first, then frames, then the clips as they render.</p>`; paintProgress(progress); return; }
-  const view = r.master ? (cr.panelView || "master") : "beats";
+  if (!r) {
+    // A chat about a video (or one that has not planned its reel yet but watched something): the Watch view.
+    if (cr.watch.length) {
+      if (!$("#cr-watch", p) || cr.panelShown !== "watch-only") { p.innerHTML = `<div id="cr-prog-slot"></div><h3>Watch</h3><div id="cr-watch" style="display:flex;flex-direction:column;gap:12px"></div>`; cr.panelShown = "watch-only"; paintWatch(p); }
+      else if (watchChanged) paintWatch(p);
+      if (cr.meta?.settings?.mode !== "watch") paintProgress(progress);
+      return;
+    }
+    p.innerHTML = cr.meta?.settings?.mode === "watch"
+      ? `<h3>Watch</h3><p class="note">The video appears here once Claude starts watching it, with a timeline of where it looks, at what frame rate, and why.</p>`
+      : `<div id="cr-prog-slot"></div><h3>Reel</h3><p class="note">The reel appears here as Claude plans it: beats first, then frames, then the clips as they render.</p>`;
+    cr.panelShown = null;
+    paintProgress(progress); return;
+  }
+  const opts = r.master ? [["master", "Master"], ["beats", "Beats"], ["post", "Post"]] : [["beats", "Beats"]];
+  if (cr.watch.length) opts.push(["watch", "Watch"]);
+  const view = cr.panelView && opts.some(([k]) => k === cr.panelView) ? cr.panelView : r.master ? "master" : "beats";
+  if (view === "watch" && cr.panelShown === "watch") { if (watchChanged) paintWatch(p); paintProgress(progress); return; }
   // Never pull the rug: leave the panel alone while the master plays, a comment is being written or a beat is dragged.
   const playing = $("video.master", p);
   const busy = (playing && !playing.paused && view === "master" && cr.panelShown === "master") || cr.commenting || cr.dragging;
@@ -1301,13 +1407,13 @@ const refreshReel = debounce(async () => {
   cr.panelShown = view;
   p.innerHTML = `<div id="cr-prog-slot"></div>
     <h3>Reel <span class="note" style="font-weight:400">${r.beats.length} beat${r.beats.length === 1 ? "" : "s"} · ${Math.round(r.seconds)} s${r.format ? ` · ${esc(r.format)}` : ""}</span></h3>
-    ${r.master ? segHtml("cr-pv", [["master", "Master"], ["beats", "Beats"], ["post", "Post"]], view, "full") : ""}
-    ${view === "master" ? masterHtml(r) : view === "post" ? `<div id="cr-post"><p class="note">Loading…</p></div>` : beatsHtml(r, live)}
+    ${opts.length > 1 ? segHtml("cr-pv", opts, view, "full") : ""}
+    ${view === "master" ? masterHtml(r) : view === "post" ? `<div id="cr-post"><p class="note">Loading…</p></div>` : view === "watch" ? `<div id="cr-watch" style="display:flex;flex-direction:column;gap:12px"></div>` : beatsHtml(r, live)}
     ${r.plan ? `<details><summary class="note" style="cursor:pointer">Plan</summary><div class="ev-text" style="font-size:13px;margin-top:8px">${md(r.plan)}</div></details>` : ""}
     <p class="foot-note">${esc(r.dir)}</p>`;
   paintProgress(progress);
-  if (r.master) bindSeg("cr-pv", (v) => { cr.panelView = v; cr.panelShown = null; refreshReel(); });
-  if (view === "master") bindMaster(r); else if (view === "post") paintPost(); else bindBeats(r);
+  if (opts.length > 1) bindSeg("cr-pv", (v) => { cr.panelView = v; cr.panelShown = null; refreshReel(); });
+  if (view === "master") bindMaster(r); else if (view === "post") paintPost(); else if (view === "watch") paintWatch(p); else bindBeats(r);
 }, 250);
 
 // ---- performance
@@ -1624,29 +1730,40 @@ function sessionRow(s) {
   const sub = [when(s.updatedAt), series && `${series.name} · episode ${s.episode.n}`, s.status === "queued" && s.queued?.startAt && `starts ${new Date(s.queued.startAt).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" })}`].filter(Boolean).map(esc).join(" · ");
   return `<a class="row-i" href="#create/${s.id}" style="color:var(--label);text-decoration:none"><span class="col"><span class="t">${esc(s.title)}</span><span class="s">${sub}</span></span><span class="badge ${STATUS_TONE[s.status] || ""}">${STATUS_WORD[s.status] || s.status}</span></a>`;
 }
+/** "Ask about a video": the jobs the watch loop has recipes for, as a first question to start from. */
+const WATCH_ASKS = [
+  ["Summary + chapters", "TL;DR, titled chapters, key moments", "Summarize this video with chapters (timestamps and titles) and the key moments."],
+  ["Critique the hook", "First 3 s, pacing, legibility, captions", "Critique this reel: the hook in the first 3 seconds, pacing, text legibility and caption timing, and where people would swipe away. Give concrete fixes with timestamps."],
+  ["Find the moment", "When it happens, to the frame", "When exactly does … happen? Give me the timestamps with the frames that prove it."],
+  ["Turn it into steps", "Numbered steps with screenshots", "Turn this tutorial into numbered step-by-step notes, with the exact commands and text read off the screen and a screenshot for the hard steps."],
+];
 function renderLanding() {
   const d = cr.draft, list = cr.list.sessions, recipes = cr.list.recipes || [];
   const mode = d.settings.mode || "script";
   const queued = list.filter((s) => s.status === "queued");
   $("#main").innerHTML = `${pageHead("Create")}<div class="intbar" id="intbar"></div>
-    <div class="cr-land"><h2>${mode === "write" ? "What should the reel be about?" : "What should the reel say?"}</h2>
+    <div class="cr-land"><h2>${mode === "write" ? "What should the reel be about?" : mode === "watch" ? "What do you want to know about the video?" : "What should the reel say?"}</h2>
       <p class="lede" style="margin:0 auto 16px">${mode === "write"
         ? "Give Claude a topic, a link or your notes. It offers three hooks, writes the script in your voice and, once you approve it, makes the reel."
+        : mode === "watch"
+        ? "Drop a video or paste a link, and ask. Claude watches it the way you would: a map first, then it jumps to what matters, re-watches the fast parts frame by frame, zooms in to read and listens. The answer comes with the frames that prove it."
         : "Paste your script or drop a .txt or .srt (drop several to make a batch), add a voiceover or assets, and say how it should feel. Claude makes the reel with /reelcut and asks what it needs right here."}</p>
-      <div style="display:flex;justify-content:center;margin-bottom:24px">${segHtml("cr-mode", [["script", "I have a script"], ["write", "Write it with Claude"]], mode)}</div></div>
-    <div class="cr-sec"><div class="cap">Start from a recipe</div>
+      <div style="display:flex;justify-content:center;margin-bottom:24px">${segHtml("cr-mode", [["script", `<span class="w-lg">I have a script</span><span class="w-sm">Script</span>`], ["write", `<span class="w-lg">Write it with Claude</span><span class="w-sm">Write it</span>`], ["watch", `<span class="w-lg">Ask about a video</span><span class="w-sm">Ask a video</span>`]], mode)}</div></div>
+    ${mode === "watch" ? `<div class="cr-sec"><div class="cap">Ask it to</div>
+      <div class="cr-recipes">${WATCH_ASKS.map(([t, s2, q]) => `<button type="button" class="cr-recipe" data-ask="${esc(q)}"><span class="t">${esc(t)}</span><span class="s">${esc(s2)}</span></button>`).join("")}</div></div>` : `<div class="cr-sec"><div class="cap">Start from a recipe</div>
       <div class="cr-recipes">${recipes.map((r) => `<button type="button" class="cr-recipe ${d.settings.recipe === r.id ? "on" : ""}" data-recipe="${esc(r.id)}" aria-pressed="${d.settings.recipe === r.id}"><span class="t">${esc(r.name)}</span><span class="s">${esc(r.line || r.structure.slice(0, 3).join(", "))}</span>${r.builtIn ? "" : `<span class="own">Yours</span>`}</button>`).join("")}
-        <button type="button" class="cr-recipe add" id="cr-recipe-save"><span class="t">${ic("plus", 14)} Save as a recipe</span><span class="s">The chips and instructions you have now</span></button></div></div>
+        <button type="button" class="cr-recipe add" id="cr-recipe-save"><span class="t">${ic("plus", 14)} Save as a recipe</span><span class="s">The chips and instructions you have now</span></button></div></div>`}
     ${queued.length ? `<div class="cr-sec"><div class="cap">Batch <span class="note">${queued.length} waiting · one at a time</span></div><div class="group cr-list">${queued.map(sessionRow).join("")}</div></div>` : ""}
     ${list.filter((s) => s.status !== "queued").length ? `<div class="cr-sec" style="margin-bottom:300px"><div class="cap">Recent</div><div class="group cr-list">${list.filter((s) => s.status !== "queued").map(sessionRow).join("")}</div></div>` : `<div style="height:300px"></div>`}
     ${composerHtml(true)}`;
-  bindSeg("cr-mode", (v) => { d.settings.mode = v === "write" ? "write" : undefined; const keep = $("#cr-text").value; renderLanding(); $("#cr-text").value = keep; });
+  bindSeg("cr-mode", (v) => { d.settings.mode = v === "write" || v === "watch" ? v : undefined; const keep = $("#cr-text").value; renderLanding(); $("#cr-text").value = keep; });
+  $$("[data-ask]").forEach((b) => b.addEventListener("click", () => { const ta = $("#cr-text"); ta.value = b.dataset.ask; ta.focus(); ta.dispatchEvent(new Event("input")); }));
   $$("[data-recipe]").forEach((b) => {
     b.addEventListener("click", () => applyRecipe(b.dataset.recipe));
     const r = recipes.find((x) => x.id === b.dataset.recipe);
     if (r && !r.builtIn) b.addEventListener("contextmenu", (e) => { e.preventDefault(); openMenu({ x: e.clientX, y: e.clientY }, [{ label: "Delete recipe", danger: true, act: async () => { await api(`/api/recipes/${r.id}`, { method: "DELETE" }); await reloadCreateList(); renderLanding(); } }]); });
   });
-  $("#cr-recipe-save").addEventListener("click", saveAsRecipe);
+  $("#cr-recipe-save")?.addEventListener("click", saveAsRecipe);
   bindComposer(true); paintIcons(); paintIntegrations();
 }
 async function reloadCreateList() { cr.list = await api("/api/create"); }
@@ -1716,7 +1833,8 @@ function composerHtml(first) {
   if (d.settings.personality === undefined && def) d.settings.personality = def.id;
   const sel = (id, opts, v, label) => `<select id="${id}" aria-label="${label}">${opts.map(([k, l]) => `<option value="${esc(k)}" ${k === (v ?? "") ? "selected" : ""}>${esc(l)}</option>`).join("")}</select>`;
   return `<div class="composer liquid-glass liquid-glass-milky ${first ? "land" : ""}" id="cr-composer">
-    ${first ? `<div class="chips">${sel("cr-pers", [["", "No personality"], ...pers.map((p) => [p.id, p.name])], d.settings.personality, "Personality")}
+    ${first && d.settings.mode === "watch" ? `<div class="chips">${sel("cr-depth", [["", "Look: normal"], ["quick", "Look: quick"], ["deep", "Look: deep, frame by frame"]], d.settings.depth, "How closely to look")}</div>` : ""}
+    ${first && d.settings.mode !== "watch" ? `<div class="chips">${sel("cr-pers", [["", "No personality"], ...pers.map((p) => [p.id, p.name])], d.settings.personality, "Personality")}
       ${sel("cr-format", [["", "Format: ask"], ["9:16", "9:16"], ["1:1", "1:1"], ["4:5", "4:5"], ["16:9", "16:9"]], d.settings.format, "Format")}
       ${sel("cr-length", [["", "Length: ask"], ["full", "Whole script"], ["short", "Short cut"]], d.settings.length, "Length")}
       ${sel("cr-res", [["", "Quality: ask"], ["hd", "HD"], ["4k", "4K"]], d.settings.resolution, "Quality")}
@@ -1729,7 +1847,7 @@ function composerHtml(first) {
     ${first ? `<div class="cr-batch" id="cr-batch" hidden></div>` : ""}
     <div class="files" id="cr-files">${cr.files.map((f, i) => `<span class="chip" data-rmfile="${i}">${ic("attach", 12)} ${esc(f.name)} <span style="color:var(--label-2)">${f.kind}</span> ${ic("x", 11)}</span>`).join("")}</div>
     <div class="row"><button class="icon" id="cr-attach" title="Add a script, a voiceover or assets" aria-label="Attach">${ic("attach", 18)}</button>
-      <textarea id="cr-text" rows="1" placeholder="${!first ? "Reply, or ask for a change…" : d.settings.mode === "write" ? "A topic, a link or your notes…" : "Paste a script, or say what the reel should be about…"}"></textarea>
+      <textarea id="cr-text" rows="1" placeholder="${!first ? "Reply, or ask for a change…" : d.settings.mode === "write" ? "A topic, a link or your notes…" : d.settings.mode === "watch" ? "Ask about the video you drop here, or paste a link…" : "Paste a script, or say what the reel should be about…"}"></textarea>
       <button class="send" id="cr-send" title="Send" aria-label="Send">${ic("up", 18)}</button></div>
     <div class="meta"><button class="plain sm" id="cr-model">${esc((cr.list?.models || []).find(([k]) => k === (cr.meta?.model ?? d.model))?.[1] || "Default model")} · ${esc((cr.list?.efforts || []).find(([k]) => k === (cr.meta?.effort ?? d.effort))?.[1] || "default")} effort</button><span class="grow"></span><span>Runs on your Claude login</span></div>
     <input type="file" id="cr-file" multiple hidden></div>`;
@@ -1745,7 +1863,8 @@ function bindComposer(first) {
     if (live && !ta.value.trim() && !cr.files.length) return post(`/api/create/${cr.meta.id}/stop`).catch((e) => toast(e.message));
     crSend(first);
   });
-  if (first) {
+  $("#cr-depth")?.addEventListener("change", (e) => { d.settings.depth = e.target.value || undefined; });
+  if (first && d.settings.mode !== "watch") {
     $("#cr-pers").addEventListener("change", (e) => { d.settings.personality = e.target.value; });
     $("#cr-format").addEventListener("change", (e) => { d.settings.format = e.target.value || undefined; });
     $("#cr-length").addEventListener("change", (e) => { d.settings.length = e.target.value || undefined; });
@@ -1764,10 +1883,13 @@ function bindComposer(first) {
     });
   }
   const pick = (kind, accept) => { const inp = $("#cr-file"); inp.accept = accept; inp.dataset.kind = kind; inp.click(); };
+  const watching = first && d.settings.mode === "watch";
   $("#cr-attach").addEventListener("click", (e) => openMenu(e.currentTarget, [
-    { label: "Script (.txt or .srt)", act: () => pick("script", ".txt,.srt,.md,text/plain") },
-    { label: "Voiceover (audio)", act: () => pick("voiceover", "audio/*,.wav,.mp3,.m4a") },
-    { label: "Assets or footage", act: () => pick("asset", "image/*,video/*,.svg,.pdf") },
+    { label: "A video to ask about", act: () => pick("video", "video/*,.mov,.mp4,.m4v,.webm,.mkv") },
+    ...(watching ? [] : [{ sep: true }]),
+    ...(watching ? [] : [{ label: "Script (.txt or .srt)", act: () => pick("script", ".txt,.srt,.md,text/plain") }]),
+    ...(watching ? [] : [{ label: "Voiceover (audio)", act: () => pick("voiceover", "audio/*,.wav,.mp3,.m4a") }]),
+    ...(watching ? [] : [{ label: "Assets or footage", act: () => pick("asset", "image/*,video/*,.svg,.pdf") }]),
     ...(cr.meta ? [{ sep: true }, { label: "Have Claude draw an asset…", act: () => drawAsset() }] : []),
   ]));
   $("#cr-file").addEventListener("change", (e) => {
@@ -1784,7 +1906,7 @@ function bindComposer(first) {
   comp.addEventListener("dragover", (e) => { e.preventDefault(); e.stopPropagation(); });
   comp.addEventListener("drop", (e) => {
     e.preventDefault(); e.stopPropagation();
-    for (const f of e.dataTransfer.files) cr.files.push({ name: f.name, kind: /\.(txt|srt|md)$/i.test(f.name) ? "script" : /^audio\//.test(f.type) ? "voiceover" : "asset", file: f });
+    for (const f of e.dataTransfer.files) cr.files.push({ name: f.name, kind: watching && /^video\//.test(f.type) ? "video" : /\.(txt|srt|md)$/i.test(f.name) ? "script" : /^audio\//.test(f.type) ? "voiceover" : "asset", file: f });
     repaintFiles();
   });
   repaintFiles();
@@ -1892,9 +2014,10 @@ async function renderCreate(id) {
   }
   const r = await api(`/api/create/${id}`);
   cr.meta = r.session; cr.events = r.events; cr.byId = new Map(r.events.map((e, i) => [e.id, i]));
+  cr.watch = null; cr.watchSel = null; cr.panelShown = null;
   $("#main").innerHTML = `${pageHead(esc(cr.meta.title), { back: `<a class="back" href="#create">${ic("back", 18)}Create</a>`, actions: `<span class="cr-meter" id="cr-meter"></span><button class="sm" id="cr-rename">Rename</button>` })}
     <div class="intbar" id="intbar"></div>
-    <div class="cr-tabs">${segHtml("cr-view", [["chat", "Chat"], ["reel", "Reel"]], cr.view)}</div>
+    <div class="cr-tabs">${segHtml("cr-view", [["chat", "Chat"], ["reel", cr.meta.settings?.mode === "watch" ? "Watch" : "Reel"]], cr.view)}</div>
     <div class="cr" data-view="${cr.view}"><section class="cr-chat"><div id="cr-events" style="display:flex;flex-direction:column;gap:14px"></div><div id="cr-typing" hidden><span class="typing"><i></i><i></i><i></i></span></div></section>
       <aside class="cr-panel" id="cr-panel"></aside></div>
     ${composerHtml(false)}`;

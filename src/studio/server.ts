@@ -36,6 +36,7 @@ import { PLATFORMS } from "../library/schema.js";
 import { HIGGSFIELD_SETTINGS, loadSettings, setHiggsfieldSetting, type HiggsfieldSetting } from "../library/settings.js";
 import { readGeneration } from "../generate/log.js";
 import { CreateManager, filesDir as createFilesDir, insideAllowed, reelState } from "../create/manager.js";
+import { watchedIn, watchHome } from "../watch/index.js";
 import { readIntegrations } from "../create/integrations.js";
 
 /** The Personality wizard's steps, in order (the page's PZ_STEPS). */
@@ -104,6 +105,7 @@ const TYPES: Record<string, string> = {
   ".mp4": "video/mp4",
   ".webm": "video/webm",
   ".mov": "video/quicktime",
+  ".m4v": "video/mp4",
   ".ogg": "audio/ogg",
   ".mp3": "audio/mpeg",
   ".m4a": "audio/mp4",
@@ -1029,6 +1031,8 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
         return;
       }
       if (read && parts[3] === "reel" && parts.length === 4) return sendJson(res, 200, { reel: reelState(cm.findReel(id)), progress: cm.progress(id) });
+      // The Watch panel: every video Claude watched in this conversation, with where it looked.
+      if (read && parts[3] === "watch" && parts.length === 4) return sendJson(res, 200, { videos: watchedIn(id) });
       if (method === "PATCH" && parts.length === 3) {
         const b = (await readBody(req)) as { title?: string };
         if (typeof b.title === "string") cm.rename(id, b.title);
@@ -1065,9 +1069,11 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
         const assets = files.some((f) => f.kind === "asset") ? path.join(createFilesDir(id), "assets") : undefined;
         const pers = sess.settings.personality ? getPersonality(sess.settings.personality) : undefined;
         const write = sess.settings.mode === "write" && !script;
+        // "Ask about a video": the words are a question, never a script.
+        const watching = sess.settings.mode === "watch";
         // A pasted script becomes a file, so /reelcut gets a path like any other script.
         let scriptPath = script?.path;
-        if (!write && !scriptPath && text.trim().split(/\s+/).length > 25) { scriptPath = path.join(createFilesDir(id), "script.txt"); writeFileSyncSafe(scriptPath, text.trim()); }
+        if (!write && !watching && !scriptPath && text.trim().split(/\s+/).length > 25) { scriptPath = path.join(createFilesDir(id), "script.txt"); writeFileSyncSafe(scriptPath, text.trim()); }
         const recipe = sess.settings.recipe ? getRecipe(sess.settings.recipe) : undefined;
         let seriesLines: string[] | undefined;
         const series = sess.settings.series ? getSeries(sess.settings.series) : undefined;
@@ -1077,11 +1083,11 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
           seriesLines = seriesPrompt(series, n, prev ? cm.findReel(prev) : undefined);
           sess.episode = { series: series.id, n };
         }
-        const prompt = cm.firstPrompt(sess, { text: scriptPath && !script ? "" : text, scriptPath, voiceoverPath: vo?.path, assetsDir: assets, settings: sess.settings, personalityName: pers?.name, recipeLines: recipe ? recipePrompt(recipe) : undefined, seriesLines, unattended });
+        const prompt = cm.firstPrompt(sess, { text: scriptPath && !script ? "" : text, files, scriptPath, voiceoverPath: vo?.path, assetsDir: assets, settings: sess.settings, personalityName: pers?.name, recipeLines: recipe ? recipePrompt(recipe) : undefined, seriesLines, unattended });
         // A placeholder until Claude names the reel: the script's first sentence, without markdown.
         if (!sess.named) {
           // From the script when there is one (the typed words may only be direction, "make it calm"), else from the words.
-          let source = text;
+          let source = watching && !text.trim() ? `Watching ${files[0]?.name ?? "a video"}` : text;
           if (script) { try { source = readFileSync(script.path, "utf8").replace(/^\d+\s*$|^[\d:,.]+\s*-->.*$/gm, ""); } catch { /* keep the words */ } }
           const first = source.replace(/^[#>*\s-]+/gm, "").split(/(?<=[.!?])\s|\n/).map((x) => x.trim()).find((x) => x.length > 3);
           const name = first ? first.split(/\s+/).slice(0, 6).join(" ") : script?.name.replace(/\.[a-z0-9]+$/i, "") || "New reel";
@@ -1360,10 +1366,18 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
         if (!thumb) throw new HttpError(404, "no preview");
         return sendFile(req, res, thumb);
       }
+      // A video Claude watched, by the id its watch cache has: it may live anywhere (Downloads, a drive), and only a
+      // video that was watched has an id.
+      if (parts[1] === "watch-video" && parts.length === 3 && /^[0-9a-f]{12}$/.test(parts[2]!)) {
+        const metaFile = path.join(watchHome(), "videos", parts[2]!, "meta.json");
+        const file = existsSync(metaFile) ? (JSON.parse(readFileSync(metaFile, "utf8")) as { path?: string }).path : undefined;
+        if (!file || !existsSync(file)) throw new HttpError(404, "not available");
+        return sendFile(req, res, file);
+      }
       // Frames, sheets and clips a Create conversation produced: only inside the project or the studio's home.
       if (parts[1] === "create-media" && parts.length === 2) {
         const p = url.searchParams.get("path") ?? "";
-        if (!/\.(png|jpe?g|mp4|webm|gif|srt|vtt)$/i.test(p) || !path.isAbsolute(p) || !insideAllowed(p) || !existsSync(p)) throw new HttpError(404, "not available");
+        if (!/\.(png|jpe?g|mp4|m4v|mov|webm|gif|srt|vtt)$/i.test(p) || !path.isAbsolute(p) || !insideAllowed(p) || !existsSync(p)) throw new HttpError(404, "not available");
         return sendFile(req, res, p);
       }
       // The bundled type, so the Personality page shows every pairing in its real faces.

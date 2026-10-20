@@ -53,11 +53,13 @@ npm run footage -- moment add <asset> --label "download Claude" --in 2 --out 8.5
 npm run footage -- meta <asset> --app Claude --platform mac --recorded 2026-09-30
 ```
 
-**Claude indexes; it applies at once.** `/reelcut tag-footage` has Claude look at each unmarked recording's
-filmstrip and run `npm run footage -- propose …`. The moment is usable immediately and shown "by Claude" in the
-Footage tab, because the user chose to remove the approval step: waiting on a person to confirm every label
-stalled whole renders. The filmstrip is eight frames, so Claude's boundaries are coarse; tighten them in the
-Footage tab if a step starts early.
+**Claude indexes; it applies at once.** `/reelcut tag-footage` has Claude **watch** each unmarked recording
+([watch.md](watch.md#footage-moments): the motion map and the on-screen text find the steps, 10 fps looks set each
+in and out to the frame) and run `npm run footage -- propose …`. A beat that needs a step nobody marked gets the
+same, automatically, in Step 2. The moment is usable immediately and shown "by Claude" in the Footage tab, because
+the user chose to remove the approval step: waiting on a person to confirm every label stalled whole renders.
+Without ffmpeg's frames, Claude falls back to the eight-frame filmstrip, and those boundaries are coarse: tighten
+them in the Footage tab if a step starts early.
 
 ## What stops a recording being used
 

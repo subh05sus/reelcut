@@ -899,6 +899,30 @@ npm run check-video -- out/clips/*.mp4
 Blank panels are the only hard failure. Static holds and grid ink are reported, never gated: a long
 hold on a payoff is the reading floor working, not a defect.
 
+### `npm run watch` — watch any video the way a person does
+
+Claude watches video in a Think-Act-Observe loop instead of reading a fixed stack of frames. It gets a map
+first, jumps to the parts that matter, pulls frames at any frame rate, re-watches fast parts at 10 fps, zooms
+in to read, and listens to the transcript and the sound, all within a frame budget. Everything runs locally:
+ffmpeg, whisper.cpp with voice detection, and macOS Vision for on-screen text.
+
+```bash
+npm run watch -- overview demo.mp4 --question "when does he open settings?" --depth normal
+npm run watch -- search demo.mp4 "settings" "Einstellungen"     # where it is said, shown on screen, or noted
+npm run watch -- frames demo.mp4 --from 1:44 --to 1:56 --count 9 --why "find the settings page"
+npm run watch -- frames demo.mp4 --from 1:49 --to 1:51 --fps 10 # the fast part, frame by frame
+npm run watch -- zoom demo.mp4 --at 1:49.6 --region top-right   # read the small text
+npm run watch -- overview out/master.mp4 --beats out/reel.json --depth deep   # the self-review of a render
+```
+
+Also `ocr`, `transcript`, `audio`, `motion`, `scenes`, `note`, `observe`, `clip` (mp4 or gif), `report` (an
+HTML watch path), `budget`, `forget`, `fetch` (any yt-dlp link) and `doctor`. reelcut uses it in four places.
+Every master is watched before Claude says it is done (a report-only **Self-review**). Reference films are
+watched, not read from a contact sheet. Recorded steps get frame-exact in and out points. And the studio's
+Create page has an **Ask about a video** mode, with a **Watch** panel that shows where Claude looked. The loop
+is in [`skills/reelcut/references/watch.md`](skills/reelcut/references/watch.md). The same thing as a standalone
+skill, for any Claude Code: [subh05sus/video-understanding-skill](https://github.com/subh05sus/video-understanding-skill).
+
 ### `npm test`
 
 ```bash
@@ -947,6 +971,7 @@ npm run typecheck
 | Higgsfield (optional AI backgrounds) | ⚠️ plan, gates, registering, placement and fallback tested and rendered with a stand-in clip; the live MCP call is untried |
 | Footage (recorded steps, as recorded) | ✅ tested; a recorded moment rendered into a real clip, trimmed, retimed and zoomed, and its frames viewed |
 | Sound effects (`--sfx`) | ⚠️ placement and mixing tested; no sound library ships |
+| Watching video (agentic: map, search, any-fps looks, zoom, OCR, transcript, sound) | ✅ tested; a real master watched beat by beat, the studio Watch panel shown from a recorded watch session (a live studio run is untried) |
 | Clawd, the Claude mascot | ✅ 30+ acts in every style, 70 pack poses, seven patterns rendered and passing every gate, transparent overlays, its own sounds |
 | Data sourcing and charts | ⚠️ specified, not built |
 
