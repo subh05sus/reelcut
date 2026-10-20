@@ -19,6 +19,8 @@ export interface TechniquePreviewOptions {
   energy?: "restrained" | "default" | "energetic";
   cadence?: Cadence;
   texture?: Texture;
+  /** The owner's own line, in place of the technique's sample (a sketch: "show this line three ways"). */
+  text?: string;
 }
 
 interface Scene { html: string; css?: string; js: string; headline?: boolean }
@@ -301,26 +303,65 @@ function semantic(mode: "contrast" | "metaphor" | "juxta" | "double" | "symbols"
   }
 }
 
+/** A type size that keeps a line of `n` characters inside the 912 px measure, in at most `lines` lines. */
+const fitSize = (base: number, text: string, lines = 2): number => Math.round(Math.max(44, Math.min(base, (912 * lines) / (Math.max(1, text.length) * 0.56))));
+
 /** The line is the picture: these scenes have no separate headline. */
 function type(id: string, sample: string): Scene {
   const big = (inner: string, size = 150, extra = "") => `<div class="type" style="font-size:${size}px;${extra}">${inner}</div>`;
+  const words = sample.split(/\s+/).filter(Boolean);
   switch (id) {
-    case "word-by-word": return { headline: false, html: big(`<span class="w">${esc(sample)}</span>`, 120), js: `RC.words(tl, q(".w"), 0.2, { lead: true, stagger: 0.28 });` };
+    case "word-by-word": return { headline: false, html: big(`<span class="w">${esc(sample)}</span>`, fitSize(120, sample, 3)), js: `RC.words(tl, q(".w"), 0.2, { lead: true, stagger: ${Math.min(0.28, 1.6 / Math.max(1, words.length)).toFixed(2)} });` };
     case "serif-accent": {
       const [a, b] = [sample.split(" ").slice(0, -1).join(" "), sample.split(" ").pop()!];
-      return { headline: false, html: big(`<span class="w">${esc(a)}</span> <em class="ser">${esc(b)}</em>`, 150), js: `RC.words(tl, q(".w"), 0.2, { lead: true }); tl.fromTo(q(".ser"), { opacity: 0, scale: 0.7, y: 30 }, { opacity: 1, scale: 1, y: 0, duration: 0.8, ease: "spring.reward" }, 1.1);` };
+      return { headline: false, html: big(`<span class="w">${esc(a)}</span> <em class="ser">${esc(b)}</em>`, fitSize(150, sample, 2)), js: `RC.words(tl, q(".w"), 0.2, { lead: true }); tl.fromTo(q(".ser"), { opacity: 0, scale: 0.7, y: 30 }, { opacity: 1, scale: 1, y: 0, duration: 0.8, ease: "spring.reward" }, 1.1);` };
     }
-    case "highlighter": return { headline: false, html: big(`Remember <span class="rc-hl">this part<span class="rc-mark"></span></span>`, 120), js: `RC.words(tl, q(".type"), 0.2, { lead: true }); RC.mark(tl, q(".rc-hl"), 1.2, { duration: 0.6 });` };
-    case "strike-replace": return { headline: false, html: big(`<span class="rc-strike">Hard<span class="rc-rule"></span></span> <span class="nw">easy</span>`, 170), js: `RC.rise(tl, q(".rc-strike"), 0.2, { y: 20 }); RC.mark(tl, q(".rc-strike"), 1.0, { duration: 0.45 }); tl.to(q(".rc-strike"), { opacity: 0.4, duration: 0.3 }, 1.4); tl.fromTo(q(".nw"), { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.6, ease: "spring.reward" }, 1.5);` };
-    case "kinetic-slam": return { headline: false, html: big(sample.split(" ").map((w) => `<span class="sl">${esc(w)}</span>`).join("<br>"), 170, "line-height:1.02"), js: `qa(".sl").forEach(function (el, i) { tl.fromTo(el, { scale: 2.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.32, ease: "power4.out" }, 0.25 + i * 0.5); });` };
-    case "rolling-values": return { headline: false, html: big(`For <span class="rv">writers,</span>`, 140), js: `RC.rise(tl, q(".type"), 0.2, { y: 20 }); RC.roll(tl, q(".rv"), 0.9, { values: ["writers,", "coders,", "creators"], each: 0.8 });` };
-    case "big-number": return { headline: false, html: big(`<span class="num">0</span><span class="cap">followers</span>`, 230), js: `RC.rise(tl, q(".num"), 0.2, { y: 20 }); RC.count(tl, q(".num"), 0.3, { from: 0, to: 71000, duration: 1.8 }); RC.rise(tl, q(".cap"), 1.4, { y: 16 });` };
-    case "type-as-image": return { headline: false, html: big(["T", "Y", "P", "E"].map((c, i) => `<span class="ch c${i % 2}">${c}</span>`).join(""), 300, "letter-spacing:0;top:360px"), js: `qa(".ch").forEach(function (el, i) { tl.fromTo(el, { scale: 0.3, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.7, ease: "spring.reward" }, 0.25 + i * 0.16); }); tl.to(q(".type"), { scale: 1.04, duration: 2.4, ease: "none" }, 0.9);` };
-    case "genre-quotation": return { headline: false, html: `<div class="cine"><div class="ti">COMING SOON</div><div class="st">A REELCUT PICTURE</div></div>`, js: `tl.fromTo(q(".cine"), { opacity: 0 }, { opacity: 1, duration: 0.5 }, 0); tl.fromTo(q(".ti"), { opacity: 0, scale: 1.12 }, { opacity: 1, scale: 1, duration: 1.6, ease: "power2.out" }, 0.4); RC.rise(tl, q(".st"), 1.5, { y: 10 });` };
-    case "brand-code": return { headline: false, html: `<div class="flood"></div><div class="brand"><i class="logo"></i><span>${esc(sample)}</span></div>`, js: `tl.fromTo(q(".flood"), { clipPath: "circle(0% at 50% 50%)" }, { clipPath: "circle(75% at 50% 50%)", duration: 0.8, ease: "power3.inOut" }, 0.2); RC.pop(tl, q(".logo"), 0.9, { reward: true }); RC.rise(tl, q(".brand span"), 1.2, { y: 20 });` };
-    case "hit-on-cut": return { headline: false, html: wave(40, "lo") + big(`<span class="boom">${esc(sample)}</span>`, 260, "top:300px") + `<div class="flash"></div>`, js: `RC.rise(tl, qa(".wv i"), 0.1, { y: 0 }); tl.set(q(".spike"), { scaleY: 6 }, 1.2); tl.fromTo(q(".boom"), { opacity: 0, scale: 1.4 }, { opacity: 1, scale: 1, duration: 0.4, ease: "power4.out" }, 1.2); tl.fromTo(q(".flash"), { opacity: 0.9 }, { opacity: 0, duration: 0.35, immediateRender: false }, 1.2);` };
-    case "keystroke-texture": return { headline: false, html: big(`<span class="ty"></span>`, 120, "top:340px") + `<div class="keys">${["T", "Y", "P", "E", "D"].map((k) => `<span class="rc-kbd kk">${k}</span>`).join("")}</div>` + wave(30, "ks"), js: `RC.type(tl, q(".ty"), 0.3, { text: ${JSON.stringify(sample)}, cps: 7 }); qa(".kk").forEach(function (el, i) { tl.to(el, { y: 8, duration: 0.06, yoyo: true, repeat: 1 }, 0.35 + i * 0.3); tl.to(qa(".wv i")[i * 6], { scaleY: 4, duration: 0.06, yoyo: true, repeat: 1 }, 0.35 + i * 0.3); });` };
-    default: return { headline: false, html: big(esc(sample)), js: `RC.words(tl, q(".type"), 0.2);` };
+    case "highlighter": {
+      const k = words.length >= 3 ? 2 : 1, head = words.slice(0, -k).join(" "), mark = words.slice(-k).join(" ");
+      return { headline: false, html: big(`${esc(head)} <span class="rc-hl">${esc(mark)}<span class="rc-mark"></span></span>`, fitSize(120, sample, 3)), js: `RC.words(tl, q(".type"), 0.2, { lead: true }); RC.mark(tl, q(".rc-hl"), 1.2, { duration: 0.6 });` };
+    }
+    case "strike-replace": {
+      // "old → new", or the line's first half struck and its second half written in.
+      const parts = /→|->/.test(sample) ? sample.split(/\s*(?:→|->)\s*/) : [words.slice(0, Math.ceil(words.length / 2)).join(" "), words.slice(Math.ceil(words.length / 2)).join(" ")];
+      const [old, nw] = [parts[0] || sample, parts.slice(1).join(" ") || ""];
+      return { headline: false, html: big(`<span class="rc-strike">${esc(old)}<span class="rc-rule"></span></span> <span class="nw">${esc(nw)}</span>`, fitSize(170, sample, 2)), js: `RC.rise(tl, q(".rc-strike"), 0.2, { y: 20 }); RC.mark(tl, q(".rc-strike"), 1.0, { duration: 0.45 }); tl.to(q(".rc-strike"), { opacity: 0.4, duration: 0.3 }, 1.4); tl.fromTo(q(".nw"), { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.6, ease: "spring.reward" }, 1.5);` };
+    }
+    case "kinetic-slam": {
+      // At most four slams: a long line is grouped into four.
+      const per = Math.ceil(words.length / 4), lines = Array.from({ length: Math.ceil(words.length / per) }, (_, i) => words.slice(i * per, (i + 1) * per).join(" "));
+      const longest = Math.max(...lines.map((l) => l.length));
+      return { headline: false, html: big(lines.map((w) => `<span class="sl">${esc(w)}</span>`).join("<br>"), Math.min(170, Math.round(912 / (longest * 0.58)), Math.round(600 / lines.length)), "line-height:1.02"), js: `qa(".sl").forEach(function (el, i) { tl.fromTo(el, { scale: 2.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.32, ease: "power4.out" }, 0.25 + i * 0.5); });` };
+    }
+    case "rolling-values": {
+      // "For writers, coders, creators": a lead word, then the listed values roll in its place.
+      const list = sample.split(/,\s*/).filter(Boolean);
+      const lead = list.length > 1 ? list[0]!.split(" ").slice(0, -1).join(" ") : words.slice(0, -1).join(" ");
+      const vals = list.length > 1 ? [list[0]!.split(" ").pop()!, ...list.slice(1)].slice(0, 4) : [words.at(-1) ?? sample];
+      return { headline: false, html: big(`${esc(lead)} <span class="rv">${esc(vals[0]!)}</span>`, fitSize(140, `${lead} ${vals.reduce((a, b) => (b.length > a.length ? b : a), "")}`, 2)), js: `RC.rise(tl, q(".type"), 0.2, { y: 20 }); RC.roll(tl, q(".rv"), 0.9, { values: ${JSON.stringify(vals)}, each: ${(1.8 / Math.max(1, vals.length - 1)).toFixed(2)} });` };
+    }
+    case "big-number": {
+      // The line's own number (71,000 or 71.000 or 3.2), with the rest of the line as its label.
+      const m = /\d[\d.,]*/.exec(sample);
+      const raw = m?.[0] ?? "71000";
+      const grouped = /^\d{1,3}([.,]\d{3})+$/.test(raw);
+      const value = grouped ? Number(raw.replace(/[.,]/g, "")) : Number(raw.replace(",", "."));
+      const decimals = !grouped && /[.,]\d+$/.test(raw) ? raw.split(/[.,]/).pop()!.length : 0;
+      const cap = (m ? (sample.slice(0, m.index) + sample.slice(m.index + raw.length)).replace(/\s+/g, " ").trim() : sample) || (sample === "71,000" ? "followers" : "");
+      // Written the German way (71.000, 3,2), it counts the German way.
+      const locale = (grouped && raw.includes(".")) || (!grouped && raw.includes(",")) ? "de-DE" : "en-US";
+      const shown = value.toLocaleString(locale, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+      return { headline: false, html: big(`<span class="num">0</span><span class="cap">${esc(cap)}</span>`, Math.min(230, Math.round(912 / (shown.length * 0.62)))), js: `RC.rise(tl, q(".num"), 0.2, { y: 20 }); RC.count(tl, q(".num"), 0.3, { from: 0, to: ${Number.isFinite(value) ? value : 71000}, decimals: ${decimals}, locale: "${locale}", duration: 1.8 }); RC.rise(tl, q(".cap"), 1.4, { y: 16 });` };
+    }
+    case "type-as-image": {
+      // One short word of the line, its letters as the picture.
+      const word = (words.filter((w) => /^\p{L}{3,6}$/u.test(w)).sort((a, b) => b.length - a.length)[0] ?? "type").toUpperCase();
+      return { headline: false, html: big([...word].map((c, i) => `<span class="ch c${i % 2}">${esc(c)}</span>`).join(""), Math.min(300, Math.round(912 / (word.length * 0.7))), "letter-spacing:0;top:360px"), js: `qa(".ch").forEach(function (el, i) { tl.fromTo(el, { scale: 0.3, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.7, ease: "spring.reward" }, 0.25 + i * 0.16); }); tl.to(q(".type"), { scale: 1.04, duration: 2.4, ease: "none" }, 0.9);` };
+    }
+    case "genre-quotation": return { headline: false, html: `<div class="cine"><div class="ti" style="font-size:${Math.min(96, Math.round(900 / (sample.length * 0.86)))}px">${esc(sample.toUpperCase())}</div><div class="st">A REELCUT PICTURE</div></div>`, js: `tl.fromTo(q(".cine"), { opacity: 0 }, { opacity: 1, duration: 0.5 }, 0); tl.fromTo(q(".ti"), { opacity: 0, scale: 1.12 }, { opacity: 1, scale: 1, duration: 1.6, ease: "power2.out" }, 0.4); RC.rise(tl, q(".st"), 1.5, { y: 10 });` };
+    case "brand-code": return { headline: false, html: `<div class="flood"></div><div class="brand"><i class="logo"></i><span style="font-size:${fitSize(120, sample, 2)}px">${esc(sample)}</span></div>`, js: `tl.fromTo(q(".flood"), { clipPath: "circle(0% at 50% 50%)" }, { clipPath: "circle(75% at 50% 50%)", duration: 0.8, ease: "power3.inOut" }, 0.2); RC.pop(tl, q(".logo"), 0.9, { reward: true }); RC.rise(tl, q(".brand span"), 1.2, { y: 20 });` };
+    case "hit-on-cut": return { headline: false, html: wave(40, "lo") + big(`<span class="boom">${esc(sample)}</span>`, fitSize(260, sample, 2), "top:300px") + `<div class="flash"></div>`, js: `RC.rise(tl, qa(".wv i"), 0.1, { y: 0 }); tl.set(q(".spike"), { scaleY: 6 }, 1.2); tl.fromTo(q(".boom"), { opacity: 0, scale: 1.4 }, { opacity: 1, scale: 1, duration: 0.4, ease: "power4.out" }, 1.2); tl.fromTo(q(".flash"), { opacity: 0.9 }, { opacity: 0, duration: 0.35, immediateRender: false }, 1.2);` };
+    case "keystroke-texture": return { headline: false, html: big(`<span class="ty"></span>`, fitSize(120, sample, 2), "top:340px") + `<div class="keys">${["T", "Y", "P", "E", "D"].map((k) => `<span class="rc-kbd kk">${k}</span>`).join("")}</div>` + wave(30, "ks"), js: `RC.type(tl, q(".ty"), 0.3, { text: ${JSON.stringify(sample)}, cps: ${Math.max(7, Math.ceil(sample.length / 1.8))} }); qa(".kk").forEach(function (el, i) { tl.to(el, { y: 8, duration: 0.06, yoyo: true, repeat: 1 }, 0.35 + i * 0.3); tl.to(qa(".wv i")[i * 6], { scaleY: 4, duration: 0.06, yoyo: true, repeat: 1 }, 0.35 + i * 0.3); });` };
+    default: return { headline: false, html: big(esc(sample), fitSize(150, sample, 3)), js: `RC.words(tl, q(".type"), 0.2);` };
   }
 }
 
@@ -536,7 +577,7 @@ const CSS = (p: Palette) => {
 /** The preview composition of a technique, in a style and a personality's palette, type and motion. */
 export function techniquePreviewComposition(techniqueId: string, style: StyleSpec, o: TechniquePreviewOptions): string {
   const plain = PLAIN[techniqueId];
-  const sample = plain?.sample ?? techniqueId;
+  const sample = (o.text?.replace(/\s+/g, " ").trim().slice(0, 90)) || (plain?.sample ?? techniqueId);
   const sc = sceneFor(techniqueId, sample);
   const cadence = o.cadence ?? style.motion.cadence;
   const fps = cadence === "stepped-8" ? 8 : cadence === "stepped-12" ? 12 : 0;
@@ -548,7 +589,7 @@ export function techniquePreviewComposition(techniqueId: string, style: StyleSpe
 <div id="root" data-look="${style.look}" data-style="${style.id}" data-type="${esc(o.pairing)}" data-motion="${o.energy ?? style.motion.energy}" data-composition-id="${esc(o.id)}" data-width="1080" data-height="1080">
   <div class="cam">
     ${sc.html}
-    ${headline ? `<div class="rc-hl hl"><span class="ln">${esc(sample)}</span></div>` : ""}
+    ${headline ? `<div class="rc-hl hl" style="font-size:${sample.length <= 28 ? 84 : sample.length <= 52 ? 64 : 52}px"><span class="ln">${esc(sample)}</span></div>` : ""}
   </div>
 </div>
 <script>

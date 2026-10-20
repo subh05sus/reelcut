@@ -5,7 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { defaultPersonality, getPersonality } from "../../../src/personality/store.js";
 import { PREVIEW_SECONDS, techniquePreviewComposition } from "../../../src/taxonomy/preview.js";
-import { previewDirFor, previewLook, previewStatus, stampFor } from "../../../src/taxonomy/previews.js";
+import { previewDirFor, previewLook, previewStatus, sketchDir, sketchKey, stampFor } from "../../../src/taxonomy/previews.js";
 import {
   DOMAINS, OPERATIONS, TECHNIQUES, TIMINGS, TaxonomyError, acceptPatternTags, checkPath, formatPath, loadTaxonomy, patternOverrides, patternTags, patternsFor,
   pinTechnique, scoreTechniques, setAssetTags, setPatternTags, suggest, techniqueById, techniqueBeats,
@@ -31,6 +31,9 @@ import type { BeatKind } from "../../../src/personality/styles.js";
  *   npm run techniques -- previews [--only a,b] [--personality <id>] [--missing] [--quality draft|looks]
  *       Render a 3.4 s preview clip per technique, its sample line in the (default) personality's look, into
  *       ~/.reelcut/technique-previews/<personality>/ (the studio's Techniques page and beat chips play them).
+ *   npm run techniques -- sketch "<line>" --only a,b,c [--quality draft|looks]
+ *       The same, with your own line in place of each technique's sample (Try a line): saved in
+ *       ~/.reelcut/technique-previews/sketches/<key>/, and the key printed as "SKETCH <key>".
  *
  * Suggestions are ranked by the line's words and beat kind, the default personality's favoured and banned
  * techniques, and how the techniques were rated in your reels.
@@ -54,25 +57,20 @@ const cwd = process.env.INIT_CWD ?? process.cwd();
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 
-/** Render the technique previews through the normal render (so the kit, styles and checks are the reels' own). */
-function previews(argv: string[]): number {
-  const pid = flag(argv, "--personality"), quality = flag(argv, "--quality") ?? "looks", only = list(flag(argv, "--only")), missing = bool(argv, "--missing");
-  const p = pid ? getPersonality(pid) : defaultPersonality();
-  if (pid && !p) { console.error(`no personality ${pid}`); return 1; }
-  const dir = previewDirFor(p), status = previewStatus(p);
-  const ids = TECHNIQUES.map((t) => t.id).filter((id) => (!only.length || only.includes(id)) && (!missing || status.stale || !status.have.includes(id)));
-  if (!ids.length) { console.log("every technique preview is up to date"); return 0; }
+/** Render technique clips through the normal render (so the kit, styles and checks are the reels' own). */
+function renderClips(ids: string[], dir: string, p: ReturnType<typeof defaultPersonality>, quality: string, text?: string): number {
   const { style, options } = previewLook(p);
   const work = path.join(dir, ".work");
   rmSync(work, { recursive: true, force: true });
   mkdirSync(path.join(work, "src"), { recursive: true });
   const beats = ids.map((id) => {
     const cid = `tq-${id}`, file = path.join(work, "src", `${cid}.html`);
-    writeFileSync(file, techniquePreviewComposition(id, style, { ...options, id: cid }));
-    return { id: cid, durationSeconds: PREVIEW_SECONDS, composition: file };
+    writeFileSync(file, techniquePreviewComposition(id, style, { ...options, id: cid, ...(text ? { text } : {}) }));
+    const t = techniqueById(id)!;
+    return { id: cid, durationSeconds: PREVIEW_SECONDS, composition: file, technique: `${t.operations[0]}/${t.domain}/${t.id}/${t.timing}` };
   });
   writeFileSync(path.join(work, "reel.json"), `${JSON.stringify({ format: "1:1", fps: 60, beats }, null, 2)}\n`);
-  console.log(`rendering ${ids.length} technique preview(s) in ${p ? `"${p.name}"` : "the plain look"} (${style.name}) into ${dir}`);
+  console.log(`rendering ${ids.length} technique clip(s) in ${p ? `"${p.name}"` : "the plain look"} (${style.name}) into ${dir}`);
   const tsx = createRequire(import.meta.url).resolve("tsx/cli");
   const r = spawnSync(process.execPath, [tsx, path.join(REPO, "skills", "reelcut", "scripts", "render.ts"), path.join(work, "reel.json"), "--clips-only", "--no-record", "--quality", quality], { cwd: REPO, stdio: "inherit" });
   let ok = 0;
@@ -83,9 +81,32 @@ function previews(argv: string[]): number {
     spawnSync("ffmpeg", ["-v", "error", "-y", "-ss", "2.9", "-i", clip, "-frames:v", "1", "-q:v", "3", path.join(dir, `${id}.jpg`)]);
     ok++;
   }
-  if (ok) writeFileSync(path.join(dir, "stamp.json"), `${JSON.stringify(stampFor(p))}\n`);
   console.log(`${ok} of ${ids.length} saved.${r.status ? " (the render reported a problem; see above)" : ""}`);
+  return ok;
+}
+
+function previews(argv: string[]): number {
+  const pid = flag(argv, "--personality"), quality = flag(argv, "--quality") ?? "looks", only = list(flag(argv, "--only")), missing = bool(argv, "--missing");
+  const p = pid ? getPersonality(pid) : defaultPersonality();
+  if (pid && !p) { console.error(`no personality ${pid}`); return 1; }
+  const dir = previewDirFor(p), status = previewStatus(p);
+  const ids = TECHNIQUES.map((t) => t.id).filter((id) => (!only.length || only.includes(id)) && (!missing || status.stale || !status.have.includes(id)));
+  if (!ids.length) { console.log("every technique preview is up to date"); return 0; }
+  const ok = renderClips(ids, dir, p, quality);
+  if (ok) writeFileSync(path.join(dir, "stamp.json"), `${JSON.stringify(stampFor(p))}\n`);
   return ok === ids.length ? 0 : 1;
+}
+
+/** The owner's line, drawn by a few techniques. */
+function sketch(argv: string[]): number {
+  const quality = flag(argv, "--quality") ?? "looks", only = list(flag(argv, "--only")).filter((id) => techniqueById(id)).slice(0, 4);
+  const text = argv.join(" ").replace(/\s+/g, " ").trim().slice(0, 90);
+  if (!text || !only.length) { console.error('usage: techniques sketch "<line>" --only a,b,c'); return 2; }
+  const p = defaultPersonality(), key = sketchKey(text, only, p), dir = sketchDir(key);
+  mkdirSync(dir, { recursive: true });
+  const ok = renderClips(only, dir, p, quality, text);
+  console.log(`SKETCH ${key}`);
+  return ok === only.length ? 0 : 1;
 }
 
 function personalityInput() {
@@ -197,6 +218,8 @@ function main(argv: string[]): number {
     }
     case "previews":
       return previews(argv);
+    case "sketch":
+      return sketch(argv);
     case "catalog":
       console.log(JSON.stringify(catalogJson(), null, json ? 2 : 0));
       return 0;

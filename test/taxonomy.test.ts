@@ -272,3 +272,34 @@ describe("technique previews", () => {
     } finally { delete process.env.REELCUT_HOME; rmSync(home, { recursive: true, force: true }); }
   });
 });
+
+describe("sketches: the owner's line in a technique", () => {
+  it("draws the line in place of the sample, with its own number and at most four slams", async () => {
+    const { techniquePreviewComposition } = await import("../src/taxonomy/preview.js");
+    const { styleById } = await import("../src/personality/styles.js");
+    const st = styleById("flat-vector")!;
+    const make = (id: string, text: string) => techniquePreviewComposition(id, st, { id: "tq-x", palette: st.palettes[0]!, pairing: st.fonts.best[0]!, text });
+    const big = make("big-number", "Über 71.000 Follower in sechs Monaten");
+    expect(big).toContain('to: 71000, decimals: 0, locale: "de-DE"');
+    expect(big).toContain("Über Follower in sechs Monaten");
+    expect(make("big-number", "3.2x faster")).toContain('to: 3.2, decimals: 1, locale: "en-US"');
+    expect(make("big-number", "3,2-mal schneller")).toContain('to: 3.2, decimals: 1, locale: "de-DE"');
+    const slam = make("kinetic-slam", "one two three four five six seven eight");
+    expect(slam.match(/class="sl"/g)).toHaveLength(4);
+    const hl = make("colour-isolation", "A much longer line that the headline has to fit into two lines at most");
+    expect(hl).toMatch(/class="rc-hl hl" style="font-size:52px"/);
+    expect(make("strike-replace", "Stunden → Minuten")).toContain('<span class="nw">Minuten</span>');
+    for (const id of ["highlighter", "rolling-values", "type-as-image", "genre-quotation", "word-by-word"]) {
+      const html = make(id, "Für Creator, Coder, Teams");
+      expect(() => new Function(html.match(/<script>([\s\S]*?)<\/script>/)![1]!), id).not.toThrow();
+    }
+  });
+  it("keys a sketch by the line, the techniques and the personality version", async () => {
+    const { sketchKey } = await import("../src/taxonomy/previews.js");
+    const a = sketchKey("Ship it today", ["big-number", "ripple"], undefined);
+    expect(a).toMatch(/^[0-9a-f]{10}$/);
+    expect(sketchKey(" Ship   it today ", ["ripple", "big-number"], undefined)).toBe(a);
+    expect(sketchKey("Ship it today", ["big-number"], undefined)).not.toBe(a);
+    expect(sketchKey("Ship it today", ["big-number", "ripple"], { id: "p_1", updatedAt: "x" } as never)).not.toBe(a);
+  });
+});

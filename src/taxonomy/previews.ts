@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { reelcutHome } from "../library/store.js";
@@ -42,3 +43,13 @@ export function previewStatus(p: Personality | undefined = defaultPersonality())
   } catch { /* no stamp: whatever is there is from before stamps */ }
   return { key: previewKey(p), have, total: TECHNIQUES.length, stale, personality: p?.name ?? null };
 }
+
+/**
+ * A sketch: the owner's own line drawn by a few techniques (Try a line, on the Techniques page), in the default
+ * personality's look. Saved under technique-previews/sketches/<key>/, the key naming the line, the techniques and
+ * the personality version, so the same request is served from disk.
+ */
+export const sketchKey = (text: string, ids: readonly string[], p: Personality | undefined = defaultPersonality()): string =>
+  createHash("sha1").update(JSON.stringify([text.replace(/\s+/g, " ").trim(), [...ids].sort(), stampFor(p)])).digest("hex").slice(0, 10);
+export const sketchDir = (key: string): string => path.join(previewRoot(), "sketches", key);
+export const sketchHave = (key: string, ids: readonly string[]): string[] => ids.filter((id) => existsSync(path.join(sketchDir(key), `${id}.mp4`)));

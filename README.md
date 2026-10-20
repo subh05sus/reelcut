@@ -946,7 +946,8 @@ made for them. The studio has a **Techniques** page (the live graph, examples, p
 
 For the people using the studio, every technique is said plainly ("Make the number stand out: big, counting up")
 and has a **preview clip** in the default personality's look (`npm run techniques -- previews`, or the button on the
-Techniques page; made again when the personality changes). **Try a line** shows three ways to show any line. On a
+Techniques page; made again when the personality changes). **Try a line** shows three ways to show any line, and
+draws your own line those three ways in your personality (`npm run techniques -- sketch "<line>" --only a,b,c`). On a
 reel, each beat shows its technique and a strip shows the reel's shape; tap a beat to swap its technique or ask for
 **3 other ways**, rendered to pick from. A star favours a technique; recipes and series can carry a technique per kind
 of beat ("Save how these beats are done as a recipe"); a short tour opens the Techniques page the first time.

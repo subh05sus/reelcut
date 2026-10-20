@@ -39,7 +39,7 @@ import { CreateManager, filesDir as createFilesDir, insideAllowed, reelState } f
 import { watchedIn, watchHome } from "../watch/index.js";
 import { acceptPatternTags, checkPath, formatPath, pinTechnique, scoreTechniques, setAssetTags, setPatternTags, suggest, TaxonomyError, TECHNIQUES, techniqueById } from "../taxonomy/index.js";
 import { PLAIN } from "../taxonomy/plain.js";
-import { previewRoot, previewStatus } from "../taxonomy/previews.js";
+import { previewRoot, previewStatus, sketchHave, sketchKey } from "../taxonomy/previews.js";
 import { catalogJson, ideasFor } from "../taxonomy/examples.js";
 import { techniquesGraphPage } from "../taxonomy/page.js";
 import { readIntegrations } from "../create/integrations.js";
@@ -445,6 +445,20 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
       }),
   };
   const jobs: Job[] = [];
+  /** Render the technique previews in the background (the missing or out-of-date ones unless told otherwise). */
+  const startTechniquePreviews = (extra: string[] = ["--missing"], cmd: "previews" | "sketch" = "previews"): Job => {
+    const job: Job = { id: String(++jobSeq), runId: "technique-previews", beat: "technique previews", status: "running", startedAt: new Date().toISOString(), log: [] };
+    jobs.unshift(job);
+    const tsx = createRequire(import.meta.url).resolve("tsx/cli");
+    const child = spawn(process.execPath, [tsx, path.join(REPO, "skills", "reelcut", "scripts", "techniques.ts"), cmd, ...extra], { cwd: REPO, windowsHide: true });
+    const append = (chunk: Buffer) => { job.log.push(...chunk.toString("utf8").split(/\r?\n/).filter(Boolean)); if (job.log.length > 300) job.log.splice(0, job.log.length - 300); };
+    child.stdout?.on("data", append); child.stderr?.on("data", append);
+    child.on("error", (error) => { job.log.push(String(error)); job.status = "failed"; job.endedAt = new Date().toISOString(); });
+    child.on("close", (code) => { if (job.status === "running") job.status = code === 0 ? "ok" : "failed"; job.exitCode = code; job.endedAt = new Date().toISOString(); });
+    return job;
+  };
+  /** The default personality changed: remake its technique previews when nothing else is rendering. */
+  const refreshPreviews = (): void => { if (process.env.VITEST) return; const st = previewStatus(); if (!jobs.some((j) => j.status === "running") && (st.stale || st.have.length < st.total)) startTechniquePreviews(["--missing"]); };
   let jobSeq = 0;
   /** Create conversations: made on first use, so a studio that never opens Create never touches them. */
   let create: CreateManager | undefined;
@@ -559,16 +573,27 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
         const b = (await readBody(req)) as { all?: unknown; only?: unknown };
         const running = jobs.find((j) => j.status === "running");
         if (running) throw new HttpError(409, `a render is already running (${running.beat})`, { job: running.id });
-        const job: Job = { id: String(++jobSeq), runId: "technique-previews", beat: "technique previews", status: "running", startedAt: new Date().toISOString(), log: [] };
-        jobs.unshift(job);
-        const tsx = createRequire(import.meta.url).resolve("tsx/cli");
         const extra = typeof b.only === "string" && /^[a-z0-9,-]+$/.test(b.only) ? ["--only", b.only] : b.all === true ? [] : ["--missing"];
-        const child = spawn(process.execPath, [tsx, path.join(REPO, "skills", "reelcut", "scripts", "techniques.ts"), "previews", ...extra], { cwd: REPO, windowsHide: true });
-        const append = (chunk: Buffer) => { job.log.push(...chunk.toString("utf8").split(/\r?\n/).filter(Boolean)); if (job.log.length > 300) job.log.splice(0, job.log.length - 300); };
-        child.stdout?.on("data", append); child.stderr?.on("data", append);
-        child.on("error", (error) => { job.log.push(String(error)); job.status = "failed"; job.endedAt = new Date().toISOString(); });
-        child.on("close", (code) => { if (job.status === "running") job.status = code === 0 ? "ok" : "failed"; job.exitCode = code; job.endedAt = new Date().toISOString(); });
-        return sendJson(res, 202, { job });
+        return sendJson(res, 202, { job: startTechniquePreviews(extra) });
+      }
+      // Try a line, rendered: the owner's own words drawn by up to three techniques, in the default personality.
+      if (method === "POST" && parts[2] === "sketch" && parts.length === 3) {
+        const b = (await readBody(req)) as { text?: unknown; ids?: unknown };
+        const text = typeof b.text === "string" ? b.text.replace(/\s+/g, " ").trim().slice(0, 90) : "";
+        const ids = Array.isArray(b.ids) ? b.ids.filter((x): x is string => typeof x === "string" && !!techniqueById(x)).slice(0, 3) : [];
+        if (!text || !ids.length) throw new HttpError(400, "send { text, ids: [technique, …] }");
+        const key = sketchKey(text, ids);
+        if (sketchHave(key, ids).length === ids.length) return sendJson(res, 200, { key, have: ids });
+        const running = jobs.find((j) => j.status === "running");
+        if (running) throw new HttpError(409, `a render is already running (${running.beat}); try again when it is done`, { job: running.id });
+        const job = startTechniquePreviews([text, "--only", ids.join(",")], "sketch");
+        job.runId = `technique-sketch:${key}`; job.beat = `your line, ${ids.length} ways`;
+        return sendJson(res, 202, { key, have: [], job: job.id });
+      }
+      if (read && parts[2] === "sketch" && parts.length === 4 && /^[0-9a-f]{10}$/.test(parts[3]!)) {
+        const ids = (url.searchParams.get("ids") ?? "").split(",").filter((x) => techniqueById(x)).slice(0, 3);
+        const job = jobs.find((j) => j.runId === `technique-sketch:${parts[3]}`);
+        return sendJson(res, 200, { have: sketchHave(parts[3]!, ids), status: job?.status ?? null });
       }
       // The best techniques for a line (a beat's chip opens these), with plain names and whether a preview exists.
       if (read && parts[2] === "suggest" && parts.length === 3) {
@@ -1007,7 +1032,9 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
         if (errors.length) return sendJson(res, 409, { error: "fix the red findings first", findings: errors });
         // Finishing settles every step: the ones the owner skipped keep their defaults, which are real choices.
         const done = [...new Set([...current.done, ...PZ_STEP_IDS])];
-        return sendJson(res, 200, { personality: withFindings(savePersonality({ ...current, done })) });
+        const saved = savePersonality({ ...current, done });
+        if (saved.isDefault) refreshPreviews();
+        return sendJson(res, 200, { personality: withFindings(saved) });
       }
       // Mini beats: one 4-second beat per chosen style in this personality's colours, type and motion, rendered and saved.
       if (read && parts[3] === "renders" && parts.length === 4) {
@@ -1032,6 +1059,7 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
       }
       if (method === "POST" && parts[3] === "default" && parts.length === 4) {
         setDefaultPersonality(id);
+        refreshPreviews();
         return sendJson(res, 200, { ok: true });
       }
       if (method === "DELETE" && parts.length === 3) {
@@ -1523,6 +1551,12 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
       }
       if (parts[1] === "mini" && parts.length === 4 && /^p_[0-9a-f]+$/.test(parts[2]!) && /^[a-z0-9-]+\.(mp4|jpg)$/.test(parts[3]!)) {
         const file = path.join(reelcutHome(), "personality-renders", parts[2]!, parts[3]!);
+        if (!existsSync(file)) throw new HttpError(404, "not rendered yet");
+        return sendFile(req, res, file);
+      }
+      // A sketch: sketches/<key>/<technique>.mp4 and .jpg.
+      if (parts[1] === "technique-sketch" && parts.length === 4 && /^[0-9a-f]{10}$/.test(parts[2]!) && /^[a-z0-9-]+\.(mp4|jpg)$/.test(parts[3]!)) {
+        const file = path.join(previewRoot(), "sketches", parts[2]!, parts[3]!);
         if (!existsSync(file)) throw new HttpError(404, "not rendered yet");
         return sendFile(req, res, file);
       }

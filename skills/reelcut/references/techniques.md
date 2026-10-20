@@ -103,8 +103,10 @@ and writes every image the graphs show, reference frames named with their film a
 The studio shows every technique by its **plain line** (`src/taxonomy/plain.ts`: "Make the number stand out: big,
 counting up"), never its path; paths stay in reel.json and plan.md. Each technique has a **preview clip**: its sample
 line composed in the default personality's lead style, colours, type and motion (`npm run techniques -- previews`,
-saved in `~/.reelcut/technique-previews/<personality>/`; the Techniques page offers to make them, and again when the
-personality changes).
+saved in `~/.reelcut/technique-previews/<personality>/`; the Techniques page offers to make them, and the studio
+makes them again when the default personality is finished or changed). **Try a line** on the Techniques page draws
+the owner's own line by three techniques the same way (`npm run techniques -- sketch "<line>" --only a,b,c`), so
+they choose between moves on their words before a reel exists.
 
 From a reel, the owner steers by technique, and the requests reach you as chat messages:
 

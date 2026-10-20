@@ -3029,8 +3029,23 @@ async function renderTechniques(id) {
     const out = $("#tq-tryout"); out.innerHTML = `<p class="note">Thinking…</p>`;
     try {
       const r = await api(`/api/techniques/suggest?n=3&text=${encodeURIComponent(text)}&kind=${encodeURIComponent($("#tq-kind").value)}`);
-      out.innerHTML = `<div class="tq-try">${r.suggestions.map((x) => `<button data-path="${esc(x.path)}">${tqVideo(x.id, "small")}<b>${esc(x.plain)}</b><span>${esc(x.name)} · ${esc(x.why.split("; ")[0] || "")}</span></button>`).join("")}</div>
-        <p class="note" style="margin:4px 0 0">Previews show each move on its sample line in your personality. Open one to pin it to a chat for this line.</p>`;
+      out.innerHTML = `<div class="tq-try">${r.suggestions.map((x) => `<button data-path="${esc(x.path)}" data-id="${esc(x.id)}">${tqVideo(x.id, "small")}<b>${esc(x.plain)}</b><span>${esc(x.name)} · ${esc(x.why.split("; ")[0] || "")}</span></button>`).join("")}</div>
+        <div class="row-i" style="padding:4px 0 0;gap:8px"><span class="grow note" id="tq-sknote">These show each move on its own sample line, in your personality. Open one to pin it to a chat.</span><button class="sm" id="tq-sketch">Draw my line these 3 ways</button></div>`;
+      const ids = r.suggestions.map((x) => x.id);
+      const swap = (key, have) => have.forEach((id) => { const v = $(`[data-id="${id}"] video, [data-id="${id}"] .ph`, out); if (!v) return; const src = `/files/technique-sketch/${key}/${id}`; v.outerHTML = `<video src="${src}.mp4" poster="${src}.jpg" muted loop playsinline autoplay></video>`; });
+      $("#tq-sketch", out).addEventListener("click", async (e) => {
+        e.target.disabled = true; $("#tq-sknote").textContent = "Drawing your line… about a minute.";
+        try {
+          const k = await post("/api/techniques/sketch", { text, ids });
+          if (k.have.length === ids.length) { swap(k.key, ids); $("#tq-sknote").textContent = "Your line, three ways, in your personality."; return; }
+          const poll = async () => {
+            const st = await api(`/api/techniques/sketch/${k.key}?ids=${ids.join(",")}`);
+            if (st.have.length === ids.length || st.status === "failed" || st.status === "ok") { swap(k.key, st.have); $("#tq-sknote").textContent = st.have.length === ids.length ? "Your line, three ways, in your personality." : "Some could not be drawn; the Jobs page has the log."; e.target.disabled = false; return; }
+            setTimeout(poll, 3000);
+          };
+          setTimeout(poll, 4000);
+        } catch (err) { toast(err.message); e.target.disabled = false; $("#tq-sknote").textContent = ""; }
+      });
       $$("[data-path]", out).forEach((b) => b.addEventListener("click", () => { tq.sel = b.dataset.path; $("#tq-frame")?.contentWindow.postMessage({ focusTechnique: tq.sel }, location.origin); paintTqSide(); if ($("#tq-note")) $("#tq-note").value = `for the line "${text}"`; $("#tq-side").scrollIntoView({ behavior: "smooth", block: "start" }); }));
     } catch (e) { out.innerHTML = `<p class="note">${esc(e.message)}</p>`; }
   };
