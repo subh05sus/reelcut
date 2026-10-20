@@ -205,6 +205,16 @@ personality's favoured and banned techniques, and how they were rated before; yo
 the studio's Techniques page arrives as a message: give it to the beat it fits. Vary the operations across the reel
 (`npm run techniques -- plan reel.json`). See [references/techniques.md](references/techniques.md).
 
+A recipe or series that names techniques per beat kind starts those beats from them. From the studio, the owner
+can also swap a beat's technique or ask for "3 other ways" (rendered alternatives to pick from); both arrive as chat
+messages with the exact steps ([techniques.md](references/techniques.md#in-the-studio-plain-names-previews-steering-a-beat)).
+
+**A client approval board** (the studio's Client board) means the client approves the reel in stages: directions,
+script and beat plan, beat drafts, final reel. When the chat says a reel has one, finish each of those stages, say
+in one line that it is ready for the board, and **stop**: the owner sends it, and the client's decision comes back
+as a message ("approved: go on to …" or a list of changes to make). Never move past a stage the client has not
+approved.
+
 You are the director. There is no model API in this pipeline — the brief is yours to write.
 
 **Gate:** every beat has a brief that passes `validateBeatBrief`. That check enforces the reading

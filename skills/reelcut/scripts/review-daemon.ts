@@ -29,6 +29,14 @@ const hooks: Parameters<typeof startReviewServer>[1] = {
       body: JSON.stringify({ text: `${author} left a review comment at ${at}: “${text.slice(0, 140)}”` }),
     }).catch(() => log("studio not reachable for a comment note"));
   },
+  // A board decision: a note in the chat, and Claude's next instruction once the stage is fully decided. The decision
+  // itself is saved in boards.json either way; when the studio is down, the owner sees it on the board panel.
+  onDecision: (sh, stage, line, done) => {
+    void fetch(`http://127.0.0.1:${STUDIO_PORT}/api/create/${sh.conversation}/board-note`, {
+      method: "POST", headers: { "Content-Type": "application/json", "x-reelcut-key": state.key },
+      body: JSON.stringify({ token: sh.token, stage, line, done }),
+    }).catch(() => log("studio not reachable for a board decision"));
+  },
 };
 const server = await listen().catch((error) => { log(`review server could not start: ${(error as Error).message}`); if (daemonState()?.pid === process.pid) writeDaemonState(undefined); process.exit(1); });
 

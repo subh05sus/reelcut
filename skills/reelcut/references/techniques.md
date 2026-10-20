@@ -98,6 +98,25 @@ goes in `reel.json` as `"referenceThumbnails": true`. The render refuses an atla
 and writes every image the graphs show, reference frames named with their film and moment, to `graph-sources.md`:
 **copy it into report.md**.
 
+## In the studio: plain names, previews, steering a beat
+
+The studio shows every technique by its **plain line** (`src/taxonomy/plain.ts`: "Make the number stand out: big,
+counting up"), never its path; paths stay in reel.json and plan.md. Each technique has a **preview clip**: its sample
+line composed in the default personality's lead style, colours, type and motion (`npm run techniques -- previews`,
+saved in `~/.reelcut/technique-previews/<personality>/`; the Techniques page offers to make them, and again when the
+personality changes).
+
+From a reel, the owner steers by technique, and the requests reach you as chat messages:
+
+- **"Beat N: <plain line>"** — they picked another technique for that beat from its sheet: recompose it with that
+  technique (the message names the path and the pattern to open), record `technique` and `techniqueWhy`, re-render
+  only it. Same words, same length, same place.
+- **"Beat N: show me 3 other ways"** — compose three alternatives with three different techniques as
+  `<beat>-way1..3.html`, render them from a scratch manifest, ask which one with a single AskUserQuestion (each
+  option's preview is the clip's path), then swap the chosen one in. The beat panel offers this when three beats in
+  a row do the same operation (the reel-shape strip colours beats by operation).
+- A star on a technique writes the default personality's `techniques.favour`; `suggest` ranks favourites first.
+
 ## From a brief
 
 The studio's Create page has a mode **From a brief**: the owner pastes a brief or a campaign's big idea, and

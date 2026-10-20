@@ -2,6 +2,7 @@ import { loadIndex } from "../library/store.js";
 import { DOMAINS, OPERATIONS, TECHNIQUES, TIMINGS, techniqueById } from "./catalog.js";
 import { operationWeights, suggest, type SuggestInput, type Suggestion } from "./paths.js";
 import { patternsFor } from "./patterns.js";
+import { PLAIN } from "./plain.js";
 import { assetTechniques, loadTaxonomy, patternOverrides, patternTags, scoreTechniques, techniqueBeats, type BeatTechnique, type TechniqueScore } from "./store.js";
 
 /**
@@ -39,7 +40,7 @@ export function catalogJson() {
     operations: OPERATIONS, domains: DOMAINS, timings: TIMINGS,
     techniques: TECHNIQUES.map((t) => {
       const ex = examplesFor(t.id, ctx);
-      return { ...t, score: ctx.scores.get(t.id) ?? { uses: 0, up: 0, down: 0, score: 0 }, examples: ex };
+      return { ...t, plain: PLAIN[t.id]?.plain ?? t.does, sample: PLAIN[t.id]?.sample ?? t.name, score: ctx.scores.get(t.id) ?? { uses: 0, up: 0, down: 0, score: 0 }, examples: ex };
     }),
     proposedPatterns: Object.keys(Object.fromEntries(TECHNIQUES.flatMap((t) => examplesFor(t.id, ctx).patterns.filter((p) => p.state === "proposed").map((p) => [p.id, 1])))).sort(),
     pins: ctx.store.pins.slice(0, 30),

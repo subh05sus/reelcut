@@ -232,3 +232,43 @@ describe("techniques in the studio", () => {
     expect(p).toContain("beats[].technique");
   });
 });
+
+describe("technique previews", () => {
+  it("every technique has a plain line and a sample, and a preview composition that obeys the contract", async () => {
+    const { PLAIN } = await import("../src/taxonomy/plain.js");
+    const { techniquePreviewComposition } = await import("../src/taxonomy/preview.js");
+    const { styleById } = await import("../src/personality/styles.js");
+    const st = styleById("flat-vector")!;
+    for (const t of TECHNIQUES) {
+      expect(PLAIN[t.id]?.plain, t.id).toBeTruthy();
+      expect(PLAIN[t.id]!.sample.length, t.id).toBeLessThanOrEqual(30);
+      const html = techniquePreviewComposition(t.id, st, { id: `tq-${t.id}`, palette: st.palettes[0]!, pairing: st.fonts.best[0]! });
+      expect(html, t.id).toContain(`data-composition-id="tq-${t.id}"`);
+      expect(html, t.id).toContain(`window.__timelines["tq-${t.id}"]`);
+      expect(html, t.id).toContain("RC.hold(tl, 3.4)");
+      expect(html, t.id).not.toMatch(/Math\.random|Date\.now/);
+      // The generated script parses.
+      const js = html.match(/<script>([\s\S]*?)<\/script>/)![1]!;
+      expect(() => new Function(js), t.id).not.toThrow();
+    }
+  });
+  it("knows which previews exist for the default personality and when they are out of date", async () => {
+    const home = mkdtempSync(path.join(os.tmpdir(), "rc-pv-"));
+    process.env.REELCUT_HOME = home;
+    try {
+      const { previewStatus, previewDirFor, stampFor } = await import("../src/taxonomy/previews.js");
+      expect(previewStatus(undefined)).toMatchObject({ key: "plain", have: [], stale: false });
+      const dir = previewDirFor(undefined);
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(path.join(dir, "big-number.mp4"), "x");
+      expect(previewStatus(undefined)).toMatchObject({ have: ["big-number"], stale: true });
+      writeFileSync(path.join(dir, "stamp.json"), JSON.stringify(stampFor(undefined)));
+      expect(previewStatus(undefined).stale).toBe(false);
+      const p = { id: "p_1", name: "Mine", updatedAt: "2026-10-20T10:00:00.000Z" } as never;
+      mkdirSync(previewDirFor(p), { recursive: true });
+      writeFileSync(path.join(previewDirFor(p), "ripple.mp4"), "x");
+      writeFileSync(path.join(previewDirFor(p), "stamp.json"), JSON.stringify({ ...stampFor(p), updatedAt: "older" }));
+      expect(previewStatus(p)).toMatchObject({ key: "p_1", have: ["ripple"], stale: true, personality: "Mine" });
+    } finally { delete process.env.REELCUT_HOME; rmSync(home, { recursive: true, force: true }); }
+  });
+});

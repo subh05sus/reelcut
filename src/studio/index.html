@@ -529,6 +529,22 @@
   .tq-ex i.ok { position: absolute; right: 6px; top: 6px; width: 20px; height: 20px; border-radius: 10px; background: var(--green); color: #fff; display: grid; place-items: center; }
   .tq-row { width: 100%; border-radius: 0; height: auto; min-height: 44px; font-size: var(--fs-b); font-weight: 400; gap: 10px; }
   @media (max-width: 1099px) { .tq { grid-template-columns: minmax(0, 1fr); } .tq-graph { position: static; max-height: none; } }
+  /* The first-run tour: a card that walks through the page, and a ring on what it is talking about. */
+  .tour { position: fixed; right: 24px; bottom: 24px; z-index: 60; width: min(380px, calc(100vw - 32px)); padding: 18px 20px 14px; border-radius: 18px; background: var(--bg-elev, var(--cell)); box-shadow: 0 24px 60px -20px rgb(0 0 0 / .45), 0 0 0 1px var(--sep); }
+  .tour h4 { margin: 0 0 6px; font-size: var(--fs-b); } .tour p { margin: 0 0 12px; color: var(--label-2); font-size: var(--fs-s); line-height: 1.45; }
+  .tour .dots { display: flex; gap: 5px; margin-right: auto; } .tour .dots i { width: 6px; height: 6px; border-radius: 3px; background: var(--fill-2); } .tour .dots i.on { background: var(--accent); width: 16px; }
+  .tour-hi { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 20px; transition: outline-offset 200ms var(--ease); }
+  @media (max-width: 700px) { .tour { left: 16px; right: 16px; bottom: 16px; width: auto; } }
+  .tq-pv { display: block; width: 100%; aspect-ratio: 1; border-radius: 16px; background: var(--fill-4); object-fit: cover; margin: 8px 0 4px; }
+  .tq-pv.ph { display: grid; place-items: center; color: var(--label-2); font-size: var(--fs-s); text-align: center; padding: 16px; box-sizing: border-box; }
+  .tq-row .t small { display: block; color: var(--label-2); font-size: var(--fs-s); margin-top: 2px; }
+  .tq-row .star, .tq-star { color: var(--orange, #f5a623); }
+  .tq-try { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 12px 0 4px; }
+  .tq-try button { all: unset; cursor: pointer; display: flex; flex-direction: column; gap: 6px; border-radius: 16px; padding: 8px; background: var(--fill-4); }
+  .tq-try button:hover { background: var(--fill-3); }
+  .tq-try video, .tq-try .ph { width: 100%; aspect-ratio: 1; border-radius: 10px; object-fit: cover; background: var(--fill-3); display: grid; place-items: center; font-size: 12px; color: var(--label-2); }
+  .tq-try b { font-size: var(--fs-b); font-weight: 600; } .tq-try span { font-size: var(--fs-s); color: var(--label-2); }
+  @media (max-width: 700px) { .tq-try { grid-template-columns: minmax(0, 1fr); } }
   /* The Watch panel: a video Claude watched, the lanes of what is in it, and where Claude looked (darker = higher fps). */
   .w-sm { display: none; }
   @media (max-width: 520px) { .w-lg { display: none; } .w-sm { display: inline; } }
@@ -676,6 +692,18 @@
   button.cr-beat { padding: 0; height: auto; cursor: pointer; transition: transform 150ms var(--ease), box-shadow 150ms var(--ease); }
   button.cr-beat:active { transform: scale(0.97); }
   .cr-beat.lifted { opacity: .5; } .cr-beat.over { box-shadow: 0 0 0 2px var(--accent); }
+  /* Each beat's technique, the reel's shape (beats coloured by what they do) and a nudge when it is one note. */
+  .cr-beat i.tqc { position: absolute; left: 6px; right: 6px; top: 6px; z-index: 2; font-style: normal; text-align: left; font-size: 10.5px; line-height: 1.25; color: #fff; background: rgb(0 0 0 / .55); border-left: 3px solid var(--opc, var(--accent)); padding: 2px 6px; border-radius: 4px 6px 6px 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cr-shape { display: flex; gap: 2px; height: 10px; border-radius: 5px; overflow: hidden; margin: 0 0 6px; }
+  .cr-shape i { display: block; min-width: 4px; background: var(--opc, var(--fill-3)); }
+  .cr-shape-k { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 11px; color: var(--label-2); margin: 0 0 10px; }
+  .cr-shape-k span::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 2px; background: var(--opc); margin-right: 5px; vertical-align: 0; }
+  .cr-vary { display: flex; align-items: center; gap: 8px; font-size: var(--fs-s); color: var(--label-2); background: var(--fill-4); border-radius: 10px; padding: 8px 10px; margin: 0 0 10px; }
+  .bt-ways { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .bt-ways button { all: unset; cursor: pointer; display: flex; flex-direction: column; gap: 4px; padding: 6px; border-radius: 12px; background: var(--fill-4); font-size: var(--fs-s); }
+  .bt-ways button:hover { background: var(--fill-3); }
+  .bt-ways video, .bt-ways .ph { width: 100%; aspect-ratio: 1; border-radius: 8px; object-fit: cover; background: var(--fill-3); display: grid; place-items: center; font-size: 11px; color: var(--label-2); }
+  .bt-ways b { font-weight: 600; }
 
   /* Progress: what Claude is on, read from the reel folder. Content, so solid. */
   .cr-prog { background: var(--fill-4); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
@@ -1543,13 +1571,43 @@ async function paintPost() {
 }
 
 // ---- beats: tap one to change it, drag to reorder
+/** What each operation looks like on the reel's shape strip and the beat chips. */
+const OPC = { differentiate: "#e8553d", group: "#2fa36b", sequence: "#3b7bd9", infer: "#c9a227", reveal: "#8a5cf6", transform: "#e0559a" };
+const OPN = { differentiate: "Make it stand out", group: "Tie together", sequence: "Step through", infer: "Let them work it out", reveal: "Hold back, then show", transform: "Turn one into another" };
+/** The technique catalog's plain names, loaded once for the reel panel. */
+let tqNames = null;
+async function loadTqNames() {
+  if (tqNames) return tqNames;
+  try { const c = tq.cat || await api("/api/techniques"); tq.cat ??= c; tqNames = Object.fromEntries(c.techniques.map((t) => [t.id, t.plain])); } catch { tqNames = {}; }
+  return tqNames;
+}
+const beatOp = (b) => (b.technique || "").split("/")[0] || "";
+const beatTq = (b) => (b.technique || "").split("/")[2] || "";
+/** Beats i..i+2 that all do the same thing, the first such run: a reel of one note. */
+function oneNote(beats) {
+  for (let i = 0; i + 2 < beats.length; i++) { const o = beatOp(beats[i]); if (o && beatOp(beats[i + 1]) === o && beatOp(beats[i + 2]) === o) return { at: i, op: o }; }
+  return null;
+}
 function beatsHtml(r, live) {
   const spin = `<span class="st run" style="width:16px;height:16px;border-radius:50%;border:2px solid var(--label-3);border-top-color:var(--accent);animation:spin 900ms linear infinite"></span>`;
-  return `<div class="cr-beats">${r.beats.map((b, i) => `<button type="button" class="cr-beat" data-beat="${esc(b.id)}" data-i="${i}" draggable="${r.master ? "true" : "false"}" aria-label="Beat ${i + 1}, ${esc(b.id)}">${b.clip ? `<video src="${media(b.clip)}" muted loop playsinline autoplay></video>` : b.frame ? `<img src="${media(b.frame)}" alt="">` : live ? spin : "—"}<b>${i + 1} · ${esc(b.id)}</b></button>`).join("")}</div>
+  const named = r.beats.some((b) => b.technique), ops = [...new Set(r.beats.map(beatOp).filter(Boolean))], run = oneNote(r.beats);
+  const shape = named ? `<div class="cr-shape" aria-label="The reel's shape: what each beat does">${r.beats.map((b, i) => `<i style="flex:${b.seconds || 1};--opc:${OPC[beatOp(b)] || "var(--fill-3)"}" title="Beat ${i + 1}: ${esc(OPN[beatOp(b)] || "no technique named")}"></i>`).join("")}</div>
+    <div class="cr-shape-k">${ops.map((o) => `<span style="--opc:${OPC[o]}">${esc(OPN[o] || o)}</span>`).join("")}</div>
+    ${run && r.master ? `<div class="cr-vary"><span class="grow">Beats ${run.at + 1}–${run.at + 3} all ${esc((OPN[run.op] || run.op).toLowerCase())}: one note for a while.</span><button class="sm" data-vary="${esc(r.beats[run.at + 1].id)}">3 other ways for beat ${run.at + 2}</button></div>` : ""}` : "";
+  const board = `<div class="cr-vary" style="background:none;padding:0 0 8px"><span class="grow note">${cr.boardLine ? esc(cr.boardLine) : "Working for a client? Let them approve it stage by stage."}</span><button class="sm" id="cr-board">Client board</button></div>`;
+  return `${board}${shape}<div class="cr-beats">${r.beats.map((b, i) => `<button type="button" class="cr-beat" data-beat="${esc(b.id)}" data-i="${i}" draggable="${r.master ? "true" : "false"}" aria-label="Beat ${i + 1}, ${esc(b.id)}">${b.clip ? `<video src="${media(b.clip)}" muted loop playsinline autoplay></video>` : b.frame ? `<img src="${media(b.frame)}" alt="">` : live ? spin : "—"}${b.technique ? `<i class="tqc" style="--opc:${OPC[beatOp(b)] || "var(--accent)"}" title="${esc(b.techniqueWhy || "")}">${esc(tqNames?.[beatTq(b)] || beatTq(b))}</i>` : ""}<b>${i + 1} · ${esc(b.id)}</b></button>`).join("")}</div>
     ${r.master ? `<p class="foot-note" style="margin:0">Tap a beat to change it, or drag one to move it.</p>` : ""}
+    ${r.master && (() => { try { return localStorage.getItem("rc.tour.rate") === "pending"; } catch { return false; } })() ? `<div class="cr-vary" style="margin-top:10px"><span class="grow">Rate these beats so it learns you: Works or Not quite on each, on the Reels page.</span><button class="sm" id="cr-rate-go">Rate them</button></div>` : ""}
+    ${r.master && named ? `<div class="acts" style="justify-content:flex-start;margin:8px 0 0"><button class="sm" id="cr-save-tq">Save how these beats are done as a recipe</button></div>` : ""}
     ${r.contact ? `<a href="${media(r.contact)}" target="_blank"><img class="cr-sheet" src="${media(r.contact)}" alt="Contact sheet"></a>` : r.sheet ? `<a href="${media(r.sheet)}" target="_blank"><img class="cr-sheet" src="${media(r.sheet)}" alt="Contact sheet"></a>` : ""}`;
 }
 function bindBeats(r) {
+  if (r.beats.some((b) => b.technique) && !tqNames) loadTqNames().then(() => $$(".cr-beat i.tqc", $("#cr-panel")).forEach((el) => { const b = r.beats[Number(el.parentElement.dataset.i)]; if (b) el.textContent = tqNames[beatTq(b)] || beatTq(b); }));
+  $$("[data-vary]", $("#cr-panel")).forEach((x) => x.addEventListener("click", () => sendEdit(x.dataset.vary, { kind: "ways" })));
+  $("#cr-save-tq", $("#cr-panel"))?.addEventListener("click", () => saveTechniquesRecipe(r));
+  $("#cr-board", $("#cr-panel"))?.addEventListener("click", openBoard);
+  if (cr.boardFor !== cr.meta.id) { cr.boardFor = cr.meta.id; cr.boardLine = ""; api(`/api/create/${cr.meta.id}/board`).then((st) => { const b = st.boards[0]; if (!b) return; const now = b.stages.filter((x) => x.published); const last = now.at(-1); cr.boardLine = last ? `Client board: ${last.name.toLowerCase()} sent · ${last.approved} of ${last.items} approved${last.changes ? ` · ${last.changes} to change` : ""}` : "Client board ready: send the first stage when it is."; const n = $("#cr-board")?.previousElementSibling; if (n) n.textContent = cr.boardLine; }).catch(() => undefined); }
+  $("#cr-rate-go", $("#cr-panel"))?.addEventListener("click", () => { try { localStorage.removeItem("rc.tour.rate"); } catch { /* fine */ } location.hash = "#reels"; });
   $$(".cr-beat", $("#cr-panel")).forEach((t) => {
     t.addEventListener("click", () => openBeat(r, t.dataset.beat));
     if (!r.master) return;
@@ -1578,6 +1636,7 @@ async function openBeat(r, beatId) {
   let info = { text: [], index: r.beats.indexOf(b), count: r.beats.length };
   try { info = await api(`/api/create/${cr.meta.id}/beat/${encodeURIComponent(beatId)}`); } catch { /* the sheet still works without the words */ }
   if (!cr.styles) { try { cr.styles = (await api("/api/personality/catalog")).styles.map((s) => [s.id, s.name]); } catch { cr.styles = []; } }
+  await loadTqNames();
   const i = info.index, n = info.count;
   const live = cr.meta.status === "running" || cr.meta.status === "waiting";
   openSheet({
@@ -1585,6 +1644,11 @@ async function openBeat(r, beatId) {
     sub: [b.kind, b.style && (cr.styles.find((s) => s[0] === b.style)?.[1] || b.style), b.seconds != null && dur(b.seconds)].filter(Boolean).map(esc).join(" · "),
     body: `${b.clip ? `<video class="cr-beat-pv" src="${media(b.clip)}" muted loop playsinline autoplay style="aspect-ratio:${FMT_RATIO[r.format] || "1 / 1"}"></video>` : ""}
       ${live ? `<p class="foot-note" style="margin:0 0 12px">Claude is working: this reaches it at its next step.</p>` : ""}
+      <div class="cap">What it does</div>
+      ${b.technique ? `<div class="group"><div class="row-i"><span class="t grow"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${OPC[beatOp(b)] || "var(--accent)"};margin-right:6px"></span>${esc((await loadTqNames())[beatTq(b)] || beatTq(b))}<small class="note" style="display:block;margin-top:2px">${esc(b.techniqueWhy || OPN[beatOp(b)] || "")}</small></span></div></div>` : `<p class="note" style="margin:0 0 6px">No technique named for this beat yet.</p>`}
+      <div class="cap">Do it another way</div>
+      <div class="bt-ways" id="bt-ways"><p class="note">Finding techniques for these words…</p></div>
+      <div class="acts" style="justify-content:flex-start;margin-top:8px"><button class="sm" data-act="ways">Show me 3 other ways, rendered</button></div>
       <div class="cap">Change it</div>
       <div class="cr-acts3"><button data-act="redo">Another take</button><button data-act="calmer">Calmer</button><button data-act="punchier">Punchier</button></div>
       <div class="group" style="margin-top:12px">
@@ -1600,6 +1664,13 @@ async function openBeat(r, beatId) {
       <div class="acts"><button class="plain" id="bt-remove" style="color:var(--red);margin-right:auto">Remove beat</button><button data-sclose>Done</button></div>`,
     bind: (sh) => {
       $$("[data-act]", sh).forEach((x) => x.addEventListener("click", () => sendEdit(beatId, { kind: x.dataset.act })));
+      // The best other techniques for these words, with their preview clips: pick one and Claude recomposes the beat.
+      api(`/api/techniques/suggest?n=5&text=${encodeURIComponent(info.text.join(" "))}&kind=${encodeURIComponent(b.kind || "")}&near=${encodeURIComponent(beatTq(b))}`).then((res) => {
+        const box = $("#bt-ways", sh); if (!box) return;
+        const pv = tq.cat?.previews, list = res.suggestions.filter((x) => x.id !== beatTq(b)).slice(0, 4);
+        box.innerHTML = list.map((x) => `<button data-tq="${esc(x.path)}" title="${esc(x.why)}">${x.preview && pv ? `<video src="/files/technique-preview/${pv.key}/${x.id}.mp4" poster="/files/technique-preview/${pv.key}/${x.id}.jpg" muted loop playsinline autoplay></video>` : `<span class="ph">${esc(x.name)}</span>`}<b>${esc(x.plain)}</b></button>`).join("") || `<p class="note">No other technique fits these words.</p>`;
+        $$("[data-tq]", box).forEach((x) => x.addEventListener("click", () => sendEdit(beatId, { kind: "technique", path: x.dataset.tq })));
+      }).catch(() => { const box = $("#bt-ways", sh); if (box) box.innerHTML = `<p class="note">Could not load techniques.</p>`; });
       $("#bt-style", sh).addEventListener("change", (e) => { if (e.target.value) sendEdit(beatId, { kind: "style", style: e.target.value }); });
       $("#bt-earlier", sh).addEventListener("click", () => sendEdit(beatId, { kind: "move", to: i - 1 }));
       $("#bt-later", sh).addEventListener("click", () => sendEdit(beatId, { kind: "move", to: i + 1 }));
@@ -1656,6 +1727,38 @@ function bindMaster(r) {
   $("#cr-comment").addEventListener("click", () => startComment());
   $("#cr-share").addEventListener("click", openShare);
   paintComments(true);
+}
+/** The client approval board: choose its stages, then send each one when it is ready and watch the decisions. */
+async function openBoard() {
+  let st;
+  try { st = await api(`/api/create/${cr.meta.id}/board`); } catch (err) { toast(err.message); return; }
+  const b = st.boards[0];
+  const what = { directions: "What each beat will do, in plain words, with its preview clip", script: "The script and the beat plan, before rendering", beats: "Each rendered beat, approved or sent back", master: "The finished reel" };
+  openSheet({
+    title: "Client board",
+    sub: b ? "Send each stage when it is ready. The client approves each item or asks for a change; Claude waits for their decision before going on." : "A private link where your client approves the reel in stages. Claude stops after each stage and waits for their decision.",
+    body: !st.cloudflared ? `<div class="group"><div class="row-i"><span class="col grow"><span class="t">One thing to install first</span><span class="s">The link runs through a free Cloudflare tunnel. In a terminal: <code>brew install cloudflared</code></span></span></div></div><div class="acts"><button data-sclose>Close</button></div>`
+      : b ? `<div class="group"><div class="row-i"><span class="t grow" style="overflow-wrap:anywhere">${b.url ? esc(b.url) : "Reconnecting the tunnel…"}</span>${b.url ? `<button class="sm" id="bd-copy">Copy</button>` : ""}</div></div>
+        <div class="cap">Stages</div><div class="group">${b.stages.map((x) => `<div class="row-i"><span class="col grow"><span class="t">${esc(x.name)}</span><span class="s">${x.published ? `Sent ${esc(new Date(x.published).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" }))} · ${x.approved} of ${x.items} approved${x.changes ? ` · ${x.changes} to change` : ""}` : esc(what[x.stage])}</span></span><button class="sm ${x.published ? "" : "primary"}" data-send="${x.stage}">${x.published ? "Send again" : "Send"}</button></div>`).join("")}</div>
+        <p class="foot-note">Sending takes a snapshot: the client sees what was ready then. Turn the link off from Share for review.</p><div class="acts"><button data-sclose>Done</button></div>`
+      : `<div class="cap">What the client approves</div><div class="group">${st.stages.map((x) => `<label class="row-i"><input type="checkbox" data-st="${x.id}" checked><span class="col grow"><span class="t">${esc(x.name)}</span><span class="s">${esc(what[x.id])}</span></span></label>`).join("")}</div>
+        <div class="acts"><select id="bd-days" aria-label="How long"><option value="7">For a week</option><option value="14" selected>For two weeks</option><option value="30">For a month</option></select><button data-sclose>Cancel</button><button class="primary" id="bd-new">Create the board</button></div>`,
+    bind: (sh) => {
+      $("#bd-copy", sh)?.addEventListener("click", async (e) => { try { await navigator.clipboard.writeText(b.url); e.target.textContent = "Copied"; } catch { toast("Could not copy"); } });
+      $$("[data-send]", sh).forEach((x) => x.addEventListener("click", async () => {
+        x.disabled = true;
+        try { const r = await post(`/api/create/${cr.meta.id}/board/publish`, { token: b.token, stage: x.dataset.send }); toast(`Sent to the client: ${r.items} item${r.items === 1 ? "" : "s"}`); cr.boardFor = null; closeSheet(); openBoard(); }
+        catch (err) { toast(err.message); x.disabled = false; }
+      }));
+      $("#bd-new", sh)?.addEventListener("click", async (e) => {
+        const stages = $$("[data-st]", sh).filter((c) => c.checked).map((c) => c.dataset.st);
+        if (!stages.length) { toast("Choose at least one stage"); return; }
+        e.target.disabled = true; e.target.textContent = "Starting the tunnel…";
+        try { const r = await post(`/api/create/${cr.meta.id}/board`, { stages, days: Number($("#bd-days", sh).value) }); if (r.url) { try { await navigator.clipboard.writeText(r.url); toast("Board link copied"); } catch { /* shown next */ } } cr.boardFor = null; closeSheet(); openBoard(); }
+        catch (err) { toast(err.message); e.target.disabled = false; e.target.textContent = "Create the board"; }
+      });
+    },
+  });
 }
 /** Share for review: confirm what a link exposes, make one, copy it, turn links off. */
 async function openShare() {
@@ -1771,7 +1874,7 @@ function renderLanding() {
       <div style="display:flex;justify-content:center;margin-bottom:24px">${segHtml("cr-mode", [["script", `<span class="w-lg">I have a script</span><span class="w-sm">Script</span>`], ["write", `<span class="w-lg">Write it with Claude</span><span class="w-sm">Write</span>`], ["brief", `<span class="w-lg">From a brief</span><span class="w-sm">Brief</span>`], ["watch", `<span class="w-lg">Ask about a video</span><span class="w-sm">Video</span>`]], mode)}</div></div>
     ${mode === "watch" ? `<div class="cr-sec"><div class="cap">Ask it to</div>
       <div class="cr-recipes">${WATCH_ASKS.map(([t, s2, q]) => `<button type="button" class="cr-recipe" data-ask="${esc(q)}"><span class="t">${esc(t)}</span><span class="s">${esc(s2)}</span></button>`).join("")}</div></div>` : `<div class="cr-sec"><div class="cap">Start from a recipe</div>
-      <div class="cr-recipes">${recipes.map((r) => `<button type="button" class="cr-recipe ${d.settings.recipe === r.id ? "on" : ""}" data-recipe="${esc(r.id)}" aria-pressed="${d.settings.recipe === r.id}"><span class="t">${esc(r.name)}</span><span class="s">${esc(r.line || r.structure.slice(0, 3).join(", "))}</span>${r.builtIn ? "" : `<span class="own">Yours</span>`}</button>`).join("")}
+      <div class="cr-recipes">${recipes.map((r) => `<button type="button" class="cr-recipe ${d.settings.recipe === r.id ? "on" : ""}" data-recipe="${esc(r.id)}" aria-pressed="${d.settings.recipe === r.id}"><span class="t">${esc(r.name)}</span><span class="s">${esc(r.line || r.structure.slice(0, 3).join(", "))}${r.techniques && Object.keys(r.techniques).length ? ` · ${Object.keys(r.techniques).length} techniques` : ""}</span>${r.builtIn ? "" : `<span class="own">Yours</span>`}</button>`).join("")}
         <button type="button" class="cr-recipe add" id="cr-recipe-save"><span class="t">${ic("plus", 14)} Save as a recipe</span><span class="s">The chips and instructions you have now</span></button></div></div>`}
     ${queued.length ? `<div class="cr-sec"><div class="cap">Batch <span class="note">${queued.length} waiting · one at a time</span></div><div class="group cr-list">${queued.map(sessionRow).join("")}</div></div>` : ""}
     ${list.filter((s) => s.status !== "queued").length ? `<div class="cr-sec" style="margin-bottom:300px"><div class="cap">Recent</div><div class="group cr-list">${list.filter((s) => s.status !== "queued").map(sessionRow).join("")}</div></div>` : `<div style="height:300px"></div>`}
@@ -1818,6 +1921,28 @@ async function saveAsRecipe() {
     },
   });
 }
+/** A finished reel's shape and the technique of each kind of beat, saved as a recipe for the next reel. */
+async function saveTechniquesRecipe(r) {
+  const names = await loadTqNames(), techniques = {};
+  for (const b of r.beats) if (b.kind && b.technique && !techniques[b.kind]) techniques[b.kind] = b.technique;
+  const structure = r.beats.map((b) => `${b.kind ? b.kind[0].toUpperCase() + b.kind.slice(1) : "Beat"}: ${names[beatTq(b)] || "free"}`);
+  openSheet({
+    title: "Save as a recipe", sub: "This reel's beats, in order, and the technique each kind of beat used. The next reel made from it starts each beat the same way.",
+    body: `<div class="group"><label class="row-i"><span class="t" style="width:96px">Name</span><input id="rt-name" class="grow" placeholder="e.g. Launch, my way" value="${esc(cr.meta.title || "")}"></label>
+      <label class="row-i"><span class="t" style="width:96px">One line</span><input id="rt-line" class="grow" placeholder="What it makes"></label></div>
+      <div class="cap">Techniques by kind of beat</div><div class="group">${Object.entries(techniques).map(([k, v]) => `<div class="row-i"><span class="t" style="width:96px">${esc(k)}</span><span class="grow">${esc(names[v.split("/")[2]] || v)}</span></div>`).join("") || `<div class="row-i note">These beats have no kind; only their order is saved.</div>`}</div>
+      <div class="cap">Beats</div><textarea id="rt-str" rows="${Math.min(8, structure.length)}" style="width:100%">${esc(structure.join("\n"))}</textarea>
+      <div class="acts"><button data-sclose>Cancel</button><button class="primary" id="rt-ok">Save recipe</button></div>`,
+    bind: (sh) => {
+      $("#rt-ok", sh).addEventListener("click", async () => {
+        const name = $("#rt-name", sh).value.trim() || "My recipe";
+        const { recipe, mode, series, ...settings } = cr.meta.settings || {};
+        try { const x = await post("/api/recipes", { name, line: $("#rt-line", sh).value, instructions: "", structure: $("#rt-str", sh).value.split("\n"), settings, techniques }); await reloadCreateList(); closeSheet(); toast(`Saved "${x.recipe.name}": find it under Start from a recipe`); }
+        catch (err) { toast(err.message); }
+      });
+    },
+  });
+}
 async function newSeries() {
   const d = cr.draft;
   return new Promise((resolve) => {
@@ -1826,7 +1951,7 @@ async function newSeries() {
       body: `<div class="group"><label class="row-i"><span class="t" style="width:72px">Name</span><input id="se-name" class="grow" placeholder="e.g. Reelcut tips"></label></div>
         <div class="cap">Intro</div><textarea id="se-intro" rows="2" style="width:100%" placeholder="The series name, then “Episode N: title”, 1.5 s"></textarea>
         <div class="cap">Outro</div><textarea id="se-outro" rows="2" style="width:100%" placeholder="“Follow for part N+1” with the logo, 2 s"></textarea>
-        <p class="foot-note">The chips you have set now (personality, format, sound…) become the series' settings.</p>
+        <p class="foot-note">The chips you have set now (personality, format, sound…) become the series' settings${(cr.list.recipes || []).find((x) => x.id === d.settings.recipe)?.techniques ? ", and the recipe's techniques its techniques: every episode does each kind of beat the same way" : ""}.</p>
         <div class="acts"><button data-sclose>Cancel</button><button class="primary" id="se-ok" disabled>Create series</button></div>`,
       bind: (sh) => {
         const name = $("#se-name", sh), ok = $("#se-ok", sh);
@@ -1834,7 +1959,8 @@ async function newSeries() {
         ok.addEventListener("click", async () => {
           ok.disabled = true;
           const { recipe, mode, series, ...settings } = d.settings;
-          try { const r = await post("/api/series", { name: name.value, intro: $("#se-intro", sh).value, outro: $("#se-outro", sh).value, settings }); await reloadCreateList(); closeSheet(); resolve(r.series); }
+          const techniques = (cr.list.recipes || []).find((x) => x.id === recipe)?.techniques;
+          try { const r = await post("/api/series", { name: name.value, intro: $("#se-intro", sh).value, outro: $("#se-outro", sh).value, settings, ...(techniques ? { techniques } : {}) }); await reloadCreateList(); closeSheet(); resolve(r.series); }
           catch (err) { toast(err.message); ok.disabled = false; }
         });
       },
@@ -2883,6 +3009,10 @@ async function renderTechniques(id) {
       <select id="tq-op" aria-label="Operation"><option value="">All operations</option>${c.operations.map((o) => `<option value="${o.id}" ${tq.op === o.id ? "selected" : ""}>${esc(o.name)}</option>`).join("")}</select>
       <input id="tq-q" type="search" placeholder="Search: contrast, cursor, metaphor…" value="${esc(tq.q)}" style="max-width:280px">
     </div>
+    <div id="tq-pvs"></div>
+    <details class="group" id="tq-trybox" style="margin-bottom:16px"><summary>Try a line: see three ways to show it</summary>
+      <div class="row-i"><input id="tq-line" class="grow" placeholder="e.g. Over 71,000 followers in six months"><select id="tq-kind" aria-label="Beat kind"><option value="">Any beat</option>${["hook", "statement", "data", "product", "quote", "cta"].map((k) => `<option>${k}</option>`).join("")}</select><button class="sm primary" id="tq-trygo">Show 3 ways</button></div>
+      <div id="tq-tryout"></div></details>
     <div class="tq">
       <div class="tq-graph"><iframe id="tq-frame" src="/techniques/graph?look=${tqLook()}" title="The techniques, as a graph"></iframe></div>
       <aside class="tq-side" id="tq-side"></aside>
@@ -2891,6 +3021,21 @@ async function renderTechniques(id) {
   $("#tq-accept")?.addEventListener("click", async () => { try { const r = await post("/api/techniques/accept", {}); toast(`Accepted ${r.accepted} pattern tag sets`); renderTechniques(); } catch (e) { toast(e.message); } });
   $("#tq-op").addEventListener("change", (e) => { tq.op = e.target.value; tq.dom = ""; paintTqSide(); });
   $("#tq-q").addEventListener("input", debounce((e) => { tq.q = e.target.value.trim().toLowerCase(); paintTqSide(); }, 200));
+  paintTqPreviews();
+  let seen = false; try { seen = localStorage.getItem("rc.tour.techniques") === "done"; } catch { /* private window: show it */ }
+  if (!seen) setTimeout(() => tqTour(0), 600);
+  const tryGo = async () => {
+    const text = $("#tq-line").value.trim(); if (!text) return;
+    const out = $("#tq-tryout"); out.innerHTML = `<p class="note">Thinking…</p>`;
+    try {
+      const r = await api(`/api/techniques/suggest?n=3&text=${encodeURIComponent(text)}&kind=${encodeURIComponent($("#tq-kind").value)}`);
+      out.innerHTML = `<div class="tq-try">${r.suggestions.map((x) => `<button data-path="${esc(x.path)}">${tqVideo(x.id, "small")}<b>${esc(x.plain)}</b><span>${esc(x.name)} · ${esc(x.why.split("; ")[0] || "")}</span></button>`).join("")}</div>
+        <p class="note" style="margin:4px 0 0">Previews show each move on its sample line in your personality. Open one to pin it to a chat for this line.</p>`;
+      $$("[data-path]", out).forEach((b) => b.addEventListener("click", () => { tq.sel = b.dataset.path; $("#tq-frame")?.contentWindow.postMessage({ focusTechnique: tq.sel }, location.origin); paintTqSide(); if ($("#tq-note")) $("#tq-note").value = `for the line "${text}"`; $("#tq-side").scrollIntoView({ behavior: "smooth", block: "start" }); }));
+    } catch (e) { out.innerHTML = `<p class="note">${esc(e.message)}</p>`; }
+  };
+  $("#tq-trygo").addEventListener("click", tryGo);
+  $("#tq-line").addEventListener("keydown", (e) => { if (e.key === "Enter") tryGo(); });
   paintTqSide();
   sizeTqGraph();
   if (tq.sel) $("#tq-frame").addEventListener("load", () => $("#tq-frame").contentWindow.postMessage({ focusTechnique: tq.sel }, location.origin), { once: true });
@@ -2903,10 +3048,61 @@ function sizeTqGraph() {
   box.style.width = `${Math.max(320, Math.min(col, room))}px`;
 }
 window.addEventListener("resize", debounce(() => { if (state.tab === "techniques") sizeTqGraph(); }, 100));
+/** A technique's preview clip (or a quiet placeholder until the previews are made). */
+function tqVideo(id, size) {
+  const pv = tq.cat?.previews; const has = pv?.have.includes(id);
+  if (!has) return size === "small" ? `<span class="ph">No preview yet</span>` : `<div class="tq-pv ph">No preview yet: make the previews above to see this move in your personality.</div>`;
+  const src = `/files/technique-preview/${pv.key}/${id}`;
+  return size === "small" ? `<video src="${src}.mp4" poster="${src}.jpg" muted loop playsinline autoplay></video>` : `<video class="tq-pv" src="${src}.mp4" poster="${src}.jpg" muted loop playsinline autoplay></video>`;
+}
+function paintTqPreviews() {
+  const box = $("#tq-pvs"), pv = tq.cat?.previews; if (!box || !pv) return;
+  const job = pv.job, running = job?.status === "running";
+  const missing = pv.total - pv.have.length;
+  if (!running && !missing && !pv.stale) { box.innerHTML = ""; return; }
+  const who = pv.personality ? `“${esc(pv.personality)}”` : "the plain look (no personality yet)";
+  box.innerHTML = `<div class="group" style="margin-bottom:16px"><div class="row-i"><span class="grow">${running ? `Making the preview clips in ${who}… <span class="note">${esc((job.log || []).filter((l) => /ok|rendering|saved/.test(l)).at(-1) || "starting")}</span>`
+    : pv.stale ? `The preview clips are from an older version of ${who}: make them again so they match it.`
+    : `<b>${pv.have.length} of ${pv.total}</b> techniques have a preview clip in ${who}. Each shows the move on a sample line, the way your reels would.`}</span>
+    ${running ? "" : `<button class="sm" id="tq-pvgo">${pv.stale ? "Make them again" : missing === pv.total ? "Make the previews" : "Make the rest"}</button>`}</div></div>`;
+  $("#tq-pvgo")?.addEventListener("click", async () => { try { await post("/api/techniques/previews", pv.stale ? { all: true } : {}); toast("Making the previews: a few minutes, in the background"); tqPoll(); } catch (e) { toast(e.message); } });
+  if (running) tqPoll();
+}
+/** The first visit: what the page is, how to favour, try a line, swap a beat, then a first reel made with suggestions. */
+const TQ_TOUR = [
+  { el: ".tq-graph", title: "What a visual must do", text: "Every visual in a reel does one of six things: makes one thing stand out, ties things together, steps through, lets the viewer work it out, holds back and then shows, or turns one thing into another. Those are the six circles. Click one to see the ways to do it." },
+  { el: "#tq-side", title: "The moves that do it", text: "Each line here is a technique, said plainly. Open one to watch it play in your personality, and favour it with the star: Claude reaches for your favourites first." },
+  { el: "#tq-trybox", open: true, title: "Try a line", text: "Type a line from your script and see three ways to show it, each as a short clip." },
+  { el: null, title: "Steer a reel by what it does", text: "On a reel, every beat shows its technique, and a strip shows the reel's shape. Tap a beat to swap its technique for another, or ask for three other ways rendered side by side and pick one." },
+  { el: null, last: true, title: "Make your first reel with suggestions", text: "Claude names a technique for every beat and says why. When it is done, rate the beats (Works or Not quite) on the Reels page: that is how it learns which moves land for you." },
+];
+function tqTour(i) {
+  $$(".tour-hi").forEach((x) => x.classList.remove("tour-hi")); $(".tour")?.remove();
+  const done = () => { try { localStorage.setItem("rc.tour.techniques", "done"); } catch { /* fine */ } $$(".tour-hi").forEach((x) => x.classList.remove("tour-hi")); $(".tour")?.remove(); };
+  const st = TQ_TOUR[i]; if (!st || state.tab !== "techniques") return done();
+  const el = st.el && $(st.el); if (el) { el.classList.add("tour-hi"); if (st.open) el.open = true; el.scrollIntoView({ behavior: "smooth", block: "nearest" }); }
+  const card = document.createElement("div"); card.className = "tour"; card.setAttribute("role", "dialog"); card.setAttribute("aria-label", "Tour of the Techniques page");
+  card.innerHTML = `<h4>${esc(st.title)}</h4><p>${esc(st.text)}</p><div class="row-i" style="padding:0;gap:8px"><span class="dots">${TQ_TOUR.map((_, k) => `<i class="${k === i ? "on" : ""}"></i>`).join("")}</span>
+    ${st.last ? `<button class="sm plain" data-t="end">Later</button><button class="sm primary" data-t="go">Start a reel</button>` : `<button class="sm plain" data-t="end">Skip</button><button class="sm primary" data-t="next">Next</button>`}</div>`;
+  document.body.appendChild(card);
+  card.querySelector('[data-t="end"]').addEventListener("click", done);
+  card.querySelector('[data-t="next"]')?.addEventListener("click", () => tqTour(i + 1));
+  card.querySelector('[data-t="go"]')?.addEventListener("click", () => { done(); try { localStorage.setItem("rc.tour.rate", "pending"); } catch { /* fine */ } location.hash = "#create"; });
+}
+function tqPoll() {
+  clearTimeout(tq.poll);
+  tq.poll = setTimeout(async () => {
+    if (state.tab !== "techniques") return;
+    try { const c = await api("/api/techniques"); const had = tq.cat.previews.have.length; tq.cat.previews = c.previews; tq.cat.favour = c.favour; paintTqPreviews(); if (c.previews.have.length !== had) paintTqSide(); } catch { /* next time */ }
+  }, 5000);
+}
+async function tqStar(id, star) {
+  try { const r = await post("/api/techniques/favourite", { id, star }); tq.cat.favour = r.favour; toast(star ? "Favoured: suggestions reach for it first" : "No longer a favourite"); paintTqSide(); } catch (e) { toast(e.message); }
+}
 function tqMatch(t) {
   if (tq.op && !t.operations.includes(tq.op)) return false;
   if (tq.dom && t.domain !== tq.dom) return false;
-  return !tq.q || `${t.name} ${t.id} ${t.does} ${t.when} ${t.domain}`.toLowerCase().includes(tq.q);
+  return !tq.q || `${t.name} ${t.plain} ${t.id} ${t.does} ${t.when} ${t.domain}`.toLowerCase().includes(tq.q);
 }
 function paintTqSide() {
   const box = $("#tq-side"), c = tq.cat; if (!box || !c) return;
@@ -2915,10 +3111,14 @@ function paintTqSide() {
     const op = tq.sel.split("/")[0] && c.operations.find((o) => o.id === tq.sel.split("/")[0]) ? tq.sel.split("/")[0] : t.operations[0];
     const path = `${op}/${t.domain}/${t.id}/${t.timing}`;
     const ex = t.examples, sc = t.score;
+    const fav = (c.favour || []).includes(t.id);
     box.innerHTML = `<button class="plain sm" id="tq-back">${ic("back", 14)} All techniques</button>
-      <h3 style="margin:8px 0 2px">${esc(t.name)}</h3><code class="tq-path">${esc(path)}</code>
+      ${tqVideo(t.id)}
+      <div class="row-i" style="padding:0;gap:8px;align-items:flex-start"><h3 class="grow" style="margin:8px 0 2px">${esc(t.plain)}</h3><button class="sm ${fav ? "" : "plain"}" id="tq-fav" aria-pressed="${fav}" title="${fav ? "Favoured by your personality" : "Favour it: suggestions reach for it first"}"><span class="tq-star">${fav ? "★" : "☆"}</span> ${fav ? "Favourite" : "Favour"}</button></div>
+      <p class="note" style="margin:0">${esc(t.name)} · ${esc(c.operations.find((o) => o.id === op)?.name || op)}</p>
       <p style="margin:10px 0 4px">${esc(t.does)}</p><p class="note" style="margin:0">For ${esc(t.when)}.</p>
-      <div class="tq-meta"><span class="chip">${esc(c.domains.find((d) => d.id === t.domain)?.name || t.domain)}</span>${t.operations.map((o) => `<span class="chip">${esc(c.operations.find((x) => x.id === o)?.name || o)}</span>`).join("")}<span class="chip">plays: ${esc(t.timing)}</span>${t.moves.map((m) => `<span class="chip">${esc(m)}</span>`).join("")}</div>
+      <details style="margin-top:10px"><summary class="note">Advanced: its path and tags</summary><code class="tq-path">${esc(path)}</code>
+      <div class="tq-meta"><span class="chip">${esc(c.domains.find((d) => d.id === t.domain)?.name || t.domain)}</span>${t.operations.map((o) => `<span class="chip">${esc(c.operations.find((x) => x.id === o)?.name || o)}</span>`).join("")}<span class="chip">plays: ${esc(t.timing)}</span>${t.moves.map((m) => `<span class="chip">${esc(m)}</span>`).join("")}</div></details>
       <div class="cap">How it has done for you</div><p class="note" style="margin:0">${sc.uses ? `Used in ${sc.uses} beat${sc.uses === 1 ? "" : "s"} · ${sc.up} rated Works · ${sc.down} rated down` : "Not used in a rendered beat yet."}</p>
       ${ex.beats.length ? `<div class="cap">Your beats</div><div class="tq-ex">${ex.beats.slice(0, 6).map((b) => `<a href="#reels/${encodeURIComponent(b.run)}" title="${esc(b.beat)}${b.rating === "up" ? " · Works" : b.rating === "down" ? " · rated down" : ""}">${b.frame ? `<img src="${media(b.frame)}" alt="">` : `<span class="ph">${esc(b.beat)}</span>`}${b.rating === "up" ? `<i class="ok">${ic("check", 11)}</i>` : ""}</a>`).join("")}</div>` : ""}
       ${ex.assets.length ? `<div class="cap">In your library</div><div class="tq-ex">${ex.assets.slice(0, 6).map((a) => `<a href="#library" title="${esc(a.name)}"><img src="/files/thumb/${a.id}" alt=""></a>`).join("")}</div>` : ""}
@@ -2927,6 +3127,9 @@ function paintTqSide() {
       <div class="group"><div class="row-i"><select id="tq-chat" class="grow" aria-label="Conversation">${(c.chats || []).map((x) => `<option value="${esc(x.id)}">${esc(x.title)}</option>`).join("") || `<option value="">No chats yet</option>`}</select></div>
         <div class="row-i"><input id="tq-note" class="grow" placeholder="Optional: for the hook, for the price beat…"></div></div>
       <div class="acts" style="justify-content:flex-start"><button class="primary sm" id="tq-pin" ${(c.chats || []).length ? "" : "disabled"}>Pin to this chat</button></div>`;
+    $("#tq-fav").addEventListener("click", () => tqStar(t.id, !fav));
+    // Opened from far down the list: bring its preview into view, below the page's sticky header.
+    { const top = box.getBoundingClientRect().top; if (top < 72 || top > innerHeight * 0.6) window.scrollTo({ top: Math.max(0, top + scrollY - 84), behavior: "smooth" }); }
     $("#tq-back").addEventListener("click", () => { tq.sel = null; history.replaceState(null, "", "#techniques"); $("#tq-frame")?.contentWindow.postMessage({ focusOut: true }, location.origin); paintTqSide(); });
     $("#tq-pin")?.addEventListener("click", async () => {
       const conversation = $("#tq-chat").value; if (!conversation) return;
@@ -2936,7 +3139,7 @@ function paintTqSide() {
   }
   const list = c.techniques.filter(tqMatch);
   const filt = [tq.op && c.operations.find((o) => o.id === tq.op)?.name, tq.dom && c.domains.find((d) => d.id === tq.dom)?.name].filter(Boolean);
-  box.innerHTML = `${filt.length ? `<div class="row-i" style="padding:0 0 4px"><span class="grow note">Showing ${esc(filt.join(" · "))}</span><button class="plain sm" id="tq-clear">Show all</button></div>` : ""}${c.domains.map((d) => { const ts = list.filter((x) => x.domain === d.id); return ts.length ? `<div class="cap">${esc(d.name)} <span class="note" style="font-weight:400">${esc(d.does)}</span></div><div class="group">${ts.map((x) => `<button class="row-i tq-row" data-t="${esc(x.operations[0])}/${esc(x.domain)}/${esc(x.id)}"><span class="t grow" style="text-align:left">${esc(x.name)}</span>${x.score.up ? `<span class="badge ok">${x.score.up} Works</span>` : ""}<span class="s">${esc(x.operations.map((o) => c.operations.find((y) => y.id === o)?.name || o).join(" · "))}</span></button>`).join("")}</div>` : ""; }).join("") || emptyState("techniques", "Nothing matches", "Try another word or all operations.")}`;
+  box.innerHTML = `${filt.length ? `<div class="row-i" style="padding:0 0 4px"><span class="grow note">Showing ${esc(filt.join(" · "))}</span><button class="plain sm" id="tq-clear">Show all</button></div>` : ""}${c.domains.map((d) => { const ts = list.filter((x) => x.domain === d.id); return ts.length ? `<div class="cap">${esc(d.name)} <span class="note" style="font-weight:400">${esc(d.does)}</span></div><div class="group">${ts.map((x) => `<button class="row-i tq-row" data-t="${esc(x.operations[0])}/${esc(x.domain)}/${esc(x.id)}"><span class="t grow" style="text-align:left">${(c.favour || []).includes(x.id) ? `<span class="star">★</span> ` : ""}${esc(x.plain)}<small>${esc(x.name)}</small></span>${x.score.up ? `<span class="badge ok">${x.score.up} Works</span>` : ""}<span class="s">${esc(x.operations.map((o) => c.operations.find((y) => y.id === o)?.name || o).join(" · "))}</span></button>`).join("")}</div>` : ""; }).join("") || emptyState("techniques", "Nothing matches", "Try another word or all operations.")}`;
   $("#tq-clear", box)?.addEventListener("click", () => { tq.op = ""; tq.dom = ""; const op = $("#tq-op"); if (op) op.value = ""; $("#tq-frame")?.contentWindow.postMessage({ focusOut: true }, location.origin); paintTqSide(); });
   $$(".tq-row", box).forEach((b) => b.addEventListener("click", () => { tq.sel = b.dataset.t; history.replaceState(null, "", `#techniques/${encodeURIComponent(tq.sel)}`); $("#tq-frame")?.contentWindow.postMessage({ focusTechnique: tq.sel }, location.origin); paintTqSide(); }));
 }
@@ -3418,6 +3621,7 @@ async function route() {
     else { await loadLibrary(); renderLibrary(); }
   } catch (e) { $("#main").innerHTML = `${pageHead("Something went wrong")}${emptyState("x", "This page could not load", esc(e.message), `<button class="primary" id="retry">Retry</button>`)}`; $("#retry")?.addEventListener("click", route); }
   clearTimeout(slow);
+  if (tab !== "techniques") { $(".tour")?.remove(); $$(".tour-hi").forEach((x) => x.classList.remove("tour-hi")); }
   // A conversation opens at its latest message (pinToBottom); every other page opens at its top.
   if (changed) { const m = $("#main"); m.classList.remove("enter"); void m.offsetWidth; m.classList.add("enter"); if (tab === "create" && id) pinToBottom(); else window.scrollTo(0, 0); }
   afterRender();

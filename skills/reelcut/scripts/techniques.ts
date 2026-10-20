@@ -1,6 +1,11 @@
-import { readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import path from "node:path";
-import { defaultPersonality } from "../../../src/personality/store.js";
+import { fileURLToPath } from "node:url";
+import { defaultPersonality, getPersonality } from "../../../src/personality/store.js";
+import { PREVIEW_SECONDS, techniquePreviewComposition } from "../../../src/taxonomy/preview.js";
+import { previewDirFor, previewLook, previewStatus, stampFor } from "../../../src/taxonomy/previews.js";
 import {
   DOMAINS, OPERATIONS, TECHNIQUES, TIMINGS, TaxonomyError, acceptPatternTags, checkPath, formatPath, loadTaxonomy, patternOverrides, patternTags, patternsFor,
   pinTechnique, scoreTechniques, setAssetTags, setPatternTags, suggest, techniqueById, techniqueBeats,
@@ -23,6 +28,9 @@ import type { BeatKind } from "../../../src/personality/styles.js";
  *   npm run techniques -- pin <path> [--chat <conversation>] [--note "…"]
  *   npm run techniques -- scores                              (uses and ratings per technique)
  *   npm run techniques -- catalog --json                      (everything, for the studio)
+ *   npm run techniques -- previews [--only a,b] [--personality <id>] [--missing] [--quality draft|looks]
+ *       Render a 3.4 s preview clip per technique, its sample line in the (default) personality's look, into
+ *       ~/.reelcut/technique-previews/<personality>/ (the studio's Techniques page and beat chips play them).
  *
  * Suggestions are ranked by the line's words and beat kind, the default personality's favoured and banned
  * techniques, and how the techniques were rated in your reels.
@@ -43,6 +51,42 @@ function bool(argv: string[], name: string): boolean {
 }
 const list = (v?: string) => (v ?? "").split(",").map((x) => x.trim()).filter(Boolean);
 const cwd = process.env.INIT_CWD ?? process.cwd();
+
+const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
+
+/** Render the technique previews through the normal render (so the kit, styles and checks are the reels' own). */
+function previews(argv: string[]): number {
+  const pid = flag(argv, "--personality"), quality = flag(argv, "--quality") ?? "looks", only = list(flag(argv, "--only")), missing = bool(argv, "--missing");
+  const p = pid ? getPersonality(pid) : defaultPersonality();
+  if (pid && !p) { console.error(`no personality ${pid}`); return 1; }
+  const dir = previewDirFor(p), status = previewStatus(p);
+  const ids = TECHNIQUES.map((t) => t.id).filter((id) => (!only.length || only.includes(id)) && (!missing || status.stale || !status.have.includes(id)));
+  if (!ids.length) { console.log("every technique preview is up to date"); return 0; }
+  const { style, options } = previewLook(p);
+  const work = path.join(dir, ".work");
+  rmSync(work, { recursive: true, force: true });
+  mkdirSync(path.join(work, "src"), { recursive: true });
+  const beats = ids.map((id) => {
+    const cid = `tq-${id}`, file = path.join(work, "src", `${cid}.html`);
+    writeFileSync(file, techniquePreviewComposition(id, style, { ...options, id: cid }));
+    return { id: cid, durationSeconds: PREVIEW_SECONDS, composition: file };
+  });
+  writeFileSync(path.join(work, "reel.json"), `${JSON.stringify({ format: "1:1", fps: 60, beats }, null, 2)}\n`);
+  console.log(`rendering ${ids.length} technique preview(s) in ${p ? `"${p.name}"` : "the plain look"} (${style.name}) into ${dir}`);
+  const tsx = createRequire(import.meta.url).resolve("tsx/cli");
+  const r = spawnSync(process.execPath, [tsx, path.join(REPO, "skills", "reelcut", "scripts", "render.ts"), path.join(work, "reel.json"), "--clips-only", "--no-record", "--quality", quality], { cwd: REPO, stdio: "inherit" });
+  let ok = 0;
+  for (const id of ids) {
+    const clip = path.join(work, "clips", `tq-${id}.mp4`);
+    if (!existsSync(clip)) { console.error(`  ${id}: not rendered`); continue; }
+    copyFileSync(clip, path.join(dir, `${id}.mp4`));
+    spawnSync("ffmpeg", ["-v", "error", "-y", "-ss", "2.9", "-i", clip, "-frames:v", "1", "-q:v", "3", path.join(dir, `${id}.jpg`)]);
+    ok++;
+  }
+  if (ok) writeFileSync(path.join(dir, "stamp.json"), `${JSON.stringify(stampFor(p))}\n`);
+  console.log(`${ok} of ${ids.length} saved.${r.status ? " (the render reported a problem; see above)" : ""}`);
+  return ok === ids.length ? 0 : 1;
+}
 
 function personalityInput() {
   const p = defaultPersonality();
@@ -151,6 +195,8 @@ function main(argv: string[]): number {
       const rows = [...sc].sort((a, b) => b[1].score - a[1].score || b[1].uses - a[1].uses);
       return out(Object.fromEntries(rows), () => rows.length ? rows.map(([id, s]) => `${id.padEnd(22)} used ${s.uses} · Works ${s.up} · down ${s.down}`).join("\n") : "no rendered beat names a technique yet");
     }
+    case "previews":
+      return previews(argv);
     case "catalog":
       console.log(JSON.stringify(catalogJson(), null, json ? 2 : 0));
       return 0;

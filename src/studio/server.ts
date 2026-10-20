@@ -37,7 +37,9 @@ import { HIGGSFIELD_SETTINGS, loadSettings, setHiggsfieldSetting, type Higgsfiel
 import { readGeneration } from "../generate/log.js";
 import { CreateManager, filesDir as createFilesDir, insideAllowed, reelState } from "../create/manager.js";
 import { watchedIn, watchHome } from "../watch/index.js";
-import { acceptPatternTags, checkPath, pinTechnique, setAssetTags, setPatternTags, TaxonomyError, TECHNIQUES, techniqueById } from "../taxonomy/index.js";
+import { acceptPatternTags, checkPath, formatPath, pinTechnique, scoreTechniques, setAssetTags, setPatternTags, suggest, TaxonomyError, TECHNIQUES, techniqueById } from "../taxonomy/index.js";
+import { PLAIN } from "../taxonomy/plain.js";
+import { previewRoot, previewStatus } from "../taxonomy/previews.js";
 import { catalogJson, ideasFor } from "../taxonomy/examples.js";
 import { techniquesGraphPage } from "../taxonomy/page.js";
 import { readIntegrations } from "../create/integrations.js";
@@ -46,6 +48,7 @@ import { readIntegrations } from "../create/integrations.js";
 const PZ_STEP_IDS = ["start", "styles", "mixer", "colours", "fonts", "motion", "texture", "signature", "copy", "sound", "pacing", "guardrails", "review"];
 import { drawPrompt } from "../create/draw.js";
 import { addPerformance, analysisPrompt, importPrompt, insights, latest, readPerformance, reelFacts, type PerfRow } from "../create/performance.js";
+import { BOARD_STAGES, STAGE_NAMES, boardStatus, boardsOf, createBoard, loadBoards, publishStage, stagePrompt, type BoardStage } from "../create/board.js";
 import { cloudflaredPath, createShare, daemonState, ensureReviewDaemon, liveShare, loadShares, reviewUrl, revokeShare, sharesFor, stopReviewDaemon } from "../create/share.js";
 import { writeCaptions } from "../create/captions.js";
 import { coverFrames, LIMITS, makeCover, postKitPrompt, readCovers, readPostKit, PLATFORMS as POST_PLATFORMS, type Platform } from "../create/postkit.js";
@@ -58,7 +61,7 @@ import { clawdCatalog, setFavourite, sheetPage } from "../clawd/index.js";
 import { readKitSources } from "../render/kit.js";
 import { GSAP_URL } from "../render/project.js";
 import {
-  STYLES, STYLE_TENSIONS, brandPalette, checkPersonality, deletePersonality, fromTaste, getPersonality, importBrand, loadPersonalities,
+  STYLES, STYLE_TENSIONS, brandPalette, checkPersonality, defaultPersonality, deletePersonality, fromTaste, getPersonality, importBrand, loadPersonalities,
   PersonalitySchema, savePersonality, setDefaultPersonality, styleById, surprise, type Locks,
 } from "../personality/index.js";
 import { acceptAnnotation, annotateReference, buildReferenceBrief, ingestReferenceUpload, loadReferences, referenceBlobPath, referenceSheetPath, referenceThumbPath, removeReference, studyQueue, updateReference, type Reference } from "../references/index.js";
@@ -548,7 +551,42 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
     if (parts[0] === "api" && parts[1] === "techniques") {
       if (read && parts.length === 2) {
         const chats = (create ??= new CreateManager()).list().slice(0, 20).map((x) => ({ id: x.id, title: x.title, status: x.status }));
-        return sendJson(res, 200, { ...catalogJson(), chats });
+        const p = defaultPersonality();
+        return sendJson(res, 200, { ...catalogJson(), chats, previews: { ...previewStatus(p), job: jobs.find((j) => j.runId === "technique-previews") ?? null }, favour: p?.techniques.favour ?? [], personalityId: p?.id ?? null });
+      }
+      // The preview clips: render the missing or out-of-date ones (or all) in the default personality's look.
+      if (method === "POST" && parts[2] === "previews" && parts.length === 3) {
+        const b = (await readBody(req)) as { all?: unknown; only?: unknown };
+        const running = jobs.find((j) => j.status === "running");
+        if (running) throw new HttpError(409, `a render is already running (${running.beat})`, { job: running.id });
+        const job: Job = { id: String(++jobSeq), runId: "technique-previews", beat: "technique previews", status: "running", startedAt: new Date().toISOString(), log: [] };
+        jobs.unshift(job);
+        const tsx = createRequire(import.meta.url).resolve("tsx/cli");
+        const extra = typeof b.only === "string" && /^[a-z0-9,-]+$/.test(b.only) ? ["--only", b.only] : b.all === true ? [] : ["--missing"];
+        const child = spawn(process.execPath, [tsx, path.join(REPO, "skills", "reelcut", "scripts", "techniques.ts"), "previews", ...extra], { cwd: REPO, windowsHide: true });
+        const append = (chunk: Buffer) => { job.log.push(...chunk.toString("utf8").split(/\r?\n/).filter(Boolean)); if (job.log.length > 300) job.log.splice(0, job.log.length - 300); };
+        child.stdout?.on("data", append); child.stderr?.on("data", append);
+        child.on("error", (error) => { job.log.push(String(error)); job.status = "failed"; job.endedAt = new Date().toISOString(); });
+        child.on("close", (code) => { if (job.status === "running") job.status = code === 0 ? "ok" : "failed"; job.exitCode = code; job.endedAt = new Date().toISOString(); });
+        return sendJson(res, 202, { job });
+      }
+      // The best techniques for a line (a beat's chip opens these), with plain names and whether a preview exists.
+      if (read && parts[2] === "suggest" && parts.length === 3) {
+        const p = defaultPersonality(), have = new Set(previewStatus(p).have);
+        const near = (url.searchParams.get("near") ?? "").split(",").filter(Boolean);
+        const kind = url.searchParams.get("kind") ?? undefined;
+        const out = suggest({ text: url.searchParams.get("text") ?? "", ...(kind ? { kind: kind as never } : {}), recent: near, favour: p?.techniques.favour ?? [], ban: p?.techniques.ban ?? [], scores: new Map([...scoreTechniques()].map(([k, v]) => [k, v.score])) }, Number(url.searchParams.get("n") ?? 5) || 5);
+        return sendJson(res, 200, { suggestions: out.map((x) => ({ id: x.technique.id, name: x.technique.name, plain: PLAIN[x.technique.id]?.plain ?? x.technique.does, path: formatPath(x.path), why: x.why.join("; "), preview: have.has(x.technique.id) })) });
+      }
+      // One-tap favourites: a star writes the default personality's favoured techniques (and clears a ban on it).
+      if (method === "POST" && parts[2] === "favourite" && parts.length === 3) {
+        const b = (await readBody(req)) as { id?: unknown; star?: unknown };
+        if (typeof b.id !== "string" || !techniqueById(b.id) || typeof b.star !== "boolean") throw new HttpError(400, "send { id: <technique>, star: true|false }");
+        const p = defaultPersonality();
+        if (!p) throw new HttpError(409, "make a personality first: favourites belong to one");
+        const favour = b.star ? [...p.techniques.favour.filter((x) => x !== b.id), b.id] : p.techniques.favour.filter((x) => x !== b.id);
+        const saved = savePersonality({ ...p, techniques: { favour, ban: b.star ? p.techniques.ban.filter((x) => x !== b.id) : p.techniques.ban } });
+        return sendJson(res, 200, { favour: saved.techniques.favour });
       }
       try {
         if (method === "POST" && parts[2] === "accept" && parts.length === 3) {
@@ -1253,6 +1291,44 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
           return sendJson(res, 200, { ok: true });
         }
       }
+      // A client approval board: the stages the client approves, each sent by the owner when it is ready.
+      if (parts[3] === "board") {
+        const u = reviewUrl();
+        if (read && parts.length === 4) return sendJson(res, 200, { boards: boardsOf(id).map((b) => ({ token: b.token, url: u ? `${u}/r/${b.token}` : null, stages: boardStatus(b) })), stages: BOARD_STAGES.map((x) => ({ id: x, name: STAGE_NAMES[x] })), cloudflared: !!cloudflaredPath() });
+        if (method === "POST" && parts.length === 4) {
+          const b = (await readBody(req)) as { stages?: unknown; days?: number };
+          const stages = Array.isArray(b.stages) ? b.stages.filter((x): x is string => typeof x === "string") : [];
+          let made;
+          try { made = createBoard(id, sess.title, reelPath(), stages, Math.min(30, Math.max(1, Number(b.days) || 14))); } catch (error) { throw error instanceof HttpError ? error : new HttpError(400, (error as Error).message); }
+          try { await ensureReviewDaemon(); } catch (error) { revokeShare(made.share.token); throw new HttpError(409, (error as Error).message); }
+          const names = made.board.stages.map((x) => STAGE_NAMES[x].toLowerCase());
+          cm.send(id, `Client approval board: ${names.join(", ")}`, [], `The owner set up a client approval board for this reel. The client approves, in turn: ${names.join(", ")}. After each of these is ready, stop and say in one line that it is ready for the board (the owner sends it from the reel panel). Do not go on to the next stage until the client's decision arrives in this chat: an approval means go on; a change request lists exactly what to change. The board shows the client the techniques in plain words and the clips, so name a technique for every beat in reel.json.`);
+          return sendJson(res, 201, { token: made.board.token, url: u ? `${u}/r/${made.board.token}` : null });
+        }
+        if (method === "POST" && parts[4] === "publish" && parts.length === 5) {
+          const b = (await readBody(req)) as { token?: string; stage?: string };
+          const board = boardsOf(id).find((x) => x.token === b.token);
+          if (!board) throw new HttpError(404, "no such board");
+          if (!(BOARD_STAGES as readonly string[]).includes(String(b.stage))) throw new HttpError(400, "no such stage");
+          let pub;
+          try { pub = publishStage(board.token, b.stage as BoardStage); } catch (error) { throw new HttpError(409, (error as Error).message); }
+          cm.note(id, `Sent the ${STAGE_NAMES[b.stage as BoardStage].toLowerCase()} to the client board (${pub.items.length} item${pub.items.length === 1 ? "" : "s"})`);
+          return sendJson(res, 200, { ok: true, items: pub.items.length });
+        }
+      }
+      // A decision from the board, through the review daemon: a note, and Claude's instruction once a stage is decided.
+      if (method === "POST" && parts[3] === "board-note" && parts.length === 4) {
+        const d = daemonState();
+        if (!d || req.headers["x-reelcut-key"] !== d.key) throw new HttpError(403, "not the review daemon");
+        const b = (await readBody(req)) as { token?: string; stage?: string; line?: string; done?: boolean };
+        cm.note(id, String(b.line ?? "").slice(0, 300));
+        const board = loadBoards().find((x) => x.token === b.token && x.conversation === id);
+        if (b.done && board && (BOARD_STAGES as readonly string[]).includes(String(b.stage))) {
+          const msg = stagePrompt(board, b.stage as BoardStage);
+          cm.send(id, msg.shown, [], msg.prompt);
+        }
+        return sendJson(res, 200, { ok: true });
+      }
       // A line from the review daemon: a reviewer commented. Only with the daemon's key.
       if (method === "POST" && parts[3] === "review-note" && parts.length === 4) {
         const d = daemonState();
@@ -1447,6 +1523,12 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
       }
       if (parts[1] === "mini" && parts.length === 4 && /^p_[0-9a-f]+$/.test(parts[2]!) && /^[a-z0-9-]+\.(mp4|jpg)$/.test(parts[3]!)) {
         const file = path.join(reelcutHome(), "personality-renders", parts[2]!, parts[3]!);
+        if (!existsSync(file)) throw new HttpError(404, "not rendered yet");
+        return sendFile(req, res, file);
+      }
+      // The technique previews: <personality id | plain>/<technique>.mp4 and .jpg.
+      if (parts[1] === "technique-preview" && parts.length === 4 && /^(p_[0-9a-f]+|plain)$/.test(parts[2]!) && /^[a-z0-9-]+\.(mp4|jpg)$/.test(parts[3]!)) {
+        const file = path.join(previewRoot(), parts[2]!, parts[3]!);
         if (!existsSync(file)) throw new HttpError(404, "not rendered yet");
         return sendFile(req, res, file);
       }

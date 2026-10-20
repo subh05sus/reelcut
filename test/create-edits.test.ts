@@ -44,6 +44,19 @@ describe("beat edits", () => {
     expect(move.prompt).not.toContain("--only");
     expect(() => editPrompt(reelPath, reel, "beat-09", { kind: "redo" })).toThrow(/no beat/);
   });
+  it("recomposes a beat with a chosen technique, or offers three other ways to pick from", async () => {
+    const { editPrompt, readReel } = await import("../src/create/edits.js");
+    const reel = readReel(reelPath);
+    const t = editPrompt(reelPath, reel, "beat-01", { kind: "technique", path: "differentiate/typographic/big-number" });
+    expect(t.shown).toBe("Beat 2: Make the number stand out: big, counting up");
+    expect(t.prompt).toContain('"technique": "differentiate/typographic/big-number/build"');
+    expect(t.prompt).toContain("--only beat-01 --clips-only");
+    expect(() => editPrompt(reelPath, reel, "beat-01", { kind: "technique", path: "nope/nope/nope" })).toThrow();
+    const w = editPrompt(reelPath, reel, "beat-02", { kind: "ways" });
+    expect(w.shown).toBe("Beat 3: show me 3 other ways");
+    expect(w.prompt).toContain("beat-02-way1.html");
+    expect(w.prompt).toContain("AskUserQuestion");
+  });
 });
 
 describe("frame comments", () => {

@@ -4,6 +4,8 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { createDir } from "./manager.js";
 import { STYLES } from "../personality/styles.js";
+import { checkPath, formatPath, techniqueById } from "../taxonomy/index.js";
+import { PLAIN } from "../taxonomy/plain.js";
 
 /**
  * Editing a finished reel from the Create page: actions on one beat, and comments pinned to frames of the master.
@@ -58,7 +60,11 @@ export type EditAction =
   | { kind: "move"; to: number }
   | { kind: "remove" }
   | { kind: "rerender" }
-  | { kind: "note"; text: string };
+  | { kind: "note"; text: string }
+  /** Recompose the beat with this technique (operation/domain/technique[/timing]). */
+  | { kind: "technique"; path: string }
+  /** Three alternatives with other techniques, rendered small; the owner picks one. */
+  | { kind: "ways" };
 
 const renderTail = (reel: string, beat: string, audio: boolean) => [
   `Then re-render only this beat: \`npm run render -- ${reel} --only ${beat} --clips-only${audio ? " --sfx" : ""}\`, check it (measure or the contact frames),`,
@@ -93,6 +99,22 @@ export function editPrompt(reelPath: string, reel: ReelFile, beatId: string, act
     case "remove": return { shown: `Remove beat ${i + 1}`, prompt: `Remove ${where} from the reel: take it out of "beats" in reel.json (keep its files). Check the cut between the beats on either side still works, fix only what breaks, and rejoin the master: \`npm run render -- ${reelPath} --master-only${audio ? " --sfx" : ""}\`. Reply in one line.` };
     case "rerender": return { shown: `${label}: render again`, prompt: `Render ${where} again exactly as it is (no changes to it): \`npm run render -- ${reelPath} --only ${b.id} --clips-only${audio ? " --sfx" : ""}\`, check the clip, and rejoin the master: \`npm run render -- ${reelPath} --master-only${audio ? " --sfx" : ""}\`. Reply in one line.` };
     case "note": return { shown: `${label}: ${action.text.trim()}`, prompt: `For ${where}: ${action.text.trim()}\n${keep}\n${renderTail(reelPath, b.id, audio)}` };
+    case "technique": {
+      const c = checkPath(action.path);
+      if (!c.ok || !c.path) throw new Error(c.errors.join("; ") || `not a technique path: ${action.path}`);
+      const t = techniqueById(c.path.technique)!;
+      return { shown: `${label}: ${PLAIN[t.id]?.plain ?? t.name}`, prompt: `Recompose ${where} with the technique ${t.name} (${formatPath(c.path)}): ${t.does} Run \`npm run techniques -- show ${t.id}\` and open the first pattern it lists for the move; same message, same length, same place. Write "technique": "${formatPath(c.path)}" and a one-line "techniqueWhy" on the beat in reel.json. ${keep}\n${renderTail(reelPath, b.id, audio)}` };
+    }
+    case "ways": {
+      const near = (b as { technique?: string }).technique;
+      return { shown: `${label}: show me 3 other ways`, prompt: [
+        `Show the owner three other ways to do ${where}${near ? ` (it does ${near} now)` : ""}.`,
+        `1. \`npm run techniques -- suggest --kind ${b.kind ?? "statement"} "<the beat's words>"${near ? ` --near ${near.split("/")[2] ?? near}` : ""}\` and pick three techniques that differ from the current one and from each other (different operations where it makes sense).`,
+        `2. Compose each as its own composition next to the beat's: ${b.id}-way1.html, ${b.id}-way2.html, ${b.id}-way3.html (composition ids ${b.id}-way1…), same words, same length, the reel's personality. Put them in a scratch manifest ways-${b.id}.json (same format and fps as the reel) and render only that: \`npm run render -- ways-${b.id}.json --clips-only --no-record\`.`,
+        `3. Ask the owner with one AskUserQuestion: "Which way should beat ${i + 1} go?" — an option per way (label: the technique in plain words; description: what the viewer sees; preview: the clip's path), plus "Keep the current one".`,
+        `4. Swap the chosen composition in as the beat (its file becomes the beat's composition; record "technique" and "techniqueWhy"), re-render only this beat and rejoin the master: \`npm run render -- ${reelPath} --only ${b.id} --clips-only${audio ? " --sfx" : ""}\` then \`npm run render -- ${reelPath} --master-only${audio ? " --sfx" : ""}\`. Keep the other ways' files.`,
+      ].join("\n") };
+    }
   }
 }
 

@@ -944,6 +944,17 @@ made for them. The studio has a **Techniques** page (the live graph, examples, p
 **From a brief** mode on Create, and a Techniques step in the Personality. See
 [`skills/reelcut/references/techniques.md`](skills/reelcut/references/techniques.md).
 
+For the people using the studio, every technique is said plainly ("Make the number stand out: big, counting up")
+and has a **preview clip** in the default personality's look (`npm run techniques -- previews`, or the button on the
+Techniques page; made again when the personality changes). **Try a line** shows three ways to show any line. On a
+reel, each beat shows its technique and a strip shows the reel's shape; tap a beat to swap its technique or ask for
+**3 other ways**, rendered to pick from. A star favours a technique; recipes and series can carry a technique per kind
+of beat ("Save how these beats are done as a recipe"); a short tour opens the Techniques page the first time.
+
+**Client board**: a private link where a client approves a reel in stages (directions with their preview clips, the
+script and beat plan, the beat drafts, the final reel), approving each item or asking for a change. Claude stops
+after each stage and waits for the decision, which comes back into the chat.
+
 ### `npm test`
 
 ```bash
@@ -994,6 +1005,8 @@ npm run typecheck
 | Sound effects (`--sfx`) | ⚠️ placement and mixing tested; no sound library ships |
 | Watching video (agentic: map, search, any-fps looks, zoom, OCR, transcript, sound) | ✅ tested; a real master watched beat by beat, the studio Watch panel shown from a recorded watch session (a live studio run is untried) |
 | Techniques taxonomy and graph engine | ✅ tested; five graph patterns rendered and passing every gate, the studio's Techniques page and brief mode shown in screenshots (a live studio run is untried) |
+| Technique previews, steering beats, recipes, first-run tour | ✅ tested; all 69 previews rendered and passing every gate, the Techniques page, beat sheet and reel panel shown in screenshots (a live Claude run of "3 other ways" is untried) |
+| Client approval board | ⚠️ tested and its page shown in screenshots through the review server locally; a client reached over the Cloudflare tunnel is untried |
 | Clawd, the Claude mascot | ✅ 30+ acts in every style, 70 pack poses, seven patterns rendered and passing every gate, transparent overlays, its own sounds |
 | Data sourcing and charts | ⚠️ specified, not built |
 

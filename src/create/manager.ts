@@ -682,7 +682,7 @@ function meta(s: Session): SessionMeta { const { events: _e, ...m } = s; return 
 export function reelState(reelPath: string | undefined): unknown {
   if (!reelPath || !existsSync(reelPath)) return null;
   const dir = path.dirname(reelPath);
-  let manifest: { beats?: { id: string; durationSeconds?: number; composition?: string; style?: string; kind?: string }[]; format?: string } = {};
+  let manifest: { beats?: { id: string; durationSeconds?: number; composition?: string; style?: string; kind?: string; technique?: string; techniqueWhy?: string }[]; format?: string } = {};
   try { manifest = JSON.parse(readFileSync(reelPath, "utf8")); } catch { return { dir, beats: [], error: "reel.json does not parse yet" }; }
   // Each file carries its modified time, so a beat Claude re-renders reloads in the page instead of staying cached.
   const at = (rel: string) => { const p = path.join(dir, rel); try { return `${p}#${Math.round(statSync(p).mtimeMs)}`; } catch { return undefined; } };
@@ -690,7 +690,7 @@ export function reelState(reelPath: string | undefined): unknown {
   const shots = existsSync(measureDir) ? readdirSync(measureDir).filter((f) => /\.(png|jpe?g)$/.test(f)) : [];
   let start = 0;
   const beats = (manifest.beats ?? []).map((b) => ({
-    id: b.id, seconds: b.durationSeconds, style: b.style, kind: b.kind, start: (start += b.durationSeconds ?? 0) - (b.durationSeconds ?? 0),
+    id: b.id, seconds: b.durationSeconds, style: b.style, kind: b.kind, technique: b.technique, techniqueWhy: b.techniqueWhy, start: (start += b.durationSeconds ?? 0) - (b.durationSeconds ?? 0),
     clip: at(`clips/${b.id}.mp4`),
     frame: shots.filter((f) => f.startsWith(b.id)).sort().map((f) => path.join(measureDir, f)).at(-1),
   }));

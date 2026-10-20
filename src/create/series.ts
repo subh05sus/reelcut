@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { reelcutHome } from "../library/store.js";
 import type { Settings } from "./manager.js";
+import { cleanTechniques, techniquesPrompt, type TechniqueByKind } from "./recipes.js";
 
 /**
  * A series: episodes that share an intro, an outro, a personality and settings. Episode 1 makes the intro and outro;
@@ -16,6 +17,8 @@ export interface Series {
   /** What the outro shows ("follow for part N+1"). */
   outro: string;
   settings: Partial<Settings>;
+  /** The technique each kind of beat starts from, the same in every episode. */
+  techniques?: TechniqueByKind;
   /** Conversations, in episode order. */
   episodes: string[];
   createdAt: string;
@@ -35,6 +38,7 @@ export function saveSeries(input: Partial<Series> & { name: string }): Series {
     intro: String(input.intro ?? old?.intro ?? "").trim().slice(0, 600),
     outro: String(input.outro ?? old?.outro ?? "").trim().slice(0, 600),
     settings: Object.fromEntries(Object.entries(input.settings ?? old?.settings ?? {}).filter(([, v]) => typeof v === "string" && v)) as Partial<Settings>,
+    ...(Object.keys(cleanTechniques(input.techniques ?? old?.techniques)).length ? { techniques: cleanTechniques(input.techniques ?? old?.techniques) } : {}),
     episodes: old?.episodes ?? [],
     createdAt: old?.createdAt ?? new Date().toISOString(),
   };
@@ -67,6 +71,7 @@ export function seriesPrompt(s: Series, episode: number, previousReel: string | 
     lines.push("- This is the first episode: make the intro and outro carefully, as reusable compositions (episode number and title as",
       "  plain text in one element each), because every later episode copies them.");
   }
+  lines.push(...techniquesPrompt(s.techniques, "The series"));
   lines.push("");
   return lines;
 }
