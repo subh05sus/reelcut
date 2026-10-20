@@ -35,6 +35,8 @@
     "dashboard": "tsx skills/reelcut/scripts/dashboard.ts",
     "clawd": "tsx skills/reelcut/scripts/clawd.ts",
     "watch": "tsx skills/reelcut/scripts/watch.ts",
+    "techniques": "tsx skills/reelcut/scripts/techniques.ts",
+    "graph": "tsx skills/reelcut/scripts/graph.ts",
     "reelcut": "tsx skills/reelcut/scripts/cmd.ts"
   },
   "dependencies": {
