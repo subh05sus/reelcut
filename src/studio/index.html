@@ -515,7 +515,8 @@
   .cr-tabs { display: none; }
   /* Techniques: the live graph beside the list or the chosen technique. */
   .tq { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 24px; align-items: start; }
-  .tq-graph { position: sticky; top: 72px; aspect-ratio: 1; width: 100%; max-height: calc(100vh - 120px); }
+  /* Square, and as big as the column and the window allow: the world inside is square too. */
+  .tq-graph { position: sticky; top: 72px; aspect-ratio: 1; width: min(100%, calc(100vh - 120px)); max-width: 100%; margin: 0 auto; }
   .tq-graph iframe { width: 100%; height: 100%; border: 0; border-radius: 28px; background: var(--cell); }
   .tq-side { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
   .tq-side .cap { margin-top: 14px; }
@@ -2869,7 +2870,7 @@ async function renderClawd() {
 window.addEventListener("message", (e) => { if (e.origin === location.origin && e.data && e.data.clawdSheetHeight) { const f = $("#cw-sheet"); if (f) f.style.height = `${e.data.clawdSheetHeight}px`; } });
 
 // ---------- techniques: operation → domain → technique → timing → execution, drawn by the reels' own graph engine
-const tq = { cat: null, sel: null, op: "", q: "" };
+const tq = { cat: null, sel: null, op: "", dom: "", q: "" };
 const tqLook = () => (document.documentElement.dataset.theme === "dark" || (!document.documentElement.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches) ? "ink" : "paper");
 async function renderTechniques(id) {
   tq.cat = await api("/api/techniques");
@@ -2888,13 +2889,23 @@ async function renderTechniques(id) {
     </div>
     <p class="foot-note">${esc(c.credit)}</p>`;
   $("#tq-accept")?.addEventListener("click", async () => { try { const r = await post("/api/techniques/accept", {}); toast(`Accepted ${r.accepted} pattern tag sets`); renderTechniques(); } catch (e) { toast(e.message); } });
-  $("#tq-op").addEventListener("change", (e) => { tq.op = e.target.value; paintTqSide(); });
+  $("#tq-op").addEventListener("change", (e) => { tq.op = e.target.value; tq.dom = ""; paintTqSide(); });
   $("#tq-q").addEventListener("input", debounce((e) => { tq.q = e.target.value.trim().toLowerCase(); paintTqSide(); }, 200));
   paintTqSide();
+  sizeTqGraph();
   if (tq.sel) $("#tq-frame").addEventListener("load", () => $("#tq-frame").contentWindow.postMessage({ focusTechnique: tq.sel }, location.origin), { once: true });
 }
+/** The graph's square: as wide as its column, and never taller than the window below where it starts. */
+function sizeTqGraph() {
+  const box = $(".tq-graph"); if (!box) return;
+  const col = box.parentElement.getBoundingClientRect().width - (matchMedia("(max-width: 1099px)").matches ? 0 : 404);
+  const room = window.innerHeight - Math.max(72, box.getBoundingClientRect().top + window.scrollY - window.scrollY) - 24;
+  box.style.width = `${Math.max(320, Math.min(col, room))}px`;
+}
+window.addEventListener("resize", debounce(() => { if (state.tab === "techniques") sizeTqGraph(); }, 100));
 function tqMatch(t) {
   if (tq.op && !t.operations.includes(tq.op)) return false;
+  if (tq.dom && t.domain !== tq.dom) return false;
   return !tq.q || `${t.name} ${t.id} ${t.does} ${t.when} ${t.domain}`.toLowerCase().includes(tq.q);
 }
 function paintTqSide() {
@@ -2924,13 +2935,21 @@ function paintTqSide() {
     return;
   }
   const list = c.techniques.filter(tqMatch);
-  box.innerHTML = `${c.domains.map((d) => { const ts = list.filter((x) => x.domain === d.id); return ts.length ? `<div class="cap">${esc(d.name)} <span class="note" style="font-weight:400">${esc(d.does)}</span></div><div class="group">${ts.map((x) => `<button class="row-i tq-row" data-t="${esc(x.operations[0])}/${esc(x.domain)}/${esc(x.id)}"><span class="t grow" style="text-align:left">${esc(x.name)}</span>${x.score.up ? `<span class="badge ok">${x.score.up} Works</span>` : ""}<span class="s">${esc(x.operations.map((o) => c.operations.find((y) => y.id === o)?.name || o).join(" · "))}</span></button>`).join("")}</div>` : ""; }).join("") || emptyState("techniques", "Nothing matches", "Try another word or all operations.")}`;
+  const filt = [tq.op && c.operations.find((o) => o.id === tq.op)?.name, tq.dom && c.domains.find((d) => d.id === tq.dom)?.name].filter(Boolean);
+  box.innerHTML = `${filt.length ? `<div class="row-i" style="padding:0 0 4px"><span class="grow note">Showing ${esc(filt.join(" · "))}</span><button class="plain sm" id="tq-clear">Show all</button></div>` : ""}${c.domains.map((d) => { const ts = list.filter((x) => x.domain === d.id); return ts.length ? `<div class="cap">${esc(d.name)} <span class="note" style="font-weight:400">${esc(d.does)}</span></div><div class="group">${ts.map((x) => `<button class="row-i tq-row" data-t="${esc(x.operations[0])}/${esc(x.domain)}/${esc(x.id)}"><span class="t grow" style="text-align:left">${esc(x.name)}</span>${x.score.up ? `<span class="badge ok">${x.score.up} Works</span>` : ""}<span class="s">${esc(x.operations.map((o) => c.operations.find((y) => y.id === o)?.name || o).join(" · "))}</span></button>`).join("")}</div>` : ""; }).join("") || emptyState("techniques", "Nothing matches", "Try another word or all operations.")}`;
+  $("#tq-clear", box)?.addEventListener("click", () => { tq.op = ""; tq.dom = ""; const op = $("#tq-op"); if (op) op.value = ""; $("#tq-frame")?.contentWindow.postMessage({ focusOut: true }, location.origin); paintTqSide(); });
   $$(".tq-row", box).forEach((b) => b.addEventListener("click", () => { tq.sel = b.dataset.t; history.replaceState(null, "", `#techniques/${encodeURIComponent(tq.sel)}`); $("#tq-frame")?.contentWindow.postMessage({ focusTechnique: tq.sel }, location.origin); paintTqSide(); }));
 }
-// The graph says which technique was clicked; the side panel follows it.
+// The graph says what was clicked; the side panel follows it: a technique opens, an operation or a domain filters the list.
 window.addEventListener("message", (e) => {
-  if (e.origin !== location.origin || !e.data?.techniquePick || state.tab !== "techniques") return;
-  tq.sel = e.data.techniquePick.path; history.replaceState(null, "", `#techniques/${encodeURIComponent(tq.sel)}`); paintTqSide();
+  if (e.origin !== location.origin || state.tab !== "techniques") return;
+  if (e.data?.techniquePick) { tq.sel = e.data.techniquePick.path; history.replaceState(null, "", `#techniques/${encodeURIComponent(tq.sel)}`); paintTqSide(); return; }
+  if (e.data?.graphPick) {
+    tq.sel = null; tq.op = e.data.graphPick.operation || ""; tq.dom = e.data.graphPick.domain || "";
+    history.replaceState(null, "", "#techniques");
+    const op = $("#tq-op"); if (op) op.value = tq.op;
+    paintTqSide();
+  }
 });
 
 function renderSounds() {

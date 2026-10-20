@@ -87,12 +87,16 @@
         ang[id] = a.reduce(function (x, y) { return x + y; }, 0) / a.length;
       });
     })(s.roots);
-    var ry = o.squash || 1;
+    var ry = o.squash || 1, ringIndex = {}, byDepth = {};
+    // Each node's place along its own ring, in angle order (for ringJitter).
+    s.order.slice().sort(function (a, b) { return (ang[a] || 0) - (ang[b] || 0); }).forEach(function (id) { var d = s.byId[id].depth; byDepth[d] = (byDepth[d] || 0); ringIndex[id] = byDepth[d]++; });
     s.order.forEach(function (id) {
       var d = s.byId[id].depth, r = radii[Math.min(d, radii.length - 1)] + (d >= radii.length ? (d - radii.length + 1) * 110 : 0);
       if (d === 0 && s.roots.length > 1) r = radii[0] || 110;
       // Leaves on two or three staggered rings read as a cloud rather than a single bead necklace.
       if (o.leafJitter && !s.byId[id].kids.length && d > 0) r += ((leaves.indexOf(id) % 3) - 1) * o.leafJitter;
+      // o.ringJitter { depth: px }: a crowded ring of labels steps in, middle, out, so neighbours never collide.
+      if (o.ringJitter && o.ringJitter[d] && s.byId[id].kids.length) r += ((ringIndex[id] % 3) - 1) * o.ringJitter[d];
       var a = (d === 0 && s.roots.length > 1 ? (o.startAngle || -90) + 360 * s.roots.indexOf(id) / s.roots.length : ang[id]) * Math.PI / 180;
       pos[id] = [cx + Math.cos(a) * r, cy + Math.sin(a) * r * ry];
     });
