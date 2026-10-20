@@ -56,6 +56,13 @@ for one creator with approval flows in mind.
   Claude waits for an approval before moving to the next stage when the reel has a board.
 - The board shows the studio's plain names, never paths.
 
+## Status (2026-10-20)
+
+All three phases built and pushed. Tested: the 69 previews render in the plain look and in the owner's personality
+and pass every gate; sketches of a German line; the Techniques page, beat sheet, reel panel and the client's board
+page in screenshots; boards, decisions and the review server in tests. Untried: a live Claude run of "3 other ways"
+and of a board's stages end to end, and a client reaching the board over the Cloudflare tunnel.
+
 ## Not now
 
 Insights ("what works for you", weekly suggestions, competitor analysis by technique) — chosen for later.

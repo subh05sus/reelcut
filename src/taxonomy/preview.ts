@@ -95,11 +95,11 @@ function scale(mode: "disparity" | "exaggerate" | "perspective" | "crop" | "cent
       js: `RC.styleEnter(tl, qa(".x:not(.k)"), 0.2); tl.fromTo(q(".k"), { scale: 0.16 }, { scale: 1, duration: 0.9, ease: "spring.reward" }, 0.9); tl.set(q(".k .on"), { opacity: 1 }, 0.9);`,
     };
     case "exaggerate": return {
-      html: `<div class="track" style="${box(84, 640, 700, 70)}"></div><div class="bar" style="${box(84, 640, 700, 70)}"></div><div class="tick" style="${box(780, 600, 4, 150)}"></div>`,
-      js: `RC.rise(tl, qa(".track, .tick"), 0.2, { y: 0 }); tl.fromTo(q(".bar"), { scaleX: 0 }, { scaleX: 0.9, duration: 0.7, ease: "power2.out" }, 0.5); tl.to(q(".bar"), { scaleX: 1.9, duration: 0.8, ease: "spring.reward" }, 1.3);`,
+      html: `<div class="track" style="${box(84, 440, 700, 70)}"></div><div class="bar soft" style="${box(84, 440, 300, 70)}"></div><div class="track" style="${box(84, 540, 700, 70)}"></div><div class="bar soft" style="${box(84, 540, 380, 70)}"></div><div class="track" style="${box(84, 640, 700, 70)}"></div><div class="bar k" style="${box(84, 640, 700, 70)}"></div><div class="tick" style="${box(762, 600, 40, 40)};border-radius:50%"></div>`,
+      js: `RC.rise(tl, qa(".track, .tick, .bar.soft"), 0.2, { y: 0, stagger: 0.06 }); tl.fromTo(q(".bar.k"), { scaleX: 0 }, { scaleX: 0.9, duration: 0.7, ease: "power2.out" }, 0.5); tl.to(q(".bar.k"), { scaleX: 1.9, duration: 0.8, ease: "spring.reward" }, 1.3);`,
     };
     case "perspective": return {
-      html: svg(`<path class="lk" d="M 0 1080 L 540 520 L 1080 1080 M 180 1080 L 540 520 M 900 1080 L 540 520 M 0 520 L 1080 520"/>`) + `<div class="x far" style="${box(520, 430, 40, 90)}"></div>` + mark(150, 690, 300, "k"),
+      html: svg(`<path class="lk" d="M 0 1080 L 540 520 L 1080 1080 M 180 1080 L 540 520 M 900 1080 L 540 520 M 360 1080 L 540 520 M 720 1080 L 540 520"/>`) + `<div class="x far" style="${box(520, 430, 40, 90)}"></div>` + mark(150, 690, 300, "k"),
       js: `RC.draw(tl, R + ".lk", 0.2, { duration: 0.8 }); RC.rise(tl, q(".far"), 0.7, { y: 10 }); tl.fromTo(q(".k"), { scale: 0.1, y: -200 }, { scale: 1, y: 0, duration: 0.9, ease: "spring.default" }, 1.1); tl.set(q(".k .on"), { opacity: 1 }, 1.1);`,
     };
     case "crop": return {
@@ -139,7 +139,7 @@ function group(mode: "proximity" | "similar" | "enclose" | "connect" | "hub" | "
       const cells = grid(5, 1, 120, 40, 540, 660);
       return {
         html: cells.map((p, i) => mark(p.x, p.y, 120, i >= 1 && i <= 3 ? "k" : "", true)).join("") + svg(`<rect class="lk acc" x="${cells[1]!.x - 30}" y="${cells[1]!.y - 30}" width="${3 * 120 + 2 * 40 + 60}" height="180" rx="44"/>`),
-        js: `RC.styleEnter(tl, qa(".x"), 0.2); RC.draw(tl, R + ".lk", 1.0, { duration: 0.8 }); tl.to(qa(".x.k .on"), { opacity: 1, duration: 0.3, stagger: 0.08 }, 1.5);`,
+        js: `RC.pop(tl, qa(".x"), 0.1, { stagger: 0.06 }); RC.draw(tl, R + ".lk", 1.0, { duration: 0.8 }); tl.to(qa(".x.k .on"), { opacity: 1, duration: 0.3, stagger: 0.08 }, 1.5);`,
       };
     }
     case "connect": {
@@ -158,10 +158,10 @@ function group(mode: "proximity" | "similar" | "enclose" | "connect" | "hub" | "
       };
     }
     case "converge": {
-      const from = Array.from({ length: 10 }, (_, i) => { const a = (i / 10) * Math.PI * 2; return [540 + Math.cos(a) * 520, 660 + Math.sin(a) * 420]; });
+      const from = Array.from({ length: 10 }, (_, i) => { const a = (i / 10) * Math.PI * 2; return [540 + Math.cos(a) * 380, 660 + Math.sin(a) * 280]; });
       return {
         html: from.map(([x, y]) => mark(Math.round(x! - 30), Math.round(y! - 30), 60, "bit", true)).join("") + mark(440, 560, 200, "k", true),
-        js: `tl.set(q(".k .on"), { opacity: 1 }, 0); tl.set(q(".k"), { scale: 0 }, 0); RC.styleEnter(tl, qa(".bit"), 0.15); ${from.map(([x, y], i) => `tl.to(qa(".bit")[${i}], { x: ${Math.round(540 - x!)}, y: ${Math.round(660 - y!)}, duration: 0.9, ease: "power3.in" }, ${(0.7 + i * 0.04).toFixed(2)});`).join(" ")} tl.to(qa(".bit"), { opacity: 0, duration: 0.15 }, 1.55); tl.to(q(".k"), { scale: 1, duration: 0.8, ease: "spring.reward" }, 1.6);`,
+        js: `tl.set(q(".k .on"), { opacity: 1 }, 0); tl.set(q(".k"), { scale: 0 }, 0); RC.pop(tl, qa(".bit"), 0.05, { stagger: 0.03 }); ${from.map(([x, y], i) => `tl.to(qa(".bit")[${i}], { x: ${Math.round(540 - x!)}, y: ${Math.round(660 - y!)}, duration: 0.9, ease: "power3.in" }, ${(0.7 + i * 0.04).toFixed(2)});`).join(" ")} tl.to(qa(".bit"), { opacity: 0, duration: 0.15 }, 1.55); tl.to(q(".k"), { scale: 1, duration: 0.8, ease: "spring.reward" }, 1.6);`,
       };
     }
   }
@@ -221,8 +221,8 @@ function depth(mode: "stack" | "fly" | "push" | "pull" | "tilt" | "frame"): Scen
       js: `RC.rise(tl, q(".card"), 0.2, { y: 30 }); tl.fromTo(q(".card"), { rotationX: 0, rotationZ: 0, scale: 1 }, { rotationX: 52, rotationZ: -22, scale: 0.9, duration: 1.2, ease: "spring.default" }, 1.0);`,
     };
     case "frame": return {
-      html: `<div class="phone" style="${box(390, 370, 300, 580)}"><i class="sk" style="left:28px;top:40px;width:60%"></i><i class="sk" style="left:28px;top:84px;width:40%"></i><i class="sk" style="left:28px;top:470px;width:70%"></i><div class="pic"><i></i></div></div>`,
-      js: `RC.rise(tl, q(".phone"), 0.1, { y: 40 }); tl.fromTo(q(".pic"), { yPercent: 55 }, { yPercent: 0, duration: 0.9, ease: "spring.default" }, 0.1); tl.fromTo(q(".pic i"), { scale: 0 }, { scale: 1, duration: 0.7, ease: "spring.reward" }, 1.4);`,
+      html: `<div class="phone" style="${box(390, 370, 300, 580)}"><i class="sk" style="left:28px;top:40px;width:60%"></i><i class="sk" style="left:28px;top:84px;width:40%"></i><i class="sk" style="left:28px;top:470px;width:70%"></i><div class="pic"><i></i><b class="sk" style="left:28px;top:330px;width:70%;background:var(--ground);opacity:.7"></b><b class="sk" style="left:28px;top:374px;width:45%;background:var(--ground);opacity:.7"></b></div></div>`,
+      js: `RC.rise(tl, q(".phone"), 0.1, { y: 40 }); tl.fromTo(q(".pic"), { yPercent: 18 }, { yPercent: 0, duration: 0.9, ease: "spring.default" }, 0.1); tl.fromTo(q(".pic i"), { scale: 0.3 }, { scale: 1, duration: 0.7, ease: "spring.reward" }, 0.1);`,
     };
   }
 }
@@ -393,7 +393,7 @@ function iface(mode: "ui" | "cursor" | "prompt" | "notify" | "toggle" | "code" |
     };
     case "code": return {
       html: `<div class="code" style="${box(120, 400, 840, 470)}">${["<b>const</b> reel = <s>await</s> make({", "  script: <u>\"hook.md\"</u>,", "  look: <u>\"atlas\"</u>,", "  technique: <u>\"reveal\"</u>,", "});"].map((l, i) => `<div class="cl ${i === 3 ? "hot" : ""}">${i === 3 ? `<i class="hb"></i>` : ""}${l}</div>`).join("")}</div>`,
-      js: `RC.rise(tl, q(".code"), 0.12, { y: 30 }); tl.fromTo(qa(".cl"), { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.22, ease: "none", stagger: 0.1 }, 0.12); tl.fromTo(q(".hb"), { opacity: 0 }, { opacity: 1, duration: 0.4 }, 1.9);`,
+      js: `RC.rise(tl, q(".code"), 0.12, { y: 30 }); tl.fromTo(qa(".cl"), { clipPath: "inset(0 55% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.18, ease: "none", stagger: 0.06 }, 0.12); tl.fromTo(q(".hb"), { opacity: 0 }, { opacity: 1, duration: 0.4 }, 1.9);`,
     };
     case "pathcard": return {
       html: `<div class="pcard" style="${box(170, 360, 740, 600)}">${[["01", "Reveal"], ["02", "Space"], ["03", "From depth"], ["04", "Build"]].map(([n, t]) => `<div class="pr"><i></i><small>${n}</small><span>${t}</span></div>`).join("")}</div>`,
@@ -422,7 +422,7 @@ function sceneFor(id: string, sample: string): Scene {
     case "value-contrast": return field("light");
     case "selective-focus": return field("focus");
     case "texture-against-flat": return field("texture");
-    case "complementary-pairing": return { html: `<div class="half pa" style="${box(84, 420, 456, 480)}"><i class="dotb"></i></div><div class="half pb" style="${box(540, 420, 456, 480)}"><i class="dotb"></i></div>`, js: `tl.fromTo(q(".pa"), { x: -560 }, { x: 0, duration: 0.8, ease: "spring.default" }, 0.3); tl.fromTo(q(".pb"), { x: 560 }, { x: 0, duration: 0.8, ease: "spring.default" }, 0.45); RC.pop(tl, qa(".dotb"), 0.55, { stagger: 0.15 });` };
+    case "complementary-pairing": return { html: `<div class="half pa" style="${box(84, 420, 456, 480)}"><i class="dotb"></i><i class="dotb d2"></i></div><div class="half pb" style="${box(540, 420, 456, 480)}"><i class="dotb"></i><i class="dotb d2"></i></div>`, js: `tl.fromTo(q(".pa"), { x: -560 }, { x: 0, duration: 0.8, ease: "spring.default" }, 0.3); tl.fromTo(q(".pb"), { x: 560 }, { x: 0, duration: 0.8, ease: "spring.default" }, 0.45); RC.pop(tl, qa(".dotb"), 0.55, { stagger: 0.15 });` };
     case "silhouette": return { html: svg(`<circle class="disc" cx="540" cy="660" r="270"/><g class="sil"><circle cx="540" cy="560" r="80"/><path d="M 400 860 C 400 700, 680 700, 680 860 Z"/></g>`), js: `RC.pop(tl, q(".disc"), 0.2); RC.draw(tl, R + ".sil > *", 0.6, { duration: 0.8, stagger: 0.1 }); tl.fromTo(q(".sil"), { fillOpacity: 0 }, { fillOpacity: 1, duration: 0.5 }, 1.5);` };
     case "crowd-and-one": return crowd();
     case "abundance-wall": return wall();
@@ -494,7 +494,7 @@ const CSS = (p: Palette) => {
   #root .lk { fill:none; stroke:var(--soft); stroke-width:6; stroke-linecap:round; } #root .lk.acc { stroke:var(--accent); } #root .lk.dash { stroke-dasharray:4 18; stroke:var(--accent); }
   #root .fig b { position:absolute; left:33px; top:0; width:44px; height:44px; border-radius:50%; background:var(--soft); } #root .fig u { position:absolute; left:15px; top:52px; width:80px; height:58px; border-radius:40px 40px 14px 14px; background:var(--soft); }
   #root .fig { position:absolute; z-index:3; }
-  #root .track { position:absolute; border-radius:35px; background:var(--soft); z-index:3; } #root .bar { position:absolute; border-radius:35px; background:var(--accent); transform-origin:0 50%; z-index:4; } #root .tick { position:absolute; background:var(--ink); z-index:5; border-radius:2px; }
+  #root .track { position:absolute; border-radius:35px; background:var(--soft); z-index:3; } #root .bar { position:absolute; border-radius:35px; background:var(--accent); transform-origin:0 50%; z-index:4; } #root .bar.soft { background:color-mix(in oklab, var(--ink) 34%, var(--ground)); } #root .tick { position:absolute; background:var(--ink); z-index:5; border-radius:2px; }
   #root .far { background:var(--soft); border-radius:6px; }
   #root .void { position:absolute; z-index:3; }
   #root .ring { position:absolute; border-radius:50%; border:10px solid var(--accent); z-index:2; }
@@ -518,7 +518,8 @@ const CSS = (p: Palette) => {
   #root .half { position:absolute; z-index:3; border-radius:36px; overflow:hidden; } #root .half .art { width:100%; height:100%; }
   #root .half path { fill:none; stroke-width:12; stroke-linecap:round; stroke-linejoin:round; }
   #root .yes { background:var(--accent); } #root .yes path { stroke:var(--on-accent); } #root .no { background:var(--soft); } #root .no path { stroke:var(--ink); }
-  #root .pa { background:var(--accent); border-radius:36px 0 0 36px; } #root .pb { background:var(--accent-2); border-radius:0 36px 36px 0; }
+  #root .pa { background:linear-gradient(160deg, color-mix(in oklab, var(--accent) 70%, #ffffff), var(--accent) 55%); border-radius:36px 0 0 36px; } #root .pb { background:linear-gradient(200deg, color-mix(in oklab, var(--accent-2) 70%, #ffffff), var(--accent-2) 55%); border-radius:0 36px 36px 0; }
+  #root .dotb.d2 { left:80px; top:330px; width:70px; height:70px; } #root .pb .dotb.d2 { left:310px; top:330px; }
   #root .dotb { position:absolute; left:168px; top:180px; width:120px; height:120px; border-radius:50%; } #root .pa .dotb { background:var(--accent-2); } #root .pb .dotb { background:var(--accent); }
   #root .disc { fill:var(--soft); } #root .sil > * { fill:var(--ink); stroke:var(--ink); stroke-width:6; }
   #root .pl { fill:var(--accent); } #root .plane { transform-box:fill-box; }

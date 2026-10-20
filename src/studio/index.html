@@ -1645,7 +1645,7 @@ async function openBeat(r, beatId) {
     body: `${b.clip ? `<video class="cr-beat-pv" src="${media(b.clip)}" muted loop playsinline autoplay style="aspect-ratio:${FMT_RATIO[r.format] || "1 / 1"}"></video>` : ""}
       ${live ? `<p class="foot-note" style="margin:0 0 12px">Claude is working: this reaches it at its next step.</p>` : ""}
       <div class="cap">What it does</div>
-      ${b.technique ? `<div class="group"><div class="row-i"><span class="t grow"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${OPC[beatOp(b)] || "var(--accent)"};margin-right:6px"></span>${esc((await loadTqNames())[beatTq(b)] || beatTq(b))}<small class="note" style="display:block;margin-top:2px">${esc(b.techniqueWhy || OPN[beatOp(b)] || "")}</small></span></div></div>` : `<p class="note" style="margin:0 0 6px">No technique named for this beat yet.</p>`}
+      ${b.technique ? `<div class="group"><div class="row-i"><span class="t grow"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${OPC[beatOp(b)] || "var(--accent)"};margin-right:6px"></span>${esc((await loadTqNames())[beatTq(b)] || beatTq(b))}<small class="note" style="display:block;margin-top:2px">${esc(b.techniqueWhy || OPN[beatOp(b)] || "")}</small></span>${(() => { const fav = (tq.cat?.favour || []).includes(beatTq(b)); return `<button class="sm ${fav ? "" : "plain"}" id="bt-fav" title="${fav ? "Favoured by your personality" : "Favour it: suggestions reach for it first"}"><span class="tq-star">${fav ? "★" : "☆"}</span></button>`; })()}</div></div>` : `<p class="note" style="margin:0 0 6px">No technique named for this beat yet.</p>`}
       <div class="cap">Do it another way</div>
       <div class="bt-ways" id="bt-ways"><p class="note">Finding techniques for these words…</p></div>
       <div class="acts" style="justify-content:flex-start;margin-top:8px"><button class="sm" data-act="ways">Show me 3 other ways, rendered</button></div>
@@ -1664,6 +1664,10 @@ async function openBeat(r, beatId) {
       <div class="acts"><button class="plain" id="bt-remove" style="color:var(--red);margin-right:auto">Remove beat</button><button data-sclose>Done</button></div>`,
     bind: (sh) => {
       $$("[data-act]", sh).forEach((x) => x.addEventListener("click", () => sendEdit(beatId, { kind: x.dataset.act })));
+      $("#bt-fav", sh)?.addEventListener("click", async (e) => {
+        const id = beatTq(b), on = !(tq.cat?.favour || []).includes(id);
+        try { const r = await post("/api/techniques/favourite", { id, star: on }); if (tq.cat) tq.cat.favour = r.favour; e.currentTarget.innerHTML = `<span class="tq-star">${on ? "★" : "☆"}</span>`; e.currentTarget.classList.toggle("plain", !on); toast(on ? "Favoured: suggestions reach for it first" : "No longer a favourite"); } catch (err) { toast(err.message); }
+      });
       // The best other techniques for these words, with their preview clips: pick one and Claude recomposes the beat.
       api(`/api/techniques/suggest?n=5&text=${encodeURIComponent(info.text.join(" "))}&kind=${encodeURIComponent(b.kind || "")}&near=${encodeURIComponent(beatTq(b))}`).then((res) => {
         const box = $("#bt-ways", sh); if (!box) return;
@@ -3129,7 +3133,7 @@ function paintTqSide() {
     const fav = (c.favour || []).includes(t.id);
     box.innerHTML = `<button class="plain sm" id="tq-back">${ic("back", 14)} All techniques</button>
       ${tqVideo(t.id)}
-      <div class="row-i" style="padding:0;gap:8px;align-items:flex-start"><h3 class="grow" style="margin:8px 0 2px">${esc(t.plain)}</h3><button class="sm ${fav ? "" : "plain"}" id="tq-fav" aria-pressed="${fav}" title="${fav ? "Favoured by your personality" : "Favour it: suggestions reach for it first"}"><span class="tq-star">${fav ? "★" : "☆"}</span> ${fav ? "Favourite" : "Favour"}</button></div>
+      <div style="display:flex;gap:8px;align-items:flex-start"><h3 class="grow" style="margin:8px 0 2px;flex:1">${esc(t.plain)}</h3><button class="sm ${fav ? "" : "plain"}" id="tq-fav" aria-pressed="${fav}" title="${fav ? "Favoured by your personality" : "Favour it: suggestions reach for it first"}"><span class="tq-star">${fav ? "★" : "☆"}</span> ${fav ? "Favourite" : "Favour"}</button></div>
       <p class="note" style="margin:0">${esc(t.name)} · ${esc(c.operations.find((o) => o.id === op)?.name || op)}</p>
       <p style="margin:10px 0 4px">${esc(t.does)}</p><p class="note" style="margin:0">For ${esc(t.when)}.</p>
       <details style="margin-top:10px"><summary class="note">Advanced: its path and tags</summary><code class="tq-path">${esc(path)}</code>
