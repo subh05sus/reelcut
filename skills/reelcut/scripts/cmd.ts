@@ -167,7 +167,11 @@ const commands: Record<string, { line: string; run: () => Promise<void> }> = {
     for (const f of scripts) {
       const { session } = await api<{ session: { id: string } }>("/api/create", { json: { title: f.replace(/\.[a-z0-9]+$/i, ""), settings } });
       const file = await upload(session.id, path.resolve(cwd, dir, f), "script");
-      await api(`/api/create/${session.id}/queue`, { json: { text: words, files: [file], batch, startAt } });
+      // An audio file with the script's name is its voiceover (a moment cut from a long video, a recorded read).
+      const stem = f.replace(/\.[a-z0-9]+$/i, "");
+      const vo = [".m4a", ".wav", ".mp3", ".aac"].map((x) => path.resolve(cwd, dir, stem + x)).find((x) => existsSync(x));
+      const files = vo ? [file, await upload(session.id, vo, "voiceover")] : [file];
+      await api(`/api/create/${session.id}/queue`, { json: { text: words, files, batch, startAt } });
     }
     out(`Queued ${scripts.length} reel${scripts.length > 1 ? "s" : ""}${tonight ? " for tonight at 1 AM" : ", starting now"}, one at a time and unattended: ${scripts.join(", ")}`);
     out(`Follow them with /reelcut status, or in the studio: ${await studio()}/#create`);

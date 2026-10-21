@@ -2020,15 +2020,17 @@ function renderLanding() {
   const mode = d.settings.mode || "script";
   const queued = list.filter((s) => s.status === "queued");
   $("#main").innerHTML = `${pageHead("Create")}<div class="intbar" id="intbar"></div>
-    <div class="cr-land"><h2>${mode === "write" ? "What should the reel be about?" : mode === "watch" ? "What do you want to know about the video?" : mode === "brief" ? "What's the brief?" : "What should the reel say?"}</h2>
+    <div class="cr-land"><h2>${mode === "write" ? "What should the reel be about?" : mode === "watch" ? "What do you want to know about the video?" : mode === "brief" ? "What's the brief?" : mode === "long" ? "Which long video should become reels?" : "What should the reel say?"}</h2>
       <p class="lede" style="margin:0 auto 16px">${mode === "write"
-        ? "Give Claude a topic, a link or your notes. It offers three hooks, writes the script in your voice and, once you approve it, makes the reel."
+        ? "Give Claude a topic, your notes, or a link to a blog post or article (it reads the page's own words). It offers three hooks, writes the script in your voice and, once you approve it, makes the reel."
         : mode === "brief"
         ? "Paste a brief or a campaign's big idea. Claude turns it into visual directions first (what the visuals must do, and the techniques that do it, with examples), you pick, and then it writes the script and makes the reel."
+        : mode === "long"
+        ? "Drop a podcast, a webinar or a talk, or paste its link. Claude transcribes it here on your Mac, finds the 3 to 5 strongest moments and asks which to keep. Each becomes its own reel with the real audio of that moment as its voiceover; the first is made now, the rest go in the batch."
         : mode === "watch"
         ? "Drop a video or paste a link, and ask. Claude watches it the way you would: a map first, then it jumps to what matters, re-watches the fast parts frame by frame, zooms in to read and listens. The answer comes with the frames that prove it."
         : "Paste your script or drop a .txt or .srt (drop several to make a batch), add a voiceover or assets, and say how it should feel. Claude makes the reel with /reelcut and asks what it needs right here."}</p>
-      <div style="display:flex;justify-content:center;margin-bottom:24px">${segHtml("cr-mode", [["script", `<span class="w-lg">I have a script</span><span class="w-sm">Script</span>`], ["write", `<span class="w-lg">Write it with Claude</span><span class="w-sm">Write</span>`], ["brief", `<span class="w-lg">From a brief</span><span class="w-sm">Brief</span>`], ["watch", `<span class="w-lg">Ask about a video</span><span class="w-sm">Video</span>`]], mode)}</div></div>
+      <div style="display:flex;justify-content:center;margin-bottom:24px">${segHtml("cr-mode", [["script", `<span class="w-lg">I have a script</span><span class="w-sm">Script</span>`], ["write", `<span class="w-lg">Write it with Claude</span><span class="w-sm">Write</span>`], ["brief", `<span class="w-lg">From a brief</span><span class="w-sm">Brief</span>`], ["long", `<span class="w-lg">From a long video</span><span class="w-sm">Long</span>`], ["watch", `<span class="w-lg">Ask about a video</span><span class="w-sm">Video</span>`]], mode)}</div></div>
     ${mode === "watch" ? `<div class="cr-sec"><div class="cap">Ask it to</div>
       <div class="cr-recipes">${WATCH_ASKS.map(([t, s2, q]) => `<button type="button" class="cr-recipe" data-ask="${esc(q)}"><span class="t">${esc(t)}</span><span class="s">${esc(s2)}</span></button>`).join("")}</div></div>` : `<div class="cr-sec"><div class="cap">Start from a recipe</div>
       <div class="cr-recipes">${recipes.map((r) => `<button type="button" class="cr-recipe ${d.settings.recipe === r.id ? "on" : ""}" data-recipe="${esc(r.id)}" aria-pressed="${d.settings.recipe === r.id}"><span class="t">${esc(r.name)}</span><span class="s">${esc(r.line || r.structure.slice(0, 3).join(", "))}${r.techniques && Object.keys(r.techniques).length ? ` · ${Object.keys(r.techniques).length} techniques` : ""}</span>${r.builtIn ? "" : `<span class="own">Yours</span>`}</button>`).join("")}
@@ -2036,7 +2038,7 @@ function renderLanding() {
     ${queued.length ? `<div class="cr-sec"><div class="cap">Batch <span class="note">${queued.length} waiting · one at a time</span></div><div class="group cr-list">${queued.map(sessionRow).join("")}</div></div>` : ""}
     ${list.filter((s) => s.status !== "queued").length ? `<div class="cr-sec" style="margin-bottom:300px"><div class="cap">Recent</div><div class="group cr-list">${list.filter((s) => s.status !== "queued").map(sessionRow).join("")}</div></div>` : `<div style="height:300px"></div>`}
     ${composerHtml(true)}`;
-  bindSeg("cr-mode", (v) => { d.settings.mode = v === "write" || v === "watch" || v === "brief" ? v : undefined; const keep = $("#cr-text").value; renderLanding(); $("#cr-text").value = keep; });
+  bindSeg("cr-mode", (v) => { d.settings.mode = v === "write" || v === "watch" || v === "brief" || v === "long" ? v : undefined; const keep = $("#cr-text").value; renderLanding(); $("#cr-text").value = keep; });
   $$("[data-ask]").forEach((b) => b.addEventListener("click", () => { const ta = $("#cr-text"); ta.value = b.dataset.ask; ta.focus(); ta.dispatchEvent(new Event("input")); }));
   $$("[data-recipe]").forEach((b) => {
     b.addEventListener("click", () => applyRecipe(b.dataset.recipe));
@@ -2150,7 +2152,7 @@ function composerHtml(first) {
     ${first ? `<div class="cr-batch" id="cr-batch" hidden></div>` : ""}
     <div class="files" id="cr-files">${cr.files.map((f, i) => `<span class="chip" data-rmfile="${i}">${ic("attach", 12)} ${esc(f.name)} <span style="color:var(--label-2)">${f.kind}</span> ${ic("x", 11)}</span>`).join("")}</div>
     <div class="row"><button class="icon" id="cr-attach" title="Add a script, a voiceover or assets" aria-label="Attach">${ic("attach", 18)}</button>
-      <textarea id="cr-text" rows="1" placeholder="${!first ? "Reply, or ask for a change…" : d.settings.mode === "write" ? "A topic, a link or your notes…" : d.settings.mode === "watch" ? "Ask about the video you drop here, or paste a link…" : d.settings.mode === "brief" ? "The brief, or the campaign's big idea…" : "Paste a script, or say what the reel should be about…"}"></textarea>
+      <textarea id="cr-text" rows="1" placeholder="${!first ? "Reply, or ask for a change…" : d.settings.mode === "write" ? "A topic, a link or your notes…" : d.settings.mode === "watch" ? "Ask about the video you drop here, or paste a link…" : d.settings.mode === "brief" ? "The brief, or the campaign's big idea…" : d.settings.mode === "long" ? "Drop the video here, or paste its link; anything to know about it?" : "Paste a script, or say what the reel should be about…"}"></textarea>
       <button class="send" id="cr-send" title="Send" aria-label="Send">${ic("up", 18)}</button></div>
     <div class="meta"><button class="plain sm" id="cr-model">${esc((cr.list?.models || []).find(([k]) => k === (cr.meta?.model ?? d.model))?.[1] || "Default model")} · ${esc((cr.list?.efforts || []).find(([k]) => k === (cr.meta?.effort ?? d.effort))?.[1] || "default")} effort</button><span class="grow"></span><span>Runs on your Claude login</span></div>
     <input type="file" id="cr-file" multiple hidden></div>`;
@@ -2186,7 +2188,7 @@ function bindComposer(first) {
     });
   }
   const pick = (kind, accept) => { const inp = $("#cr-file"); inp.accept = accept; inp.dataset.kind = kind; inp.click(); };
-  const watching = first && d.settings.mode === "watch";
+  const watching = first && (d.settings.mode === "watch" || d.settings.mode === "long");
   $("#cr-attach").addEventListener("click", (e) => openMenu(e.currentTarget, [
     { label: "A video to ask about", act: () => pick("video", "video/*,.mov,.mp4,.m4v,.webm,.mkv") },
     ...(watching ? [] : [{ sep: true }]),
@@ -2749,7 +2751,7 @@ async function renderPzList() {
   const list = (await api("/api/personalities")).personalities;
   setCount("personality", list.length || "");
   const strip = (p) => `<div class="pcard-strip">${(p.styles.length ? p.styles : [{ id: pz.cat.styles[0].id }]).map((st) => { const s = pzStyle(st.id), pal = p.palettes[st.id] || s.palettes[0]; return `<span>${[pal.ground, pal.ink, pal.accent, pal.accent2].map((c) => `<i style="background:${c}"></i>`).join("")}</span>`; }).join("")}</div>`;
-  $("#main").innerHTML = `${pageHead("Personality", { actions: `<button id="pz-new" class="primary">${ic("plus", 16)} New</button>` })}
+  $("#main").innerHTML = `${pageHead("Personality", { actions: `<button id="pz-site">From a website</button><button id="pz-new" class="primary">${ic("plus", 16)} New</button>` })}
     <p class="lede">A personality is how every reel looks, moves and sounds: up to three styles, their colours and type, motion, texture, signature moves, voice, sound, pacing and guardrails. The default one is used for every new reel; Step 0 confirms it in one line.</p>
     ${list.length ? `<div class="grid">${list.map((p) => { const err = p.findings.filter((f) => f.level === "error").length, warn = p.findings.filter((f) => f.level === "warn").length;
       return `<a class="card" href="#personality/${p.id}">${strip(p)}<div class="meta"><div class="name">${esc(p.name)}</div><div class="sub">${p.isDefault ? `<span class="badge identity">Default</span>` : ""}${p.styles.map((s) => `<span>${esc(pzStyle(s.id)?.name || s.id)}</span>`).join(" · ") || "No styles yet"}</div>
@@ -2757,6 +2759,26 @@ async function renderPzList() {
       : emptyState("personality", "Give your reels a personality", "Choose the styles, colours and type every reel is made in. Start from your brand, your taste or a surprise.", `<button class="primary" id="pz-new2">Create a personality</button>`)}`;
   const create = async () => { const r = await post("/api/personalities", { name: list.length ? "New personality" : "My personality" }); location.hash = `#personality/${r.personality.id}/start`; };
   $("#pz-new").addEventListener("click", create); $("#pz-new2")?.addEventListener("click", create);
+  $("#pz-site").addEventListener("click", () => openSheet({
+    title: "A personality from a website", sub: "The studio reads the site's colours, type and logo, and drafts a personality: your default one's styles and motion, in this brand's colours and nearest type. You adjust it after.",
+    body: `<div class="group"><label class="row-i"><span class="t" style="width:90px">Website</span><input class="grow" id="ps-url" placeholder="client.com" autocomplete="url" inputmode="url"></label></div>
+      <p class="foot-note">The logo goes to Review in the Library, like anything you drop in: nothing is used as a brand mark until you approve it.</p>
+      <div class="acts"><button data-sclose>Cancel</button><button class="primary" id="ps-go">Draft it</button></div>`,
+    bind: (sh) => {
+      const go = async (e) => {
+        const url = $("#ps-url", sh).value.trim(); if (!url) { toast("Give the website"); return; }
+        e.target.disabled = true; e.target.textContent = "Reading the site…";
+        try {
+          const r = await post("/api/personalities/from-site", { url });
+          closeSheet(); toast(`Drafted from ${r.colors.length} colours, ${r.pairing.why}${r.logo ? "; the logo is in Review" : ""}`);
+          location.hash = `#personality/${r.personality.id}/review`;
+        } catch (err) { toast(err.message); e.target.disabled = false; e.target.textContent = "Draft it"; }
+      };
+      $("#ps-go", sh).addEventListener("click", go);
+      $("#ps-url", sh).addEventListener("keydown", (e) => { if (e.key === "Enter") go({ target: $("#ps-go", sh) }); });
+      setTimeout(() => $("#ps-url", sh)?.focus(), 50);
+    },
+  }));
   paintIcons();
 }
 

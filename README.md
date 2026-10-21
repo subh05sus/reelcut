@@ -975,6 +975,14 @@ bundled pack's. **Add sound cues** proposes cues for each beat's own moments (ne
 has one; **Only my own sounds** uses `sfx suggest --mine`) and re-mixes the master and every clip's slice without
 rendering a frame. New reels have sound effects on unless the personality or the composer says otherwise.
 
+**New ways to start.** **From a long video** on Create: drop a podcast, webinar or talk; it is transcribed on the Mac
+(whisper), Claude proposes its 3 to 5 strongest moments, and each one you keep becomes a reel whose voiceover is that
+moment's real audio, cut on word edges (`npm run moments -- cut`); the first is made at once, the rest go in the batch
+(which now pairs each script with an audio file of the same name). **From a website** on the Personality page: a
+draft personality in the site's colours (adapted to each of your styles), its nearest bundled type, and its logo, which
+waits in Review. **Write it with Claude** reads a blog post or article link as the page's own words
+(`npm run article -- <url>`), so its figures are quoted exactly and traced to the page.
+
 ### `npm test`
 
 ```bash
@@ -1028,6 +1036,7 @@ npm run typecheck
 | Technique previews, steering beats, recipes, first-run tour | ✅ tested; all 69 previews rendered and passing every gate, the Techniques page, beat sheet and reel panel shown in screenshots (a live Claude run of "3 other ways" is untried) |
 | Hook check, 3 hooks and A/B, Instagram safe zones, other formats | ✅ tested; a real 72 s master checked, a hook variant composed, rendered, joined and swapped in, the Hook card and overlay shown in screenshots (Claude laying out another format live is untried) |
 | Sound on a finished reel (beat-snapping, cues, re-mix) | ✅ tested; cues added to a real 72 s reel from the owner's library and the master and clips re-mixed without a render (snapping a real track's cuts live is untried) |
+| Long video → reels, personality from a website, blog post → reel | ✅ tested; a spoken test video cut on word edges and re-transcribed, personalities drafted from three real sites with their logos, a real article read (a live Claude run of the long-video mode is untried) |
 | Client approval board | ⚠️ tested, with marks drawn on a frame in a headless browser, before/now and the owner's brand shown in screenshots through the review server locally; a client reached over the Cloudflare tunnel is untried |
 | Clawd, the Claude mascot | ✅ 30+ acts in every style, 70 pack poses, seven patterns rendered and passing every gate, transparent overlays, its own sounds |
 | Data sourcing and charts | ⚠️ specified, not built |

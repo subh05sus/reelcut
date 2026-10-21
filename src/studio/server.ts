@@ -55,6 +55,7 @@ import { fixHookPrompt, hookFresh, measureHook, readHook } from "../create/hook.
 import { abResult, hooksPrompt, readHooks, setAB, useVariant } from "../create/hooks.js";
 import { formatsPrompt, formatVersions, OTHER_FORMATS } from "../create/formats.js";
 import { snapPrompt, soundState } from "../create/sound.js";
+import { draftFromSite } from "../create/brandsite.js";
 import { coverFrames, LIMITS, makeCover, postKitPrompt, readCovers, readPostKit, PLATFORMS as POST_PLATFORMS, type Platform } from "../create/postkit.js";
 import { getRecipe, listRecipes, recipePrompt, removeRecipe, saveRecipe } from "../create/recipes.js";
 import { addEpisode, getSeries, listSeries, removeSeries, saveSeries, seriesPrompt } from "../create/series.js";
@@ -1043,6 +1044,20 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
     if (parts[0] === "api" && parts[1] === "personalities") {
       const withFindings = (pp: ReturnType<typeof loadPersonalities>[number]) => ({ ...pp, findings: checkPersonality(pp) });
       if (read && parts.length === 2) return sendJson(res, 200, { personalities: loadPersonalities().map(withFindings) });
+      // A personality from a website in one go: its colours per style, its nearest type, its logo to Review.
+      if (method === "POST" && parts[2] === "from-site" && parts.length === 3) {
+        const b = (await readBody(req)) as { url?: string };
+        if (!String(b.url ?? "").trim()) throw new HttpError(400, "give a website address");
+        let d;
+        try { d = await draftFromSite(String(b.url)); } catch (error) { throw new HttpError(422, `could not read that site: ${(error as Error).message}`); }
+        let logoAsset: string | undefined;
+        if (d.logo) {
+          const name = `${d.brand.name || new URL(d.brand.url).hostname} logo${path.extname(d.logo.file)}`;
+          const [outcome] = await ingestBatch([{ file: name, name, source: { kind: "upload", origin: d.logo.url, assetKind: "generic", trusted: false, private: false }, stored: await streamToTemp(createReadStream(d.logo.file)) }]);
+          logoAsset = outcome?.assetId;
+        }
+        return sendJson(res, 201, { personality: withFindings(d.personality), pairing: d.pairing, colors: d.brand.colors, fonts: d.brand.fonts, logo: d.logo ? { url: d.logo.url, ...(logoAsset ? { asset: logoAsset } : {}) } : null });
+      }
       if (method === "POST" && parts.length === 2) {
         const b = (await readBody(req, 256 * 1024)) as Record<string, unknown>;
         const saved = savePersonality({ ...(b as object), name: typeof b.name === "string" && b.name.trim() ? b.name.trim() : "My personality" } as never);
@@ -1233,7 +1248,7 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
         const pers = sess.settings.personality ? getPersonality(sess.settings.personality) : undefined;
         const write = sess.settings.mode === "write" && !script;
         // "Ask about a video": the words are a question, never a script.
-        const watching = sess.settings.mode === "watch" || sess.settings.mode === "brief";
+        const watching = sess.settings.mode === "watch" || sess.settings.mode === "brief" || sess.settings.mode === "long";
         // A pasted script becomes a file, so /reelcut gets a path like any other script.
         let scriptPath = script?.path;
         if (!write && !watching && !scriptPath && text.trim().split(/\s+/).length > 25) { scriptPath = path.join(createFilesDir(id), "script.txt"); writeFileSyncSafe(scriptPath, text.trim()); }

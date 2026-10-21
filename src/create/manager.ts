@@ -34,7 +34,7 @@ export interface Settings {
   personality?: string; format?: string; length?: "full" | "short"; resolution?: "hd" | "4k";
   text?: "full" | "key-lines" | "minimal" | "none"; sfx?: "on" | "off" | "ask"; music?: "fits" | "snap" | "none"; blur?: "on" | "off";
   /** "write": the owner gave a topic, a link or notes, and Claude writes the script first. "watch": the owner asks about a video. */
-  mode?: "script" | "write" | "watch" | "brief";
+  mode?: "script" | "write" | "watch" | "brief" | "long";
   /** How hard Claude looks at a video it is asked about: the frame budget of a watch session. */
   depth?: "quick" | "normal" | "deep";
   /** Target length in seconds for a script Claude writes. */
@@ -220,6 +220,7 @@ export class CreateManager {
     if (i.assetsDir) flags.push(`--assets ${i.assetsDir}`);
     if (i.settings?.mode === "watch") return watchPrompt(i);
     if (i.settings?.mode === "brief") return briefPrompt(s, i);
+    if (i.settings?.mode === "long") return longPrompt(s, i, flags);
     const write = i.settings?.mode === "write" && !i.scriptPath;
     const head = `/reelcut ${i.scriptPath ?? ""} ${flags.join(" ")}`.replace(/\s+/g, " ").trim();
     const lines = write ? [] : [head, ""];
@@ -229,7 +230,7 @@ export class CreateManager {
       lines.push(
         "Write the script for a reel first, then make the reel from it.",
         "",
-        "What the owner gave you (a topic, notes or links; read any link with WebFetch first):",
+        `What the owner gave you (a topic, notes, or a link to a blog post or article: read a link first with \`npm run article -- <url> --out ${path.join(filesDir(s.id), "article.md")}\`, the page's own words, or WebFetch when it has no text; keep its figures exactly as written, each with the link as its source in report.md):`,
         i.text.trim(), "",
         `- Length: about ${secs} seconds, so about ${Math.round(secs * 2.5)} spoken words.`,
         "- Voice: the default personality's copy and voice (`npm run personality -- brief`), or plain and direct without one.",
@@ -580,6 +581,35 @@ export function briefPrompt(s: SessionMeta, i: StartInput): string {
  * The first message of an "Ask about a video" chat: watch the video in reelcut's loop and answer, with the frames that
  * prove it. No reel is made unless the owner asks for one.
  */
+/** A long video into short reels: its strongest moments, each with its own audio as the voiceover. */
+export function longPrompt(s: Session, i: StartInput, flags: readonly string[]): string {
+  const videos = (i.files ?? []).filter((f) => f.kind === "video" || /\.(mp4|mov|m4v|webm|mkv|avi|m4a|mp3|wav)$/i.test(f.name));
+  const out = path.join(filesDir(s.id), "moments");
+  const rest = flags.filter((f) => !f.startsWith("--voiceover") && !f.startsWith("--assets"));
+  return [
+    "Turn the owner's long video (a podcast, a webinar, a talk) into short reels: find its strongest moments, and make each one a",
+    "reel whose voiceover is the real audio of that moment and whose script is what is said in it. Only the sound is used; every",
+    "reel's visuals are composed as usual, never the speaker's picture.",
+    "",
+    ...(videos.length ? [`The video: ${videos.map((f) => f.path).join(", ")}`] : ["No file was added: the video is a link or a path in what the owner wrote (`npm run watch` downloads a link)."]),
+    ...(i.text.trim() ? ["", "What the owner said:", i.text.trim()] : []),
+    "",
+    "1. Map it and read what is said: `npm run watch -- overview <video> --depth quick --question \"the strongest moments for short reels\"`, then",
+    "   `npm run watch -- transcript <video>` (local whisper; add `--lang de` for German). Read the whole transcript.",
+    "2. Choose 3 to 5 moments, each 15 to 60 seconds and whole on its own: it opens on a line that hooks (a number, a strong claim, a",
+    "   question, a turn in a story), makes one point, and ends on its payoff. Skip any that needs what was said before it.",
+    "3. Ask the owner with one AskUserQuestion (multiSelect, header \"Moments\"): \"Which moments should become reels?\", an option per",
+    "   moment, the label its opening words and the description `12:30–13:15 · 45 s · <what it says>`; your favourite first, (Recommended).",
+    `4. Cut each chosen one: \`npm run moments -- cut <video> --from <start> --to <end> --out ${out} --name moment-<n>\` (it snaps to word`,
+    "   edges and writes moment-<n>.m4a and moment-<n>.txt). In the .txt fix only what whisper misheard (names, numbers, spelling),",
+    "   never the order or the words said.",
+    `5. Make the first one here, now: invoke the reelcut skill with \`${out}/moment-1.txt --voiceover ${out}/moment-1.m4a ${rest.join(" ")}\`.`,
+    `   Move the others into ${out}/queue/ (each .txt with its .m4a) and queue them to run one after another, unattended:`,
+    `   \`npm run reelcut -- batch ${out}/queue ${rest.filter((f) => f.startsWith("--format") || f === "--short").join(" ")}\`; say they are in the batch.`,
+    "- Start your first reply with one line `Title: <a short name for this reel, 2 to 6 words>`; the chat is named after it.",
+  ].join("\n");
+}
+
 export function watchPrompt(i: StartInput): string {
   const videos = (i.files ?? []).filter((f) => f.kind === "video" || /\.(mp4|mov|m4v|webm|mkv|avi)$/i.test(f.name));
   const depth = i.settings?.depth ?? "normal";
