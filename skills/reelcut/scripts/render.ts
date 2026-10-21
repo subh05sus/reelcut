@@ -695,6 +695,8 @@ async function main(): Promise<void> {
           rmSync(masterFile, { force: true });
           copyFileSync(withSound, masterFile);
           rmSync(withSound, { force: true });
+          // A master-only run may carry a new mix (cues added, the music changed): every clip gets its new slice.
+          if (!args.clips) for (const p of built.placements) muxSlice(path.join(clipsOut, `${p.id}.mp4`), reelMix.file, p.startSeconds, p.durationSeconds);
         }
         const report = checkVideo(masterFile, { samplesPerSecond: 4, footage: footageByBeat.size > 0 });
         outcomes.push({ id: "master", status: "ok", file: masterFile, report });

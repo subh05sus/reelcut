@@ -1750,7 +1750,8 @@ function masterHtml(r) {
     <div class="cr-tl" id="cr-tl" aria-label="Timeline: beats and comments">${r.beats.map((b, i) => `<span class="seg-b" style="flex:${b.seconds || 1}" title="Beat ${i + 1}" data-t="${b.start}"></span>`).join("")}<span class="ph" id="cr-ph"></span><span class="marks" id="cr-marks"></span></div>
     <div class="cr-mbar">${cur && cur !== vs[0] ? `<span class="note">Comments are on the ${esc(r.format)} reel</span>` : `<button class="sm" id="cr-comment">${ic("plus", 14)} Comment on a frame</button>`}<span class="grow"></span>${fmt === "9:16" ? `<button class="plain sm" id="cr-igv" aria-pressed="${ig}">${ig ? "Hide" : "Show"} Instagram's UI</button>` : ""}<button class="plain sm" id="cr-fmt-make">Other formats</button><button class="plain sm" id="cr-share">Share for review</button><a class="plain sm-link" href="${media(src)}" download>Download</a></div>
     <div id="cr-comments"></div>
-    <div id="cr-hook"></div>`;
+    <div id="cr-hook"></div>
+    <div id="cr-sound"></div>`;
 }
 /** Instagram's Reels interface over a 9:16 frame, drawn from its proportions: what covers the video, and the grid's crop. */
 const IG_OVERLAY = `<svg class="cr-ig" viewBox="0 0 1080 1920" preserveAspectRatio="none" aria-hidden="true">
@@ -1808,6 +1809,26 @@ async function paintHook() {
   }));
   $$("video[data-hover]", box).forEach((x) => { x.addEventListener("mouseenter", () => x.play().catch(() => {})); x.addEventListener("mouseleave", () => { x.pause(); x.currentTime = 0; }); x.addEventListener("click", () => { x.muted = false; x.controls = true; x.play().catch(() => {}); }); });
 }
+/** Sound: the music's beat (snapping the cuts goes to Claude) and the cues (added and re-mixed as a job). */
+async function paintSound() {
+  const box = $("#cr-sound"); if (!box || !cr.meta) return;
+  let d; try { d = await api(`/api/create/${cr.meta.id}/sound`); } catch { box.innerHTML = ""; return; }
+  if (!$("#cr-sound")) return;
+  const m = d.music, c = d.cues, j = d.job, busy = j?.status === "running";
+  const music = m ? `<div class="row-i"><span class="col grow"><span class="t">${esc(m.name)} · ${m.bpm} BPM</span><span class="s">${m.voiced ? "The voiceover sets the cuts; the music fits under it." : m.sync === "snap" ? `The cuts are snapped to its beat: ${m.onBeat} of ${m.cuts} land on one.` : `${m.onBeat} of ${m.cuts} cuts land on a beat.${m.snap && m.snap.moved ? ` Snapping would put ${m.snap.onBeat} on one, moving ${m.snap.moved} by at most ${m.snap.maxShift.toFixed(2)} s.` : ""}`}${m.confidence < 0.25 ? " Its beat is not clear, so this is a guess." : ""}</span></span>${!m.voiced && m.sync !== "snap" && m.snap?.moved ? `<button class="sm" id="snd-snap">Put the cuts on the beat</button>` : ""}</div>`
+    : d.musicError ? `<div class="row-i"><span class="s">Music: ${esc(d.musicError)}</span></div>` : `<div class="row-i"><span class="s grow">No music bed. Ask Claude in the chat for one from your library.</span></div>`;
+  const cues = `<div class="row-i"><span class="col grow"><span class="t">${c.total ? `${c.total} sound cue${c.total === 1 ? "" : "s"} on ${c.beats} beat${c.beats === 1 ? "" : "s"}` : "No sound cues yet"}</span><span class="s">${c.total ? `${c.mine} of your own sounds, ${c.pack} from the bundled CC0 pack. ` : ""}Cues land on each beat's own moments: a click, typing, a count, a reveal.${d.hasSound ? "" : " The master is silent now."}</span></span></div>
+    <label class="row-i"><input type="checkbox" id="snd-mine" ${d.ownSounds >= 8 ? "checked" : ""} ${d.ownSounds ? "" : "disabled"}><span class="col grow"><span class="t">Only my own sounds</span><span class="s">${d.ownSounds ? `${d.ownSounds} approved in your library` : "None approved in your library yet: the bundled pack is used"}</span></span></label>`;
+  box.innerHTML = `<div class="cap" style="margin:16px 0 8px">Sound</div><div class="group">${music}${cues}</div>
+    <div class="acts" style="justify-content:flex-start;margin-top:8px"><button class="sm" id="snd-cues" ${busy ? "disabled" : ""}>${busy ? "Adding cues…" : c.total ? "Add more cues and re-mix" : "Add sound cues"}</button>${j && !busy ? `<span class="note">${j.status === "ok" ? "Re-mixed." : `That did not work: ${esc(j.log.at(-1) || "see Jobs")}`}</span>` : ""}</div>`;
+  $("#snd-snap", box)?.addEventListener("click", async () => { try { await post(`/api/create/${cr.meta.id}/sound/snap`, {}); toast("Asked Claude to put the cuts on the beat"); } catch (err) { toast(err.message); } });
+  $("#snd-cues", box)?.addEventListener("click", async () => { try { await post(`/api/create/${cr.meta.id}/sound/cues`, { mine: $("#snd-mine", box).checked }); toast("Adding cues; the master is re-mixed, no frames rendered"); paintSound(); } catch (err) { toast(err.message); } });
+  // When the re-mix finishes, the master is a new file: repaint the panel so the player loads it.
+  clearTimeout(cr.soundTimer);
+  const was = cr.soundBusy; cr.soundBusy = busy;
+  if (was && !busy) { cr.panelShown = null; refreshReel(); return; }
+  if (busy) cr.soundTimer = setTimeout(() => { if ($("#cr-sound")) paintSound(); }, 4000);
+}
 /** Other formats: Claude lays the reel out again in each. */
 async function openFormats() {
   let d; try { d = await api(`/api/create/${cr.meta.id}/formats`); } catch (err) { toast(err.message); return; }
@@ -1836,6 +1857,7 @@ function bindMaster(r) {
   $$("[data-fmt]").forEach((b) => b.addEventListener("click", () => { cr.fmtView = b.dataset.fmt || null; cr.panelShown = null; refreshReel(); }));
   paintComments(true);
   paintHook();
+  paintSound();
 }
 /** The client approval board: choose its stages, then send each one when it is ready and watch the decisions. */
 async function openBoard() {
@@ -2094,7 +2116,7 @@ function composerHtml(first) {
       ${sel("cr-length", [["", "Length: ask"], ["full", "Whole script"], ["short", "Short cut"]], d.settings.length, "Length")}
       ${sel("cr-res", [["", "Quality: ask"], ["hd", "HD"], ["4k", "4K"]], d.settings.resolution, "Quality")}
       ${sel("cr-text-on", [["", "Text: ask"], ["full", "Full text"], ["key-lines", "Key lines"], ["minimal", "Minimal text"], ["none", "No text"]], d.settings.text, "Text on screen")}
-      ${sel("cr-sfx", [["", "Sound: ask"], ["on", "Sound effects"], ["off", "No effects"]], d.settings.sfx, "Sound effects")}
+      ${sel("cr-sfx", [["", "Sound effects"], ["ask", "Sound: ask"], ["off", "No effects"]], d.settings.sfx === "on" ? "" : d.settings.sfx, "Sound effects")}
       ${sel("cr-music", [["", "Music: ask"], ["fits", "Music, fitted"], ["snap", "Music, on the beat"], ["none", "No music"]], d.settings.music, "Music")}
       ${sel("cr-blur", [["", "Blur: off"], ["on", "Motion blur"]], d.settings.blur, "Motion blur")}
       ${d.settings.mode === "write" || d.settings.mode === "brief" ? sel("cr-target", [["", "About 45 s"], ["15", "About 15 s"], ["30", "About 30 s"], ["60", "About 60 s"], ["90", "About 90 s"]], d.settings.target, "Target length") : ""}

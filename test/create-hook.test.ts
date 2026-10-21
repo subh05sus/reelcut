@@ -133,3 +133,23 @@ describe("other formats", () => {
     expect(formatVersions(reelPath).map((v) => [v.format, !!v.master])).toEqual([["9:16", false], ["4:5", false]]);
   });
 });
+
+describe("the reel's sound", () => {
+  it("says how the cuts sit on the music's beat, what snapping would move, and whose the cues are", async () => {
+    // A click on every beat at 120 BPM, and cuts just off it (1.9 s and 4.1 s).
+    ffmpeg(["-f", "lavfi", "-i", "aevalsrc=0.8*sin(2*PI*1000*t)*lt(mod(t\\,0.5)\\,0.02):s=48000:d=12", "-ac", "2", path.join(dir, "clicks.flac")]);
+    writeFileSync(reelPath, JSON.stringify({ format: "9:16", music: { source: "clicks.flac" }, beats: [
+      { id: "beat-00", durationSeconds: 1.9, sfx: [{ source: "pack:pop-01", at: 0.2 }] },
+      { id: "beat-01", durationSeconds: 2.2, sfx: [{ source: "library:0123456789abcdef", at: 0.4 }, { source: "pack:pop-02", at: 1 }] },
+      { id: "beat-02", durationSeconds: 2 },
+    ] }));
+    const { soundState, snapPrompt } = await import("../src/create/sound.js");
+    const s = soundState(reelPath);
+    expect(s.cues).toEqual({ total: 3, beats: 2, mine: 1, pack: 2 });
+    expect(s.music).toMatchObject({ bpm: 120, sync: "fit", cuts: 2, voiced: false });
+    expect(s.music!.snap!.onBeat).toBe(2);
+    expect(s.music!.snap!.maxShift).toBeLessThanOrEqual(0.15);
+    expect(snapPrompt(reelPath, s).prompt).toContain('"sync": "snap"');
+    expect(() => snapPrompt(reelPath, { ...s, music: { ...s.music!, voiced: true } })).toThrow(/voiceover sets/);
+  });
+});

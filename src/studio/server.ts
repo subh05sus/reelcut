@@ -54,6 +54,7 @@ import { writeCaptions } from "../create/captions.js";
 import { fixHookPrompt, hookFresh, measureHook, readHook } from "../create/hook.js";
 import { abResult, hooksPrompt, readHooks, setAB, useVariant } from "../create/hooks.js";
 import { formatsPrompt, formatVersions, OTHER_FORMATS } from "../create/formats.js";
+import { snapPrompt, soundState } from "../create/sound.js";
 import { coverFrames, LIMITS, makeCover, postKitPrompt, readCovers, readPostKit, PLATFORMS as POST_PLATFORMS, type Platform } from "../create/postkit.js";
 import { getRecipe, listRecipes, recipePrompt, removeRecipe, saveRecipe } from "../create/recipes.js";
 import { addEpisode, getSeries, listSeries, removeSeries, saveSeries, seriesPrompt } from "../create/series.js";
@@ -475,7 +476,23 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
   /** The default personality changed: remake its technique previews when nothing else is rendering. */
   const refreshPreviews = (): void => { if (process.env.VITEST) return; const st = previewStatus(); if (!jobs.some((j) => j.status === "running") && (st.stale || st.have.length < st.total)) startTechniquePreviews(["--missing"]); };
   let jobSeq = 0;
-  /** Create conversations: made on first use, so a studio that never opens Create never touches them. */
+
+  /** A studio job of tsx scripts run one after another; it stops at the first that fails. */
+  const runSteps = (runId: string, label: string, steps: string[][]): Job => {
+    const job: Job = { id: String(++jobSeq), runId, beat: label, status: "running", startedAt: new Date().toISOString(), log: [] };
+    jobs.unshift(job);
+    const tsx = createRequire(import.meta.url).resolve("tsx/cli");
+    const append = (chunk: Buffer) => { job.log.push(...chunk.toString("utf8").split(/\r?\n/).filter(Boolean)); if (job.log.length > 300) job.log.splice(0, job.log.length - 300); };
+    const next = (k: number): void => {
+      if (k >= steps.length) { job.status = "ok"; job.exitCode = 0; job.endedAt = new Date().toISOString(); return; }
+      const child = spawn(process.execPath, [tsx, ...steps[k]!], { cwd: REPO, windowsHide: true });
+      child.stdout?.on("data", append); child.stderr?.on("data", append);
+      child.on("error", (error) => { job.log.push(String(error)); job.status = "failed"; job.endedAt = new Date().toISOString(); });
+      child.on("close", (code) => { if (job.status !== "running") return; if (code === 0) next(k + 1); else { job.status = "failed"; job.exitCode = code; job.endedAt = new Date().toISOString(); } });
+    };
+    next(0);
+    return job;
+  };  /** Create conversations: made on first use, so a studio that never opens Create never touches them. */
   let create: CreateManager | undefined;
   // Shared review links live in their own background process (the review daemon), so restarting the studio never takes
   // one down. When the studio starts and links are live but the daemon is not, it is started again.
@@ -1303,6 +1320,29 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
           let m; try { m = formatsPrompt(rp, b.formats ?? []); } catch (error) { throw new HttpError(400, (error as Error).message); }
           cm.send(id, m.shown, [], m.prompt);
           return sendJson(res, 202, { ok: true, shown: m.shown });
+        }
+      }
+      // Sound: the music's beat and the cues. Snapping moves cuts, so it goes to Claude; cues only re-mix, as a job.
+      if (parts[3] === "sound") {
+        const rp = reelPath();
+        const job = () => jobs.find((j) => j.runId === `sound:${id}`);
+        const view = () => { const j = job(); return { ...soundState(rp), job: j ? { id: j.id, status: j.status, log: j.log.slice(-3) } : null }; };
+        if (read && parts.length === 4) return sendJson(res, 200, view());
+        if (method === "POST" && parts[4] === "snap" && parts.length === 5) {
+          let m; try { m = snapPrompt(rp); } catch (error) { throw new HttpError(409, (error as Error).message); }
+          cm.send(id, m.shown, [], m.prompt);
+          return sendJson(res, 202, { ok: true, shown: m.shown });
+        }
+        if (method === "POST" && parts[4] === "cues" && parts.length === 5) {
+          const b = (await readBody(req)) as { mine?: boolean };
+          const running = jobs.find((j) => j.status === "running");
+          if (running) throw new HttpError(409, `a render is already running (${running.beat})`, { job: running.id });
+          const scripts = path.join(REPO, "skills", "reelcut", "scripts");
+          runSteps(`sound:${id}`, `sound cues: ${sess.title}`, [
+            [path.join(scripts, "sfx.ts"), "suggest", rp, "--apply", ...(b.mine ? ["--mine"] : [])],
+            [path.join(scripts, "render.ts"), rp, "--master-only", "--sfx"],
+          ]);
+          return sendJson(res, 202, view());
         }
       }
       // Results from the platforms: typed in, or a screenshot or CSV that Claude reads.

@@ -6,6 +6,11 @@ import { query, type CanUseTool, type Query, type SDKMessage, type SDKUserMessag
 import { reelcutHome } from "../library/store.js";
 import { chromeStatus } from "./integrations.js";
 import { formatVersions } from "./formats.js";
+import { isUsableSound, loadIndex } from "../library/index.js";
+
+/** With this many approved sounds of their own, a reel's cues come from the owner's library only. */
+export const MINE_ENOUGH = 8;
+const ownSoundCount = () => { try { return loadIndex().assets.filter(isUsableSound).length; } catch { return 0; } };
 
 /**
  * Create: a reel made from the dashboard. Each conversation drives the real /reelcut skill through Claude Code (the
@@ -27,7 +32,7 @@ export interface Question { question: string; header?: string; multiSelect?: boo
 
 export interface Settings {
   personality?: string; format?: string; length?: "full" | "short"; resolution?: "hd" | "4k";
-  text?: "full" | "key-lines" | "minimal" | "none"; sfx?: "on" | "off"; music?: "fits" | "snap" | "none"; blur?: "on" | "off";
+  text?: "full" | "key-lines" | "minimal" | "none"; sfx?: "on" | "off" | "ask"; music?: "fits" | "snap" | "none"; blur?: "on" | "off";
   /** "write": the owner gave a topic, a link or notes, and Claude writes the script first. "watch": the owner asks about a video. */
   mode?: "script" | "write" | "watch" | "brief";
   /** How hard Claude looks at a video it is asked about: the frame budget of a watch session. */
@@ -244,7 +249,9 @@ export class CreateManager {
     const st = i.settings ?? {};
     const settled = [
       st.format && `format ${st.format}`, st.length && (st.length === "short" ? "a short cut" : "the whole script"), st.resolution && st.resolution.toUpperCase(),
-      st.text && `text on screen: ${st.text}`, st.sfx && `sound effects ${st.sfx === "on" ? "on (render with --sfx)" : "off"}`,
+      st.text && `text on screen: ${st.text}`,
+      // Sound cues are on unless the owner said otherwise: proposed from each beat's own moments, the owner's sounds first.
+      st.sfx === "off" ? "sound effects off" : st.sfx === "ask" ? undefined : `sound effects on${st.sfx === "on" ? "" : " (unless the personality's sound effects are off)"}: \`npm run sfx -- suggest reel.json --apply${ownSoundCount() >= MINE_ENOUGH ? " --mine" : ""}\` before rendering, then render with --sfx${ownSoundCount() >= MINE_ENOUGH ? " (only the owner's own approved sounds)" : " (the owner's own sounds win a tie with the bundled CC0 pack)"}`,
       st.music && (st.music === "none" ? "no music" : `a music bed, ${st.music === "snap" ? "cuts snapped to its beat" : "fitted to the cut"}`),
       `motion blur ${st.blur === "on" ? "on" : "off"}`, st.personality && "the look, palette, type and motion (the personality)",
     ].filter(Boolean);

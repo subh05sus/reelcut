@@ -354,7 +354,7 @@ time, checks every file, joins the passing clips into the master (no second rend
 clips that passed) and bakes the hook's strongest settled frame in as the thumbnail. A blocked beat does not
 hold up the others; render it later with `--only`, and the master is joined then. Look at `contact.jpg` (a row
 of five frames per beat) instead of re-opening compositions in a browser. Add `--sfx` for sound effects: `npm run sfx -- suggest reel.json --apply` proposes cues
-from the 395 bundled CC0 sounds (Clawd's 8-bit blips among them, only ever for Clawd) and the user's own approved sounds (theirs win a tie); typing becomes a keystroke
+from the 395 bundled CC0 sounds (Clawd's 8-bit blips among them, only ever for Clawd) and the user's own approved sounds (theirs win a tie; `--mine` for theirs only); typing becomes a keystroke
 per few letters, each a different key (see [references/step-5-render.md](references/step-5-render.md)).
 The sound is mixed by the render, not the browser: cues land by their transient, peak or end, the voiceover sits
 on top with effects (7 dB) and the music bed (`"music"`, found in Step 2; 9 dB) ducking under it, and a reel with

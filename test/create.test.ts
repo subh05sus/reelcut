@@ -80,7 +80,7 @@ describe("a conversation", () => {
     expect(p).toContain('personality "gptmarlon" (p_1)');
     expect(p).toContain("AskUserQuestion");
     expect(p).toMatch(/Never ask whether to open the studio/);
-    expect(p).toMatch(/never ask about them: format 9:16; a short cut; 4K; motion blur off; the look/);
+    expect(p).toMatch(/never ask about them: format 9:16; a short cut; 4K; sound effects on \(unless the personality's sound effects are off\): `npm run sfx -- suggest reel.json --apply` before rendering, then render with --sfx \(the owner's own sounds win a tie with the bundled CC0 pack\); motion blur off; the look/);
   });
 });
 

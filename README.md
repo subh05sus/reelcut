@@ -966,6 +966,12 @@ use (swapped in, no render) or to post two as an **A/B test**, whose numbers the
 Instagram's UI** draws the Reels interface and the profile grid's crop over a 9:16 master, and **Other formats**
 has Claude lay the reel out again in 9:16, 4:5 and 1:1 (`formats/<w>x<h>/`), shown above the player.
 
+**Sound** on a finished reel: the music's tempo, how many cuts land on its beat and what snapping would move
+(**Put the cuts on the beat** goes to Claude, since beat lengths change), and the sound cues per beat, yours or the
+bundled pack's. **Add sound cues** proposes cues for each beat's own moments (never a second sound on a moment that
+has one; **Only my own sounds** uses `sfx suggest --mine`) and re-mixes the master and every clip's slice without
+rendering a frame. New reels have sound effects on unless the personality or the composer says otherwise.
+
 ### `npm test`
 
 ```bash
@@ -1018,6 +1024,7 @@ npm run typecheck
 | Techniques taxonomy and graph engine | ✅ tested; five graph patterns rendered and passing every gate, the studio's Techniques page and brief mode shown in screenshots (a live studio run is untried) |
 | Technique previews, steering beats, recipes, first-run tour | ✅ tested; all 69 previews rendered and passing every gate, the Techniques page, beat sheet and reel panel shown in screenshots (a live Claude run of "3 other ways" is untried) |
 | Hook check, 3 hooks and A/B, Instagram safe zones, other formats | ✅ tested; a real 72 s master checked, a hook variant composed, rendered, joined and swapped in, the Hook card and overlay shown in screenshots (Claude laying out another format live is untried) |
+| Sound on a finished reel (beat-snapping, cues, re-mix) | ✅ tested; cues added to a real 72 s reel from the owner's library and the master and clips re-mixed without a render (snapping a real track's cuts live is untried) |
 | Client approval board | ⚠️ tested and its page shown in screenshots through the review server locally; a client reached over the Cloudflare tunnel is untried |
 | Clawd, the Claude mascot | ✅ 30+ acts in every style, 70 pack poses, seven patterns rendered and passing every gate, transparent overlays, its own sounds |
 | Data sourcing and charts | ⚠️ specified, not built |

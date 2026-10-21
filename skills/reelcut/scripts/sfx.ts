@@ -12,7 +12,7 @@ import { readBeatVoices } from "../../../src/voice/reel.js";
  *
  *   npm run sfx -- list [--pack [--category transition|ui|pop|hit|texture]]
  *   npm run sfx -- find --event click|type|count|roll|pop|reveal|whoosh|hit|ding|success|error|glitch|shimmer|riser|slide|boom|toggle [--tags whoosh] [--max 1.0] [--mine] [--json]
- *   npm run sfx -- suggest <reel.json> [--cuts] [--apply] [--json]
+ *   npm run sfx -- suggest <reel.json> [--cuts] [--apply] [--mine] [--json]     (--mine: only your own approved sounds)
  *
  * `suggest` loads each beat in Chrome, reads the moments the kit's helpers recorded (clicks, typing,
  * counts, reveals), and proposes a cue from the library for the few that matter. Without `--apply` it
@@ -85,20 +85,21 @@ async function suggest(argv: string[]): Promise<void> {
   const cuts = bool(argv, "--cuts");
   const apply = bool(argv, "--apply");
   const json = bool(argv, "--json");
+  const mine = bool(argv, "--mine");
   const file = argv.find((a) => !a.startsWith("--"));
   if (!file) throw new Error("usage: sfx suggest <reel.json> [--cuts] [--apply] [--json]");
   const manifestPath = path.resolve(cwd, file);
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as Manifest;
   const base = path.dirname(manifestPath);
   const kit = loadKit("inline");
-  if (!loadIndex().assets.some(isUsableSound) && !loadSfxPack()) {
+  if (!loadIndex().assets.some(isUsableSound) && (mine || !loadSfxPack())) {
     console.log("No approved sounds in the library and no bundled pack, so there is nothing to propose.");
     return;
   }
   // With a voiceover, a moment placed on a word (RC.word) is read at that word, as it will render.
   const voices = readBeatVoices(base);
   const events = await collectEvents(manifest.beats.map((b) => ({ id: b.id, html: injectVoice(readFileSync(path.resolve(base, b.composition), "utf8"), voices?.get(b.id)) })), kit);
-  const proposals = proposeCues(manifest.beats.map((b) => ({ id: b.id, durationSeconds: b.durationSeconds, events: events[b.id] ?? [] })), allSounds(), { cuts, seed: path.basename(base) });
+  const proposals = proposeCues(manifest.beats.map((b) => ({ id: b.id, durationSeconds: b.durationSeconds, events: events[b.id] ?? [] })), allSounds(mine), { cuts, seed: path.basename(base) });
 
   if (json) console.log(JSON.stringify(proposals, null, 2));
   else if (proposals.length === 0) console.log("Nothing to propose: no beat has a moment the library has a sound for.");
@@ -122,7 +123,9 @@ async function suggest(argv: string[]): Promise<void> {
     for (const p of byBeat.get(beat.id) ?? []) {
       const source = p.source;
       beat.sfx ??= [];
+      // A moment that already has a sound keeps it: adding cues again never doubles one.
       if (beat.sfx.some((c) => c.source === source && Math.abs(c.at - p.at) < 0.05)) continue;
+      if (beat.sfx.some((c) => Math.abs(c.at - p.at) < (p.event === "keystroke" ? 0.03 : 0.12))) continue;
       beat.sfx.push({ source, at: p.at, ...(p.durationSeconds ? { durationSeconds: Math.round(p.durationSeconds * 1000) / 1000 } : {}), ...(p.pan ? { pan: p.pan } : {}), ...(p.rate && p.rate !== 1 ? { rate: p.rate } : {}) });
       beat.sfx.sort((a, b) => a.at - b.at);
       added += 1;
