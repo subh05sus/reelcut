@@ -7,7 +7,7 @@ import http from "node:http";
 import path from "node:path";
 import { reelcutHome } from "../library/store.js";
 import { addComment, loadComments, readReel } from "./edits.js";
-import { boardFile, boardFor, decide, publicBoard, type BoardStage } from "./board.js";
+import { boardBrand, boardFile, boardFor, decide, publicBoard, type BoardStage } from "./board.js";
 import { boardPage } from "./board-page.js";
 
 /**
@@ -146,7 +146,7 @@ export function startReviewServer(port = REVIEW_PORT, hooks: ReviewHooks = {}): 
     const fail = (code: number, text: string) => { res.writeHead(code, { "Content-Type": "text/plain; charset=utf-8", ...PAGE_SECURITY }); res.end(text); };
     try {
       const url = new URL(req.url ?? "/", "http://review");
-      const m = /^\/r\/([A-Za-z0-9_-]{32})(?:\/(master\.mp4|poster\.jpg|comments|data|board|decide|m\/([a-z]+)\/([A-Za-z0-9_.%-]+)))?$/.exec(url.pathname);
+      const m = /^\/r\/([A-Za-z0-9_-]{32})(?:\/(master\.mp4|poster\.jpg|comments|data|board|decide|brand-logo|m\/([a-z]+)\/([A-Za-z0-9_.%-]+)))?$/.exec(url.pathname);
       const share = m ? findShare(m[1]!) : undefined;
       if (!m || !share) return fail(404, "This review link has expired or was turned off.");
       const dir = path.dirname(share.reel);
@@ -154,25 +154,30 @@ export function startReviewServer(port = REVIEW_PORT, hooks: ReviewHooks = {}): 
       const board = boardFor(share.token);
       if (!what && req.method === "GET") {
         res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", ...PAGE_SECURITY, "Content-Security-Policy": "default-src 'none'; media-src 'self'; img-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'" });
-        return res.end(board ? boardPage(share.token, share.title) : reviewPage(share));
+        return res.end(board ? boardPage(share.token, share.title, boardBrand()) : reviewPage(share));
       }
       // An approval board: its stages as sent, the files it lists (and only those), and the client's decisions.
       if (board && what === "board" && req.method === "GET") { res.writeHead(200, { "Content-Type": "application/json", ...PAGE_SECURITY }); return res.end(JSON.stringify(publicBoard(board))); }
       if (board && what?.startsWith("m/") && req.method === "GET") {
-        const f = boardFile(board, m[3]!, decodeURIComponent(m[4]!), url.searchParams.has("poster"));
+        const f = boardFile(board, m[3]!, decodeURIComponent(m[4]!), url.searchParams.has("poster"), url.searchParams.has("before"));
         return f ? sendMedia(req, res, f) : fail(404, "Not on this board.");
+      }
+      if (board && what === "brand-logo" && req.method === "GET") {
+        const logo = boardBrand().logo;
+        return logo && existsSync(logo) ? sendMedia(req, res, logo) : fail(404, "No logo.");
       }
       if (board && what === "decide" && req.method === "POST") {
         let body = "";
-        req.on("data", (d) => { body += d; if (body.length > 4096) req.destroy(); });
+        // Marks drawn on a frame make a decision bigger than a comment.
+        req.on("data", (d) => { body += d; if (body.length > 65536) req.destroy(); });
         req.on("end", () => {
           try {
-            const b = JSON.parse(body) as { stage?: string; item?: string; status?: string; note?: string; name?: string };
+            const b = JSON.parse(body) as { stage?: string; item?: string; status?: string; note?: string; name?: string; marks?: unknown };
             const author = String(b.name ?? "").trim().replace(/[<>]/g, "").slice(0, 40);
             if (!author || author.toLowerCase() === "you") return fail(400, "Add your name first.");
             if (b.status !== "approved" && b.status !== "changes") return fail(400, "Approve it or ask for a change.");
             if (!allowComment(share.token)) return fail(429, "That is a lot at once; try again in a while.");
-            const r = decide(share.token, String(b.stage) as BoardStage, String(b.item ?? ""), { status: b.status, note: typeof b.note === "string" ? b.note : undefined, author });
+            const r = decide(share.token, String(b.stage) as BoardStage, String(b.item ?? ""), { status: b.status, note: typeof b.note === "string" ? b.note : undefined, author, marks: b.marks });
             hooks.onDecision?.(share, String(b.stage) as BoardStage, r.line, r.stageDone);
             res.writeHead(201, { "Content-Type": "application/json", ...PAGE_SECURITY }); res.end(JSON.stringify({ ok: true, stageDone: r.stageDone }));
           } catch (error) { fail(400, error instanceof Error ? error.message : "That did not arrive whole."); }
@@ -214,7 +219,7 @@ export function startReviewServer(port = REVIEW_PORT, hooks: ReviewHooks = {}): 
 function sendMedia(req: http.IncomingMessage, res: http.ServerResponse, file: string): void {
   if (!existsSync(file)) { res.writeHead(404, PAGE_SECURITY); res.end(); return; }
   const size = statSync(file).size;
-  const type = file.endsWith(".mp4") ? "video/mp4" : "image/jpeg";
+  const type = ({ ".mp4": "video/mp4", ".png": "image/png", ".svg": "image/svg+xml", ".webp": "image/webp" } as Record<string, string>)[path.extname(file).toLowerCase()] ?? "image/jpeg";
   const m = /^bytes=(\d*)-(\d*)$/.exec(String(req.headers.range ?? ""));
   if (m && (m[1] || m[2])) {
     const start = m[1] ? Number(m[1]) : Math.max(0, size - Number(m[2]));

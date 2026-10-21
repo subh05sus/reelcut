@@ -48,7 +48,7 @@ import { readIntegrations } from "../create/integrations.js";
 const PZ_STEP_IDS = ["start", "styles", "mixer", "colours", "fonts", "motion", "texture", "signature", "copy", "sound", "pacing", "guardrails", "review"];
 import { drawPrompt } from "../create/draw.js";
 import { addPerformance, analysisPrompt, importPrompt, insights, latest, readPerformance, reelFacts, type PerfRow } from "../create/performance.js";
-import { BOARD_STAGES, STAGE_NAMES, boardStatus, boardsOf, createBoard, loadBoards, publishStage, stagePrompt, type BoardStage } from "../create/board.js";
+import { BOARD_STAGES, STAGE_NAMES, boardBrand, boardStatus, boardsOf, createBoard, loadBoards, publishStage, saveBoardBrand, stagePrompt, type BoardStage } from "../create/board.js";
 import { cloudflaredPath, createShare, daemonState, ensureReviewDaemon, liveShare, loadShares, reviewUrl, revokeShare, sharesFor, stopReviewDaemon } from "../create/share.js";
 import { writeCaptions } from "../create/captions.js";
 import { fixHookPrompt, hookFresh, measureHook, readHook } from "../create/hook.js";
@@ -1131,6 +1131,19 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
       }
     }
     // Performance: every reel with results, what differs between them, and a conversation to make sense of it.
+    // The owner's brand on client boards: a name, a colour, a logo from the library.
+    if (parts[0] === "api" && parts[1] === "board-brand" && parts.length === 2) {
+      const pub = () => { const b = boardBrand(); return { name: b.name ?? "", accent: b.accent ?? "", logo: b.logo && existsSync(b.logo) ? b.logo : null }; };
+      if (read) return sendJson(res, 200, pub());
+      if (method === "POST") {
+        const b = (await readBody(req)) as { name?: string; accent?: string; logoAsset?: string | null };
+        let logo: string | null | undefined;
+        if (b.logoAsset === null) logo = null;
+        else if (b.logoAsset) { const a = findAsset(String(b.logoAsset)); if (!a || a.mediaType !== "image") throw new HttpError(404, "no such image in the library"); logo = blobPath(a); }
+        try { saveBoardBrand({ name: b.name, accent: b.accent, logo }); } catch (error) { throw new HttpError(400, (error as Error).message); }
+        return sendJson(res, 200, pub());
+      }
+    }
     if (parts[0] === "api" && parts[1] === "performance") {
       const cm = (create ??= new CreateManager());
       const rows = (): PerfRow[] => cm.list().flatMap((m) => {

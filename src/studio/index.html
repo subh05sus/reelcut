@@ -790,6 +790,7 @@
   .cr-pick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; max-height: 50vh; overflow: auto; }
   .cr-pick button { padding: 0; height: auto; aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: var(--fill-4); }
   .cr-pick button:hover { box-shadow: 0 0 0 2px var(--accent); }
+  .cr-pick button.on { box-shadow: 0 0 0 3px var(--accent); }
   .cr-pick img { width: 100%; height: 100%; object-fit: cover; display: block; }
   @media (max-width: 899px) { .cr-acts3 button { height: 44px; } .cr-tl { height: 28px; } .cr-tc { height: 32px; } .cr-pick { grid-template-columns: repeat(3, 1fr); } }
   @media (prefers-reduced-motion: reduce) { .cr-prog.live .bar i, .cr-prog.live .stages .now .d, .cr-pin { animation: none; } }
@@ -1861,9 +1862,10 @@ function bindMaster(r) {
 }
 /** The client approval board: choose its stages, then send each one when it is ready and watch the decisions. */
 async function openBoard() {
-  let st;
-  try { st = await api(`/api/create/${cr.meta.id}/board`); } catch (err) { toast(err.message); return; }
+  let st, brand;
+  try { [st, brand] = await Promise.all([api(`/api/create/${cr.meta.id}/board`), api("/api/board-brand")]); } catch (err) { toast(err.message); return; }
   const b = st.boards[0];
+  const brandRow = `<div class="cap">On the client's page</div><div class="group"><div class="row-i">${brand.logo ? `<img src="${media(brand.logo)}" alt="" style="height:28px;max-width:80px;object-fit:contain">` : ""}<span class="col grow"><span class="t">${brand.name ? esc(brand.name) : "Your brand"}</span><span class="s">${brand.name || brand.logo || brand.accent ? "Your logo, name and colour head the board" : "Put your logo, name and colour at the top, so it reads as your own"}</span></span><button class="sm" id="bd-brand">${brand.name || brand.logo ? "Edit" : "Add"}</button></div></div>`;
   const what = { directions: "What each beat will do, in plain words, with its preview clip", script: "The script and the beat plan, before rendering", beats: "Each rendered beat, approved or sent back", master: "The finished reel" };
   openSheet({
     title: "Client board",
@@ -1871,10 +1873,11 @@ async function openBoard() {
     body: !st.cloudflared ? `<div class="group"><div class="row-i"><span class="col grow"><span class="t">One thing to install first</span><span class="s">The link runs through a free Cloudflare tunnel. In a terminal: <code>brew install cloudflared</code></span></span></div></div><div class="acts"><button data-sclose>Close</button></div>`
       : b ? `<div class="group"><div class="row-i"><span class="t grow" style="overflow-wrap:anywhere">${b.url ? esc(b.url) : "Reconnecting the tunnel…"}</span>${b.url ? `<button class="sm" id="bd-copy">Copy</button>` : ""}</div></div>
         <div class="cap">Stages</div><div class="group">${b.stages.map((x) => `<div class="row-i"><span class="col grow"><span class="t">${esc(x.name)}</span><span class="s">${x.published ? `Sent ${esc(new Date(x.published).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" }))} · ${x.approved} of ${x.items} approved${x.changes ? ` · ${x.changes} to change` : ""}` : esc(what[x.stage])}</span></span><button class="sm ${x.published ? "" : "primary"}" data-send="${x.stage}">${x.published ? "Send again" : "Send"}</button></div>`).join("")}</div>
-        <p class="foot-note">Sending takes a snapshot: the client sees what was ready then. Turn the link off from Share for review.</p><div class="acts"><button data-sclose>Done</button></div>`
+        ${brandRow}<p class="foot-note">Sending takes a snapshot: the client sees what was ready then, and a changed item shows them the version before beside it. Turn the link off from Share for review.</p><div class="acts"><button data-sclose>Done</button></div>`
       : `<div class="cap">What the client approves</div><div class="group">${st.stages.map((x) => `<label class="row-i"><input type="checkbox" data-st="${x.id}" checked><span class="col grow"><span class="t">${esc(x.name)}</span><span class="s">${esc(what[x.id])}</span></span></label>`).join("")}</div>
-        <div class="acts"><select id="bd-days" aria-label="How long"><option value="7">For a week</option><option value="14" selected>For two weeks</option><option value="30">For a month</option></select><button data-sclose>Cancel</button><button class="primary" id="bd-new">Create the board</button></div>`,
+        ${brandRow}<div class="acts"><select id="bd-days" aria-label="How long"><option value="7">For a week</option><option value="14" selected>For two weeks</option><option value="30">For a month</option></select><button data-sclose>Cancel</button><button class="primary" id="bd-new">Create the board</button></div>`,
     bind: (sh) => {
+      $("#bd-brand", sh)?.addEventListener("click", () => { closeSheet(); openBrand(brand, openBoard); });
       $("#bd-copy", sh)?.addEventListener("click", async (e) => { try { await navigator.clipboard.writeText(b.url); e.target.textContent = "Copied"; } catch { toast("Could not copy"); } });
       $$("[data-send]", sh).forEach((x) => x.addEventListener("click", async () => {
         x.disabled = true;
@@ -1887,6 +1890,29 @@ async function openBoard() {
         e.target.disabled = true; e.target.textContent = "Starting the tunnel…";
         try { const r = await post(`/api/create/${cr.meta.id}/board`, { stages, days: Number($("#bd-days", sh).value) }); if (r.url) { try { await navigator.clipboard.writeText(r.url); toast("Board link copied"); } catch { /* shown next */ } } cr.boardFor = null; closeSheet(); openBoard(); }
         catch (err) { toast(err.message); e.target.disabled = false; e.target.textContent = "Create the board"; }
+      });
+    },
+  });
+}
+/** The owner's brand on client boards: a name, a colour, a logo from the library. */
+async function openBrand(brand, back) {
+  let assets = [];
+  try { assets = (await api("/api/assets?type=image&limit=120")).assets; } catch { /* no library yet */ }
+  assets.sort((a, b) => (b.assetKind === "identity") - (a.assetKind === "identity"));
+  let logo;
+  openSheet({
+    title: "Your brand on the board", sub: "Shown at the top of every client board, in place of reelcut's look.",
+    body: `<div class="group"><label class="row-i"><span class="t" style="width:110px">Name</span><input class="grow" id="br-name" maxlength="60" placeholder="Your studio or agency" value="${esc(brand.name)}"></label>
+      <label class="row-i"><span class="t" style="width:110px">Colour</span><input type="color" id="br-accent" value="${esc(brand.accent || "#ff9230")}" style="width:56px;height:32px;padding:0;border:0;background:none"><span class="s grow">Buttons and highlights</span></label></div>
+      <div class="cap">Logo</div>${assets.length ? `<div class="cr-pick" style="max-height:240px;overflow:auto">${assets.map((a) => `<button type="button" data-logo="${esc(a.id)}" title="${esc(a.name)}"><img src="${fileUrl(a)}" alt="${esc(a.name)}" loading="lazy"></button>`).join("")}</div>` : `<p class="note">Add your logo to the Library first, then pick it here.</p>`}
+      ${brand.logo ? `<div class="acts" style="justify-content:flex-start"><button class="sm" id="br-nologo">Remove the logo</button></div>` : ""}
+      <div class="acts"><button data-sclose>Cancel</button><button class="primary" id="br-ok">Save</button></div>`,
+    bind: (sh) => {
+      $$("[data-logo]", sh).forEach((x) => x.addEventListener("click", () => { logo = x.dataset.logo; $$("[data-logo]", sh).forEach((y) => y.classList.toggle("on", y === x)); }));
+      $("#br-nologo", sh)?.addEventListener("click", (e) => { logo = null; e.target.textContent = "Removed when you save"; });
+      $("#br-ok", sh).addEventListener("click", async () => {
+        try { await post("/api/board-brand", { name: $("#br-name", sh).value, accent: $("#br-accent", sh).value, ...(logo !== undefined ? { logoAsset: logo } : {}) }); closeSheet(); toast("Saved: boards show it now"); back?.(); }
+        catch (err) { toast(err.message); }
       });
     },
   });

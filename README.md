@@ -954,7 +954,10 @@ of beat ("Save how these beats are done as a recipe"); a short tour opens the Te
 
 **Client board**: a private link where a client approves a reel in stages (directions with their preview clips, the
 script and beat plan, the beat drafts, the final reel), approving each item or asking for a change. Claude stops
-after each stage and waits for the decision, which comes back into the chat.
+after each stage and waits for the decision, which comes back into the chat. Asking for a change on a clip can
+**mark the frame** (tap to pin, drag to draw); Claude gets the second, where it is, and a still with the marks drawn
+on it. Each send keeps its own copies, and an item sent back after a change shows the client **before and now** side
+by side with what they asked. **Your brand** (name, colour, a logo from the library) heads every board.
 
 **The hook** (`npm run hook`): every master's first 3 seconds are checked as it is joined (Instagram counts who
 scrolls past within 3 s). The check reads the words on each frame with macOS Vision, times when they appear and
@@ -1025,7 +1028,7 @@ npm run typecheck
 | Technique previews, steering beats, recipes, first-run tour | ✅ tested; all 69 previews rendered and passing every gate, the Techniques page, beat sheet and reel panel shown in screenshots (a live Claude run of "3 other ways" is untried) |
 | Hook check, 3 hooks and A/B, Instagram safe zones, other formats | ✅ tested; a real 72 s master checked, a hook variant composed, rendered, joined and swapped in, the Hook card and overlay shown in screenshots (Claude laying out another format live is untried) |
 | Sound on a finished reel (beat-snapping, cues, re-mix) | ✅ tested; cues added to a real 72 s reel from the owner's library and the master and clips re-mixed without a render (snapping a real track's cuts live is untried) |
-| Client approval board | ⚠️ tested and its page shown in screenshots through the review server locally; a client reached over the Cloudflare tunnel is untried |
+| Client approval board | ⚠️ tested, with marks drawn on a frame in a headless browser, before/now and the owner's brand shown in screenshots through the review server locally; a client reached over the Cloudflare tunnel is untried |
 | Clawd, the Claude mascot | ✅ 30+ acts in every style, 70 pack poses, seven patterns rendered and passing every gate, transparent overlays, its own sounds |
 | Data sourcing and charts | ⚠️ specified, not built |
 
