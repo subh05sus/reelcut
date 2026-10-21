@@ -361,6 +361,11 @@ on top with effects (7 dB) and the music bed (`"music"`, found in Step 2; 9 dB) 
 a voice or music is normalised to -14 LUFS. Every clip carries its slice of that mix, the master all of it, and
 `mix/` holds the stems. `"render"` in `reel.json` turns on motion blur and 4K, as asked in Step 0. `"type"` sets every beat's type
 pairing; each clip carries only the bundled fonts it uses.
+**The hook check runs on every master** (the render prints it: words, motion, the reading floor, lines under
+Instagram's interface). Look at `hook/strip.jpg`, then save your verdict: `npm run hook -- verdict reel.json --score
+<1-10> --clear yes|no --gap yes|no --line "<one line>" [--rewrite "<a stronger opening>" --why "<why>"]`. Below 7,
+propose the fix with AskUserQuestion ("Fix the hook (Recommended)" / "Make 3 hooks to compare" / "Keep it") and wait;
+never rewrite the hook unasked. "Make 3 hooks" and "Other formats" come from the studio as their own instructions.
 **Then watch the master yourself, before telling the owner it is done**: the self-review in
 [references/watch.md](references/watch.md#self-review-of-a-render) (`npm run watch -- overview out/master.mp4 --beats
 out/reel.json --depth deep`, then the hook at 10 fps, every text card read back against its script line, every fast

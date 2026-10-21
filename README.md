@@ -956,6 +956,16 @@ of beat ("Save how these beats are done as a recipe"); a short tour opens the Te
 script and beat plan, the beat drafts, the final reel), approving each item or asking for a change. Claude stops
 after each stage and waits for the decision, which comes back into the chat.
 
+**The hook** (`npm run hook`): every master's first 3 seconds are checked as it is joined (Instagram counts who
+scrolls past within 3 s). The check reads the words on each frame with macOS Vision, times when they appear and
+when something first moves, holds beat 1's words to the reading floor, and lists any line of the reel's that sits
+under Instagram's own interface anywhere in the reel; Claude looks at the strip and adds a verdict and a rewrite
+(`hook.json`, `hook/strip.jpg`). The studio's Hook card offers **Fix the hook** and **Make 3 hooks**: three other
+openings at beat 1's exact length, each joined into a full master from the existing clips with the real sound, to
+use (swapped in, no render) or to post two as an **A/B test**, whose numbers the Post tab records per hook. **Show
+Instagram's UI** draws the Reels interface and the profile grid's crop over a 9:16 master, and **Other formats**
+has Claude lay the reel out again in 9:16, 4:5 and 1:1 (`formats/<w>x<h>/`), shown above the player.
+
 ### `npm test`
 
 ```bash
@@ -1007,6 +1017,7 @@ npm run typecheck
 | Watching video (agentic: map, search, any-fps looks, zoom, OCR, transcript, sound) | ✅ tested; a real master watched beat by beat, the studio Watch panel shown from a recorded watch session (a live studio run is untried) |
 | Techniques taxonomy and graph engine | ✅ tested; five graph patterns rendered and passing every gate, the studio's Techniques page and brief mode shown in screenshots (a live studio run is untried) |
 | Technique previews, steering beats, recipes, first-run tour | ✅ tested; all 69 previews rendered and passing every gate, the Techniques page, beat sheet and reel panel shown in screenshots (a live Claude run of "3 other ways" is untried) |
+| Hook check, 3 hooks and A/B, Instagram safe zones, other formats | ✅ tested; a real 72 s master checked, a hook variant composed, rendered, joined and swapped in, the Hook card and overlay shown in screenshots (Claude laying out another format live is untried) |
 | Client approval board | ⚠️ tested and its page shown in screenshots through the review server locally; a client reached over the Cloudflare tunnel is untried |
 | Clawd, the Claude mascot | ✅ 30+ acts in every style, 70 pack poses, seven patterns rendered and passing every gate, transparent overlays, its own sounds |
 | Data sourcing and charts | ⚠️ specified, not built |

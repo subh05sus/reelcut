@@ -5,6 +5,7 @@ import path from "node:path";
 import { query, type CanUseTool, type Query, type SDKMessage, type SDKUserMessage } from "@anthropic-ai/claude-agent-sdk";
 import { reelcutHome } from "../library/store.js";
 import { chromeStatus } from "./integrations.js";
+import { formatVersions } from "./formats.js";
 
 /**
  * Create: a reel made from the dashboard. Each conversation drives the real /reelcut skill through Claude Code (the
@@ -700,5 +701,6 @@ export function reelState(reelPath: string | undefined): unknown {
     seconds: beats.reduce((a, b) => a + (b.seconds ?? 0), 0),
     master: at("master.mp4"), contact: at("contact.jpg"), poster: at("poster.jpg"), sheet: at("measure/reel-sheet.jpg"),
     plan: plan ? readFileSync(plan, "utf8").slice(0, 6000) : undefined,
+    formats: (() => { try { return formatVersions(reelPath); } catch { return []; } })(),
   };
 }

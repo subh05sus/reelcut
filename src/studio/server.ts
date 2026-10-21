@@ -51,6 +51,9 @@ import { addPerformance, analysisPrompt, importPrompt, insights, latest, readPer
 import { BOARD_STAGES, STAGE_NAMES, boardStatus, boardsOf, createBoard, loadBoards, publishStage, stagePrompt, type BoardStage } from "../create/board.js";
 import { cloudflaredPath, createShare, daemonState, ensureReviewDaemon, liveShare, loadShares, reviewUrl, revokeShare, sharesFor, stopReviewDaemon } from "../create/share.js";
 import { writeCaptions } from "../create/captions.js";
+import { fixHookPrompt, hookFresh, measureHook, readHook } from "../create/hook.js";
+import { abResult, hooksPrompt, readHooks, setAB, useVariant } from "../create/hooks.js";
+import { formatsPrompt, formatVersions, OTHER_FORMATS } from "../create/formats.js";
 import { coverFrames, LIMITS, makeCover, postKitPrompt, readCovers, readPostKit, PLATFORMS as POST_PLATFORMS, type Platform } from "../create/postkit.js";
 import { getRecipe, listRecipes, recipePrompt, removeRecipe, saveRecipe } from "../create/recipes.js";
 import { addEpisode, getSeries, listSeries, removeSeries, saveSeries, seriesPrompt } from "../create/series.js";
@@ -422,6 +425,18 @@ function toPatch(body: unknown): AssetPatch {
     patch.description = b.description.slice(0, 400);
   }
   return patch;
+}
+
+/** The hook card: the check (and whether it is for the master as it is), the other hooks with their files, the A/B. */
+function hookState(rp: string): unknown {
+  const dir = path.dirname(rp);
+  const at = (rel?: string) => { if (!rel) return undefined; const p = path.join(dir, rel); try { return `${p}#${Math.round(statSync(p).mtimeMs)}`; } catch { return undefined; } };
+  const hook = readHook(rp), set = readHooks(rp);
+  return {
+    master: existsSync(path.join(dir, "master.mp4")),
+    hook: hook ? { ...hook, strip: at(hook.strip), fresh: hookFresh(rp, hook) } : null,
+    hooks: set ? { ...set, variants: set.variants.map((v) => ({ ...v, master: at(v.master), poster: at(v.poster), strip: at(v.strip), clip: at(v.clip) })), result: abResult(set, readPerformance(rp)) ?? null } : null,
+  };
 }
 
 export function createStudioServer(options: StudioOptions = {}): http.Server {
@@ -1251,6 +1266,57 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
         cm.send(id, msg.shown, [], msg.prompt);
         return sendJson(res, 202, { ok: true, shown: msg.shown });
       }
+      // The hook: measured on every master (the render runs the check), judged by Claude; three other hooks and an A/B.
+      if (parts[3] === "hook") {
+        const rp = reelPath();
+        if (read && parts.length === 4) return sendJson(res, 200, hookState(rp));
+        if (method === "POST" && parts.length === 5) {
+          const b = (await readBody(req)) as { variant?: string; ids?: [string, string] | null };
+          if (parts[4] === "check") {
+            try { await measureHook(rp); } catch (error) { throw new HttpError(409, (error as Error).message); }
+            return sendJson(res, 200, hookState(rp));
+          }
+          if (parts[4] === "fix") {
+            const r = readHook(rp);
+            if (!r) throw new HttpError(409, "check the hook first");
+            const m = fixHookPrompt(rp, r); cm.send(id, m.shown, [], m.prompt);
+            return sendJson(res, 202, { ok: true, shown: m.shown });
+          }
+          if (parts[4] === "variants") { const m = hooksPrompt(rp); cm.send(id, m.shown, [], m.prompt); return sendJson(res, 202, { ok: true, shown: m.shown }); }
+          if (parts[4] === "use") {
+            try { useVariant(rp, String(b.variant ?? "")); } catch (error) { throw new HttpError(400, (error as Error).message); }
+            try { await measureHook(rp); } catch { /* the card says it is not checked */ }
+            return sendJson(res, 200, hookState(rp));
+          }
+          if (parts[4] === "ab") {
+            try { setAB(rp, Array.isArray(b.ids) ? [String(b.ids[0]), String(b.ids[1])] : null); } catch (error) { throw new HttpError(400, (error as Error).message); }
+            return sendJson(res, 200, hookState(rp));
+          }
+        }
+      }
+      // The same reel in other formats: Claude lays it out again in formats/<w>x<h>/.
+      if (parts[3] === "formats" && parts.length === 4) {
+        const rp = reelPath();
+        if (read) return sendJson(res, 200, { versions: formatVersions(rp), offer: OTHER_FORMATS });
+        if (method === "POST") {
+          const b = (await readBody(req)) as { formats?: string[] };
+          let m; try { m = formatsPrompt(rp, b.formats ?? []); } catch (error) { throw new HttpError(400, (error as Error).message); }
+          cm.send(id, m.shown, [], m.prompt);
+          return sendJson(res, 202, { ok: true, shown: m.shown });
+        }
+      }
+      // Results from the platforms: typed in, or a screenshot or CSV that Claude reads.
+      if (method === "POST" && parts[3] === "performance" && parts.length === 4) {
+        const b = (await readBody(req)) as Record<string, unknown> & { platform?: string };
+        return sendJson(res, 201, { entry: addPerformance(reelPath(), { ...b, platform: String(b.platform ?? "other"), source: "typed" }) });
+      }
+      if (method === "POST" && parts[3] === "performance" && parts[4] === "import" && parts.length === 5) {
+        const b = (await readBody(req)) as { files?: { name: string; path: string }[]; platform?: string; variant?: string };
+        const files = (b.files ?? []).filter((f) => typeof f.path === "string" && f.path.startsWith(createFilesDir(id)));
+        if (!files.length) throw new HttpError(400, "add a screenshot or a CSV");
+        cm.send(id, `Read the results from ${files.map((f) => f.name).join(", ")}`, files.map((f) => ({ ...f, kind: "results" })), importPrompt(reelPath(), files, b.platform || "any", b.variant));
+        return sendJson(res, 202, { ok: true });
+      }
       // Posting: captions (files now, burned in as a job), covers from the reel's frames, and the words Claude writes.
       if (read && parts[3] === "post" && parts.length === 4) {
         const rp = reelPath(), dir = path.dirname(rp);
@@ -1261,7 +1327,7 @@ export function createStudioServer(options: StudioOptions = {}): http.Server {
         const job = jobs.find((j) => j.runId === `captions:${id}`);
         return sendJson(res, 200, {
           captions: { ...captions, srt: at("captions.srt"), vtt: at("captions.vtt"), burned: at("master.captioned.mp4"), voiced, job: job && { id: job.id, status: job.status, log: job.log.slice(-4) } },
-          frames: coverFrames(rp), covers: readCovers(rp), kit: readPostKit(rp), limits: LIMITS, platforms: POST_PLATFORMS, results: latest(readPerformance(rp)),
+          frames: coverFrames(rp), covers: readCovers(rp), kit: readPostKit(rp), limits: LIMITS, platforms: POST_PLATFORMS, results: latest(readPerformance(rp)), ab: readHooks(rp)?.ab ?? null,
         });
       }
       if (method === "POST" && parts[3] === "captions" && parts.length === 4) {

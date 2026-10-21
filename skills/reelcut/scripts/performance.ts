@@ -7,7 +7,7 @@ import { addPerformance, insights, latest, readPerformance, reelFacts, type Perf
  * How posted reels performed.
  *
  *   npm run performance -- add out/reel.json --platform instagram --source screenshot --views 1200 --avg-watch 9.5 \
- *       [--reach N] [--likes N] [--comments N] [--shares N] [--saves N] [--follows N] [--retention3s 64] [--completion 22] [--captured 2026-10-08]
+ *       [--reach N] [--likes N] [--comments N] [--shares N] [--saves N] [--follows N] [--retention3s 64] [--completion 22] [--captured 2026-10-08] [--variant a]
  *   npm run performance -- summary [--json]      every reel with results, and what differs between them
  */
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
@@ -21,7 +21,7 @@ if (argv[0] === "add") {
     platform: flag("--platform") ?? "other", source: (flag("--source") ?? "typed") as never, capturedAt: flag("--captured"),
     views: flag("--views") as never, reach: flag("--reach") as never, likes: flag("--likes") as never, comments: flag("--comments") as never,
     shares: flag("--shares") as never, saves: flag("--saves") as never, follows: flag("--follows") as never,
-    avgWatchSeconds: flag("--avg-watch") as never, retention3s: flag("--retention3s") as never, completionRate: flag("--completion") as never, note: flag("--note"),
+    avgWatchSeconds: flag("--avg-watch") as never, retention3s: flag("--retention3s") as never, completionRate: flag("--completion") as never, note: flag("--note"), variant: flag("--variant"),
   });
   console.log(`recorded ${e.platform}: ${Object.entries(e).filter(([k]) => !["platform", "capturedAt", "source"].includes(k)).map(([k, v]) => `${k} ${v}`).join(", ")}`);
 } else if (argv[0] === "summary") {

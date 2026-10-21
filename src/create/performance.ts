@@ -26,6 +26,8 @@ export interface PerfEntry {
   completionRate?: number;
   source: "screenshot" | "csv" | "typed";
   note?: string;
+  /** Which hook this reading is for, when two were posted as an A/B test (hooks.json): "original", "a", "b", "c". */
+  variant?: string;
 }
 export const METRICS = ["views", "reach", "likes", "comments", "shares", "saves", "follows", "avgWatchSeconds", "retention3s", "completionRate"] as const;
 
@@ -46,14 +48,15 @@ export function addPerformance(reelPath: string, input: Omit<Partial<PerfEntry>,
     e[k] = k === "retention3s" || k === "completionRate" ? Math.min(1, n) : k === "avgWatchSeconds" ? Math.round(n * 10) / 10 : Math.round(n);
   }
   if (input.note) e.note = String(input.note).slice(0, 300);
+  if (input.variant && /^(original|[a-c])$/.test(String(input.variant))) e.variant = String(input.variant);
   const entries = [...readPerformance(reelPath), e];
   writeFileSync(file(reelPath), `${JSON.stringify({ entries }, null, 1)}\n`);
   return e;
 }
-/** The latest reading per platform. */
+/** The latest reading per platform (and per hook, for an A/B test). */
 export function latest(entries: readonly PerfEntry[]): PerfEntry[] {
   const by = new Map<string, PerfEntry>();
-  for (const e of [...entries].sort((a, b) => a.capturedAt.localeCompare(b.capturedAt))) by.set(e.platform, e);
+  for (const e of [...entries].sort((a, b) => a.capturedAt.localeCompare(b.capturedAt))) by.set(e.variant ? `${e.platform}:${e.variant}` : e.platform, e);
   return [...by.values()];
 }
 
@@ -114,11 +117,11 @@ export function insights(rows: readonly PerfRow[]): Insight[] {
 }
 
 /** Claude reads a screenshot or a CSV of the platform's analytics into performance.json. */
-export function importPrompt(reelPath: string, files: readonly { name: string; path: string }[], platform: string): string {
+export function importPrompt(reelPath: string, files: readonly { name: string; path: string }[], platform: string, variant?: string): string {
   const reelSecs = readReel(reelPath).beats.reduce((a, b) => a + (b.durationSeconds ?? 0), 0);
   return [
     `Read the ${platform === "any" ? "platform" : platform} analytics in ${files.map((f) => f.path).join(", ")} (look at an image with Read; read a CSV as text) for the reel at ${reelPath} (${Math.round(reelSecs)} s long).`,
-    `Record what they show with \`npm run performance -- add ${reelPath} --platform <instagram|tiktok|youtube|linkedin|other> --source <screenshot|csv> [--views N] [--reach N] [--likes N] [--comments N] [--shares N] [--saves N] [--follows N] [--avg-watch SECONDS] [--retention3s PERCENT] [--completion PERCENT] [--captured YYYY-MM-DD]\`, one call per platform shown.`,
+    `Record what they show with \`npm run performance -- add ${reelPath} --platform <instagram|tiktok|youtube|linkedin|other> --source <screenshot|csv> [--views N] [--reach N] [--likes N] [--comments N] [--shares N] [--saves N] [--follows N] [--avg-watch SECONDS] [--retention3s PERCENT] [--completion PERCENT] [--captured YYYY-MM-DD]${variant ? ` --variant ${variant}` : ""}\`, one call per platform shown.${variant ? ` These are the numbers for ${variant === "original" ? "the original hook" : `hook ${variant.toUpperCase()}`} of an A/B test.` : ""}`,
     "Only numbers the file actually shows: leave a flag out rather than estimate it, and read \"1.2K\" as 1200. If the file is not analytics for this reel, say so and record nothing.",
     "Then reply in two or three lines: the numbers in words, and how this reel compares with the others (`npm run performance -- summary`).",
   ].join("\n");

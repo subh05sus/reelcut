@@ -29,6 +29,7 @@ import { mixReel, muxSlice, type ReelMix } from "../../../src/audio/reelmix.js";
 import { applyMotionBlur, SCALE_PRESET } from "../../../src/render/blur.js";
 import { beatVoice } from "../../../src/voice/index.js";
 import { voiceForReel, type ReelVoice, type VoiceoverSpec } from "../../../src/voice/reel.js";
+import { hookSummary, measureHook } from "../../../src/create/hook.js";
 
 /**
  * Turn a reel manifest into rendered clips and a master.
@@ -703,13 +704,19 @@ async function main(): Promise<void> {
         const posterPath = path.join(base, "poster.jpg");
         const baked = bakePoster(masterFile, choice.at, posterPath);
         console.log(`  poster … ${choice.at.toFixed(2)}s (${choice.reason})${baked.ok ? `, baked as frame 0 — ${baked.detail}` : ` — NOT baked: ${baked.detail}`}`);
+        // The hook check, on every master of a real reel: the first 3 s measured, and the text under Instagram's UI.
+        if (args.record) {
+          try { console.log(hookSummary(args.manifest, await measureHook(args.manifest)).replace(/^/gm, "  ")); }
+          catch (error) { console.warn(`  (no hook check: ${error instanceof Error ? error.message : String(error)})`); }
+        }
       }
     }
   }
 
-  // One sheet for the whole reel, a row per beat, from whatever clip sheets exist.
-  const rows = beats.map((b) => path.join(sheetDir, `${b.id}.jpg`)).filter((f) => existsSync(f));
-  try {
+  // One sheet for the whole reel, a row per beat, from whatever clip sheets exist. A scratch render beside a reel
+  // (its other ways, its other hooks) leaves the reel's sheet alone.
+  const rows = args.record ? beats.map((b) => path.join(sheetDir, `${b.id}.jpg`)).filter((f) => existsSync(f)) : [];
+  if (rows.length) try {
     const sheet = stackSheets(rows, path.join(base, "contact.jpg"));
     if (sheet) console.log(`  contact sheet … ${sheet} (a row per beat, frames at ${SHEET_AT.map((f) => `${Math.round(f * 100)}%`).join(", ")})`);
   } catch (error) {

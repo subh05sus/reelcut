@@ -744,7 +744,27 @@
   .cr-tl .marks { position: absolute; inset: 0; pointer-events: none; }
   .cr-tl .marks i { position: absolute; top: 50%; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 1.5px var(--cell); }
   .cr-tl .marks i.sent { background: var(--orange); } .cr-tl .marks i.resolved { background: var(--label-3); }
-  .cr-mbar { display: flex; align-items: center; gap: 8px; justify-content: space-between; min-height: 28px; }
+  .cr-ig { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+  .cr-fmts { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 8px; }
+  .cr-fmts button { height: 28px; padding: 0 12px; border-radius: 999px; font-size: 13px; background: var(--fill-3); }
+  .cr-fmts button.on { background: var(--accent); color: var(--on-accent); }
+  .cr-hook { margin-top: 14px; background: var(--cell); border-radius: var(--r-group); padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .cr-hook .hd { display: flex; align-items: center; gap: 8px; }
+  .cr-hook .sc { font-weight: 600; padding: 2px 8px; border-radius: 999px; font-size: 13px; background: var(--fill-3); }
+  .cr-hook .sc.good { background: color-mix(in srgb, var(--green) 22%, transparent); color: var(--green); }
+  .cr-hook .sc.weak { background: color-mix(in srgb, var(--orange) 22%, transparent); color: var(--orange); }
+  .cr-hook .strips { overflow-x: auto; margin: 0 -12px; padding: 0 12px; scrollbar-width: thin; }
+  .cr-hook .strip { height: 200px; width: auto; max-width: none; border-radius: 8px; display: block; }
+  .cr-hook ul { margin: 0; padding-left: 18px; font-size: 13px; color: var(--label-2); display: flex; flex-direction: column; gap: 3px; }
+  .cr-hook .rw { font-size: 15px; } .cr-hook .rw b { font-weight: 600; }
+  .cr-hook .safe button { all: unset; cursor: pointer; color: var(--accent-text, var(--accent)); }
+  .cr-hooks { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .cr-hooks .hv { background: var(--fill-1); border-radius: 12px; padding: 8px; display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+  .cr-hooks .hv.on { box-shadow: 0 0 0 2px var(--accent); }
+  .cr-hooks video { width: 100%; border-radius: 8px; background: #000; display: block; }
+  .cr-hooks .hv .t { font-weight: 600; } .cr-hooks .hv .s { color: var(--label-2); }
+  .cr-hooks label { display: flex; gap: 6px; align-items: center; color: var(--label-2); }
+  .cr-mbar { display: flex; align-items: center; gap: 4px 8px; flex-wrap: wrap; justify-content: space-between; min-height: 28px; }
   .cr-mbar .sm-link { font-size: 13px; }
   .cr-draft { background: var(--fill-4); border-radius: 12px; padding: 12px; }
   .cr-draft .acts { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
@@ -1468,15 +1488,17 @@ function perfLine(e, seconds) {
   const watched = e.avgWatchSeconds != null ? `${e.avgWatchSeconds} s watched${seconds ? ` (${Math.round(Math.min(1, e.avgWatchSeconds / seconds) * 100)}%)` : ""}` : e.completionRate != null ? `${Math.round(e.completionRate * 100)}% to the end` : e.retention3s != null ? `${Math.round(e.retention3s * 100)}% past 3 s` : "";
   return [e.views != null && `${n(e.views)} views`, watched, e.likes != null && `${n(e.likes)} likes`, e.shares != null && `${n(e.shares)} shares`, e.saves != null && `${n(e.saves)} saves`].filter(Boolean).join(" · ");
 }
-function typeResults(id, done) {
+const hookName = (v) => (v === "original" ? "Original hook" : `Hook ${String(v).toUpperCase()}`);
+const abSelect = (ab, idAttr) => (ab ? `<label class="row-i"><span class="t" style="width:150px">Which hook</span><select id="${idAttr}" class="grow">${ab.map((v) => `<option value="${esc(v)}">${esc(hookName(v))}</option>`).join("")}</select></label>` : "");
+function typeResults(id, done, ab) {
   const f = (k, label, hint = "") => `<label class="row-i"><span class="t" style="width:150px">${label}</span><input class="grow" inputmode="decimal" data-m="${k}" placeholder="${hint}"></label>`;
   openSheet({
-    title: "Results", sub: "Type what the platform shows; leave out what it doesn't.",
-    body: `<div class="group"><label class="row-i"><span class="t" style="width:150px">Platform</span><select id="rs-pf" class="grow"><option value="instagram">Instagram</option><option value="tiktok">TikTok</option><option value="youtube">YouTube</option><option value="linkedin">LinkedIn</option><option value="other">Other</option></select></label></div>
+    title: "Results", sub: ab ? "Type what the platform shows for one of the two hooks; leave out what it doesn't." : "Type what the platform shows; leave out what it doesn't.",
+    body: `<div class="group">${abSelect(ab, "rs-v")}<label class="row-i"><span class="t" style="width:150px">Platform</span><select id="rs-pf" class="grow"><option value="instagram">Instagram</option><option value="tiktok">TikTok</option><option value="youtube">YouTube</option><option value="linkedin">LinkedIn</option><option value="other">Other</option></select></label></div>
       <div class="group" style="margin-top:12px">${f("views", "Views")}${f("avgWatchSeconds", "Average watch time", "seconds")}${f("retention3s", "Still watching at 3 s", "%")}${f("completionRate", "Watched to the end", "%")}${f("likes", "Likes")}${f("comments", "Comments")}${f("shares", "Shares")}${f("saves", "Saves")}${f("follows", "Follows")}</div>
       <div class="acts"><button data-sclose>Cancel</button><button class="primary" id="rs-ok">Save</button></div>`,
     bind: (sh) => $("#rs-ok", sh).addEventListener("click", async () => {
-      const body = { platform: $("#rs-pf", sh).value };
+      const body = { platform: $("#rs-pf", sh).value, ...($("#rs-v", sh) ? { variant: $("#rs-v", sh).value } : {}) };
       $$("[data-m]", sh).forEach((i) => { const v = i.value.replace(/[,\s]/g, "").replace(/k$/i, "000"); if (v) body[i.dataset.m] = v; });
       try { await post(`/api/create/${id}/performance`, body); closeSheet(); toast("Saved"); done?.(); } catch (err) { toast(err.message); }
     }),
@@ -1541,8 +1563,8 @@ async function paintPost() {
     : `<p class="foot-note" style="margin:0 0 8px">Titles, captions, hashtags and a first comment for Instagram, TikTok, YouTube and LinkedIn, written by Claude in your voice from the script.</p>
       <div style="display:flex;gap:8px"><input id="cp-note" style="flex:1" placeholder="Anything to know? (optional)"><button class="primary sm" id="cp-kit" style="height:var(--ctl)">Write the post kit</button></div>`}
     <div class="cap" style="margin:16px 0 8px">Results <a class="note" href="#performance" style="margin-left:auto">All reels</a></div>
-    ${k.results.length ? `<div class="group">${k.results.map((e) => `<div class="row-i"><span class="col grow"><span class="t">${PF_NAME[e.platform] || "Other"}</span><span class="s">${esc(perfLine(e, Math.round(cr.reel?.seconds || 0)))}</span></span><span class="s">${esc(new Date(e.capturedAt).toLocaleDateString([], { day: "numeric", month: "short" }))}</span></div>`).join("")}</div>` : `<p class="foot-note" style="margin:0 0 8px">Once it is posted, add its analytics: a screenshot or a CSV export, which Claude reads, or the numbers typed in. The Performance page then shows what holds attention across your reels.</p>`}
-    <div class="acts" style="justify-content:flex-start;margin-top:8px"><button class="sm" id="cp-res-file">Add a screenshot or CSV</button><button class="sm" id="cp-res-type">Type them in</button><input type="file" id="cp-res-input" accept="image/*,.csv,text/csv" multiple hidden></div>`;
+    ${k.results.length ? `<div class="group">${k.results.map((e) => `<div class="row-i"><span class="col grow"><span class="t">${PF_NAME[e.platform] || "Other"}${e.variant ? ` · ${esc(hookName(e.variant))}` : ""}</span><span class="s">${esc(perfLine(e, Math.round(cr.reel?.seconds || 0)))}</span></span><span class="s">${esc(new Date(e.capturedAt).toLocaleDateString([], { day: "numeric", month: "short" }))}</span></div>`).join("")}</div>` : `<p class="foot-note" style="margin:0 0 8px">Once it is posted, add its analytics: a screenshot or a CSV export, which Claude reads, or the numbers typed in. The Performance page then shows what holds attention across your reels.</p>`}
+    ${k.ab ? `<div class="group" style="margin-top:8px">${abSelect(k.ab, "cp-res-v")}</div>` : ""}<div class="acts" style="justify-content:flex-start;margin-top:8px"><button class="sm" id="cp-res-file">Add a screenshot or CSV</button><button class="sm" id="cp-res-type">Type them in</button><input type="file" id="cp-res-input" accept="image/*,.csv,text/csv" multiple hidden></div>`;
   $$("[data-copy]", box).forEach((b) => b.addEventListener("click", async () => { try { await navigator.clipboard.writeText(b.dataset.copy); const t = b.textContent; b.textContent = "Copied"; setTimeout(() => { b.textContent = t; }, 1200); } catch { toast("Could not copy"); } }));
   $("#cp-write")?.addEventListener("click", async () => { try { await post(`/api/create/${cr.meta.id}/captions`, {}); paintPost(); } catch (err) { toast(err.message); } });
   $("#cp-burn")?.addEventListener("click", async () => { try { await post(`/api/create/${cr.meta.id}/captions`, { burn: true, style: $("#cp-style").value }); toast("Burning captions in; this takes a few minutes"); paintPost(); } catch (err) { toast(err.message); } });
@@ -1561,11 +1583,11 @@ async function paintPost() {
     const picked = [...e.target.files]; if (!picked.length) return;
     try {
       const files = []; for (const f of picked) files.push(await uploadFile(cr.meta.id, { name: f.name, kind: "results", file: f }));
-      await post(`/api/create/${cr.meta.id}/performance/import`, { files, platform: "any" });
+      await post(`/api/create/${cr.meta.id}/performance/import`, { files, platform: "any", ...($("#cp-res-v") ? { variant: $("#cp-res-v").value } : {}) });
       toast("Claude is reading the results"); window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
     } catch (err) { toast(err.message); }
   });
-  $("#cp-res-type").addEventListener("click", () => typeResults(cr.meta.id, () => paintPost()));
+  $("#cp-res-type").addEventListener("click", () => typeResults(cr.meta.id, () => paintPost(), k.ab));
   clearTimeout(cr.postTimer);
   if (burning) cr.postTimer = setTimeout(() => { if (cr.panelShown === "post") paintPost(); }, 4000);
 }
@@ -1714,23 +1736,106 @@ async function pickImage(beatId) {
 
 // ---- master: play it, pin comments to frames, send them to Claude
 function masterHtml(r) {
-  return `<div class="cr-stage" id="cr-stage" style="aspect-ratio:${FMT_RATIO[r.format] || "1 / 1"}">
-      <video class="master" id="cr-master" src="${media(r.master)}" ${r.poster ? `poster="${media(r.poster)}"` : ""} controls playsinline preload="metadata"></video>
+  const vs = (r.formats || []).filter((f) => f.master);
+  const cur = vs.find((f) => f.format === cr.fmtView) || null;
+  const src = cur ? cur.master : r.master, fmt = cur ? cur.format : r.format;
+  const ig = fmt === "9:16" && igOn();
+  return `${vs.length > 1 ? `<div class="cr-fmts" role="group" aria-label="Format">${vs.map((f, i) => `<button type="button" data-fmt="${i ? f.format : ""}" class="${(i ? f.format : "") === (cur && cur !== vs[0] ? cur.format : "") ? "on" : ""}">${esc(f.format)} <span class="note">${esc(f.label.split(" · ")[0])}</span></button>`).join("")}</div>` : ""}
+    <div class="cr-stage" id="cr-stage" style="aspect-ratio:${FMT_RATIO[fmt] || "1 / 1"}">
+      <video class="master" id="cr-master" src="${media(src)}" ${(cur ? cur.poster : r.poster) ? `poster="${media(cur ? cur.poster : r.poster)}"` : ""} controls playsinline preload="metadata"></video>
+      ${ig ? IG_OVERLAY : ""}
       <div class="cr-pins" id="cr-pins"></div>
       <div class="cr-catch" id="cr-catch" hidden></div>
     </div>
     <div class="cr-tl" id="cr-tl" aria-label="Timeline: beats and comments">${r.beats.map((b, i) => `<span class="seg-b" style="flex:${b.seconds || 1}" title="Beat ${i + 1}" data-t="${b.start}"></span>`).join("")}<span class="ph" id="cr-ph"></span><span class="marks" id="cr-marks"></span></div>
-    <div class="cr-mbar"><button class="sm" id="cr-comment">${ic("plus", 14)} Comment on a frame</button><span class="grow"></span><button class="plain sm" id="cr-share">Share for review</button><a class="plain sm-link" href="${media(r.master)}" download>Download</a></div>
-    <div id="cr-comments"></div>`;
+    <div class="cr-mbar">${cur && cur !== vs[0] ? `<span class="note">Comments are on the ${esc(r.format)} reel</span>` : `<button class="sm" id="cr-comment">${ic("plus", 14)} Comment on a frame</button>`}<span class="grow"></span>${fmt === "9:16" ? `<button class="plain sm" id="cr-igv" aria-pressed="${ig}">${ig ? "Hide" : "Show"} Instagram's UI</button>` : ""}<button class="plain sm" id="cr-fmt-make">Other formats</button><button class="plain sm" id="cr-share">Share for review</button><a class="plain sm-link" href="${media(src)}" download>Download</a></div>
+    <div id="cr-comments"></div>
+    <div id="cr-hook"></div>`;
+}
+/** Instagram's Reels interface over a 9:16 frame, drawn from its proportions: what covers the video, and the grid's crop. */
+const IG_OVERLAY = `<svg class="cr-ig" viewBox="0 0 1080 1920" preserveAspectRatio="none" aria-hidden="true">
+  <rect width="1080" height="230" fill="rgba(0,0,0,.38)"/><rect y="1536" width="1080" height="384" fill="rgba(0,0,0,.38)"/><rect x="906" y="1056" width="174" height="480" fill="rgba(0,0,0,.26)"/>
+  <text x="44" y="132" fill="#fff" font-size="60" font-weight="700" font-family="-apple-system,system-ui,sans-serif">Reels</text>
+  <circle cx="1010" cy="112" r="30" fill="none" stroke="#fff" stroke-width="7"/><rect x="985" y="90" width="50" height="44" rx="10" fill="none" stroke="#fff" stroke-width="7"/>
+  <g fill="none" stroke="#fff" stroke-width="7" stroke-linejoin="round">
+    <path d="M993 1158c-22-20-50-14-50 12 0 22 30 42 50 58 20-16 50-36 50-58 0-26-28-32-50-12z"/>
+    <path d="M950 1300a43 40 0 1 1 22 34l-26 8 6-24a40 40 0 0 1-2-18z"/>
+    <path d="M948 1430l92-36-30 96-18-40z"/>
+  </g>
+  <g fill="#fff" font-family="-apple-system,system-ui,sans-serif" font-size="26" text-anchor="middle"><text x="993" y="1268">12K</text><text x="993" y="1388">340</text><text x="993" y="1520">1.2K</text></g>
+  <g fill="#fff"><circle cx="970" cy="1600" r="7"/><circle cx="993" cy="1600" r="7"/><circle cx="1016" cy="1600" r="7"/></g>
+  <rect x="958" y="1690" width="70" height="70" rx="14" fill="none" stroke="#fff" stroke-width="6"/>
+  <circle cx="78" cy="1640" r="38" fill="rgba(255,255,255,.85)"/>
+  <text x="134" y="1652" fill="#fff" font-size="34" font-weight="600" font-family="-apple-system,system-ui,sans-serif">yourname · Follow</text>
+  <rect x="44" y="1708" width="720" height="26" rx="13" fill="rgba(255,255,255,.75)"/><rect x="44" y="1752" width="520" height="26" rx="13" fill="rgba(255,255,255,.55)"/>
+  <text x="44" y="1840" fill="#fff" font-size="30" font-family="-apple-system,system-ui,sans-serif">♫ Original audio</text>
+  <rect x="3" y="240" width="1074" height="1440" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="4" stroke-dasharray="18 14"/>
+  <rect x="640" y="244" width="432" height="44" rx="10" fill="rgba(0,0,0,.45)"/><text x="1056" y="276" fill="#fff" font-size="26" text-anchor="end" font-family="-apple-system,system-ui,sans-serif">The profile grid shows this much</text>
+</svg>`;
+const igOn = () => { try { return localStorage.getItem("rc.igview") === "1"; } catch { return false; } };
+async function paintHook() {
+  const box = $("#cr-hook"); if (!box || !cr.meta) return;
+  let d; try { d = await api(`/api/create/${cr.meta.id}/hook`); } catch { box.innerHTML = ""; return; }
+  if (!$("#cr-hook")) return;
+  const h = d.hook, hs = d.hooks, v = h?.verdict;
+  const score = h && v && h.fresh ? `<span class="sc ${v.score >= 7 ? "good" : "weak"}">${v.score}/10</span>` : h ? `<span class="sc ${h.score >= 75 ? "good" : "weak"}">${h.score}/100</span>` : "";
+  const later = (h?.safe || []).filter((x) => x.from > 3);
+  const early = (h?.safe || []).filter((x) => x.from <= 3);
+  box.innerHTML = `<div class="cr-hook">
+    <div class="hd"><b>Hook</b>${score}<span class="note grow">${!h ? "the first 3 seconds, not checked yet" : !h.fresh ? "the master changed since this check" : v ? "the first 3 seconds, judged by Claude" : "the first 3 seconds, measured; Claude has not judged it yet"}</span><button class="plain sm" id="hk-check">${h ? "Check again" : "Check the hook"}</button></div>
+    ${h?.strip ? `<div class="strips"><img class="strip" src="${media(h.strip)}" alt="The first 3 seconds, frame by frame"></div>` : ""}
+    ${v && h.fresh ? `<div class="rw">${esc(v.line)}</div>${v.rewrite ? `<div class="rw">Try: <b>“${esc(v.rewrite)}”</b>${v.why ? ` <span class="note">${esc(v.why)}</span>` : ""}</div>` : ""}` : ""}
+    ${h?.flags?.length ? `<ul>${h.flags.map((f) => `<li>${esc(f.line)}</li>`).join("")}</ul>` : h ? `<ul><li>Words early, moving early, readable before 3 s${h.format === "9:16" ? ", clear of Instagram's interface" : ""}.</li></ul>` : ""}
+    ${later.length ? `<div class="note safe">Under Instagram's interface later: ${later.slice(0, 5).map((x) => `<button type="button" data-seek="${x.from}">“${esc(x.text.slice(0, 32))}” at ${x.from.toFixed(1)} s</button> (${esc(x.name)})`).join("; ")}${later.length > 5 ? `; and ${later.length - 5} more` : ""}</div>` : ""}
+    ${h ? `<div class="acts" style="justify-content:flex-start;margin:0">${(h.flags.length || (v && v.score < 7) || early.length) ? `<button class="sm primary" id="hk-fix">Fix the hook</button>` : ""}<button class="sm" id="hk-make">${hs ? "Make 3 more hooks" : "Make 3 hooks"}</button></div>` : ""}
+    ${hs ? `<div class="cap" style="margin:6px 0 0">The hooks · pick one, or two to post as an A/B test</div><div class="cr-hooks">${hs.variants.map((x) => `<div class="hv ${x.id === hs.chosen ? "on" : ""}">
+        ${x.master ? `<video src="${media(x.master)}" ${x.poster ? `poster="${media(x.poster)}"` : ""} muted playsinline preload="none" data-hover></video>` : ""}
+        <span class="t">${x.id === "original" ? "Original" : `Hook ${x.id.toUpperCase()}`} <span class="note">${x.score}/100</span></span>
+        <span>${esc(x.line || "(no words)")}</span>${x.angle ? `<span class="s">${esc(x.angle)}</span>` : ""}
+        ${x.id === hs.chosen ? `<span class="s">In the reel</span>` : `<button class="sm" data-use="${x.id}">Use this one</button>`}
+        <label><input type="checkbox" data-ab="${x.id}" ${hs.ab?.includes(x.id) ? "checked" : ""}> A/B</label></div>`).join("")}</div>
+      ${hs.result ? `<div class="note">${esc(hs.result.line)}</div>` : `<div class="note">Tick two to post both and compare them; their numbers go in on the Post tab.</div>`}` : ""}
+  </div>`;
+  $("#hk-check", box)?.addEventListener("click", async (e) => { e.target.disabled = true; e.target.textContent = "Checking…"; try { await post(`/api/create/${cr.meta.id}/hook/check`, {}); } catch (err) { toast(err.message); } paintHook(); });
+  $("#hk-fix", box)?.addEventListener("click", async () => { try { await post(`/api/create/${cr.meta.id}/hook/fix`, {}); toast("Asked Claude to fix the hook"); } catch (err) { toast(err.message); } });
+  $("#hk-make", box)?.addEventListener("click", async () => { try { await post(`/api/create/${cr.meta.id}/hook/variants`, {}); toast("Claude is making 3 hooks"); } catch (err) { toast(err.message); } });
+  $$("[data-seek]", box).forEach((b) => b.addEventListener("click", () => { const m = $("#cr-master"); if (m) { m.currentTime = Number(b.dataset.seek); m.pause(); m.scrollIntoView({ block: "center", behavior: "smooth" }); } }));
+  $$("[data-use]", box).forEach((b) => b.addEventListener("click", async () => { b.disabled = true; try { await post(`/api/create/${cr.meta.id}/hook/use`, { variant: b.dataset.use }); toast("Hook swapped in"); cr.panelShown = null; refreshReel(); } catch (err) { toast(err.message); b.disabled = false; } }));
+  $$("[data-ab]", box).forEach((c) => c.addEventListener("change", async () => {
+    const ids = $$("[data-ab]", box).filter((x) => x.checked).map((x) => x.dataset.ab);
+    if (ids.length > 2) { c.checked = false; toast("Two at a time"); return; }
+    try { await post(`/api/create/${cr.meta.id}/hook/ab`, { ids: ids.length === 2 ? ids : null }); if (ids.length === 2) toast("A/B set: post both, then add each one's numbers on the Post tab"); } catch (err) { toast(err.message); }
+  }));
+  $$("video[data-hover]", box).forEach((x) => { x.addEventListener("mouseenter", () => x.play().catch(() => {})); x.addEventListener("mouseleave", () => { x.pause(); x.currentTime = 0; }); x.addEventListener("click", () => { x.muted = false; x.controls = true; x.play().catch(() => {}); }); });
+}
+/** Other formats: Claude lays the reel out again in each. */
+async function openFormats() {
+  let d; try { d = await api(`/api/create/${cr.meta.id}/formats`); } catch (err) { toast(err.message); return; }
+  const own = d.versions[0]?.format, have = new Set(d.versions.map((v) => v.format));
+  const opts = d.offer.filter((f) => f !== own);
+  openSheet({
+    title: "Other formats", sub: "Each format is laid out again, not cropped: the same words, moves and timing, refitted. It renders beside this reel and shows above the player.",
+    body: `<div class="group">${opts.map((f) => `<label class="row-i"><input type="checkbox" data-f="${f}" ${have.has(f) ? "" : "checked"}><span class="col grow"><span class="t">${esc(f)}</span><span class="s">${esc({ "9:16": "Reels, TikTok, Shorts", "4:5": "The Instagram and LinkedIn feed", "1:1": "Everywhere else" }[f] || "")}${have.has(f) ? " · made already: makes it again" : ""}</span></span></label>`).join("")}</div>
+      <div class="acts"><button data-sclose>Cancel</button><button class="primary" id="fm-go">Make them</button></div>`,
+    bind: (sh) => $("#fm-go", sh).addEventListener("click", async () => {
+      const formats = $$("[data-f]", sh).filter((c) => c.checked).map((c) => c.dataset.f);
+      if (!formats.length) { toast("Choose a format"); return; }
+      try { await post(`/api/create/${cr.meta.id}/formats`, { formats }); closeSheet(); toast("Claude is laying it out again"); } catch (err) { toast(err.message); }
+    }),
+  });
 }
 function bindMaster(r) {
   const v = $("#cr-master"), tl = $("#cr-tl"), ph = $("#cr-ph"), total = r.seconds || 1;
   const sync = () => { ph.style.left = `${Math.min(100, (v.currentTime / total) * 100)}%`; paintPins(); };
   v.addEventListener("timeupdate", sync); v.addEventListener("seeked", sync);
   tl.addEventListener("click", (e) => { const rc = tl.getBoundingClientRect(); v.currentTime = Math.max(0, Math.min(total - 0.05, ((e.clientX - rc.left) / rc.width) * total)); });
-  $("#cr-comment").addEventListener("click", () => startComment());
+  $("#cr-comment")?.addEventListener("click", () => startComment());
   $("#cr-share").addEventListener("click", openShare);
+  $("#cr-fmt-make").addEventListener("click", openFormats);
+  $("#cr-igv")?.addEventListener("click", () => { try { localStorage.setItem("rc.igview", igOn() ? "0" : "1"); } catch { /* per viewer only */ } cr.panelShown = null; refreshReel(); });
+  $$("[data-fmt]").forEach((b) => b.addEventListener("click", () => { cr.fmtView = b.dataset.fmt || null; cr.panelShown = null; refreshReel(); }));
   paintComments(true);
+  paintHook();
 }
 /** The client approval board: choose its stages, then send each one when it is ready and watch the decisions. */
 async function openBoard() {
