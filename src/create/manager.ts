@@ -5,7 +5,7 @@ import path from "node:path";
 import { query, type CanUseTool, type Query, type SDKMessage, type SDKUserMessage } from "@anthropic-ai/claude-agent-sdk";
 import { reelcutHome } from "../library/store.js";
 import { chromeStatus } from "./integrations.js";
-import { formatVersions } from "./formats.js";
+import { alsoFormatLine, formatVersions } from "./formats.js";
 import { isUsableSound, loadIndex } from "../library/index.js";
 
 /** With this many approved sounds of their own, a reel's cues come from the owner's library only. */
@@ -31,7 +31,10 @@ export type Ev = { seq: number; id: string; at: string } & Body;
 export interface Question { question: string; header?: string; multiSelect?: boolean; options: { label: string; description?: string; preview?: string }[] }
 
 export interface Settings {
-  personality?: string; format?: string; length?: "full" | "short"; resolution?: "hd" | "4k";
+  personality?: string; format?: string;
+  /** A second format made in the same run ("Also in" on the composer): two formats at most. */
+  alsoFormat?: string;
+  length?: "full" | "short"; resolution?: "hd" | "4k";
   text?: "full" | "key-lines" | "minimal" | "none"; sfx?: "on" | "off" | "ask"; music?: "fits" | "snap" | "none"; blur?: "on" | "off";
   /** "write": the owner gave a topic, a link or notes, and Claude writes the script first. "watch": the owner asks about a video. */
   mode?: "script" | "write" | "watch" | "brief" | "long";
@@ -247,9 +250,11 @@ export class CreateManager {
     if (i.seriesLines?.length) lines.push(...i.seriesLines);
     if (i.settings?.personality) lines.push(`Use the personality "${i.personalityName ?? i.settings.personality}" (${i.settings.personality}); write it into reel.json.`, "");
     if (!i.scriptPath && !write) lines.push("There is no script file: the script is in the instructions above.", "");
+    const also = alsoFormatLine(i.settings?.format, i.settings?.alsoFormat);
+    if (also) lines.push(also, "");
     const st = i.settings ?? {};
     const settled = [
-      st.format && `format ${st.format}`, st.length && (st.length === "short" ? "a short cut" : "the whole script"), st.resolution && st.resolution.toUpperCase(),
+      st.format && `format ${st.format}`, alsoFormatLine(st.format, st.alsoFormat) && `also in ${st.alsoFormat}`, st.length && (st.length === "short" ? "a short cut" : "the whole script"), st.resolution && st.resolution.toUpperCase(),
       st.text && `text on screen: ${st.text}`,
       // Sound cues are on unless the owner said otherwise: proposed from each beat's own moments, the owner's sounds first.
       st.sfx === "off" ? "sound effects off" : st.sfx === "ask" ? undefined : `sound effects on${st.sfx === "on" ? "" : " (unless the personality's sound effects are off)"}: \`npm run sfx -- suggest reel.json --apply${ownSoundCount() >= MINE_ENOUGH ? " --mine" : ""}\` before rendering, then render with --sfx${ownSoundCount() >= MINE_ENOUGH ? " (only the owner's own approved sounds)" : " (the owner's own sounds win a tie with the bundled CC0 pack)"}`,
@@ -571,6 +576,7 @@ export function briefPrompt(s: SessionMeta, i: StartInput): string {
     "   direction. Ask with AskUserQuestion: \"Make the reel from this script?\" with \"Make the reel (Recommended)\", \"Tighten it\" and \"Another angle\".",
     `4. Then make the reel: invoke the reelcut skill (Skill tool) with the arguments \`${`${scriptOut} ${flags}`.trim()}\`, and give every beat the`,
     "   technique path of the direction it carries (beats[].technique and techniqueWhy in reel.json).",
+    ...(alsoFormatLine(i.settings?.format, i.settings?.alsoFormat) ? [`   ${alsoFormatLine(i.settings?.format, i.settings?.alsoFormat)}`] : []),
     "",
     "This run is driven from the reelcut studio's Create page: the owner answers your questions there as cards. Never ask whether",
     "to open the studio. Start your first reply with one line `Title: <a short name for this reel, 2 to 6 words>`.",
@@ -606,6 +612,7 @@ export function longPrompt(s: Session, i: StartInput, flags: readonly string[]):
     `5. Make the first one here, now: invoke the reelcut skill with \`${out}/moment-1.txt --voiceover ${out}/moment-1.m4a ${rest.join(" ")}\`.`,
     `   Move the others into ${out}/queue/ (each .txt with its .m4a) and queue them to run one after another, unattended:`,
     `   \`npm run reelcut -- batch ${out}/queue ${rest.filter((f) => f.startsWith("--format") || f === "--short").join(" ")}\`; say they are in the batch.`,
+    ...(alsoFormatLine(i.settings?.format, i.settings?.alsoFormat) ? [`   For the first one: ${alsoFormatLine(i.settings?.format, i.settings?.alsoFormat)}`] : []),
     "- Start your first reply with one line `Title: <a short name for this reel, 2 to 6 words>`; the chat is named after it.",
   ].join("\n");
 }

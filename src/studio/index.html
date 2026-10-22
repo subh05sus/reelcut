@@ -2141,6 +2141,7 @@ function composerHtml(first) {
     ${first && d.settings.mode === "watch" ? `<div class="chips">${sel("cr-depth", [["", "Look: normal"], ["quick", "Look: quick"], ["deep", "Look: deep, frame by frame"]], d.settings.depth, "How closely to look")}</div>` : ""}
     ${first && d.settings.mode !== "watch" ? `<div class="chips">${sel("cr-pers", [["", "No personality"], ...pers.map((p) => [p.id, p.name])], d.settings.personality, "Personality")}
       ${sel("cr-format", [["", "Format: ask"], ["9:16", "9:16"], ["1:1", "1:1"], ["4:5", "4:5"], ["16:9", "16:9"]], d.settings.format, "Format")}
+      ${sel("cr-also", [["", "One format"], ...["9:16", "1:1", "4:5", "16:9"].filter((f) => f !== d.settings.format).map((f) => [f, `Also in ${f}`])], d.settings.alsoFormat, "A second format, made in the same run")}
       ${sel("cr-length", [["", "Length: ask"], ["full", "Whole script"], ["short", "Short cut"]], d.settings.length, "Length")}
       ${sel("cr-res", [["", "Quality: ask"], ["hd", "HD"], ["4k", "4K"]], d.settings.resolution, "Quality")}
       ${sel("cr-text-on", [["", "Text: ask"], ["full", "Full text"], ["key-lines", "Key lines"], ["minimal", "Minimal text"], ["none", "No text"]], d.settings.text, "Text on screen")}
@@ -2171,7 +2172,12 @@ function bindComposer(first) {
   $("#cr-depth")?.addEventListener("change", (e) => { d.settings.depth = e.target.value || undefined; });
   if (first && d.settings.mode !== "watch") {
     $("#cr-pers").addEventListener("change", (e) => { d.settings.personality = e.target.value; });
-    $("#cr-format").addEventListener("change", (e) => { d.settings.format = e.target.value || undefined; });
+    $("#cr-format").addEventListener("change", (e) => {
+      d.settings.format = e.target.value || undefined;
+      if (d.settings.alsoFormat && d.settings.alsoFormat === d.settings.format) d.settings.alsoFormat = undefined;
+      const keep = $("#cr-text").value; renderLanding(); $("#cr-text").value = keep;
+    });
+    $("#cr-also").addEventListener("change", (e) => { d.settings.alsoFormat = e.target.value || undefined; });
     $("#cr-length").addEventListener("change", (e) => { d.settings.length = e.target.value || undefined; });
     $("#cr-res").addEventListener("change", (e) => { d.settings.resolution = e.target.value || undefined; });
     $("#cr-text-on").addEventListener("change", (e) => { d.settings.text = e.target.value || undefined; });

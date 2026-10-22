@@ -43,3 +43,17 @@ export function formatsPrompt(reelPath: string, wanted: readonly string[]): { sh
     ].join("\n"),
   };
 }
+
+/**
+ * The composer's "Also in": a second format made in the same run, two at most. The reel is made in its own format
+ * first; once its master renders, the copy is laid out again in formats/<w>x<h>/ the way "Make the other formats" does.
+ */
+export function alsoFormatLine(primary: string | undefined, also: string | undefined): string | undefined {
+  if (!also || !isOutputFormat(also) || also === primary) return undefined;
+  const { width, height } = frameSizeFor(also);
+  return [
+    `Two formats: once the ${primary ?? "chosen"} master is rendered, make the same reel in ${also} (${FORMAT_LABELS[also]}) as well${primary ? "" : ` (skip this if ${also} is the format chosen)`}:`,
+    `its own copy in formats/${width}x${height}/ beside reel.json, with its own reel.json ("format": "${also}", the same beats, lengths, sound and voiceover; relative paths point back up with ../../) and compositions/ laid out again for ${width}×${height}.`,
+    `Lay each beat out again, never crop or letterbox: the same words, moves, colours and timing, type and framing refitted (\`npm run measure -- <beat.html> <t> --format ${also}\`).${also === "9:16" ? " Keep every line clear of Instagram's interface (top 12%, bottom 20%, the right edge below the middle)." : ""} Then render it: \`npm run render -- <its reel.json>\` (with --sfx if the reel has sound effects). The studio shows both.`,
+  ].join(" ");
+}
